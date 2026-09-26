@@ -30,4 +30,17 @@ export const islandRunBossRewardTests: TestCase[] = [
       assertEqual(resolveIslandCompleteTitleEntrance(Number.NaN), 'wave', 'bad input falls back safely');
     },
   },
+  {
+    name: 'island completion hands off through the Mission Phone signal, with no keep-playing exit',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(!board.includes('Keep Playing For Now'), 'the celebration no longer offers Keep Playing');
+      assert(board.includes("'📡 Send assignment completed signal'"), 'the Mission Phone offers the completed signal');
+      assert(/setShowIslandClearCelebration\(false\);\s*setIsIslandClearSignalPending\(true\);\s*setShowMissionPhoneBriefing\(true\);/.test(board), 'after claiming, the celebration closes and the Mission Phone opens on the signal step');
+      assert(/const handleSendAssignmentCompletedSignal = \(\) => \{[\s\S]{0,260}void handleTravelFromCelebration\(\);/.test(board), 'sending the signal departs through the canonical, completion-checked travel path');
+      assert(board.includes("isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''"), 'an unsent signal marks the phone icon');
+    },
+  },
 ];

@@ -619,7 +619,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assert(boardSource.includes("[1, 3, 10, 13].includes(islandNumber)"), 'only islands with dedicated mission panels are marked as external launches');
       assert(modalSource.includes('aria-label="Mission progress"'), 'phone tracker exposes accessible overall progress');
       assert(boardSource.includes('<MissionPhoneRailIcon />') && !boardSource.includes('/tech/ExpeditionPhone_v19_folded.webp'), 'the board affordance shows the new sliding phone icon');
-      assert(boardSource.includes('className="island-run-board__mission-phone-floating"'), 'before the reward bar exists the phone sits above the magnifier');
+      assert(boardSource.includes('className={`island-run-board__mission-phone-floating${'), 'before the reward bar exists the phone sits above the magnifier');
       assert(cssSource.includes(".island-mission-tracker[data-phase='open'] .island-mission-tracker__device {\n  transform-style: flat;"), 'the docked phone leaves 3D so iOS keeps painting the scrollable screen');
       assert(!modalSource.includes('/tech/ExpeditionPhone_v21_opening.webp'), 'the tracker no longer waits on the heavy animated opening image');
       assert(modalSource.includes('island-mission-tracker__bottom-cap') && modalSource.includes('island-mission-tracker__pack-face'), 'the tracker slides out from a compact pack behind a slim bottom cap');

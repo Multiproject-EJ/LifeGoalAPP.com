@@ -52,7 +52,8 @@ export function IslandCompleteRewardCount({ value, delayMs }: { value: number; d
     let frame = 0;
     const startAt = performance.now() + delayMs;
     const tick = (now: number) => {
-      const progress = Math.min(1, Math.max(0, (now - startAt) / 650));
+      // Fast enough to land while the reward is still big at the centre (POW).
+      const progress = Math.min(1, Math.max(0, (now - startAt) / 450));
       setShown(Math.round(value * (1 - (1 - progress) ** 3)));
       if (progress < 1) frame = requestAnimationFrame(tick);
     };

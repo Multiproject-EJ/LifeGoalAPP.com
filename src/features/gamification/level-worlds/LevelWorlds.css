@@ -28013,19 +28013,84 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   30% { transform: translateY(-7px) scale(1.06); }
 }
 
-/* Rewards arrive one at a time, then Claim appears. */
+/* Rewards POW in one at a time: each bursts in large at the centre, holds,
+   then zooms down into its own slot. Claim appears after the third lands. */
+.island-clear-celebration__reward-item--beat-1 { --pow-x: 5.6rem; }
+.island-clear-celebration__reward-item--beat-2 { --pow-x: 0rem; }
+.island-clear-celebration__reward-item--beat-3 { --pow-x: -5.6rem; }
 .island-clear-celebration__reward-item--beat-1,
 .island-clear-celebration__reward-item--beat-2,
 .island-clear-celebration__reward-item--beat-3 {
-  animation: island-clear-reward-arrive 560ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  --pow-y: 0.4rem;
+  z-index: 5;
+  animation: island-clear-reward-pow 1150ms cubic-bezier(0.3, 0.7, 0.2, 1) both;
 }
-.island-clear-celebration__reward-item--beat-1 { animation-delay: 1.2s; }
-.island-clear-celebration__reward-item--beat-2 { animation-delay: 1.85s; }
-.island-clear-celebration__reward-item--beat-3 { animation-delay: 2.5s; }
-@keyframes island-clear-reward-arrive {
-  0% { opacity: 0; transform: translateY(18px) scale(0.3); }
-  60% { opacity: 1; transform: translateY(-4px) scale(1.18); }
+.island-clear-celebration__reward-item--beat-1 { animation-delay: 1.1s; }
+.island-clear-celebration__reward-item--beat-2 { animation-delay: 1.9s; }
+.island-clear-celebration__reward-item--beat-3 { animation-delay: 2.7s; }
+@keyframes island-clear-reward-pow {
+  0% { opacity: 0; transform: translate(var(--pow-x), var(--pow-y)) scale(0.2) rotate(-12deg); }
+  16% { opacity: 1; transform: translate(var(--pow-x), var(--pow-y)) scale(3) rotate(4deg); }
+  26% { transform: translate(var(--pow-x), var(--pow-y)) scale(2.5) rotate(0deg); }
+  54% { transform: translate(var(--pow-x), var(--pow-y)) scale(2.55); }
+  84% { transform: translate(0, 0) scale(0.88); }
   100% { opacity: 1; transform: none; }
+}
+.island-clear-celebration__reward-burst {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 7rem;
+  height: 7rem;
+  margin: -3.5rem 0 0 -3.5rem;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 220, 110, 0.7) 32%, rgba(255, 170, 40, 0) 70%);
+  opacity: 0;
+  animation: island-clear-reward-burst 700ms ease-out both;
+}
+.island-clear-celebration__reward-item--beat-1 .island-clear-celebration__reward-burst { animation-delay: 1.25s; }
+.island-clear-celebration__reward-item--beat-2 .island-clear-celebration__reward-burst { animation-delay: 2.05s; }
+.island-clear-celebration__reward-item--beat-3 .island-clear-celebration__reward-burst { animation-delay: 2.85s; }
+@keyframes island-clear-reward-burst {
+  0% { opacity: 0; transform: scale(0.2); }
+  25% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+
+/* See-through celebration: the live island, washed out and slowly orbiting,
+   stays visible behind a lighter panel instead of an opaque sunburst card. */
+.island-clear-celebration {
+  background:
+    radial-gradient(circle at 50% 26%, rgba(255, 232, 150, 0.2), transparent 52%),
+    linear-gradient(180deg, rgba(10, 22, 44, 0), rgba(6, 10, 24, 0.32));
+  /* No backdrop-filter: re-blurring the whole screen every frame over a
+     moving 3D canvas is the most expensive thing on the page. The island
+     canvas itself is washed out (below) and drawn at low resolution. */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.island-clear-celebration::before {
+  background: conic-gradient(from 0deg at 50% 30%, rgba(255, 236, 160, 0.16) 0deg 10deg, transparent 10deg 30deg);
+  opacity: 0.8;
+  animation: island-clear-rays 40s linear infinite;
+}
+@keyframes island-clear-rays { to { transform: rotate(360deg); } }
+.island-clear-celebration__card,
+.island-clear-celebration__card--boss {
+  height: auto;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+.island-clear-celebration__hero { display: none; }
+.island-clear-celebration__content {
+  border: 1px solid rgba(255, 240, 180, 0.22);
+  background: linear-gradient(180deg, rgba(8, 18, 40, 0.08), rgba(6, 10, 26, 0.4));
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+  overflow: visible;
 }
 .island-clear-celebration__actions {
   opacity: 0;
@@ -28039,6 +28104,80 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   .island-complete-title__letter,
   .island-clear-celebration__reward-item--beat-1,
   .island-clear-celebration__reward-item--beat-2,
-  .island-clear-celebration__reward-item--beat-3 { animation: none; }
+  .island-clear-celebration__reward-item--beat-3,
+  .island-clear-celebration__reward-burst,
+  .island-clear-celebration::before { animation: none; }
   .island-clear-celebration__actions { transition: none; }
+}
+
+/* Keep the three rewards on one row so each POW lands in its own slot. */
+.island-clear-celebration__rewards { flex-wrap: nowrap; gap: 0.7rem; }
+.island-clear-celebration__reward-item { flex: 0 0 5.2rem; }
+.island-clear-celebration__reward-icon { font-size: 2.9rem; }
+.island-clear-celebration__money-note { width: 4.4rem; }
+.island-clear-celebration__reward-item--beat-1 { --pow-x: 5.9rem; }
+.island-clear-celebration__reward-item--beat-3 { --pow-x: -5.9rem; }
+
+/* The island behind the Island Complete celebration is a snapshot (the 3D
+   scene pauses while the modal is open). The filter is rasterised once and the
+   slow zoom-and-turn is a compositor transform, so it stays smooth anywhere. */
+.island-clear-celebration__island {
+  position: absolute;
+  inset: -8%;
+  width: 116%;
+  height: 116%;
+  z-index: -1;
+  object-fit: cover;
+  pointer-events: none;
+  filter: saturate(0.72) brightness(0.98) contrast(0.95) blur(1.2px);
+  transform-origin: 50% 45%;
+  will-change: transform;
+  animation: island-clear-island-drift 26s ease-in-out infinite alternate;
+}
+@keyframes island-clear-island-drift {
+  from { transform: scale(1) rotate(0deg); }
+  to { transform: scale(1.2) rotate(5deg) translate(-1.5%, 1%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-clear-celebration__island { animation: none; }
+}
+
+/* Mission Phone: an unsent 'assignment completed' signal. A pulsing green
+   message dot, and the phone wriggles every few seconds like an unread text. */
+/* The phone buttons already use position and transform for placement, so
+   the wriggle uses the independent 'rotate' property, which composes with
+   their transform instead of replacing it. */
+.island-run-mission-phone--signal {
+  animation: island-run-mission-phone-wriggle 4.2s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+.island-run-mission-phone__signal-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #37e27b;
+  border: 2px solid #eafff2;
+  box-shadow: 0 0 0 0 rgba(55, 226, 123, 0.7);
+  animation: island-run-mission-phone-signal-pulse 1.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes island-run-mission-phone-signal-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(55, 226, 123, 0.75); transform: scale(1); }
+  60% { box-shadow: 0 0 0 10px rgba(55, 226, 123, 0); transform: scale(1.12); }
+  100% { box-shadow: 0 0 0 0 rgba(55, 226, 123, 0); transform: scale(1); }
+}
+@keyframes island-run-mission-phone-wriggle {
+  0%, 78%, 100% { rotate: 0deg; }
+  81% { rotate: -11deg; }
+  84% { rotate: 10deg; }
+  87% { rotate: -8deg; }
+  90% { rotate: 6deg; }
+  93% { rotate: -3deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-run-mission-phone--signal,
+  .island-run-mission-phone__signal-dot { animation: none; }
 }
