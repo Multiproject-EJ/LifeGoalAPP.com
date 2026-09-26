@@ -3038,7 +3038,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('constructionCrewRevealStages'), 'the five-stage reveal distribution must be exposed for live QA');
       assert(pilotSource.includes('constructionCommissioningFx.trigger'), 'completed levels must trigger the shared commissioning beat');
       assert(pilotSource.includes('applyCommissioningScale'), 'only additive construction geometry should consume the finish pop');
-      assert(commissioningSource.includes('new THREE.Points') && commissioningSource.includes('new THREE.PointLight'), 'the finish beat needs one pooled sparkle burst and one light flash');
+      assert(commissioningSource.includes('new THREE.Points') && commissioningSource.includes('new THREE.Sprite'), 'the finish beat needs one pooled sparkle burst and one glow flash');
+      // Lights change the light count compiled into every island shader, so a
+      // light that appears with the crew or the finish beat recompiles the scene.
+      assert(!/new THREE\.(Point|Spot|Directional|Hemisphere|Ambient)Light/.test(commissioningSource), 'the finish flash must not add a light to the island scene');
+      assert(pilotSource.includes("createRobotFamilyModel({ quality: 'low', showAddonRack: false, fixtureLights: false, transmission: false })"), 'the on-island build crew must not add lights or refractive glass (a full-scene transmission pre-pass) to the island scene');
       assert(presentationSource.includes('options.levelReview?.stopId ?? landmark?.stopId'), 'a completion beat must remain on the landmark that actually finished');
       assert(presentationSource.includes('sourceLevel') && pilotSource.includes('next?.sourceLevel'), 'level review must reconstruct the completed additive L(n-1) to Ln delta');
       assert(!/persistIslandRunRuntimeStatePatch|commitIslandRunState/.test(commissioningSource), 'commissioning FX must remain presentation-only');

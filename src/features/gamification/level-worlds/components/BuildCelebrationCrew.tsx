@@ -30,6 +30,8 @@ export default function BuildCelebrationCrew({ active, orbit = false }: { active
       camera.updateProjectionMatrix();
     };
     const observer = new ResizeObserver(resize); observer.observe(canvas); resize();
+    // Compile now, while the panel is idle, so the first celebration frame does not stall.
+    void renderer.compileAsync(scene, camera).catch(() => undefined);
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let frame = 0, last = performance.now(), elapsed = 0, wasActive = false;
     const draw = (now: number) => {
