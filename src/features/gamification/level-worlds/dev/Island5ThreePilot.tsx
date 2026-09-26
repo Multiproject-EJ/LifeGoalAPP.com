@@ -6154,6 +6154,12 @@ export default function Island5ThreePilot({
     // The family lab keeps showroom scale. On a live landmark these are a
     // coordinated miniature work crew, with matching tools and payloads.
     constructionTheatre.setCrewScale(0.11);
+    // Measured once at model scale: crew sizing is expressed as a share of
+    // the real building height rather than a fixed miniature factor.
+    const constructionHeavyWorkerModelHeight = Math.max(
+      0.001,
+      new THREE.Box3().setFromObject(constructionFamily.members['heavy-worker']).getSize(new THREE.Vector3()).y,
+    );
     const constructionCommissioningFx = createIslandConstructionCommissioningFx();
     const constructionAnchor = new THREE.Group();
     constructionAnchor.name = 'ISLAND_RUN_BUILD_MODAL_CONSTRUCTION_ANCHOR';
@@ -6333,13 +6339,15 @@ export default function Island5ThreePilot({
     /**
      * Compiles every shader a subtree can need. renderer.compile walks the
      * whole subtree, hidden objects included, so reveal parts compile now
-     * instead of one stall per part as each first appears mid-build.
-     * compileAsync uses parallel shader compilation where the browser has it.
+     * instead of one stall per part as each first appears mid-build. The
+     * driver finishes the compiles in the background before first use.
+     * compileAsync is deliberately avoided: its readiness poll throws an
+     * uncaught error if a material is disposed before it reports ready.
      */
     const warmConstructionShaders = (root: THREE.Object3D) => {
       if (!renderer) return;
       try {
-        void renderer.compileAsync(root, camera, scene).catch(() => undefined);
+        renderer.compile(root, camera, scene);
       } catch {
         // Warm-up is an optimisation only; rendering compiles on demand.
       }
@@ -6661,35 +6669,36 @@ export default function Island5ThreePilot({
       if (constructionPreviewRoot) {
         constructionPreviewBounds.getCenter(constructionPreviewCenter);
         const previewHorizontalSize = Math.max(constructionPreviewSize.x, constructionPreviewSize.z, 0.001);
+        // The build preview is drawn at the landmark's true board size (world
+        // scale 1). It used to be shrunk to 58% (and further for tall levels)
+        // to fit between the header and dock, so buildings looked much smaller
+        // in Build than on the island. Framing now belongs to the camera.
+        const previewStageScale = 1 / (crewScale * authoredBuildingScale);
+        // Size the crew from the real building: the Heavy Worker stands about
+        // a quarter of the building's height, so all three robots read clearly.
+        const buildingWorldHeight = constructionPreviewSize.y;
         const crewVisualScale = THREE.MathUtils.clamp(
-          0.19 * (constructionPreviewSize.y / previewHorizontalSize),
-          isJungleExpedition ? 0.16 : 0.084,
-          isJungleExpedition ? 0.27 : 0.2,
+          (buildingWorldHeight * 0.25) / (constructionHeavyWorkerModelHeight * 0.84 * crewScale),
+          0.12,
+          0.9,
         );
         constructionTheatre.setCrewScale(crewVisualScale);
         canvas.dataset.constructionCrewScale = crewVisualScale.toFixed(3);
-        // Tall restored landmarks (especially tree/citadel L3s) need the same
-        // visible-stage ceiling as broad buildings. Otherwise their upper
-        // scaffold and work stations disappear beneath the modal header.
-        const verticalFit = THREE.MathUtils.clamp(
-          (previewHorizontalSize * 1.38) / Math.max(constructionPreviewSize.y, 0.001),
-          0.72,
-          1,
-        );
-        const previewStageScale = (0.58 / crewScale) * verticalFit;
+        canvas.dataset.constructionPreviewWorldScale = (crewScale * authoredBuildingScale * previewStageScale).toFixed(3);
         constructionPreviewRoot.scale.setScalar(previewStageScale);
         constructionPreviewRoot.position.set(
           -constructionPreviewCenter.x * previewStageScale,
           -constructionPreviewBounds.min.y * previewStageScale,
           -constructionPreviewCenter.z * previewStageScale,
         );
+        // Envelopes are in anchor space (the anchor carries crewScale).
         constructionTheatre.setTargetEnvelope(
-          previewHorizontalSize * previewStageScale * 0.5,
-          constructionPreviewSize.y * previewStageScale,
+          (previewHorizontalSize * 0.5) / crewScale,
+          buildingWorldHeight / crewScale,
         );
         constructionCommissioningFx.setTargetEnvelope(
-          previewHorizontalSize * previewStageScale * 0.5,
-          constructionPreviewSize.y * previewStageScale,
+          (previewHorizontalSize * 0.5) / crewScale,
+          buildingWorldHeight / crewScale,
         );
         // The target landmark already owns its stage-specific façade
         // scaffolding. A second rectangular cage around the entire plot was
@@ -8018,20 +8027,34 @@ export default function Island5ThreePilot({
       const buildPresentation = constructionPresentationRef.current;
       const buildPreset = buildPresentation?.targetStopId === 'mystery' ? 'event' : buildPresentation?.targetStopId;
       if (buildPresentation?.active && id === buildPreset && constructionPreviewRoot) {
-        // Frame the actual miniature, including off-centre authored landmarks.
-        // Twenty percent more apparent size comes from the camera, not from
-        // compounding funded geometry or changing the board footprint.
-        const offset = new THREE.Vector3(...preset.position).sub(new THREE.Vector3(...preset.target));
-        offset.multiplyScalar(1 / 1.2);
-        const target = constructionAnchor.position.clone();
-        const previewHeight = constructionPreviewSize.y * constructionPreviewRoot.scale.y
+        // Fit the true-size building (plus a margin for the crew) into the
+        // clear area between the Build header and dock, keeping each world's
+        // authored viewing angle. The building is shown at real board size,
+        // so framing is solved from its bounds rather than a fixed zoom.
+        const previewWorldScale = constructionPreviewRoot.scale.y
           * constructionAnchor.scale.y * constructionStageBuilding.scale.y;
-        target.y += previewHeight * 0.44;
+        const buildingWidth = Math.max(constructionPreviewSize.x, constructionPreviewSize.z) * previewWorldScale;
+        const buildingHeight = constructionPreviewSize.y * previewWorldScale;
+        const buildingCenter = constructionAnchor.position.clone();
+        buildingCenter.y += buildingHeight * 0.5;
+        const fitRadius = 0.5 * Math.hypot(buildingWidth, buildingHeight) * 1.08;
+        const halfFovTan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / Math.max(camera.zoom, 0.001);
+        // Roughly 70% of the phone height is clear of the header and dock.
+        const clearHalfHeightTan = halfFovTan * 0.72;
+        const clearHalfWidthTan = halfFovTan * camera.aspect * 0.92;
+        const fitDistance = fitRadius / Math.max(Math.min(clearHalfHeightTan, clearHalfWidthTan), 0.001);
+        const viewOffset = new THREE.Vector3(...preset.position).sub(new THREE.Vector3(...preset.target)).setLength(fitDistance);
+        const viewDirection = viewOffset.clone().negate().normalize();
+        const viewRight = new THREE.Vector3().crossVectors(viewDirection, THREE.Object3D.DEFAULT_UP).normalize();
+        const viewUp = new THREE.Vector3().crossVectors(viewRight, viewDirection).normalize();
+        // The clear area sits above screen centre (the dock is taller than the
+        // header), so aim slightly below the building to lift it into view.
+        const target = buildingCenter.clone().addScaledVector(viewUp, -0.16 * halfFovTan * fitDistance);
         preset = { ...preset,
-          position: target.clone().add(offset).toArray() as [number, number, number],
+          position: target.clone().add(viewOffset).toArray() as [number, number, number],
           target: target.toArray() as [number, number, number],
         };
-        canvas.dataset.constructionFraming = 'centred-1.20';
+        canvas.dataset.constructionFraming = 'fit-true-size';
       }
       setActivePreset(id);
       if (isReducedMotion || instant) {
