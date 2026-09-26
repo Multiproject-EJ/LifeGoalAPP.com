@@ -11947,6 +11947,12 @@ export function IslandRunBoardPrototype({
     }
   }, [isBuildCameraHandoffActive, isBuildCameraHandoffPending, processBuildTapQueue]);
 
+  // True while the player's finger/key that started Hold to build is still
+  // down. The dock swaps the hold button for the level review at each level
+  // boundary, so the physical press is tracked at window level: if it is
+  // still held when the review ends, building carries on by itself.
+  const buildHoldIntentRef = useRef(false);
+
   const stopBuildHold = useCallback((): void => {
     buildHoldGenerationRef.current += 1;
     holdBuildSpendActiveRef.current = false;
@@ -12021,6 +12027,7 @@ export function IslandRunBoardPrototype({
     ) return;
     const holdGeneration = ++buildHoldGenerationRef.current;
     holdBuildSpendActiveRef.current = true;
+    buildHoldIntentRef.current = true;
     setBuildActionError(null);
     setIsBuildHoldActive(true);
     markBuildChoreographyActive(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS);
@@ -12031,11 +12038,15 @@ export function IslandRunBoardPrototype({
         if (holdGeneration !== buildHoldGenerationRef.current) return;
         const spendApplied = await handleSpendEssenceOnBuild(stopIndex, 1);
         if (holdGeneration !== buildHoldGenerationRef.current) return;
-        if (
-          !spendApplied
-          || buildLevelCompletionRef.current
-          || runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built'
-        ) {
+        if (!spendApplied || runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built') {
+          // Out of Money, an error, or a tutorial beat: never auto-resume.
+          buildHoldIntentRef.current = false;
+          stopBuildHold();
+          return;
+        }
+        if (buildLevelCompletionRef.current) {
+          // Level complete: pause for its celebration. If the player is still
+          // holding when the review ends, the resume effect carries on.
           stopBuildHold();
           return;
         }
@@ -12046,6 +12057,63 @@ export function IslandRunBoardPrototype({
       }
     })();
   }, [handleSpendEssenceOnBuild, isBuildCameraHandoffActive, isBuildCameraHandoffPending, markBuildChoreographyActive, stopBuildHold]);
+
+  useEffect(() => {
+    if (!showBuildPanel) {
+      buildHoldIntentRef.current = false;
+      return undefined;
+    }
+    const release = () => {
+      buildHoldIntentRef.current = false;
+      if (holdBuildSpendActiveRef.current) stopBuildHold();
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === ' ' || event.key === 'Enter') release();
+    };
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    window.addEventListener('blur', release);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('pointerup', release);
+      window.removeEventListener('pointercancel', release);
+      window.removeEventListener('blur', release);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, [showBuildPanel, stopBuildHold]);
+
+  const continuousHoldStopIndex = buildModalPresentationViewModel.activeLandmark?.canAffordNextTap
+    ? buildModalPresentationViewModel.activeLandmark.stopIndex
+    : null;
+  useEffect(() => {
+    // Continuous hold: once a level's celebration and any camera move to the
+    // next landmark have finished, keep building while the press is held.
+    if (
+      !showBuildPanel
+      || !buildHoldIntentRef.current
+      || buildLevelCompletion
+      || isBuildHoldActive
+      || isBuildSequenceActive
+      || isBuildCameraHandoffActive
+      || isBuildCameraHandoffPending
+      || isBuildModalHatcheryGuidanceActive
+      || continuousHoldStopIndex === null
+    ) return undefined;
+    const timer = window.setTimeout(() => {
+      if (buildHoldIntentRef.current) startBuildHold(continuousHoldStopIndex);
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [
+    showBuildPanel,
+    buildLevelCompletion,
+    isBuildHoldActive,
+    isBuildSequenceActive,
+    isBuildCameraHandoffActive,
+    isBuildCameraHandoffPending,
+    isBuildModalHatcheryGuidanceActive,
+    continuousHoldStopIndex,
+    startBuildHold,
+  ]);
 
   const handleCompleteActiveStop = (successMessage?: string) => {
     if (!activeStopId) return;

@@ -3029,6 +3029,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes("? 'build-locked'") && pilotSource.includes(": 'build-recent-cooldown'"), 'working and recent construction must expose distinct camera-lock evidence');
       assert(pilotSource.includes('if (transition) transition = null;'), 'a build lock must stop any idle camera orbit already in flight');
       assert(pilotSource.includes('snapInitialLockedConstructionFocus'), 'a simultaneous modal mount and build lock must still establish the intended landmark shot once');
+      // Continuous hold: a held press carries on after each level's review,
+      // but never after running out of Money, an error or a tutorial beat.
+      assert(/if \(!spendApplied \|\| runtimeStateRef\.current\.firstSessionTutorialState === 'hatchery_l1_built'\) \{\s*\/\/[^\n]*\n\s*buildHoldIntentRef\.current = false;/.test(boardSource), 'hold must not auto-resume after a failed spend or tutorial beat');
+      assert(/\|\| buildLevelCompletion\s*\n\s*\|\| isBuildHoldActive[\s\S]{0,200}\|\| isBuildCameraHandoffActive\s*\n\s*\|\| isBuildCameraHandoffPending/.test(boardSource), 'continuous hold resumes only after the level review and camera handoff finish');
+      assert(boardSource.includes("window.addEventListener('pointerup', release);"), 'releasing the press anywhere must stop continuous hold');
+      // Build cinematic: presentation only, reduced-motion safe, and it yields to a camera drag.
+      assert(/constructionCinematic\?\.active[\s\S]{0,160}!isReducedMotion\s*\n\s*&& !constructionCinematic\.reducedMotion/.test(pilotSource), 'the build cinematic must stay off under reduced motion');
+      assert(pilotSource.includes('constructionCinematicPausedUntil = performance.now() + 8000;'), 'dragging the camera must pause the build cinematic');
       assert(pilotSource.includes("applyAmbientCameraNudge(ambientCameraContext, now)"), 'idle Build and board states should share the gentle POV variation path');
       assert(pilotSource.includes('ambientCameraEligibleAt = now + ISLAND_3D_BOARD_POV_IDLE_DELAY_MS;'), 'a board roll must restart the forty-second ambient POV timer');
       assert(pilotSource.includes("cameraFocusTransition === 'quick' ? 0.48 : 0.82"), 'the actual 3D camera should shorten Build handoff timing without changing its preset geometry');
