@@ -1,6 +1,6 @@
 # Event-minigame readiness and introduction audit
 
-Date: 2026-09-26. Scope: current main integrated at 52f1610f, local model/action tests, actual mobile puzzle briefings and HUD/controller renders. This is **not** a full playtest or a production-readiness certification.
+Date: 2026-09-26. Scope: current main integrated through `58542b21` at `ffacf8b8`, local model/action tests, actual mobile puzzle briefings and HUD/controller renders. This is **not** a full playtest or a production-readiness certification.
 
 ## Recommendation: commit the introduction contract before expanding the catalogue
 
@@ -61,6 +61,7 @@ Visual direction: one title (“Which would you play again?”), two equal halve
 
 - Previous verified progression slice committed as `d237d9e0`.
 - Latest remote main at fetch: `1efd6ecd` (Claude's build-mode work). Merged without conflicts as `52f1610f`, then local main fast-forwarded to that tested commit. No push or deployment; shared dirty checkout untouched.
+- HUD/audit implementation is checkpointed in `f6a862ae`. A second fetch found Claude's build-hold/cinematic work at `58542b21`; integrated without conflicts as `ffacf8b8`. Full app TypeScript, 262 event tests, rank/progression suites and architecture guard pass after integration. The changed live-board Build contract test also passes (Vite emitted a sandbox-blocked optional WebSocket warning; no network-dependent test was required).
 - Top bar housing: 76px → 64.59375px in browser measurements at 360/390/1280 viewports; width unchanged, menu hit height remains 44px.
 - Entry glint settles to low-opacity ambient sparkle; upper Shop/Build controller faces receive bounded 12fps decorative sparkle using the existing cap surface. No gameplay writes or geometry changes; reduced motion freezes the effect.
 - HUD screenshot fixtures use actual SVG/controller components, not the authenticated full app. See before/after PNGs and `hud-measurements.json`. Puzzle screenshots show briefings, not completed game sessions.
