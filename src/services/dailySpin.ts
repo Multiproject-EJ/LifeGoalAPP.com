@@ -1,4 +1,12 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import {
+  applySuperSliceLuck,
+  normalizeSuperSliceHistory,
+  resolveSuperSliceLuck,
+  SUPER_SLICE_HISTORY_WINDOW,
+  NEUTRAL_SUPER_SLICE_LUCK,
+  type SuperSliceLuck,
+} from './dailySpinSuperLuck';
 import type { PostgrestError, Session } from '@supabase/supabase-js';
 import type { DailySpinState, SpinAward, SpinResult, SpinPrize } from '../types/gamification';
 import { SPIN_PRIZES } from '../types/gamification';
@@ -343,6 +351,25 @@ export async function getSpinHistory(userId: string, limit: number = 10): Promis
   return { data: data || [], error: null };
 }
 
+/** Current Super Slice luck, for the wheel's "Lucky xN" badge. */
+export async function getSuperSliceLuck(userId: string): Promise<SuperSliceLuck> {
+  try {
+    const [{ data: spinState }, { data: history }] = await Promise.all([
+      getDailySpinState(userId),
+      getSpinHistory(userId, SUPER_SLICE_HISTORY_WINDOW),
+    ]);
+    if (!spinState) return NEUTRAL_SUPER_SLICE_LUCK;
+    return resolveSuperSliceLuck({
+      history: normalizeSuperSliceHistory(history),
+      totalSpinsUsed: spinState.totalSpinsUsed,
+      lastSpinDate: spinState.lastSpinDate,
+      nowMs: Date.now(),
+    });
+  } catch {
+    return NEUTRAL_SUPER_SLICE_LUCK;
+  }
+}
+
 /**
  * Get a random prize based on weighted probabilities
  * Implements the prize selection algorithm from the spec
@@ -598,8 +625,19 @@ export async function executeSpin(
   }
 
   // Island 3's first wheel visit is a one-time guaranteed acceleration
-  // moment. Everywhere else uses the normal weighted pool.
-  const prize = selectDailySpinPrize(prizePool);
+  // moment. Everywhere else uses the weighted pool with Super Slice luck
+  // (bounded boosts, a weekly cap and guarantees; see dailySpinSuperLuck).
+  const { data: recentHistory } = await getSpinHistory(userId, SUPER_SLICE_HISTORY_WINDOW);
+  const superLuck = resolveSuperSliceLuck({
+    history: normalizeSuperSliceHistory(recentHistory),
+    totalSpinsUsed: spinState.totalSpinsUsed,
+    lastSpinDate: spinState.lastSpinDate,
+    nowMs: Date.now(),
+  });
+  const superPrize = prizePool.find((entry) => entry.type === 'super');
+  const prize = !guaranteedJackpot && superLuck.guaranteed && superPrize
+    ? superPrize
+    : selectDailySpinPrize(applySuperSliceLuck(prizePool, superLuck));
 
   // Award prize
   const awardedRewards = await awardPrize(options.session, prize, rewardMultiplier);
@@ -623,7 +661,7 @@ export async function executeSpin(
       userId,
       prizeType: prize.type,
       prizeValue: prize.value,
-      prizeDetails: { ...(prize.details || {}), awardedRewards },
+      prizeDetails: { ...(prize.details || {}), awardedRewards, superLuck },
       spunAt: new Date().toISOString(),
     };
     const history = JSON.parse(localStorage.getItem(DEMO_HISTORY_KEY) || '[]');
@@ -662,7 +700,7 @@ export async function executeSpin(
     user_id: userId,
     prize_type: prize.type,
     prize_value: prize.value,
-    prize_details: { ...(prize.details || {}), awardedRewards },
+    prize_details: { ...(prize.details || {}), awardedRewards, superLuck },
   });
 
   return {

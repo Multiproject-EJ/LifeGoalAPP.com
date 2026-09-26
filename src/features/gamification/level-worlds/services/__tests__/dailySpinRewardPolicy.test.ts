@@ -9,13 +9,74 @@ import {
   ISLAND_THREE_JACKPOT_PRIZE,
   selectDailySpinPrize,
 } from '../../../../../services/dailySpinPrizePool';
+import {
+  applySuperSliceLuck,
+  normalizeSuperSliceHistory,
+  resolveSuperSliceLuck,
+  SUPER_SLICE_LAUNCHED_AT_MS,
+} from '../../../../../services/dailySpinSuperLuck';
 import { assert, assertEqual, type TestCase } from './testHarness';
+
+const DAY = 24 * 60 * 60 * 1000;
+const NOW = Date.UTC(2026, 11, 1, 12);
+const isoDay = (ms: number) => new Date(ms).toISOString().split('T')[0];
+/** `count` ordinary spins, one per day, ending yesterday; newest first. */
+function spins(count: number, endMs = NOW - DAY): { prizeType: string; spunAtMs: number }[] {
+  return Array.from({ length: count }, (_, index) => ({ prizeType: 'dice', spunAtMs: endMs - index * DAY }));
+}
 
 function prize(type: SpinPrize['type'], value = 1): SpinPrize {
   return { type, value, label: type, icon: 'test' };
 }
 
 export const dailySpinRewardPolicyTests: TestCase[] = [
+  {
+    name: 'Super Slice luck combines comeback, bad-luck and new-player boosts under hard caps',
+    run: () => {
+      const yesterday = isoDay(NOW - DAY);
+      // Weekly cap: nothing lands again within 7 days of a Super Slice.
+      const recentSuper = [{ prizeType: 'super', spunAtMs: NOW - 3 * DAY }, ...spins(5)];
+      const cooling = resolveSuperSliceLuck({ history: recentSuper, totalSpinsUsed: 300, lastSpinDate: isoDay(NOW - 20 * DAY), nowMs: NOW });
+      assert(cooling.onCooldown && cooling.multiplier === 0 && !cooling.guaranteed, 'cooldown beats comeback luck and guarantees');
+      assertEqual(applySuperSliceLuck(SPIN_PRIZES, cooling).find((entry) => entry.type === 'super')?.wheelWeight, 0, 'cooldown removes the slice from the draw');
+      const rested = resolveSuperSliceLuck({ history: [{ prizeType: 'super', spunAtMs: NOW - 8 * DAY }], totalSpinsUsed: 300, lastSpinDate: yesterday, nowMs: NOW });
+      assert(!rested.onCooldown && rested.multiplier === 1, 'after a week the slice is back at normal odds');
+
+      // Comeback luck.
+      const away4 = resolveSuperSliceLuck({ history: spins(3, NOW - 4 * DAY), totalSpinsUsed: 300, lastSpinDate: isoDay(NOW - 4 * DAY), nowMs: NOW });
+      assertEqual(away4.multiplier, 3, '3-6 days away gives x3');
+      const away10 = resolveSuperSliceLuck({ history: spins(3, NOW - 10 * DAY), totalSpinsUsed: 300, lastSpinDate: isoDay(NOW - 10 * DAY), nowMs: NOW });
+      assertEqual(away10.multiplier, 5, '7+ days away gives x5');
+      assert(away10.reasons.includes('comeback'), 'comeback reason is reported for the badge');
+
+      // Bad-luck protection counts only spins since launch, then guarantees.
+      const thirty = resolveSuperSliceLuck({ history: spins(30), totalSpinsUsed: 300, lastSpinDate: yesterday, nowMs: NOW });
+      assertEqual(thirty.multiplier, 2.1, 'odds creep up after 20 spins without one');
+      const due = resolveSuperSliceLuck({ history: spins(44), totalSpinsUsed: 300, lastSpinDate: yesterday, nowMs: NOW });
+      assert(due.guaranteed, 'the 45th spin without a Super Slice is guaranteed');
+      const preLaunch = spins(50, SUPER_SLICE_LAUNCHED_AT_MS - DAY);
+      const veteran = resolveSuperSliceLuck({ history: preLaunch, totalSpinsUsed: 500, lastSpinDate: yesterday, nowMs: SUPER_SLICE_LAUNCHED_AT_MS + DAY });
+      assert(!veteran.guaranteed && veteran.multiplier === 1, 'spins before launch never make a Super Slice owed');
+
+      // Combined cap.
+      const both = resolveSuperSliceLuck({ history: spins(40, NOW - 9 * DAY), totalSpinsUsed: 300, lastSpinDate: isoDay(NOW - 9 * DAY), nowMs: NOW });
+      assertEqual(both.multiplier, 5, 'comeback x5 and bad-luck protection together stay capped at x5');
+      const weights = applySuperSliceLuck(SPIN_PRIZES, both);
+      const total = weights.reduce((sum, entry) => sum + (entry.wheelWeight ?? 1), 0);
+      const odds = (weights.find((entry) => entry.type === 'super')?.wheelWeight ?? 0) / total;
+      assert(odds < 0.12, `boosted odds stay below about 1 in 9 (got ${odds.toFixed(3)})`);
+
+      // New-player hook.
+      const sixth = resolveSuperSliceLuck({ history: spins(6), totalSpinsUsed: 6, lastSpinDate: yesterday, nowMs: NOW });
+      assert(sixth.guaranteed && sixth.reasons.includes('new_player'), 'a new player gets it by their 7th spin');
+      const third = resolveSuperSliceLuck({ history: spins(3), totalSpinsUsed: 3, lastSpinDate: yesterday, nowMs: NOW });
+      assert(!third.guaranteed, 'not guaranteed earlier than the 7th spin');
+
+      // History rows from the database or demo storage both work.
+      const rows = normalizeSuperSliceHistory([{ prize_type: 'super', spun_at: new Date(NOW).toISOString() }, { prizeType: 'dice', spunAt: new Date(NOW).toISOString() }, { nonsense: true }]);
+      assertEqual(rows.length, 2, 'snake_case and camelCase rows normalise; junk is dropped');
+    },
+  },
   {
     name: 'Super Slice is a rare glowing wheel slice that pays one high-value jackpot',
     run: () => {

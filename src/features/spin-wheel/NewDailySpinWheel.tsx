@@ -11,7 +11,9 @@ import {
   SPIN_REWARD_MULTIPLIER_OPTIONS,
   getSpinHistory,
   getSpinPrizesForUser,
+  getSuperSliceLuck,
 } from '../../services/dailySpin';
+import { NEUTRAL_SUPER_SLICE_LUCK, type SuperSliceLuck } from '../../services/dailySpinSuperLuck';
 import type { SpinAward, SpinHistoryEntry, SpinPrize } from '../../types/gamification';
 import { SPIN_PRIZES } from '../../types/gamification';
 import { isIslandThreeJackpotPrize } from '../../services/dailySpinPrizePool';
@@ -125,15 +127,17 @@ function WheelSVG({
   rotation,
   spinning,
   winningSegmentIndex,
+  superState = 'normal',
 }: {
   segments: WheelSegment[];
   rotation: number;
   spinning: boolean;
   winningSegmentIndex: number;
+  superState?: 'normal' | 'charged' | 'cooldown';
 }) {
   return (
     <svg
-      className="spin-wheel-svg"
+      className={`spin-wheel-svg spin-wheel-svg--super-${superState}`}
       viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`}
       width="100%"
       height="100%"
@@ -279,7 +283,7 @@ function WheelSVG({
         if (arcDeg < 28) return null;
         const textR = OUTER_R * 0.43;
         const p = polarToCart(CX, CY, textR, seg.centerAngle);
-        const lines = getWheelLabelLines(seg);
+        const lines = seg.type === 'super' && superState === 'cooldown' ? ['Recharging'] : getWheelLabelLines(seg);
         return (
           <text
             key={`txt-${i}`}
@@ -345,6 +349,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
   const [showReward, setShowReward] = useState(false);
   const [winnerRevealPending, setWinnerRevealPending] = useState(false);
   const [lastAwards, setLastAwards] = useState<SpinAward[]>([]);
+  const [superLuck, setSuperLuck] = useState<SuperSliceLuck>(NEUTRAL_SUPER_SLICE_LUCK);
   const [lastMultiplier, setLastMultiplier] = useState(1);
   const [showGiftOpening, setShowGiftOpening] = useState(false);
   const [giftRewards, setGiftRewards] = useState<GiftBoxRewardItem[]>([]);
@@ -450,6 +455,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
 
       if (spinState) {
         setCanSpin(spinState.spinsAvailable > 0);
+        void getSuperSliceLuck(session.user.id).then(setSuperLuck);
         const today = new Date().toISOString().split('T')[0];
         if (spinState.lastSpinDate === today) {
           const { data: history, error: historyError } = await getSpinHistory(
@@ -560,7 +566,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
           }
         }, 720);
 
-        if(!isDevPreview){refreshProfile();window.dispatchEvent(new CustomEvent('dailySpinComplete'));}
+        if(!isDevPreview){refreshProfile();window.dispatchEvent(new CustomEvent('dailySpinComplete'));void getSuperSliceLuck(session.user.id).then(setSuperLuck);}
       }, 3200);
     } catch (err) {
       console.error('Spin failed:', err);
@@ -727,6 +733,17 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
               );
             })}
             <small className="new-daily-spin-modal__boost-balance" aria-label={`${essenceBalance} money available`}>💰 {essenceBalance}</small>
+            {!superLuck.onCooldown && (superLuck.guaranteed || superLuck.multiplier > 1) ? (
+              <span
+                className="new-daily-spin-modal__super-luck"
+                role="status"
+                aria-label={superLuck.guaranteed
+                  ? 'Super Slice guaranteed on this spin'
+                  : `Super Slice odds boosted ${superLuck.multiplier} times`}
+              >
+                ★ {superLuck.guaranteed ? 'Super Slice guaranteed' : `Lucky ×${superLuck.multiplier}`}
+              </span>
+            ) : null}
           </div>
         )}
 
@@ -739,6 +756,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
             }`}
           >
             <WheelSVG
+              superState={superLuck.onCooldown ? 'cooldown' : superLuck.guaranteed || superLuck.multiplier > 1 ? 'charged' : 'normal'}
               segments={wheelSegments}
               rotation={spinning ? rotation : rotation + idleAngle}
               spinning={spinning}

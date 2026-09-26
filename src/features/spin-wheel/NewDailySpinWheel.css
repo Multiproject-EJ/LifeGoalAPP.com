@@ -1910,3 +1910,57 @@
     animation: none;
   }
 }
+
+/* Super Slice luck states. Charged: odds are boosted (shown with the badge),
+   so the slice animates harder. Cooldown: it landed within the last week and
+   cannot land again yet, so it rests grey and still. */
+.spin-wheel-svg--super-charged .spin-wheel-segment--super {
+  animation-duration: 1.4s;
+  filter: saturate(1.6) drop-shadow(0 0 9px #ffffff);
+}
+
+.spin-wheel-svg--super-charged .spin-wheel-super-rays { animation-duration: 3s; }
+.spin-wheel-svg--super-charged .spin-wheel-super-glow { animation-duration: 0.8s; }
+.spin-wheel-svg--super-charged .spin-wheel-super-star { animation-duration: 0.8s; }
+
+.spin-wheel-svg--super-cooldown .spin-wheel-segment--super,
+.spin-wheel-svg--super-cooldown .spin-wheel-super-emblem,
+.spin-wheel-svg--super-cooldown .spin-wheel-super-edge {
+  animation: none;
+  filter: grayscale(0.9) brightness(0.8);
+}
+
+.spin-wheel-svg--super-cooldown .spin-wheel-super-emblem *,
+.spin-wheel-svg--super-cooldown .spin-wheel-super-spark,
+.spin-wheel-svg--super-cooldown .spin-wheel-super-glow {
+  animation: none;
+}
+
+.spin-wheel-svg--super-cooldown .spin-wheel-super-spark,
+.spin-wheel-svg--super-cooldown .spin-wheel-super-glow,
+.spin-wheel-svg--super-cooldown .spin-wheel-super-rays,
+.spin-wheel-svg--super-cooldown .spin-wheel-super-ring,
+.spin-wheel-svg--super-cooldown .spin-wheel-super-orbit {
+  display: none;
+}
+
+.new-daily-spin-modal__super-luck {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff3fd4, #ffb020, #34f5a0, #35c8ff, #9b5cff);
+  background-size: 200% 100%;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-shadow: 0 1px 3px rgba(59, 10, 87, 0.9);
+  box-shadow: 0 6px 16px rgba(155, 92, 255, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.6);
+  animation: spin-wheel-luck-shimmer 2.4s linear infinite;
+}
+
+@keyframes spin-wheel-luck-shimmer {
+  to { background-position: 200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new-daily-spin-modal__super-luck { animation: none; }
+}
