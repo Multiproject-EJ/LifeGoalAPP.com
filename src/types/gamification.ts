@@ -381,7 +381,7 @@ export const DEMO_ACHIEVEMENTS_KEY = 'lifegoal_demo_user_achievements';
 // =====================================================
 
 // Daily Spin types
-export type PrizeType = 'gold' | 'treasure_chest' | 'essence' | 'shards' | 'dice' | 'game_tokens' | 'mystery';
+export type PrizeType = 'gold' | 'treasure_chest' | 'essence' | 'shards' | 'dice' | 'game_tokens' | 'mystery' | 'super';
 
 export interface DailySpinState {
   userId: string;
@@ -412,7 +412,7 @@ export interface SpinPrize {
 }
 
 export interface SpinAward {
-  currency: Exclude<PrizeType, 'treasure_chest' | 'mystery'>;
+  currency: Exclude<PrizeType, 'treasure_chest' | 'mystery' | 'super'>;
   amount: number;
   label: string;
   icon: string;
@@ -433,6 +433,9 @@ export const SPIN_PRIZES: SpinPrize[] = [
   { type: 'dice',           value: 100, label: '100 Dice',        icon: '🎲', wheelSize: 'large',  wheelWeight: 4 },
   { type: 'dice',           value: 250, label: '250 Dice',        icon: '🎲', wheelSize: 'large',  wheelWeight: 0.8, details: { rarity: 'rare' } },
   { type: 'dice',           value: 500, label: '500 Dice',        icon: '🎲', wheelSize: 'small',  wheelWeight: 0.08, details: { rarity: 'legendary' } },
+  // Glowing Super Slice (about 1 spin in 40): pays one high-value jackpot
+  // from DAILY_SPIN_SUPER_SLICE_OPTIONS.
+  { type: 'super',          value: 1,   label: 'Super Slice',     icon: '★', wheelSize: 'small',  wheelWeight: 0.8, details: { rarity: 'legendary' } },
   { type: 'essence',        value: 25,  label: '25 Money',        icon: '💰', wheelSize: 'medium', wheelWeight: 4 },
   { type: 'shards',         value: 5,   label: '5 Essence',       icon: '🟣', wheelSize: 'medium', wheelWeight: 3 },
   { type: 'treasure_chest', value: 1,   label: 'Treasure Chest',  icon: '🧰', wheelSize: 'small',  wheelWeight: 1.2, details: { rarity: 'rare' } },

@@ -1756,3 +1756,94 @@
     animation: none;
   }
 }
+
+/* Lucky Spin title: live text in the wheel's gold-and-blue style (replaces
+   the old painted "Daily Momentum" art, so renames need no new artwork). */
+.new-daily-spin-modal__title-text {
+  display: grid;
+  justify-items: center;
+  margin: 0 auto 0.35rem;
+  font-family: 'Arial Black', 'Helvetica Neue', system-ui, sans-serif;
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  transform: rotate(-3deg);
+  filter: drop-shadow(0 8px 16px rgba(2, 6, 23, 0.55));
+}
+
+.new-daily-spin-modal__title-text span {
+  -webkit-text-stroke: 3px #1e1b6b;
+  paint-order: stroke fill;
+}
+
+.new-daily-spin-modal__title-text span:first-child {
+  font-size: clamp(2.6rem, 13vw, 3.4rem);
+  color: #7ee3ff;
+  background: linear-gradient(180deg, #ffffff 0%, #9be7ff 45%, #2f8fe8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.new-daily-spin-modal__title-text span:last-child {
+  font-size: clamp(3rem, 15vw, 3.9rem);
+  color: #ffd23f;
+  background: linear-gradient(180deg, #fff6b0 0%, #ffd23f 45%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Super Slice: gold fill, pulsing light and a star. */
+.spin-wheel-super-glow {
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: spin-wheel-super-pulse 1.6s ease-in-out infinite;
+}
+
+.spin-wheel-segment--super {
+  filter: drop-shadow(0 0 5px rgba(255, 214, 90, 0.9));
+}
+
+.spin-wheel-super-star {
+  filter: drop-shadow(0 0 4px rgba(255, 244, 190, 0.95));
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin-wheel-super-twinkle 1.6s ease-in-out infinite;
+}
+
+@keyframes spin-wheel-super-pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.28; }
+}
+
+@keyframes spin-wheel-super-twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.18) rotate(12deg); }
+}
+
+.new-daily-spin-modal__reward-extras {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.new-daily-spin-modal__reward-extras span {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(8, 14, 40, 0.72);
+  color: #ffe9a8;
+  font-size: 1rem;
+  font-weight: 900;
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin-wheel-super-glow,
+  .spin-wheel-super-star {
+    animation: none;
+  }
+}

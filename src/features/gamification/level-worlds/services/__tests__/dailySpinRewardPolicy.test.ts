@@ -1,6 +1,7 @@
 import { SPIN_PRIZES, type SpinPrize } from '../../../../../types/gamification';
 import {
   DAILY_SPIN_DICE_REWARD_AMOUNTS,
+  DAILY_SPIN_SUPER_SLICE_OPTIONS,
   resolveDailySpinAwards,
 } from '../../../../../services/dailySpinRewardPolicy';
 import {
@@ -15,6 +16,29 @@ function prize(type: SpinPrize['type'], value = 1): SpinPrize {
 }
 
 export const dailySpinRewardPolicyTests: TestCase[] = [
+  {
+    name: 'Super Slice is a rare glowing wheel slice that pays one high-value jackpot',
+    run: () => {
+      const superPrizes = SPIN_PRIZES.filter((entry) => entry.type === 'super');
+      assertEqual(superPrizes.length, 1, 'the wheel has exactly one Super Slice');
+      const totalWeight = SPIN_PRIZES.reduce((sum, entry) => sum + (entry.wheelWeight ?? 1), 0);
+      const odds = (superPrizes[0].wheelWeight ?? 0) / totalWeight;
+      assert(odds > 0.015 && odds < 0.04, `Super Slice lands roughly once in 25-60 spins (got ${odds.toFixed(3)})`);
+      assert(SPIN_PRIZES.some((entry) => entry.type === 'mystery'), 'the Mystery Box slice stays alongside it');
+
+      const first = resolveDailySpinAwards(superPrizes[0], 1, () => 0);
+      assertEqual(JSON.stringify(first.map((award) => [award.currency, award.amount])), JSON.stringify([['dice', 550]]), 'lowest roll pays 550 dice');
+      const last = resolveDailySpinAwards(superPrizes[0], 1, () => 0.9999);
+      assertEqual(JSON.stringify(last.map((award) => [award.currency, award.amount])), JSON.stringify([['dice', 1000]]), 'top roll pays the 1,000 dice jackpot');
+      const boosted = resolveDailySpinAwards(superPrizes[0], 3, () => 0);
+      assertEqual(boosted[0].amount, 1650, 'reward boosts multiply the jackpot');
+      for (const option of DAILY_SPIN_SUPER_SLICE_OPTIONS) {
+        const total = option.awards.reduce((sum, award) => sum + (award.currency === 'dice' ? award.amount : 0), 0);
+        const money = option.awards.reduce((sum, award) => sum + (award.currency === 'essence' ? award.amount : 0), 0);
+        assert(total >= 300 || money >= 400, 'every Super Slice jackpot beats ordinary slices');
+      }
+    },
+  },
   {
     name: 'visible Daily Spin dice segments use the 25 to 500 dice economy ladder',
     run: () => {

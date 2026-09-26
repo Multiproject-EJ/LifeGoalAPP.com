@@ -15738,10 +15738,10 @@ export function IslandRunBoardPrototype({
                 className={`island-run-board__daily-momentum-btn${dailySpinAvailable ? ' island-run-board__daily-momentum-btn--ready' : ' island-run-board__daily-momentum-btn--used'}`}
                 aria-label={
                   dailySpinAvailable
-                    ? `Open Daily Momentum. ${Math.max(1, Math.floor(dailySpinCount))} spin${Math.floor(dailySpinCount) === 1 ? '' : 's'} ready.`
-                    : 'Open Daily Momentum. Today\'s spin has been collected.'
+                    ? `Open Lucky Spin. ${Math.max(1, Math.floor(dailySpinCount))} spin${Math.floor(dailySpinCount) === 1 ? '' : 's'} ready.`
+                    : 'Open Lucky Spin. Today\'s spin has been collected.'
                 }
-                title={dailySpinAvailable ? 'Daily Momentum — spin ready' : 'Daily Momentum — collected today'}
+                title={dailySpinAvailable ? 'Lucky Spin — spin ready' : 'Lucky Spin — collected today'}
                 onClick={onOpenDailySpinWheel}
               >
                 <NotificationBadge show={dailySpinAvailable} ariaLabel="A spin is ready" />
