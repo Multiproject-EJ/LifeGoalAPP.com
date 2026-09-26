@@ -3049,7 +3049,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('constructionTheatre.setCrewScale(0.11)'), 'the live construction crew must remain miniature beside the authored landmark');
       assert(theatreSource.includes('THREE.MathUtils.clamp(scale, 0.035, 1.25)'), 'the theatre must honor the authored low-profile landmark crew scale instead of silently raising it');
       assert(theatreSource.includes('THREE.MathUtils.clamp(crewScale / 0.58, 0.18, 1.25)'), 'miniature crew occupancy must contract with the rendered workers while retaining a conservative floor');
-      assert(pilotSource.includes('0.19 * (constructionPreviewSize.y / previewHorizontalSize)'), 'crew scale must respond to low-wide versus tall landmark silhouettes while remaining readable on a physical phone');
+      assert(pilotSource.includes('const previewStageScale = 1 / (crewScale * authoredBuildingScale);'), 'the Build preview must be drawn at the landmark\'s true board size so Build and the island never disagree about scale');
+      assert(pilotSource.includes('(buildingWorldHeight * 0.25) / (constructionHeavyWorkerModelHeight * 0.84 * crewScale)'), 'crew size must follow the real building height so the robots read clearly on a phone');
       assert(pilotSource.includes("canvas.dataset.constructionCrewScale = crewVisualScale.toFixed(3)"), 'live QA must expose the resolved building-aware miniature scale');
       assert(pilotSource.includes('completionCelebration: next?.completionCelebration ?? false'), 'the live renderer must forward the fully-built victory state to the robot theatre');
       assert(theatreSource.includes("isCompletionCelebration") && theatreSource.includes("? 'celebrate'"), 'all three robots must use their authored celebration motion in the fully-built state');
