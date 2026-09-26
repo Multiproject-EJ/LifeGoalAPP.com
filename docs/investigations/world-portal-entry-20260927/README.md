@@ -47,7 +47,14 @@ must settle safely before mounting a playable board.
 ## Parallel integration
 
 Owned work is isolated on `codex/ranks-and-island40-portal-20260926`. Upstream
-Claude changes through a8d685ea modify Island Complete presentation in the board
-and renderer. Merge them on the isolated branch, validate the combined tree,
-then fast-forward a clean dedicated local main. No shared dirty checkout, paused
+Claude changes through abd80d41 modify Island Complete presentation and its
+Mission Phone handoff in the board and renderer. Integrated without conflicts at
+9815eb6b. On this combined tree, full TypeScript, entry wiring, both entry/guest
+browser fixtures, portal/guest suites, Arena, journey, rank and architecture
+checks all pass. Island 040 routing/construction and its actual shared renderer
+also pass at five viewport/level combinations; refreshed captures are in the
+Island 040 investigation folder. Completion reward/title/Mission Phone assertions
+pass. A second fetch confirmed origin/main still at abd80d41 before integration.
+
+Fast-forward only a clean dedicated local main. No shared dirty checkout, paused
 Cosmic Outpost work, push, deployment or live migrations are part of this slice.

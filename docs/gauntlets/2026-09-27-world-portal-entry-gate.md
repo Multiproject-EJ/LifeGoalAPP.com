@@ -36,3 +36,8 @@ StrictMode and late prior-owner responses are exercised using the real App effec
 Native egg notifications remain mounted after safe startup. Focused checks and
 TypeScript pass; evidence and the known baseline landing-copy test failure are in
 `docs/investigations/world-portal-entry-20260927/README.md`.
+
+Combined-tree checkpoint: merged Claude's latest abd80d41 into the isolated
+branch at 9815eb6b, preserving Island Complete and Mission Phone work. Full
+TypeScript, focused behavior/browser regressions, architecture and real shared
+Island 040 renderer checks pass. No production publish or database writes.
