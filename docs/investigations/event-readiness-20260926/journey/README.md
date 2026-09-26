@@ -14,7 +14,7 @@
 
 ## Evidence / limits
 
-`node scripts/check-arena-journey.mjs`: 78 targeted journey, preference, opening-ceremony and signature-mission integration tests. New journey suite is also registered in the main Island Run runner.
+`node scripts/check-arena-journey.mjs`: 79 targeted journey, preference, opening-ceremony and signature-mission integration tests. New journey suite is also registered in the main Island Run runner. Includes a source-integration regression for the legacy Island001 orientation exit, so hiding games does not trap returning players at that activity.
 
 `node scripts/check-arena-journey-browser.mjs`: actual controls/chooser and canonical store with a synthetic owner. Checks explicit introduction, one-card launch, no comparison after only one played game, equal halves at360/390/1280, viewport bounds, scroll lock, focus/Escape, vote persistence, travel invalidation and dev isolation. Browser uses installed Chrome and PLAYWRIGHT_MODULE in this workspace. Captures are fixtures, **not** full authenticated app playthroughs.
 
@@ -27,3 +27,9 @@ Scope deliberately stops at the approved three introductions. Skybound and the r
 ## Visual review
 
 Initial desktop fixture exposed art overflowing its frame. Switched Miners to its existing icon asset, bounded illustration dimensions, and authored Signal Path's native SVG route. Re-ran the same browser checks at all three widths; final captures show no overlap. No third-party creative assets or image generation used.
+
+## Integration checkpoints
+
+Implementation checkpoint `9668c21c`; merged Claude's latest main `5b13eb27` without conflict at `56f0be6e`. On the combined tree, 29 changed Build/parity regression tests, Arena integration suites, rank/progression suites and architecture guard pass. The shared dirty checkout remains untouched apart from its owned handoff pointer; local main is fast-forwarded only after final checks. No remote push/deployment.
+
+Final verification: full application TypeScript check passed on the integrated tree. The final Island001 orientation guard also passes its dedicated regression and TSX parse/transpile check. All79 Arena integration tests pass after that guard. Browser vote-persistence and mobile/desktop checks pass; development screenshots remain fixture evidence, not live-account playtesting.

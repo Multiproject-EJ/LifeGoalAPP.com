@@ -23,6 +23,13 @@ const action = (command: Parameters<typeof applyArenaJourneyAction>[0]['command'
 const report = { completed: true, arenaPerformance: { gameId: 'signal_path', rawScore: 0, mastery: 0, stars: 1 as const, durationMs: 60000, mistakes: 3, hintsUsed: 0 } };
 const all = () => sanitizeArenaJourney({ introduced: { signal_path: 1, crystal_miners: 2, journey_disc_arena: 3 }, played: { signal_path: 4, crystal_miners: 5, journey_disc_arena: 6 } });
 export const arenaJourneyTests: TestCase[] = [
+  { name: 'quiet Island001 keeps the legacy orientation exit while hiding its event surface', async run() {
+    // @ts-ignore node types omitted by the Island Run test tsconfig
+    const fs = await import('node:fs');
+    const source = fs.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+    assert(source.includes('if (__storeState.currentIslandNumber === 1) return null;'), 'clock presentation hidden, not erased');
+    assert(source.includes("setArenaBoostStatus(activeStopId === 'mystery' && islandNumber === 1 ? 'no_active_event' : 'idle')"), 'legacy orientation remains completable without an event');
+  }},
   { name: 'catalogue grows 0/1/2/3 and contracts on backtracking without erasing progress', run() {
     const p = all();
     for (const [island, count] of [[1,0],[2,1],[3,2],[5,2],[6,3],[40,3],[2,1],[1,0]]) assertEqual(introducedArenaGames(island,p).length,count,'introduced catalogue size');

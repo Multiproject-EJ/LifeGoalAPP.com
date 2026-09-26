@@ -7914,7 +7914,9 @@ export function IslandRunBoardPrototype({
 
   useEffect(() => {
     if (activeStopId !== 'mystery' || !featureAccess.ordinaryEvents) {
-      setArenaBoostStatus('idle');
+      // A returning legacy player can still finish the quiet first-island
+      // orientation; it must never demand an unavailable event game.
+      setArenaBoostStatus(activeStopId === 'mystery' && islandNumber === 1 ? 'no_active_event' : 'idle');
       return;
     }
     if (!effectiveActiveTimedEvent?.eventId) {
