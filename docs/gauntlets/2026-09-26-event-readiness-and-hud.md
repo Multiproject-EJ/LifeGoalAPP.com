@@ -8,6 +8,8 @@ Local commits and safe local merge are authorized. No push, deployment, producti
 
 ## Gates and interpretation
 
+2026-09-26 continuation approval: Eivind accepted the recommendation. Implement Signal Path002, Crystal Miners003 and Disc Arena006 with explicit, free introduction acknowledgements (catch-up introductions may be read on later islands). Existing ceremony participation counts as Signal Path introduction/play. Do not fabricate play history for legacy players. Demo/held games stay in a separately labelled, verified-dev opt-in lab, never the introduced catalogue or evaluator. Preserve the global clock and wallets even when its rotating game is unavailable. Build a separate two-game evaluator rather than turning the first-play chooser into a vote. Persist bounded owner-scoped introductions, played-once receipts and comparisons in the existing typed signature-journey JSON envelope; no schema or live database changes.
+
 - Island001 remains quiet for every player, including devs: no event catalogue or reward bar.
 - Current island presentation limits the catalogue even after returning from a later island. Saved purchases, equipment, XP and played history are not deleted.
 - Introduction, readiness, event availability and genuine played-once evidence are separate requirements. Developer demo access is opt-in, not a blanket introduction/play-history bypass.

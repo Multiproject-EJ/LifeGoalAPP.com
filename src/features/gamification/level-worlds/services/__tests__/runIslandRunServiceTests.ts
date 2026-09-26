@@ -115,6 +115,7 @@ import { minigameConsolidationPhase5Tests } from './minigameConsolidationPhase5.
 import { minigameConsolidationPhase6Tests } from './minigameConsolidationPhase6.test';
 import { islandRunArenaPreferencesTests } from './islandRunArenaPreferences.test';
 import { arenaPuzzleGamesTests } from './arenaPuzzleGames.test';
+import { arenaJourneyTests } from './arenaJourney.test';
 import { spaceExcavatorCluesTests } from './spaceExcavatorClues.test';
 import { spaceExcavatorDepthsTests } from './spaceExcavatorDepths.test';
 import { spaceExcavatorObjectsTests } from './spaceExcavatorObjects.test';
@@ -448,6 +449,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunModalVisibility', tests: islandRunModalVisibilityTests },
   { label: 'islandRunArenaPreferences', tests: islandRunArenaPreferencesTests },
   { label: 'arenaPuzzleGames', tests: arenaPuzzleGamesTests },
+  { label: 'arenaJourney', tests: arenaJourneyTests },
   { label: 'islandRunGuestClaimService', tests: islandRunGuestClaimServiceTests },
   { label: 'islandRunRoutekeeperTinyActions', tests: islandRunRoutekeeperTinyActionsTests },
   { label: 'islandRunFirstPlayerModalScheduler', tests: islandRunFirstPlayerModalSchedulerTests },

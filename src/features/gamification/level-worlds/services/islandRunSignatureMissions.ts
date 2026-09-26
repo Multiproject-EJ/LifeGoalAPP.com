@@ -1,4 +1,5 @@
 import { sanitizeTitanAwakening, mergeTitanAwakening, type TitanAwakening } from './island17Awakening';
+import { ARENA_JOURNEY_KEY, sanitizeArenaJourney, mergeArenaJourney, type ArenaJourneyProgress } from './arenaJourney';
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import {
   OPENING_GAMES_CAMPAIGN_KEY, OPENING_GAMES_CEREMONY_KEY,
@@ -350,6 +351,7 @@ export interface StagedRestorationMissionProgress {
 }
 
 export type IslandRunSignatureMissionProgress =
+  | ArenaJourneyProgress
   | OpeningGamesCampaignMarker
   | OpeningGamesCeremonyProgress
   | MoonwellThermalProgress
@@ -403,6 +405,10 @@ export function sanitizeIslandRunSignatureMissionProgress(
   Object.entries(value as Record<string, unknown>).forEach(([key, raw]) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
     const record = raw as Record<string, unknown>;
+    if (record.missionId === 'arena-journey') {
+      if (key === ARENA_JOURNEY_KEY && record.version === 1) result[key] = sanitizeArenaJourney(record);
+      return;
+    }
     if (record.missionId === 'opening-games-campaign') {
       const marker = sanitizeOpeningGamesCampaignMarker(record);
       if (key === OPENING_GAMES_CAMPAIGN_KEY && marker) result[key] = marker;
@@ -1597,6 +1603,10 @@ export function mergeIslandRunSignatureMissionProgress(
     }
     if (!a) { merged[key] = b; return; }
     if (!b) { merged[key] = a; return; }
+    if (a.missionId === 'arena-journey' || b.missionId === 'arena-journey') {
+      merged[key] = mergeArenaJourney(sanitizeArenaJourney(a), sanitizeArenaJourney(b));
+      return;
+    }
     if (a.missionId === 'opening-games-campaign' || b.missionId === 'opening-games-campaign') {
       merged[key] = a.missionId === 'opening-games-campaign' && b.missionId === 'opening-games-campaign'
         ? mergeOpeningGamesCampaignMarkers(a, b) : a.missionId === 'opening-games-campaign' ? a : b;

@@ -73,10 +73,14 @@ export function moveArenaEvent(
   preferences: ArenaMinigamePreferences,
   eventId: ArenaGameId,
   direction: -1 | 1,
+  allowedGameIds: readonly ArenaGameId[] = ARENA_GAME_IDS,
 ): ArenaMinigamePreferences {
   const normalized = normalizeArenaPreferences(preferences);
   const currentIndex = normalized.rankedEventIds.indexOf(eventId);
-  const nextIndex = Math.max(0, Math.min(normalized.rankedEventIds.length - 1, currentIndex + direction));
+  const visible = normalized.rankedEventIds.filter(id => allowedGameIds.includes(id));
+  const visibleIndex = visible.indexOf(eventId);
+  const neighbor = visible[visibleIndex + direction];
+  const nextIndex = neighbor ? normalized.rankedEventIds.indexOf(neighbor) : currentIndex;
   if (currentIndex < 0 || currentIndex === nextIndex) return normalized;
   const rankedEventIds = [...normalized.rankedEventIds];
   [rankedEventIds[currentIndex], rankedEventIds[nextIndex]] = [
@@ -89,6 +93,7 @@ export function moveArenaEvent(
 export function toggleArenaEvent(
   preferences: ArenaMinigamePreferences,
   eventId: ArenaGameId,
+  allowedGameIds: readonly ArenaGameId[] = ARENA_GAME_IDS,
 ): { preferences: ArenaMinigamePreferences; changed: boolean; reason: string | null } {
   const normalized = normalizeArenaPreferences(preferences);
   const isDisabled = normalized.disabledEventIds.includes(eventId);
@@ -102,11 +107,11 @@ export function toggleArenaEvent(
       reason: null,
     };
   }
-  if (normalized.disabledEventIds.length >= getArenaDisabledLimit(ARENA_GAME_IDS.length)) {
+  if (normalized.disabledEventIds.filter(id => allowedGameIds.includes(id)).length >= getArenaDisabledLimit(allowedGameIds.length)) {
     return {
       preferences: normalized,
       changed: false,
-      reason: `You can pause ${getArenaDisabledLimit()} of the ${ARENA_GAME_IDS.length} Arena games (25%). Turn another game back on first.`,
+      reason: `You can pause ${getArenaDisabledLimit(allowedGameIds.length)} of your ${allowedGameIds.length} introduced Arena games (25%). Turn another game back on first.`,
     };
   }
   return {
@@ -122,10 +127,11 @@ export function toggleArenaEvent(
 export function resolveArenaSessionPace(
   preferences: ArenaMinigamePreferences,
   eventId: ArenaGameId,
+  allowedGameIds: readonly ArenaGameId[] = ARENA_GAME_IDS,
 ): ArenaSessionPace | null {
   const normalized = normalizeArenaPreferences(preferences);
   if (normalized.disabledEventIds.includes(eventId)) return null;
-  const enabled = normalized.rankedEventIds.filter((id) => !normalized.disabledEventIds.includes(id));
+  const enabled = normalized.rankedEventIds.filter((id) => allowedGameIds.includes(id) && !normalized.disabledEventIds.includes(id));
   const index = enabled.indexOf(eventId);
   if (index < 0) return 'fast';
   const edgeSize = Math.max(1, Math.floor(enabled.length * 0.25));
@@ -140,7 +146,7 @@ export function getArenaSessionSeconds(pace: ArenaSessionPace): number | null {
   return null;
 }
 
-export function getArenaPreferenceRows(preferences: ArenaMinigamePreferences) {
+export function getArenaPreferenceRows(preferences: ArenaMinigamePreferences, allowedGameIds: readonly ArenaGameId[] = ARENA_GAME_IDS) {
   const normalized = normalizeArenaPreferences(preferences);
   return normalized.rankedEventIds.map((eventId, index) => {
     const game = getArenaGameDefinition(eventId);
@@ -148,7 +154,7 @@ export function getArenaPreferenceRows(preferences: ArenaMinigamePreferences) {
       eventId,
       rank: index + 1,
       disabled: normalized.disabledEventIds.includes(eventId),
-      pace: resolveArenaSessionPace(normalized, eventId),
+      pace: resolveArenaSessionPace(normalized, eventId, allowedGameIds),
       icon: game.icon,
       displayName: game.displayName,
       artSrc: game.artSrc,

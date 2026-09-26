@@ -17,6 +17,13 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 export const islandRunArenaPreferencesTests: TestCase[] = [
+  { name: 'introduced subset owns pacing, adjacent moves and pause capacity', run() {
+    const ids = ['signal_path', 'crystal_miners'] as const;
+    assert(resolveArenaSessionPace(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'signal_path', ['signal_path']) === 'full', 'first game has no hidden-game short timer');
+    const moved = moveArenaEvent(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'signal_path', -1, ids);
+    assert(moved.rankedEventIds.indexOf('signal_path') < moved.rankedEventIds.indexOf('crystal_miners'), 'moves past hidden entries');
+    assert(!toggleArenaEvent(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'signal_path', ['signal_path']).changed, 'cannot pause only introduced game');
+  }},
   {
     name: 'timed event games stay admin-only except in an explicitly unlocked local QA session',
     run: () => {

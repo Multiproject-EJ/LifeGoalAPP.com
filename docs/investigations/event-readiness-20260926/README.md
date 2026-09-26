@@ -1,5 +1,7 @@
 # Event-minigame readiness and introduction audit
 
+**Follow-up:** Eivind approved the initial sequence; the catalogue/demo gates and a separate comparison modal are now implemented locally. See [implementation and evidence](journey/README.md). The audit below records the earlier findings, not current “not wired yet” status.
+
 Date: 2026-09-26. Scope: current main integrated through `58542b21` at `ffacf8b8`, local model/action tests, actual mobile puzzle briefings and HUD/controller renders. This is **not** a full playtest or a production-readiness certification.
 
 ## Recommendation: commit the introduction contract before expanding the catalogue

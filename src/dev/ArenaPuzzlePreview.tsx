@@ -57,8 +57,9 @@ export default function ArenaPuzzlePreview() {
       <main style={{ minHeight: '100dvh', boxSizing: 'border-box', padding: '18px', color: '#fff', background: 'radial-gradient(circle at 50% 10%, #244770, #081426 48%, #040a14)' }}>
         <section style={{ maxWidth: 430, margin: '0 auto', padding: 16, border: '1px solid rgba(238,210,137,.22)', borderRadius: 24, background: 'rgba(7, 16, 31, .72)' }}>
           <IslandRunArenaChoice
+            allowedGameIds={['signal_path', 'crystal_miners']}
             playerKey="arena-preview"
-            islandNumber={1}
+            islandNumber={3}
             activeEventId="lucky_spin"
             activeEventRuntimeId="preview-event"
             preferences={DEFAULT_ARENA_MINIGAME_PREFERENCES}

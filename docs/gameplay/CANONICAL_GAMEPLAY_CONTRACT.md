@@ -461,6 +461,17 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 
 ## 6) Timed minigame system
 
+### Progressive event catalogue (approved 2026-09-26)
+
+- Island001 has no event catalogue, reward bar or comparison, including verified developers and returning players. The saved event clock and earned balances remain intact.
+- First release introductions are Signal Path on002, Crystal Miners on003 and Journey Disc Arena on006. A free, explicit introduction acknowledgement adds the game; a later-island catch-up can introduce a missed earlier game. Existing completed Signal Path ceremony participation also supplies introduction and play evidence. This does not silently enrol legacy saves in the separate opening-games cohort or award starter currency.
+- Returning to an earlier island hides later introductions without deleting them. Disc Arena stays in the learned catalogue but is playable only on its existing chapter exhibition islands (006/011/016/etc.).
+- Twin Sigils, Concord Categories and Lexicon Relay are demo-only. Other games without an approved introduction remain unreleased. A verified admin **and** enabled developer mode **and** an individual, off-by-default preview flag are required for the separate developer lab. Preview flags do not add catalogue or comparison credit. They reset when the board session ends.
+- Catalogue, chooser, settings and launch callbacks use the same introduction policy. A one-game catalogue has one launch card; zero/one eligible game never triggers a broad fallback. Visible-game rankings own session pacing.
+- Comparison is opt-in from the catalogue, with two equal game choices. It requires two distinct introduced games and genuine settled-play evidence for this owner, checked again on submission. Merely opening/starting/cancelling is not play. Miners uses settled dig counts; Disc Arena uses banked rounds including losses; Signal Path uses a funded attempt and terminal performance report (including a timed-out round). No fabricated legacy play credit.
+- Bounded introductions, Signal Path receipts and comparisons use the canonical `arena-journey-v1` entry in `signatureMissionProgressByIsland`, through mutex-protected actions and existing JSON persistence/merge. A comparison grants no currency, changes no score and does not automatically rewrite session preferences. Adding a later game requires its own introduction and settlement adapter.
+- Hiding an unreleased rotating game never removes the shared clock/ticket/reward channel. The normal-player header opens the introduced catalogue, not the hidden rotating game.
+
 - At any given time, there is exactly **one** active timed minigame/event.
 - The active timed minigame/event is global for the player and persists across island transitions.
 - The active timed minigame/event remains available until its timer expires.
