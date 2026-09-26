@@ -12,14 +12,16 @@ export interface LivingControllerProps {
  onArrivalImpact?:()=>void;
  onThemeChange?:(theme:string)=>void;
  creatureRewardReady?:boolean; rolling:boolean; autoRolling:boolean; jackpot:boolean; buildReady:boolean; tutorial:boolean;
- blocked:boolean; rollDisabled:boolean; multiplierDisabled:boolean; multiplierMaxJumping?:boolean; canHold:boolean;
+ blocked:boolean; rollDisabled:boolean; devThemeSelection?:string; multiplierDisabled:boolean; multiplierMaxJumping?:boolean; canHold:boolean;
  rollTitle:string; regenLabel:string; concordLabel:string; concordTitle?:string; rollHint?:string;
  onRoll:()=>void; onHoldStart:()=>void; onHoldEnd:()=>void; onHoldCancel?:()=>void; onStopAuto:()=>void;
  onMultiplier:()=>void; onShop:()=>void; onBuild:()=>void; onCreatures:()=>void; onConcord:()=>void;
  fallback:ReactNode;
 }
 export function LivingController(p:LivingControllerProps){
- const [failed,setFailed]=useState(false),[ready,setReady]=useState(false),[collapsed,setCollapsed]=useState(p.surface==='treasure'),[selection,setSelection]=useState('auto');
+ const [failed,setFailed]=useState(false),[ready,setReady]=useState(false),[collapsed,setCollapsed]=useState(p.surface==='treasure');
+ // Dev theme override is chosen in the board's developer menu.
+ const selection=p.devThemeSelection??'auto';
  const [reduced,setReduced]=useState(()=>matchMedia('(prefers-reduced-motion: reduce)').matches);
  const [label,setLabel]=useState('');
  const [powerFeedback,setPowerFeedback]=useState('');
@@ -58,9 +60,6 @@ export function LivingController(p:LivingControllerProps){
  const actions:Record<Action,()=>void>={shop:p.onShop,build:p.onBuild,creatures:p.onCreatures,concord:p.onConcord,roll:p.onRoll};
  const labels:Record<Action,string>={shop:'Shop',build:p.buildReady?'Build — next step affordable':'Build',creatures:'Creatures',concord:p.concordLabel,roll:`${p.rollTitle} · ${Math.floor(p.dice/Math.max(1,p.cost))} rolls left`};
  return <div className={`living-controller-dock${isCollapsed?' is-collapsed':''}`} data-theme={snapshot.current.theme}>
-   {p.dev&&!isCollapsed&&<select className="living-controller-themes" aria-label="Dev controller theme" value={selection} onChange={e=>setSelection(e.target.value)}>
-     <option value="auto">Island / saved default</option><option value="ice">Default Day</option><option value="dark">Default Dark</option><option value="light">Light (preview)</option><option value="christmas">Christmas (preview)</option><option value="snow">Snow & Gold (preview)</option><option value="classic">Classic Christmas (preview)</option><option value="gold">Gold (preview)</option><option value="wood">Satin Teak (preview)</option>
-   </select>}
    <div className={`living-controller${ready?' is-ready':''}`} aria-label={isCollapsed?'Controller hidden — swipe up or press Enter to restore':'Game controller — swipe down to hide'} tabIndex={0}
      onKeyDown={e=>{if(e.target!==e.currentTarget)return;if((isCollapsed&&(e.key==='Enter'||e.key==='ArrowUp'))||(!isCollapsed&&e.key==='ArrowDown'&&!p.tutorial)){e.preventDefault();p.onStopAuto();setCollapsed(!isCollapsed);}}}
      onPointerDownCapture={e=>{if(!e.isPrimary||e.button!==0)return;suppress.current=false;gesture.current={id:e.pointerId,x:e.clientX,y:e.clientY,drag:false};}}

@@ -1540,3 +1540,373 @@
     animation: none;
   }
 }
+
+/* =====================================================
+   FLOATING WHEEL (2026-09-25)
+   No panel: the title, wheel and controls float over a light veil with a
+   gentle blur so the island stays visible behind them. Visible boost
+   chips, and a large prize reveal with a counting number and fireworks.
+   ===================================================== */
+
+.new-daily-spin-modal {
+  background: rgba(4, 10, 24, 0.24);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.new-daily-spin-modal__content {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  overflow-x: visible;
+}
+
+.new-daily-spin-modal__content::before {
+  display: none;
+}
+
+.new-daily-spin-modal__title-art {
+  filter: drop-shadow(0 8px 16px rgba(2, 6, 23, 0.55));
+}
+
+.new-daily-spin-modal__subtitle,
+.new-daily-spin-modal__header [role='status'] {
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(2, 6, 23, 0.85), 0 0 2px rgba(2, 6, 23, 0.9);
+}
+
+.new-daily-spin-modal__close {
+  background: rgba(8, 14, 40, 0.72);
+  box-shadow: 0 6px 16px rgba(2, 6, 23, 0.45);
+}
+
+/* Boost chips: ×1 is free, bigger boosts cost money. */
+.new-daily-spin-modal__boosts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0.2rem auto 0.55rem;
+}
+
+.new-daily-spin-modal__boost {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  min-width: 64px;
+  padding: 6px 10px 7px;
+  border: 1.5px solid rgba(255, 214, 102, 0.55);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(22, 30, 82, 0.9), rgba(10, 14, 44, 0.9));
+  color: #fdf6d8;
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.new-daily-spin-modal__boost strong {
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.new-daily-spin-modal__boost span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.new-daily-spin-modal__boost.is-active {
+  border-color: #fff3b0;
+  background: linear-gradient(180deg, #ffd65a, #f59e0b);
+  color: #2a1603;
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.5), 0 0 0 3px rgba(255, 243, 176, 0.35);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.new-daily-spin-modal__boost.is-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.new-daily-spin-modal__boost:disabled:not(.is-locked):not(.is-active) {
+  opacity: 0.7;
+}
+
+.new-daily-spin-modal__boost-balance {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(8, 14, 40, 0.72);
+  color: #ffe9a8;
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.35);
+}
+
+/* Prize reveal: the reward itself is the hero, filling the whole screen
+   rather than the wheel's box (which clipped the Collect button). */
+.new-daily-spin-modal__result-overlay--reward {
+  position: fixed !important;
+  inset: 0;
+  border-radius: 0;
+  padding:
+    max(1.25rem, env(safe-area-inset-top, 0px))
+    1.25rem
+    max(1.25rem, env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 196, 64, 0.32), transparent 46%),
+    rgba(5, 8, 36, 0.62);
+  backdrop-filter: blur(4px);
+}
+
+.new-daily-spin-modal__result-overlay--reward .new-daily-spin-modal__reward-card {
+  width: min(380px, 92vw);
+  max-height: none;
+  overflow: visible;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.new-daily-spin-modal__result-overlay--reward .new-daily-spin-modal__reward-close {
+  min-width: 190px;
+  padding: 0.85rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 26px rgba(245, 158, 11, 0.5);
+}
+
+.new-daily-spin-modal__reward-hero {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 0.1rem 0 0.9rem;
+}
+
+.new-daily-spin-modal__reward-hero-art {
+  width: min(60vw, 230px);
+  height: auto;
+  filter: drop-shadow(0 18px 26px rgba(2, 6, 23, 0.55)) drop-shadow(0 0 26px rgba(255, 210, 90, 0.5));
+  animation: dsw-heroDrop 700ms cubic-bezier(0.2, 1.4, 0.4, 1) both, dsw-heroFloat 2.6s 700ms ease-in-out infinite;
+}
+
+.new-daily-spin-modal__reward-amount {
+  color: #ffe27a;
+  font-size: clamp(3.6rem, 18vw, 5.4rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 0 #b45309, 0 10px 24px rgba(2, 6, 23, 0.5), 0 0 30px rgba(255, 196, 64, 0.6);
+  animation: dsw-amountPop 520ms 180ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+.new-daily-spin-modal__reward-unit {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(2, 6, 23, 0.7);
+}
+
+.new-daily-spin-modal__reward-boost {
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffd65a, #f59e0b);
+  color: #2a1603;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.45);
+}
+
+.new-daily-spin-modal__result-overlay--reward .new-daily-spin-modal__reward-title {
+  font-size: 1.5rem;
+  text-shadow: 0 3px 10px rgba(2, 6, 23, 0.7);
+}
+
+.new-daily-spin-modal__result-overlay--reward .new-daily-spin-modal__reward-subtitle {
+  text-shadow: 0 2px 8px rgba(2, 6, 23, 0.7);
+}
+
+@keyframes dsw-heroDrop {
+  0% { opacity: 0; transform: translateY(-40px) scale(0.4) rotate(-14deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+@keyframes dsw-heroFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+
+@keyframes dsw-amountPop {
+  0% { opacity: 0; transform: scale(0.3); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new-daily-spin-modal__reward-hero-art,
+  .new-daily-spin-modal__reward-amount {
+    animation: none;
+  }
+}
+
+/* Lucky Spin title: live text in the wheel's gold-and-blue style (replaces
+   the old painted "Daily Momentum" art, so renames need no new artwork). */
+.new-daily-spin-modal__title-text {
+  display: grid;
+  justify-items: center;
+  margin: 0 auto 0.35rem;
+  font-family: 'Arial Black', 'Helvetica Neue', system-ui, sans-serif;
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  transform: rotate(-3deg);
+  filter: drop-shadow(0 8px 16px rgba(2, 6, 23, 0.55));
+}
+
+.new-daily-spin-modal__title-text span {
+  -webkit-text-stroke: 3px #1e1b6b;
+  paint-order: stroke fill;
+}
+
+.new-daily-spin-modal__title-text span:first-child {
+  font-size: clamp(2.6rem, 13vw, 3.4rem);
+  color: #7ee3ff;
+  background: linear-gradient(180deg, #ffffff 0%, #9be7ff 45%, #2f8fe8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.new-daily-spin-modal__title-text span:last-child {
+  font-size: clamp(3rem, 15vw, 3.9rem);
+  color: #ffd23f;
+  background: linear-gradient(180deg, #fff6b0 0%, #ffd23f 45%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Super Slice: multicolour, colour-shifting and energised so it stands
+   out from every other slice. */
+.spin-wheel-segment--super {
+  animation: spin-wheel-super-hue 3.2s linear infinite;
+  filter: saturate(1.35) drop-shadow(0 0 6px rgba(255, 255, 255, 0.85));
+}
+
+.spin-wheel-super-glow {
+  mix-blend-mode: overlay;
+  opacity: 0;
+  animation: spin-wheel-super-pulse 1.2s ease-in-out infinite;
+}
+
+.spin-wheel-super-edge {
+  filter: drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 6px #7df9ff);
+  animation: spin-wheel-super-crackle 0.9s linear infinite;
+}
+
+.spin-wheel-super-spark {
+  opacity: 0;
+  filter: drop-shadow(0 0 3px #ffffff);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin-wheel-super-spark 1.35s ease-in-out infinite;
+}
+
+.spin-wheel-super-star {
+  filter: drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 7px #ff6bf0) drop-shadow(0 1px 2px rgba(59, 10, 87, 0.6));
+  animation: spin-wheel-super-twinkle 1.2s ease-in-out infinite;
+}
+
+/* Light rays turn slowly behind the star; a ring bursts outwards and a
+   spark orbits it. Transform origins are set inline to the star centre. */
+.spin-wheel-super-rays {
+  mix-blend-mode: screen;
+  animation: spin-wheel-super-rays 6s linear infinite;
+}
+
+.spin-wheel-super-ring {
+  opacity: 0;
+  animation: spin-wheel-super-ring 1.6s ease-out infinite;
+}
+
+.spin-wheel-super-orbit {
+  filter: drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 5px #7df9ff);
+  animation: spin-wheel-super-orbit 2.4s linear infinite;
+}
+
+@keyframes spin-wheel-super-rays {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-wheel-super-ring {
+  0% { opacity: 0.9; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(2); }
+}
+
+@keyframes spin-wheel-super-orbit {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes spin-wheel-super-hue {
+  from { filter: saturate(1.35) hue-rotate(0deg) drop-shadow(0 0 6px rgba(255, 255, 255, 0.85)); }
+  to { filter: saturate(1.35) hue-rotate(360deg) drop-shadow(0 0 6px rgba(255, 255, 255, 0.85)); }
+}
+
+@keyframes spin-wheel-super-pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes spin-wheel-super-crackle {
+  to { stroke-dashoffset: -28; }
+}
+
+@keyframes spin-wheel-super-spark {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  45% { opacity: 1; transform: scale(1.5); }
+}
+
+@keyframes spin-wheel-super-twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.22) rotate(18deg); }
+}
+
+.new-daily-spin-modal__reward-extras {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.new-daily-spin-modal__reward-extras span {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(8, 14, 40, 0.72);
+  color: #ffe9a8;
+  font-size: 1rem;
+  font-weight: 900;
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin-wheel-segment--super,
+  .spin-wheel-super-glow,
+  .spin-wheel-super-edge,
+  .spin-wheel-super-spark,
+  .spin-wheel-super-star,
+  .spin-wheel-super-rays,
+  .spin-wheel-super-ring,
+  .spin-wheel-super-orbit {
+    animation: none;
+  }
+}

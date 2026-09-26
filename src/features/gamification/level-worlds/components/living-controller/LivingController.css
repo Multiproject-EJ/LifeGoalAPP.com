@@ -24,7 +24,6 @@
 .living-controller-power-feedback{position:absolute;bottom:100%;left:10%;right:10%;padding:7px 10px;border:1px solid #94eaff88;border-radius:999px;background:#10354be8;color:#effcff;text-align:center;font:600 12px/1.3 system-ui;box-shadow:0 0 14px #54cfff33;pointer-events:none;z-index:4}
 @media(prefers-reduced-motion:no-preference){.living-controller-power-feedback{animation:controller-power-pop .35s ease-out}@keyframes controller-power-pop{from{opacity:.4;transform:translateY(5px) scale(.94)}to{opacity:1;transform:none}}}
 .living-controller-multiplier::after{content:'';position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
-.living-controller-themes{position:absolute;right:0;top:-24px;max-width:190px;z-index:5;font-size:11px;background:#10243c;color:white;border:1px solid #6abbda;border-radius:8px}
 .living-controller.is-ready .living-controller-multiplier{border-radius:999px;background:transparent!important;border:0!important;box-shadow:none!important;min-height:44px!important}
 .living-controller.is-ready .living-controller-multiplier>*{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .living-controller.is-ready .living-controller-multiplier:focus-visible{outline:2px solid #bdf3ff!important;outline-offset:2px}

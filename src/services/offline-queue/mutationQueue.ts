@@ -138,6 +138,11 @@ export class MutationQueue {
     this.notify();
   }
 
+  /** Drop one change the user chose not to keep (it will never be sent). */
+  async discard(id: string): Promise<void> {
+    await this.markStatus(id, 'completed');
+  }
+
   /** Re-arm failed mutations (user pressed "Retry"). */
   async retryFailed(): Promise<number> {
     await this.initialize();

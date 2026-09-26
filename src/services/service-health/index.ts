@@ -11,6 +11,7 @@ export {
   classifyProviderError,
   isAppError,
   getCategoryDefinition,
+  describeErrorCode,
 } from './errorTranslation';
 export { CircuitBreaker, type CircuitState, type CircuitBreakerOptions } from './circuitBreaker';
 export { BoundedLog, type BoundedLogEntry, type BoundedLogOptions } from './boundedLog';

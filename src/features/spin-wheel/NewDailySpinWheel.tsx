@@ -77,19 +77,45 @@ function getPrizeIconAsset(type: SpinPrize['type']): string {
     game_tokens: 'prize-game-tickets-transparent.png',
     treasure_chest: 'prize-treasure-case-transparent.png',
     mystery: 'prize-lucky-gift-transparent.png',
+    super: 'prize-treasure-case-transparent.png',
   };
   return `${DAILY_MOMENTUM_ASSET_ROOT}/prizes/${prizeAssets[type]}`;
+}
+
+/** Big prize number that counts up once when the reward appears. */
+function SpinRewardCount({ value }: { value: number }) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || value <= 0) {
+      setShown(value);
+      return undefined;
+    }
+    let frame = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / 900);
+      setShown(Math.round(value * (1 - Math.pow(1 - progress, 3))));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+  return <>{shown.toLocaleString()}</>;
 }
 
 function getWheelLabelLines(segment: WheelSegment): string[] {
   const compactLabels: Record<SpinPrize['type'], string> = {
     gold: `${segment.value} Money`,
-    essence: `${segment.value} Essence`,
-    shards: `${segment.value} Shards`,
+    // Wheel labels match what the prize pays out: essence is Money and
+    // shards are Essence in the Island Run wallet.
+    essence: `${segment.value} Money`,
+    shards: `${segment.value} Essence`,
     dice: `${segment.value} Dice`,
     game_tokens: `${segment.value} Tickets`,
     treasure_chest: 'Treasure Chest',
     mystery: 'Mystery Box',
+    super: 'Super Slice',
   };
   return compactLabels[segment.type].split(' ');
 }
@@ -119,23 +145,119 @@ function WheelSVG({
           : undefined,
       }}
     >
+      <defs>
+        <linearGradient id="spin-wheel-super-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ff3fd4" />
+          <stop offset="25%" stopColor="#ffb020" />
+          <stop offset="50%" stopColor="#34f5a0" />
+          <stop offset="75%" stopColor="#35c8ff" />
+          <stop offset="100%" stopColor="#9b5cff" />
+        </linearGradient>
+        <radialGradient id="spin-wheel-super-star-fill" cx="42%" cy="36%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="35%" stopColor="#fff27a" />
+          <stop offset="70%" stopColor="#ffb31a" />
+          <stop offset="100%" stopColor="#ff3fb4" />
+        </radialGradient>
+        <radialGradient id="spin-wheel-super-ray-fill" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="45%" stopColor="#fff3a0" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="#ffd23f" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
       {/* Segments */}
       {segments.map((seg, i) => (
         <path
           key={i}
-          className={winningSegmentIndex === i ? 'spin-wheel-segment spin-wheel-segment--winner' : 'spin-wheel-segment'}
+          className={`spin-wheel-segment${seg.type === 'super' ? ' spin-wheel-segment--super' : ''}${winningSegmentIndex === i ? ' spin-wheel-segment--winner' : ''}`}
           d={segmentPath(CX, CY, OUTER_R - 10, seg.startAngle, seg.endAngle)}
-          fill={seg.color}
+          fill={seg.type === 'super' ? 'url(#spin-wheel-super-fill)' : seg.color}
           stroke="rgba(255,255,255,0.82)"
           strokeWidth="1.25"
         />
       ))}
+      {/* Super Slice energy: pulsing light, a crackling edge and sparks */}
+      {segments.map((seg, i) => {
+        if (seg.type !== 'super') return null;
+        const d = segmentPath(CX, CY, OUTER_R - 10, seg.startAngle, seg.endAngle);
+        const span = seg.endAngle - seg.startAngle;
+        const sparks = [
+          { r: 0.36, t: 0.3 }, { r: 0.52, t: 0.78 }, { r: 0.74, t: 0.18 },
+          { r: 0.84, t: 0.62 }, { r: 0.6, t: 0.45 },
+        ];
+        return (
+          <g key={`super-energy-${i}`} style={{ pointerEvents: 'none' }}>
+            <path className="spin-wheel-super-glow" d={d} fill="#ffffff" />
+            <path className="spin-wheel-super-edge" d={d} fill="none" stroke="#ffffff" strokeWidth="2.2" strokeDasharray="5 9" strokeLinejoin="round" />
+            {sparks.map((spark, sparkIndex) => {
+              const point = polarToCart(CX, CY, (OUTER_R - 10) * spark.r, seg.startAngle + span * spark.t);
+              return (
+                <circle
+                  key={sparkIndex}
+                  className="spin-wheel-super-spark"
+                  cx={point.x}
+                  cy={point.y}
+                  r={sparkIndex % 2 === 0 ? 1.8 : 1.3}
+                  fill="#ffffff"
+                  style={{ animationDelay: `${sparkIndex * 0.27}s` }}
+                />
+              );
+            })}
+          </g>
+        );
+      })}
 
       {/* Segment prize artwork */}
       {segments.map((seg, i) => {
         const iconR = OUTER_R * 0.67;
         const p = polarToCart(CX, CY, iconR, seg.centerAngle);
         const iconSize = seg.wheelSize === 'small' ? 25 : seg.wheelSize === 'large' ? 34 : 30;
+        if (seg.type === 'super') {
+          const r = 15;
+          const starPoints = (outer: number, inner: number) => Array.from({ length: 10 }, (_, point) => {
+            const radius = point % 2 === 0 ? outer : inner;
+            const angle = (point * 36 - 90) * DEG;
+            return `${(p.x + radius * Math.cos(angle)).toFixed(2)},${(p.y + radius * Math.sin(angle)).toFixed(2)}`;
+          }).join(' ');
+          // Faceted look: each arm is split into a lit and a shaded half.
+          const facets = Array.from({ length: 5 }, (_, arm) => {
+            const tipAngle = (arm * 72 - 90) * DEG;
+            const leftAngle = (arm * 72 - 126) * DEG;
+            const tip = `${(p.x + r * Math.cos(tipAngle)).toFixed(2)},${(p.y + r * Math.sin(tipAngle)).toFixed(2)}`;
+            const valley = `${(p.x + r * 0.45 * Math.cos(leftAngle)).toFixed(2)},${(p.y + r * 0.45 * Math.sin(leftAngle)).toFixed(2)}`;
+            return `${p.x.toFixed(2)},${p.y.toFixed(2)} ${valley} ${tip}`;
+          });
+          const orbit = polarToCart(p.x, p.y, r * 1.45, 0);
+          return (
+            <g key={`asset-${i}`} className="spin-wheel-super-emblem" style={{ pointerEvents: 'none' }}>
+              <g className="spin-wheel-super-rays" style={{ transformOrigin: `${p.x}px ${p.y}px` }}>
+                {Array.from({ length: 8 }, (_, ray) => {
+                  const a = (ray * 45) * DEG;
+                  const b = (ray * 45 + 12) * DEG;
+                  return (
+                    <polygon
+                      key={ray}
+                      points={`${p.x},${p.y} ${(p.x + r * 2.1 * Math.cos(a)).toFixed(2)},${(p.y + r * 2.1 * Math.sin(a)).toFixed(2)} ${(p.x + r * 2.1 * Math.cos(b)).toFixed(2)},${(p.y + r * 2.1 * Math.sin(b)).toFixed(2)}`}
+                      fill="url(#spin-wheel-super-ray-fill)"
+                    />
+                  );
+                })}
+              </g>
+              <circle className="spin-wheel-super-ring" cx={p.x} cy={p.y} r={r * 0.9} fill="none" stroke="#ffffff" strokeWidth="1.4" style={{ transformOrigin: `${p.x}px ${p.y}px` }} />
+              <g className="spin-wheel-super-star" style={{ transformOrigin: `${p.x}px ${p.y}px` }}>
+                <polygon points={starPoints(r, r * 0.45)} fill="url(#spin-wheel-super-star-fill)" stroke="#5b1a8c" strokeWidth="1.3" strokeLinejoin="round" />
+                {facets.map((facet, facetIndex) => (
+                  <polygon key={facetIndex} points={facet} fill="#ffffff" opacity="0.35" />
+                ))}
+                <circle cx={p.x - r * 0.18} cy={p.y - r * 0.22} r={r * 0.16} fill="#ffffff" opacity="0.9" />
+              </g>
+              <g className="spin-wheel-super-orbit" style={{ transformOrigin: `${p.x}px ${p.y}px` }}>
+                <circle cx={orbit.x} cy={orbit.y} r="1.9" fill="#ffffff" />
+              </g>
+            </g>
+          );
+        }
         return (
           <image
             key={`asset-${i}`}
@@ -169,6 +291,9 @@ function WheelSVG({
             fontSize="7.4"
             fontWeight="900"
             fill="#fff"
+            stroke={seg.type === 'super' ? '#3b0a57' : undefined}
+            strokeWidth={seg.type === 'super' ? 1.6 : undefined}
+            paintOrder={seg.type === 'super' ? 'stroke' : undefined}
             style={{ pointerEvents: 'none' }}
           >
             {lines.map((line, lineIndex) => (
@@ -219,7 +344,8 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
   const [error, setError] = useState<string | null>(null);
   const [showReward, setShowReward] = useState(false);
   const [winnerRevealPending, setWinnerRevealPending] = useState(false);
-  const [showMultiplierInfo, setShowMultiplierInfo] = useState(false);
+  const [lastAwards, setLastAwards] = useState<SpinAward[]>([]);
+  const [lastMultiplier, setLastMultiplier] = useState(1);
   const [showGiftOpening, setShowGiftOpening] = useState(false);
   const [giftRewards, setGiftRewards] = useState<GiftBoxRewardItem[]>([]);
   const [isOffline, setIsOffline] = useState(
@@ -397,6 +523,8 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
 
       const { prize, spinsRemaining, awardedRewards } = data;
       const resolvedGiftRewards = toGiftBoxRewards(awardedRewards);
+      setLastAwards(awardedRewards);
+      setLastMultiplier(multiplierOption.multiplier);
 
       const segment = wheelSegments.find(
         (c) => c.type === prize.type && c.value === prize.value && c.label === prize.label,
@@ -414,7 +542,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
         setEssenceBalance((current) => Math.max(0, current - multiplierOption.essenceCost));
         setSpinning(false);
 
-        triggerCompletionHaptic(prize.type === 'treasure_chest' || prize.type === 'mystery' || isIslandThreeJackpotPrize(prize) || selectedMultiplier > 1 ? 'strong' : 'medium', { channel: 'gamification', minIntervalMs: 300 });
+        triggerCompletionHaptic(prize.type === 'treasure_chest' || prize.type === 'mystery' || prize.type === 'super' || isIslandThreeJackpotPrize(prize) || selectedMultiplier > 1 ? 'strong' : 'medium', { channel: 'gamification', minIntervalMs: 300 });
 
         window.setTimeout(() => {
           setWinnerRevealPending(false);
@@ -448,21 +576,6 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
     setGiftRewards([]);
   }, []);
 
-  const affordableMultiplierOptions = useMemo(
-    () => SPIN_REWARD_MULTIPLIER_OPTIONS.filter((option) => option.essenceCost <= essenceBalance),
-    [essenceBalance],
-  );
-
-  const cycleMultiplier = () => {
-    if (hasIslandThreeJackpot || !canSpin || charging || spinning || affordableMultiplierOptions.length === 0) return;
-    const currentIndex = affordableMultiplierOptions.findIndex(
-      (option) => option.multiplier === selectedMultiplier,
-    );
-    const nextOption = affordableMultiplierOptions[(currentIndex + 1) % affordableMultiplierOptions.length];
-    setSelectedMultiplier(nextOption.multiplier);
-    triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 });
-  };
-
   /* ── Render ── */
 
   if (loading) {
@@ -494,6 +607,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
     || wonPrize?.type === 'mystery'
     || (wonPrize ? isIslandThreeJackpotPrize(wonPrize) : false);
   const isTreasureChest = wonPrize?.type === 'treasure_chest';
+  const isSuperSlice = wonPrize?.type === 'super';
   const isIslandThreeJackpot = wonPrize ? isIslandThreeJackpotPrize(wonPrize) : false;
 
   const rewardSubtitle = isDevPreview ? 'Developer preview only — no rewards or daily eligibility changed.' : wonPrize
@@ -501,6 +615,8 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
       ? 'Island 3 jackpot! 2,000 dice are now in your Island Run wallet.'
       : wonPrize.type === 'treasure_chest'
       ? 'Chest opened! Money + Essence + Dice added.'
+      : wonPrize.type === 'super'
+      ? 'Super Slice jackpot added to your wallet!'
       : wonPrize.type === 'mystery'
         ? 'Mystery revealed! Bonus reward added.'
         : wonPrize.type === 'game_tokens'
@@ -514,15 +630,13 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
     : selectedMultiplierOption;
   const canAffordSelectedMultiplier = essenceBalance >= effectiveMultiplierOption.essenceCost;
 
+  // The wheel explains itself; only problems and the one-off Island 3
+  // jackpot get a line under the title.
   const headerSubtitle = error
     ? 'We could not load the spin. Check your connection and retry.'
-    : canSpin
-      ? hasIslandThreeJackpot
-        ? 'Island 3 has charged one unforgettable jackpot spin.'
-        : 'Your spin is ready — give it a whirl!'
-      : wonPrize
-        ? 'Your daily reward is safely collected.'
-        : 'Complete habits to earn your next spin.';
+    : canSpin && hasIslandThreeJackpot
+      ? 'Island 3 has charged one unforgettable jackpot spin.'
+      : null;
 
   return (
     <div className="new-daily-spin-modal" onClick={onClose}>
@@ -540,12 +654,11 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
         </button>
 
         <header className="new-daily-spin-modal__header">
-          <img
-            className="new-daily-spin-modal__title-art"
-            src={`${DAILY_MOMENTUM_ASSET_ROOT}/title/daily-momentum-title-v2-transparent.png`}
-            alt="Daily Momentum"
-          />
-          <p className="new-daily-spin-modal__subtitle">{headerSubtitle}</p>
+          <h2 className="new-daily-spin-modal__title-text" aria-label="Lucky Spin">
+            <span>Lucky</span>
+            <span>Spin</span>
+          </h2>
+          {headerSubtitle ? <p className="new-daily-spin-modal__subtitle">{headerSubtitle}</p> : null}
           {isDevPreview&&<><p role="status">Developer rehearsal · no wallet payouts</p><button type="button" disabled={spinning||charging} onClick={()=>void loadSpinStatus()}>Reset test spin</button></>}
         </header>
 
@@ -588,24 +701,32 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
             <span aria-hidden="true">🎲</span>
           </div>
         ) : (
-          <div className="new-daily-spin-modal__multiplier-controls" aria-label="Reward multiplier controls">
-            <button
-              type="button"
-              className="new-daily-spin-modal__multiplier-orb"
-              onClick={cycleMultiplier}
-              disabled={!canSpin || charging || spinning}
-              aria-label={`Reward multiplier ×${selectedMultiplier}. Click to change.`}
-            >
-              ×{selectedMultiplier}
-            </button>
-            <button
-              type="button"
-              className="new-daily-spin-modal__multiplier-info-button"
-              onClick={() => setShowMultiplierInfo(true)}
-              aria-label="How reward multipliers work"
-            >
-              i
-            </button>
+          <div className="new-daily-spin-modal__boosts" role="radiogroup" aria-label="Reward boost">
+            {SPIN_REWARD_MULTIPLIER_OPTIONS.map((option) => {
+              const affordable = essenceBalance >= option.essenceCost;
+              const active = selectedMultiplier === option.multiplier;
+              return (
+                <button
+                  key={option.multiplier}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  className={`new-daily-spin-modal__boost${active ? ' is-active' : ''}${affordable ? '' : ' is-locked'}`}
+                  disabled={!canSpin || charging || spinning || !affordable}
+                  onClick={() => {
+                    setSelectedMultiplier(option.multiplier);
+                    triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 });
+                  }}
+                  aria-label={option.essenceCost === 0
+                    ? `Times ${option.multiplier}, free`
+                    : `Times ${option.multiplier}, costs ${option.essenceCost} money${affordable ? '' : ', not enough money'}`}
+                >
+                  <strong>×{option.multiplier}</strong>
+                  <span>{option.essenceCost === 0 ? 'Free' : `💰 ${option.essenceCost}`}</span>
+                </button>
+              );
+            })}
+            <small className="new-daily-spin-modal__boost-balance" aria-label={`${essenceBalance} money available`}>💰 {essenceBalance}</small>
           </div>
         )}
 
@@ -672,9 +793,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
             aria-label="Spin reward"
             onClick={() => setShowReward(false)}
           >
-            {isTreasureChest || isIslandThreeJackpot
-              ? <CelebrationFireworks variant="rapid" fit="contain" />
-              : null}
+            <CelebrationFireworks variant={isTreasureChest || isIslandThreeJackpot || isSuperSlice || lastMultiplier > 1 ? 'hero' : 'rapid'} fit="contain" />
             <div
               className={`new-daily-spin-modal__reward-card${
                 isSpecialPrize ? ' new-daily-spin-modal__reward-card--chest' : ''
@@ -687,18 +806,41 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
               <h3 className="new-daily-spin-modal__reward-title">
                 {isIslandThreeJackpot
                   ? 'ISLAND 3 JACKPOT!'
+                  : isSuperSlice
+                    ? '★ SUPER SLICE ★'
                   : wonPrize.type === 'mystery'
                     ? 'Mystery Revealed!'
                     : 'You won!'}
               </h3>
-              <div
-                className={`new-daily-spin-modal__reward-icon${
-                  isSpecialPrize ? ' new-daily-spin-modal__reward-icon--chest' : ''
-                }`}
-              >
-                {wonPrize.icon}
-              </div>
-              <p className="new-daily-spin-modal__reward-name">{wonPrize.label}</p>
+              {isSpecialPrize ? (
+                <>
+                  <div className="new-daily-spin-modal__reward-icon new-daily-spin-modal__reward-icon--chest">
+                    {wonPrize.icon}
+                  </div>
+                  <p className="new-daily-spin-modal__reward-name">{wonPrize.label}</p>
+                </>
+              ) : (
+                <div className="new-daily-spin-modal__reward-hero">
+                  <img
+                    className="new-daily-spin-modal__reward-hero-art"
+                    src={getPrizeIconAsset(lastAwards[0]?.currency ?? wonPrize.type)}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <strong className="new-daily-spin-modal__reward-amount" aria-label={`${lastAwards[0]?.amount ?? wonPrize.value} ${lastAwards[0]?.label ?? wonPrize.label}`}>
+                    +<SpinRewardCount value={lastAwards[0]?.amount ?? wonPrize.value} />
+                  </strong>
+                  <span className="new-daily-spin-modal__reward-unit">{lastAwards[0]?.label ?? wonPrize.label}</span>
+                  {lastAwards.length > 1 ? (
+                    <span className="new-daily-spin-modal__reward-extras">
+                      {lastAwards.slice(1).map((award) => (
+                        <span key={award.currency}>+{award.amount.toLocaleString()} {award.icon}</span>
+                      ))}
+                    </span>
+                  ) : null}
+                  {lastMultiplier > 1 ? <span className="new-daily-spin-modal__reward-boost">×{lastMultiplier} boost</span> : null}
+                </div>
+              )}
               <p className="new-daily-spin-modal__reward-subtitle">{rewardSubtitle}</p>
               <button
                 type="button"
@@ -754,67 +896,11 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
                   : hasIslandThreeJackpot
                     ? 'UNLEASH 2,000 DICE!'
                     : selectedMultiplier > 1
-                      ? `SPIN ×${selectedMultiplier}!`
+                      ? `SPIN ×${selectedMultiplier} · 💰${selectedMultiplierOption.essenceCost}`
                       : 'SPIN!'}
             </button>
           ) : null}
         </div>
-
-        {showMultiplierInfo && (
-          <div
-            className="new-daily-spin-modal__multiplier-info-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="daily-spin-multiplier-title"
-            onClick={() => setShowMultiplierInfo(false)}
-          >
-            <div
-              className="new-daily-spin-modal__multiplier-info-card"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <button
-                type="button"
-                className="new-daily-spin-modal__multiplier-info-close"
-                onClick={() => setShowMultiplierInfo(false)}
-                aria-label="Close multiplier information"
-              >
-                ✕
-              </button>
-              <span className="new-daily-spin-modal__multiplier-info-symbol" aria-hidden="true">×</span>
-              <h3 id="daily-spin-multiplier-title">Reward multiplier</h3>
-              <p>Choose a boost before spinning. It multiplies the prize you land on.</p>
-              <div className="new-daily-spin-modal__multiplier-balance">💰 {essenceBalance} available</div>
-              <div className="new-daily-spin-modal__multiplier-info-options">
-                {SPIN_REWARD_MULTIPLIER_OPTIONS.map((option) => {
-                  const affordable = essenceBalance >= option.essenceCost;
-                  return (
-                    <button
-                      key={option.multiplier}
-                      type="button"
-                      className={`new-daily-spin-modal__multiplier-info-option${selectedMultiplier === option.multiplier ? ' new-daily-spin-modal__multiplier-info-option--active' : ''}`}
-                      onClick={() => {
-                        setSelectedMultiplier(option.multiplier);
-                        triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 });
-                      }}
-                      disabled={!canSpin || charging || spinning || !affordable}
-                      aria-pressed={selectedMultiplier === option.multiplier}
-                    >
-                      <strong>×{option.multiplier}</strong>
-                      <span>{option.essenceCost === 0 ? 'Free' : `${option.essenceCost} money`}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                type="button"
-                className="new-daily-spin-modal__multiplier-done"
-                onClick={() => setShowMultiplierInfo(false)}
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        )}
 
         {showGiftOpening && wonPrize?.type === 'mystery' && (
           <div className="new-daily-spin-modal__gift-opening" role="presentation">

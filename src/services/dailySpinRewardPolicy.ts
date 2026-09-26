@@ -12,6 +12,25 @@ export const DAILY_SPIN_DICE_REWARD_AMOUNTS = {
 
 type RandomSource = () => number;
 
+/**
+ * Super Slice jackpots, weighted. Values are before the reward boost.
+ * Controller themes and other owned digital items can join this list once
+ * the game can grant owned themes.
+ */
+export const DAILY_SPIN_SUPER_SLICE_OPTIONS: ReadonlyArray<{ weight: number; awards: readonly SpinAward[] }> = [
+  { weight: 40, awards: [{ currency: 'dice', amount: 550, label: 'Dice', icon: '🎲' }] },
+  { weight: 28, awards: [{ currency: 'essence', amount: 400, label: 'Money', icon: '💰' }] },
+  {
+    weight: 20,
+    awards: [
+      { currency: 'dice', amount: 300, label: 'Dice', icon: '🎲' },
+      { currency: 'essence', amount: 200, label: 'Money', icon: '💰' },
+      { currency: 'shards', amount: 20, label: 'Essence', icon: '🟣' },
+    ],
+  },
+  { weight: 12, awards: [{ currency: 'dice', amount: 1000, label: 'Dice', icon: '🎲' }] },
+];
+
 function normalizeMultiplier(value: number): number {
   return Number.isFinite(value) ? Math.max(1, Math.floor(value)) : 1;
 }
@@ -68,6 +87,13 @@ export function resolveDailySpinAwards(
       ];
       const boundedRandom = Math.min(0.999999999, Math.max(0, random()));
       return [mysteryOptions[Math.floor(boundedRandom * mysteryOptions.length)]];
+    }
+    case 'super': {
+      const totalWeight = DAILY_SPIN_SUPER_SLICE_OPTIONS.reduce((sum, option) => sum + option.weight, 0);
+      let roll = Math.min(0.999999999, Math.max(0, random())) * totalWeight;
+      const option = DAILY_SPIN_SUPER_SLICE_OPTIONS.find((entry) => (roll -= entry.weight) < 0)
+        ?? DAILY_SPIN_SUPER_SLICE_OPTIONS[0];
+      return option.awards.map((award) => ({ ...award, amount: award.amount * multiplier }));
     }
     default:
       return [];
