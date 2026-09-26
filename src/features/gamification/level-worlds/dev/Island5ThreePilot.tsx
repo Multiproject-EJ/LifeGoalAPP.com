@@ -7315,6 +7315,14 @@ export default function Island5ThreePilot({
         : ISLAND_3D_BOARD_POV_IDLE_DELAY_MS
     );
     let ambientCameraStep = 0;
+    // Build-mode cinematic: the framed construction shot (set in applyPreset)
+    // drifts slowly around the landmark, pushes in as a level fills, and
+    // cranes up for each level reveal. A camera drag pauses it for a while.
+    let constructionShotBase: { target: THREE.Vector3; offset: THREE.Vector3 } | null = null;
+    let constructionCinematicStartedAt = 0;
+    let constructionCinematicPausedUntil = 0;
+    let constructionRevealStartedAt = Number.NEGATIVE_INFINITY;
+    let constructionRevealKey = '';
     let wasConstructionCameraLocked = Boolean(
       constructionPresentationRef.current?.active
       && constructionPresentationRef.current?.cameraLocked,
@@ -8054,6 +8062,8 @@ export default function Island5ThreePilot({
           position: target.clone().add(viewOffset).toArray() as [number, number, number],
           target: target.toArray() as [number, number, number],
         };
+        constructionShotBase = { target: target.clone(), offset: viewOffset.clone() };
+        constructionCinematicStartedAt = performance.now();
         canvas.dataset.constructionFraming = 'fit-true-size';
       }
       setActivePreset(id);
@@ -8875,6 +8885,7 @@ export default function Island5ThreePilot({
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const cancelTransition = () => {
+      constructionCinematicPausedUntil = performance.now() + 8000;
       transition = null;
       island15PalaceEntryActive = false;
       island15PalaceExitActive = false;
@@ -9137,6 +9148,9 @@ export default function Island5ThreePilot({
           : constructionCameraPresentation?.targetStopId;
         const snapInitialLockedConstructionFocus = Boolean(
           !wasConstructionCameraLocked
+          // The build cinematic is already framing this landmark; snapping
+          // back to the base shot would jolt the camera on every Hold.
+          && !(constructionShotBase && activeInspectionPreset === lockedPreset)
           && lockedPreset
           && ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === lockedPreset)
         );
@@ -10365,6 +10379,51 @@ export default function Island5ThreePilot({
         camera.position.copy(cactusCanyonBlastCameraPose.position);
         controls.target.copy(cactusCanyonBlastCameraPose.target);
         camera.lookAt(controls.target);
+      }
+      const constructionCinematic = constructionPresentationRef.current;
+      if (
+        constructionCinematic?.active
+        && constructionShotBase
+        && !transition
+        && !isReducedMotion
+        && !constructionCinematic.reducedMotion
+        && !isJungleExpedition
+        && !isCrystalGlacier
+        && now >= constructionCinematicPausedUntil
+        && !cactusCanyonBlastCameraPose && !jungleBuildupCameraPose && !jungleZenithCameraPose && !marinaArrivalCameraPose
+      ) {
+        const shotSeconds = Math.max(0, (now - constructionCinematicStartedAt) / 1000);
+        const revealKey = constructionCinematic.commissioning || constructionCinematic.completionCelebration
+          ? `${constructionCinematic.targetStopId}:${constructionCinematic.targetLevel}:${constructionCinematic.sequence}`
+          : '';
+        if (revealKey && revealKey !== constructionRevealKey) {
+          constructionRevealKey = revealKey;
+          constructionRevealStartedAt = now;
+        }
+        const revealAge = (now - constructionRevealStartedAt) / 1000;
+        const reveal = revealAge >= 0 && revealAge < 2.8 ? Math.sin((revealAge / 2.8) * Math.PI) : 0;
+        // Ease in so the first seconds of a shot never jump.
+        const ease = THREE.MathUtils.smoothstep(shotSeconds, 0, 1.6);
+        const sway = (Math.sin(shotSeconds * 0.23) * 0.2 + Math.sin(shotSeconds * 0.11 + 1.3) * 0.06) * ease;
+        const pushIn = 1 - 0.1 * THREE.MathUtils.smoothstep(presentedConstructionProgress, 0, 1) * ease;
+        const offset = constructionShotBase.offset.clone()
+          .applyAxisAngle(THREE.Object3D.DEFAULT_UP, sway)
+          .multiplyScalar(pushIn * (1 + 0.14 * reveal));
+        const craneAxis = new THREE.Vector3().crossVectors(offset, THREE.Object3D.DEFAULT_UP).normalize();
+        offset.applyAxisAngle(craneAxis, -0.2 * reveal);
+        const desiredTarget = constructionShotBase.target.clone();
+        desiredTarget.y += 0.06 * reveal * offset.length();
+        const follow = 1 - Math.exp(-frameDeltaSeconds * 3.2);
+        controls.target.lerp(desiredTarget, follow);
+        camera.position.lerp(desiredTarget.clone().add(offset), follow);
+        camera.lookAt(controls.target);
+        // The cinematic owns the build shot; no ambient POV nudge on top.
+        ambientCameraEligibleAt = Number.POSITIVE_INFINITY;
+        canvas.dataset.constructionCinematic = reveal > 0.01 ? 'reveal-crane' : 'drift';
+      } else if (!constructionCinematic?.active && constructionShotBase) {
+        constructionShotBase = null;
+        constructionRevealKey = '';
+        canvas.dataset.constructionCinematic = 'off';
       }
       if (jungleBuildupCameraPose) {
         transition = null;
