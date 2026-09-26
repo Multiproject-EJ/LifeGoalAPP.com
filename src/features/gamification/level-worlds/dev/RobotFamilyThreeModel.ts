@@ -2702,7 +2702,25 @@ function countTriangles(root: THREE.Object3D): number {
   return Math.round(triangles);
 }
 
-export function createRobotFamilyModel(options: { quality?: RobotQuality; showAddonRack?: boolean } = {}): RobotFamilyModel {
+export function createRobotFamilyModel(options: {
+  quality?: RobotQuality;
+  showAddonRack?: boolean;
+  /**
+   * Tiny fin point lights for showroom close-ups. A crew embedded in a larger
+   * scene should pass false: every added light changes the light count baked
+   * into every shader on screen, which recompiles the whole scene when the
+   * crew appears and adds per-pixel light work everywhere while it is shown.
+   */
+  fixtureLights?: boolean;
+  /**
+   * Refractive (transmission) glass for showroom close-ups. Any visible
+   * transmissive material makes Three.js re-render the whole opaque scene
+   * into an offscreen buffer every frame and compile a second shader variant
+   * of every material on screen. A crew embedded in a larger scene should pass
+   * false; its domes and fins stay see-through via opacity.
+   */
+  transmission?: boolean;
+} = {}): RobotFamilyModel {
   const quality = options.quality ?? 'high';
   const materials = createMaterials();
   const root = namePart(new THREE.Group(), 'habitgame-robot-family', 'shared', 'family-root');
@@ -2714,6 +2732,23 @@ export function createRobotFamilyModel(options: { quality?: RobotQuality; showAd
   manager.root.position.x = 0;
   mini.root.position.x = 3.05;
   root.add(heavy.root, manager.root, mini.root);
+  if (options.fixtureLights === false) {
+    const fixtureLights: THREE.Light[] = [];
+    root.traverse((entry) => { if (entry instanceof THREE.Light) fixtureLights.push(entry); });
+    fixtureLights.forEach((light) => light.removeFromParent());
+  }
+  if (options.transmission === false) {
+    // createMaterials() is per model, so these materials are this crew's own.
+    root.traverse((entry) => {
+      if (!(entry instanceof THREE.Mesh)) return;
+      (Array.isArray(entry.material) ? entry.material : [entry.material]).forEach((material) => {
+        if (material instanceof THREE.MeshPhysicalMaterial && material.transmission > 0) {
+          material.transmission = 0;
+          material.needsUpdate = true;
+        }
+      });
+    });
+  }
   const rigs: Record<RobotRole, MemberRig> = { 'heavy-worker': heavy, 'project-manager': manager, 'mini-artist': mini };
 
   const addons = createAddonLibrary(quality, materials);

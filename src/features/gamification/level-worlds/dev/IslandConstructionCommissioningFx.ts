@@ -99,8 +99,37 @@ export function createIslandConstructionCommissioningFx(): IslandConstructionCom
   sparkles.frustumCulled = false;
   root.add(sparkles);
 
-  const flash = new THREE.PointLight(0xffc83d, 0, 8, 2);
+  // A soft additive glow rather than a PointLight. Adding a light changes the
+  // light count compiled into every shader in the island scene, so a light
+  // that switches on for each level-complete beat recompiled the whole island
+  // twice per level. This glow costs one draw call and no recompiles.
+  const glowCanvas = document.createElement('canvas');
+  glowCanvas.width = 64;
+  glowCanvas.height = 64;
+  const glowContext = glowCanvas.getContext('2d');
+  if (glowContext) {
+    const gradient = glowContext.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, 'rgba(255, 236, 170, 1)');
+    gradient.addColorStop(0.35, 'rgba(255, 200, 61, 0.55)');
+    gradient.addColorStop(1, 'rgba(255, 200, 61, 0)');
+    glowContext.fillStyle = gradient;
+    glowContext.fillRect(0, 0, 64, 64);
+  }
+  const glowTexture = new THREE.CanvasTexture(glowCanvas);
+  glowTexture.colorSpace = THREE.SRGBColorSpace;
+  const glowMaterial = new THREE.SpriteMaterial({
+    map: glowTexture,
+    color: 0xffc83d,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    depthTest: false,
+    blending: THREE.AdditiveBlending,
+    toneMapped: false,
+  });
+  const flash = new THREE.Sprite(glowMaterial);
   flash.name = 'ISLAND_RUN_CONSTRUCTION_COMMISSIONING_FLASH';
+  flash.renderOrder = 5;
   root.add(flash);
 
   let targetRadius = 1;
@@ -113,7 +142,8 @@ export function createIslandConstructionCommissioningFx(): IslandConstructionCom
     targetRadius = Math.max(0.25, radius);
     targetHeight = Math.max(0.5, height);
     flash.position.set(0, targetHeight * 0.52, 0);
-    flash.distance = Math.max(4, targetRadius * 4.2, targetHeight * 1.9);
+    const glowSize = Math.max(targetRadius * 3.4, targetHeight * 1.7);
+    flash.scale.set(glowSize, glowSize, 1);
     material.size = THREE.MathUtils.clamp(targetRadius * 0.055, 0.07, 0.18);
   };
 
@@ -135,7 +165,7 @@ export function createIslandConstructionCommissioningFx(): IslandConstructionCom
 
     const beat = resolveIslandConstructionCommissioningBeat(elapsedSeconds - startedAtSeconds, reducedMotion);
     root.visible = beat.active && beat.flashIntensity > 0.001;
-    flash.intensity = beat.flashIntensity * Math.max(1.8, targetRadius * 1.4);
+    glowMaterial.opacity = THREE.MathUtils.clamp(beat.flashIntensity * 0.85, 0, 0.85);
 
     if (reducedMotion || !beat.active) {
       sparkles.visible = false;
@@ -159,7 +189,7 @@ export function createIslandConstructionCommissioningFx(): IslandConstructionCom
     if (!beat.active) {
       startedAtSeconds = null;
       root.visible = false;
-      flash.intensity = 0;
+      glowMaterial.opacity = 0;
     }
     root.userData.commissioningBeat = beat;
     return beat;
@@ -167,13 +197,15 @@ export function createIslandConstructionCommissioningFx(): IslandConstructionCom
 
   return {
     root,
-    metrics: { triangles: 0, drawCalls: 1 },
+    metrics: { triangles: 2, drawCalls: 2 },
     setTargetEnvelope,
     trigger,
     update,
     dispose() {
       geometry.dispose();
       material.dispose();
+      glowMaterial.dispose();
+      glowTexture.dispose();
     },
   };
 }
