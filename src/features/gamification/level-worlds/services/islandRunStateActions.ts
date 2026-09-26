@@ -2,6 +2,7 @@ import { resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolv
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { resolveIslandRunRestorationDiceReward } from './islandRunRestorationReward';
 import { applyLandmarkCompletionReward } from './islandRunLandmarkReward';
+import { arenaStadiumComplete, currentArenaStadium } from './arenaStadium';
 export { ISLAND_RUN_FULL_RESTORATION_DICE_REWARD } from './islandRunRestorationReward';
 /**
  * islandRunStateActions — pure action functions that mutate Island Run
@@ -4361,6 +4362,9 @@ export function syncCompletedStopsForIsland(options: SyncCompletedStopsForIsland
   const islandKey = String(islandNumber);
   const currentStops = normalizeCompletedStopsForSync(current.completedStopsByIsland?.[islandKey] ?? []);
   const normalizedCompletedStops = normalizeCompletedStopsForSync(completedStops);
+  if (islandNumber === current.currentIslandNumber && normalizedCompletedStops.includes('mystery')
+    && !arenaStadiumComplete(current) && resolveIslandRunFeatureAccess(current).ordinaryEvents
+    && !currentArenaStadium(current)?.completedAtMs) return current;
   if (areStringArraysEqual(currentStops, normalizedCompletedStops)) {
     return current;
   }
@@ -4470,6 +4474,8 @@ export function applyStopObjectiveProgress(options: ApplyStopObjectiveProgressOp
     triggerSource,
   } = options;
   const current = getIslandRunStateSnapshot(session);
+  if (stopStatesByIndex[2]?.objectiveComplete && !arenaStadiumComplete(current)
+    && resolveIslandRunFeatureAccess(current).ordinaryEvents && !currentArenaStadium(current)?.completedAtMs) return current;
   const normalizedStopStates = stopStatesByIndex.map((entry, index) => ({
     ...entry,
     accessUnlocked: index === 0 || entry.accessUnlocked === true || entry.objectiveComplete === true,
@@ -4514,6 +4520,9 @@ export interface PostponeIslandRunStopResult {
 export function postponeIslandRunStop(options: PostponeIslandRunStopOptions): PostponeIslandRunStopResult {
   const { session, client, stopIndex, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  if (stopIndex === 2 && resolveIslandRunFeatureAccess(current).ordinaryEvents) {
+    return { ok: false, changed: false, record: current, reason: 'not_postponable', openIncompleteCount: 0 };
+  }
   // Older saves can have completion credit in completedStopsByIsland while the
   // contract-v2 objective entry is still false. Reconcile the same source the
   // renderer uses so a visible "Later" action cannot be rejected as inaccessible.

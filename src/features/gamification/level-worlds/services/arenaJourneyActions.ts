@@ -7,6 +7,7 @@ import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { resolveOpeningGamesCeremony } from './islandRunOpeningGames';
 import { ARENA_JOURNEY_KEY, arenaJourney, arenaIntroductionAvailable, canCompareArenaGames, arenaComparisonKey } from './arenaJourney';
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
+import { arenaStadiumVisitKey } from './arenaStadium';
 
 /** Derive genuine play from canonical settlements, never the bounded launch history. */
 export function resolveArenaJourney(state: IslandRunGameStateRecord) {
@@ -43,18 +44,25 @@ export function applyArenaJourneyAction(options: {
       next.introduced[command.gameId] ??= now;
     } else if (command.kind === 'begin-signal') {
       if (!next.introduced.signal_path || !state.activeTimedEvent || state.activeTimedEvent.eventId !== command.eventId) return null;
-      const resume = next.signalAttempt?.island === island && next.signalAttempt.eventId === command.eventId;
+      const visitKey = arenaStadiumVisitKey(state);
+      const resume = next.signalAttempt?.island === island && next.signalAttempt.eventId === command.eventId
+        && next.signalAttempt.visitKey === visitKey;
       if (!resume && (tickets[command.eventId] ?? 0) < 1) return null;
       attemptId = resume ? next.signalAttempt!.id : crypto.randomUUID();
       if (!resume) tickets = { ...tickets, [command.eventId]: tickets[command.eventId]! - 1 };
-      next.signalAttempt = { id: attemptId, island, eventId: command.eventId };
+      next.signalAttempt = { id: attemptId, island, eventId: command.eventId, visitKey };
     } else if (command.kind === 'settle-signal') {
       const attempt = next.signalAttempt, report = command.result.arenaPerformance;
-      if (!attempt || attempt.id !== command.attemptId || attempt.island !== island) return null;
+      if (!attempt || attempt.id !== command.attemptId || attempt.island !== island
+        || attempt.visitKey !== arenaStadiumVisitKey(state)) return null;
       next.signalAttempt = null;
       if (command.result.completed && report?.gameId === 'signal_path'
         && [report.durationMs, report.rawScore, report.mastery, report.mistakes, report.hintsUsed].every(Number.isFinite)
-        && report.durationMs >= 0) next.played.signal_path ??= now;
+        && report.durationMs >= 0) {
+        next.played.signal_path ??= now;
+        if (next.stadium?.key === attempt.visitKey && next.stadium.attempt?.gameId === 'signal_path'
+          && next.stadium.attempt.eventId === attempt.eventId) next.stadium.playedAtMs ??= now;
+      }
     } else {
       if (!canCompareArenaGames(command.pair, island, next) || !command.pair.includes(command.winner)) return null;
       next.comparisons[arenaComparisonKey(...command.pair)] = { winner: command.winner, at: now };

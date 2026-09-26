@@ -5,7 +5,7 @@
 .arena-journey-lab>div{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:6px 0}
 .arena-journey-lab label{display:flex;gap:8px;align-items:center;font-size:12px}.arena-journey-lab input{width:22px;height:22px}
 .arena-journey-lab button{padding:8px;min-height:44px}.arena-journey-lab button:disabled{opacity:.35}
-.arena-journey-overlay{position:fixed;inset:0;z-index:9800;display:grid;place-items:center;padding:16px;background:#030b16d9;backdrop-filter:blur(12px);overflow:auto;color:#eff9ff}
+.arena-journey-overlay{position:fixed;inset:0;z-index:14000;display:grid;place-items:center;padding:16px;background:#030b16d9;backdrop-filter:blur(12px);overflow:auto;color:#eff9ff}
 .arena-journey-dialog{width:min(760px,100%);max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #8ac6e04d;border-radius:26px;padding:28px 18px 14px;background:radial-gradient(ellipse at top,#18354c,#071422 70%);text-align:center;box-shadow:0 25px 90px #0009}
 .arena-journey-eyebrow{text-transform:uppercase;letter-spacing:.2em;font-size:10px;color:#81c7da;margin:0 0 12px}
 .arena-journey-dialog h2{font-size:clamp(23px,4vw,34px);line-height:1.15;margin:0;color:#f2faff}

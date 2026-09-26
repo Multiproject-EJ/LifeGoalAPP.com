@@ -466,6 +466,9 @@ import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { ArenaJourneyControls } from './ArenaJourneyControls';
+import { ArenaStadiumActivity } from './ArenaStadiumActivity';
+import { applyArenaStadiumAction } from '../services/arenaStadiumActions';
+import { arenaStadiumBlocksRoll, arenaStadiumEnterable, arenaStadiumVisitKey } from '../services/arenaStadium';
 import { introducedArenaGames, canPreviewArenaDemo } from '../services/arenaJourney';
 import { applyArenaJourneyAction, resolveArenaJourney } from '../services/arenaJourneyActions';
 import {
@@ -6498,9 +6501,16 @@ export function IslandRunBoardPrototype({
   // to finish the in-modal flow (which always offers a completing path) so the
   // landmark is never left visited-but-incomplete. Eggs/Hatchery are excluded by
   // design (they incubate over a long time). Update this list to widen the rule.
-  const isActiveBehaviorStopNonDismissable = (activeStopId === 'habit' || activeStopId === 'wisdom')
+  const isActiveBehaviorStopNonDismissable = (activeStopId === 'habit' || activeStopId === 'wisdom'
+      || (activeStopId === 'mystery' && featureAccess.ordinaryEvents))
     && ['active', 'accessible', 'postponed'].includes(stopStateMap.get(activeStopId) ?? 'active');
   nonDismissableActiveStopRef.current = isActiveBehaviorStopNonDismissable;
+
+  // Resume a persisted stadium obligation after interruption. No tile-index authority.
+  useEffect(() => {
+    if (hasHydratedRuntimeState && !activeStopId && !activeLaunchedMinigameId && !isRolling
+      && arenaStadiumBlocksRoll(__storeState)) setActiveStopId('mystery');
+  }, [hasHydratedRuntimeState, activeStopId, activeLaunchedMinigameId, isRolling, __storeState]);
 
   useEffect(() => {
     if (!requiredDoorStopId) return;
@@ -8432,6 +8442,9 @@ export function IslandRunBoardPrototype({
       setIsRolling(false);
       if (rollResult.status === 'insufficient_dice') {
         openOutOfDicePurchasePrompt('roll_attempt');
+      } else if (rollResult.status === 'arena_activity_required') {
+        setActiveStopId('mystery');
+        setLandingText('Finish your stadium round and any waiting comparison before rolling again.');
       } else if (rollResult.status === 'tutorial_order_required') {
         setLandingText('Bip! Read the incoming Central Command message first.');
       } else {
@@ -11055,6 +11068,8 @@ export function IslandRunBoardPrototype({
   };
 
   const handleLaunchArenaGame = async (gameId: ArenaGameId) => {
+    const launchVisitKey = arenaStadiumVisitKey(getIslandRunStateSnapshot(session));
+    const launchPreferences = activeStopId === 'mystery' ? { ...arenaPreferences, disabledEventIds: [] } : arenaPreferences;
     if (!canLaunchIntroducedArenaGame(gameId)) {
       setLandingText('Meet this game on its introduction island before playing.');
       return;
@@ -11066,6 +11081,15 @@ export function IslandRunBoardPrototype({
       return;
     }
     if (!resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).ordinaryEvents) { if (islandNumber === 2) setShowOpeningGamesCeremony(true); return; }
+    if (activeStopId === 'mystery') {
+      const current = getIslandRunStateSnapshot(session);
+      if (arenaStadiumEnterable(current)) {
+        const started = await applyArenaStadiumAction({ session, client,
+          expectedVisitKey: arenaStadiumVisitKey(current), command: { kind: 'play', gameId, eventId: entryEventId } }).catch(() => null);
+        if (!started || arenaLaunchOwnerRef.current !== session.user.id
+          || arenaStadiumVisitKey(getIslandRunStateSnapshot(session)) !== arenaStadiumVisitKey(current)) return;
+      }
+    }
     if (gameId === 'crystal_miners') {
       const miningEvent = effectiveActiveTimedEvent ?? activeTimedEvent;
       if (!miningEvent || !isCanonicalEventId(miningEvent.eventType)) {
@@ -11077,7 +11101,7 @@ export function IslandRunBoardPrototype({
         setLandingText('Finish this roll, then enter the crystal mine.');
         return;
       }
-      const pace = resolveArenaSessionPace(arenaPreferences, gameId, [...introducedArenaGameIds, ...enabledArenaDemos]);
+      const pace = resolveArenaSessionPace(launchPreferences, gameId, [...introducedArenaGameIds, ...enabledArenaDemos]);
       if (!pace) { setShowArenaPreferences(true); return; }
       registerAllMinigameManifests();
       setActiveLaunchedMinigameId(gameId);
@@ -11085,6 +11109,7 @@ export function IslandRunBoardPrototype({
       const miningBridge=createCrystalMinersBridge({session,client,eventId:miningEvent.eventId});
       setActiveLaunchedMinigameConfig({
         source: 'timed_event', mode: 'crystal_miners', arenaTimerManagedByGame: true,
+        arenaLaunchVisitKey: launchVisitKey,
         inspectEnabled: isAdmin || (import.meta.env.DEV && isDevModeEnabled),
         bridge: miningBridge,
         onError: (error:Error)=>miningBridge.reportError(error,'load'),
@@ -11119,7 +11144,7 @@ export function IslandRunBoardPrototype({
         setLandingText('Arena choice saved. Finish this roll, then open the Arena again.');
         return;
       }
-      const arenaPace = resolveArenaSessionPace(arenaPreferences, gameId, [...introducedArenaGameIds, ...enabledArenaDemos]);
+      const arenaPace = resolveArenaSessionPace(launchPreferences, gameId, [...introducedArenaGameIds, ...enabledArenaDemos]);
       if (!arenaPace) {
         setLandingText('This Arena game is paused in your rotation.');
         setShowArenaPreferences(true);
@@ -11154,6 +11179,7 @@ export function IslandRunBoardPrototype({
       setActiveLaunchedMinigameConfig({
         source: 'timed_event',
         mode: 'arena_exhibition',
+        arenaLaunchVisitKey: launchVisitKey,
         activeEventId: effectiveActiveTimedEvent.eventId,
         arenaSessionPace: arenaPace,
         arenaSessionSeconds: getArenaSessionSeconds(arenaPace),
@@ -11196,7 +11222,7 @@ export function IslandRunBoardPrototype({
         playIslandRunSound('market_insufficient_coins');
         return;
       }
-      const arenaPace = resolveArenaSessionPace(arenaPreferences, gameId, [...introducedArenaGameIds, ...enabledArenaDemos]);
+      const arenaPace = resolveArenaSessionPace(launchPreferences, gameId, [...introducedArenaGameIds, ...enabledArenaDemos]);
       if (!arenaPace) {
         setLandingText('Journey Disc Arena is paused in your Arena rotation.');
         setShowArenaPreferences(true);
@@ -11209,6 +11235,7 @@ export function IslandRunBoardPrototype({
       setActiveLaunchedMinigameConfig({
         source: 'timed_event',
         mode: 'journey_disc_arena',
+        arenaLaunchVisitKey: launchVisitKey,
         activeEventId: recordEventId,
         initialTickets: activeEventTickets,
         initialProgress: runtimeStateRef.current.journeyDiscArenaProgressByEvent?.[recordEventId] ?? null,
@@ -12221,6 +12248,8 @@ export function IslandRunBoardPrototype({
 
   const handleCompleteActiveStop = (successMessage?: string) => {
     if (!activeStopId) return;
+    // Ordinary stadium completion belongs to the receipt-checked, atomic action.
+    if (activeStopId === 'mystery' && resolveIslandRunFeatureAccess(getIslandRunStateSnapshot(session)).ordinaryEvents) return;
     const activeStopIndex = islandStopPlan.findIndex((stop) => stop.stopId === activeStopId);
     const requiresTicketPayment = doesStopRequireTicketPayment(activeStopId);
     const requiredTicketCost = requiresTicketPayment && activeStopIndex > 0
@@ -17240,7 +17269,7 @@ export function IslandRunBoardPrototype({
           return <IslandRunArenaOrientationModal key={`${cycleIndex}:${islandNumber}`} session={session} client={client}
             onClose={() => setActiveStopId(null)} />;
         }
-        return (
+        const stopModal = (
         <div className={`island-run-overlay-root island-stop-modal-backdrop${isFocusedBehaviorEncounter ? ' island-stop-modal-backdrop--world-visible' : ''}`} role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy${isFocusedBehaviorEncounter ? ' island-stop-modal--behavior-focus' : ''}`} role="dialog" aria-modal="true" aria-label={activeStop.title}>
             {!isFocusedBehaviorEncounter ? <div className="island-stop-modal__header-row">
@@ -17554,7 +17583,7 @@ export function IslandRunBoardPrototype({
                 ) : arenaBoostStatus === 'no_active_event' ? (
                   <>
                     <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
-                    <p>No live event now. Finish the quick orientation to unlock Wisdom.</p>
+                    <p>{featureAccess.ordinaryEvents ? 'The event channel is reconnecting. Your stadium activity remains saved.' : 'Finish the quick orientation to unlock Wisdom.'}</p>
                   </>
                 ) : (
                   <>
@@ -17568,7 +17597,7 @@ export function IslandRunBoardPrototype({
                     <strong>Orientation</strong>
                   </div>
                 ) : null}
-                {arenaBoostStatus === 'no_active_event' ? (
+                {!featureAccess.ordinaryEvents && arenaBoostStatus === 'no_active_event' ? (
                   <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
                     <button
                       type="button"
@@ -17581,7 +17610,22 @@ export function IslandRunBoardPrototype({
                       Finish orientation
                     </button>
                   </div>
-                ) : effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType) ? (
+                ) : featureAccess.ordinaryEvents ? (
+                  <ArenaStadiumActivity key={`${session.user.id}:${arenaStadiumVisitKey(__storeState)}`}
+                    session={session} client={client} gameOpen={!!activeLaunchedMinigameId}
+                    onComplete={() => {
+                      if (arenaLaunchOwnerRef.current !== session.user.id
+                        || arenaStadiumVisitKey(getIslandRunStateSnapshot(session)) !== arenaStadiumVisitKey(__storeState)) return;
+                      setArenaSoftSaveValueMomentReached(true);
+                      setLandingText('Stadium activity complete — your round and any required comparisons are saved.');
+                      setActiveStopId(null);
+                    }}
+                    onEarnTickets={() => {
+                      setRequiredDoorStopId(null);
+                      setActiveStopId(null);
+                      setLandingText('Earn event tickets on the board, then return to finish the stadium.');
+                    }}>
+                  {effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType) ? (
                   <IslandRunArenaChoice
                     key={session.user.id}
                     allowedGameIds={introducedArenaGameIds}
@@ -17589,7 +17633,7 @@ export function IslandRunBoardPrototype({
                     islandNumber={islandNumber}
                     activeEventId={effectiveActiveTimedEvent.eventType}
                     activeEventRuntimeId={effectiveActiveTimedEvent.eventId}
-                    preferences={arenaPreferences}
+                    preferences={{ ...arenaPreferences, disabledEventIds: [] }}
                     tickets={activeEventTickets}
                     activeEventName={activeEventSurfaceMeta?.displayName ?? 'Active event'}
                     activeEventIcon={activeEventSurfaceMeta?.icon ?? '✦'}
@@ -17600,17 +17644,11 @@ export function IslandRunBoardPrototype({
                     nextRewardLabel={nextRewardKind.replace(/_/g, ' ')}
                     onLaunch={handleLaunchArenaGame}
                     onTune={openRewardDetailsModal}
-                  />
+                  />) : <p role="status">Waiting for the shared event channel.</p>}
+                  </ArenaStadiumActivity>
+                ) : featureAccess.inauguralRound || (featureAccess.gradual && islandNumber === 2) ? (
+                  <button type="button" onClick={() => setShowOpeningGamesCeremony(true)}>Join the opening games</button>
                 ) : null}
-                <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                    onClick={handleComeBackLaterForActiveStop}
-                  >
-                    Later
-                  </button>
-                </div>
                 <div className="island-event-arena-card__outcome" aria-label="Finish one Arena challenge to unlock Wisdom. Live games also add event-bar progress.">
                   <span><b aria-hidden="true">🎪</b> Finish</span>
                   <i aria-hidden="true">→</i>
@@ -17918,7 +17956,7 @@ export function IslandRunBoardPrototype({
               {isActiveBehaviorStopNonDismissable ? (
                 <p className="island-stop-modal__locked-notice" role="status">
                   <span aria-hidden="true">📝</span>{' '}
-                  Finish this landmark to continue — answer the prompt{activeStop.stopId === 'habit' ? ' (or tap “Skip for now”)' : ''} above.
+                  {activeStop.stopId === 'mystery' ? 'Finish a stadium round and any waiting game comparison to continue.' : <>Finish this landmark to continue — answer the prompt{activeStop.stopId === 'habit' ? ' (or tap “Skip for now”)' : ''} above.</>}
                 </p>
               ) : (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setActiveStopId(null)}>
@@ -17929,6 +17967,8 @@ export function IslandRunBoardPrototype({
           </section>
         </div>
         );
+        return activeStop.stopId === 'mystery' && featureAccess.ordinaryEvents
+          ? createPortal(stopModal, document.body) : stopModal;
       })()}
 
       {activeVaultCasinoPlay && typeof document !== 'undefined' ? createPortal((
@@ -20297,23 +20337,38 @@ export function IslandRunBoardPrototype({
           setLandingText('✨ The First Games are open! Your reward bar is here. Tap First game for your free guided round.');
         }} />
       ) : null}
-      {activeLaunchedMinigameId && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9000, overflow: 'hidden' }}>
+      {activeLaunchedMinigameId && createPortal((
+        <div style={{ position: 'fixed', inset: 0, zIndex: 13000, overflow: 'hidden' }}>
           <IslandRunMinigameLauncher
             minigameId={activeLaunchedMinigameId}
             islandNumber={islandNumber}
             ticketBudget={activeLaunchedMinigameSource === 'timed_event' ? activeEventTickets : undefined}
             controllerInput={activeLaunchedMinigameId === 'shooter_blitz' ? shooterControllerInput : undefined}
             launchConfig={activeLaunchedMinigameConfig}
-            onComplete={(result) => {
+            onComplete={async (result) => {
+              if (arenaLaunchOwnerRef.current !== session.user.id
+                || (activeLaunchedMinigameConfig?.arenaLaunchVisitKey
+                  && activeLaunchedMinigameConfig.arenaLaunchVisitKey !== arenaStadiumVisitKey(getIslandRunStateSnapshot(session)))) return;
               const signalAttempt = activeLaunchedMinigameConfig?.arenaJourneyAttemptId;
               if (activeLaunchedMinigameId === 'signal_path' && typeof signalAttempt === 'string') {
-                void applyArenaJourneyAction({ session, client,
+                const settled = await applyArenaJourneyAction({ session, client,
                   expectedIsland: Number(activeLaunchedMinigameConfig?.arenaJourneyIsland),
                   command: { kind: 'settle-signal', attemptId: signalAttempt, result } }).catch(() => {
                     setLandingText('Your comparison history could not be saved. No extra reward was granted.');
+                    return null;
                   });
+                if (!settled) {
+                  if (arenaLaunchOwnerRef.current === session.user.id) {
+                    setActiveLaunchedMinigameId(null);
+                    setActiveLaunchedMinigameSource(null);
+                    setActiveLaunchedMinigameConfig(undefined);
+                  }
+                  return;
+                }
               }
+              if (arenaLaunchOwnerRef.current !== session.user.id
+                || (activeLaunchedMinigameConfig?.arenaLaunchVisitKey
+                  && activeLaunchedMinigameConfig.arenaLaunchVisitKey !== arenaStadiumVisitKey(getIslandRunStateSnapshot(session)))) return;
               if (activeLaunchedMinigameSource === 'boss_trial' && result.completed) {
                 handleResolveBossTrial();
                 setBossTrialPhase('success');
@@ -20346,7 +20401,10 @@ export function IslandRunBoardPrototype({
                   runContractV2RewardBarClaimCascade({ state: nextRewardBarState });
                 }
               }
-              if (
+              if (activeStopId === 'mystery' && featureAccess.ordinaryEvents) {
+                // Round rewards use their existing event settlement above.
+                // Stadium credit/rewards are committed once by ArenaStadiumActivity.
+              } else if (
                 activeStopId === 'mystery'
                 && activeLaunchedMinigameId
                 && shouldResolveEventArenaStopOnMinigameComplete({
@@ -20403,7 +20461,7 @@ export function IslandRunBoardPrototype({
             }}
           />
         </div>
-      )}
+      ), document.body)}
 
       {showJourneyDiscConcourseInvitation && typeof document !== 'undefined' ? createPortal((
         <div

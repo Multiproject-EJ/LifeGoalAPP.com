@@ -17,11 +17,12 @@ const introductionCopy: Partial<Record<ArenaGameId, string>> = {
 };
 
 /** Presentation-only; the owning controls/action revalidate both receipts on every vote. */
-export function ArenaJourneyDialog({ games, comparison, busy, error, onChoose, onClose }: {
+export function ArenaJourneyDialog({ games, comparison, busy, error, onChoose, onClose, required = false }: {
   games: readonly ArenaGameId[]; comparison: boolean; busy: boolean; error: string | null;
-  onChoose: (id: ArenaGameId) => void; onClose: () => void;
+  onChoose: (id: ArenaGameId) => void; onClose: () => void; required?: boolean;
 }) {
-  const focus = useVaultModalFocusTrap<HTMLDivElement>(() => { if (!busy) onClose(); });
+  const mustAnswer = required || comparison;
+  const focus = useVaultModalFocusTrap<HTMLDivElement>(() => { if (!busy && !mustAnswer) onClose(); });
   useEffect(() => lockFullscreenPageScroll({ root: true }), []);
   return createPortal(<div className="arena-journey-overlay" ref={focus} tabIndex={-1}>
     <section className="arena-journey-dialog" role="dialog" aria-modal="true" aria-labelledby="arena-journey-title">
@@ -48,7 +49,8 @@ export function ArenaJourneyDialog({ games, comparison, busy, error, onChoose, o
         })}
       </div>
       {error && <p role="alert">{error}</p>}
-      <button type="button" className="arena-journey-skip" onClick={onClose} disabled={busy}>{busy ? 'Saving…' : comparison ? 'Skip for now' : 'Later'}</button>
+      {mustAnswer ? <p className="arena-journey-subtitle" role="status">{busy ? 'Saving…' : comparison ? 'Choose a game to continue.' : 'Meet this game to continue to the stadium challenge.'}</p>
+        : <button type="button" className="arena-journey-skip" onClick={onClose} disabled={busy}>Later</button>}
     </section>
   </div>, document.body);
 }
