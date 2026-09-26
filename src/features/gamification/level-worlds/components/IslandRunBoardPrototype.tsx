@@ -3407,6 +3407,9 @@ export function IslandRunBoardPrototype({
   const [isIslandClearCelebrationDeparting, setIsIslandClearCelebrationDeparting] = useState(false);
   // Claim appears once the title and rewards have landed (~3 s).
   const [isIslandClearClaimReady, setIsIslandClearClaimReady] = useState(false);
+  // A snapshot of the island (taken by the 3D scene, which then pauses) is
+  // the celebration backdrop, animated with compositor-only CSS.
+  const [islandClearBackdropUrl, setIslandClearBackdropUrl] = useState<string | null>(null);
   const [isIslandClearRewardClaimed, setIsIslandClearRewardClaimed] = useState(false);
   const [islandClearRewardPulseKey, setIslandClearRewardPulseKey] = useState(0);
   const [islandClearStats, setIslandClearStats] = useState<{
@@ -11785,6 +11788,7 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     if (!showIslandClearCelebration) {
       setIsIslandClearClaimReady(false);
+      setIslandClearBackdropUrl(null);
       return undefined;
     }
     const reduced = typeof window !== 'undefined'
@@ -16300,6 +16304,7 @@ export function IslandRunBoardPrototype({
                 }}
                 firstArrivalActive={firstArrivalActive}
                 celebrationOrbit={showIslandClearCelebration && !isIslandClearCelebrationDeparting}
+                onCelebrationSnapshot={setIslandClearBackdropUrl}
                 firstArrivalSkip={firstArrivalSkip}
                 onFirstArrivalComplete={finishFirstArrival}
                 onFirstArrivalBeat={setFirstArrivalBeat}
@@ -18774,6 +18779,9 @@ export function IslandRunBoardPrototype({
             aria-hidden={islandNarrativeOpeningFlow.activeDialogue?.beatId === 'I001-B30' ? true : undefined}
             aria-label="Island completion celebration"
           >
+            {islandClearBackdropUrl ? (
+              <img className="island-clear-celebration__island" src={islandClearBackdropUrl} alt="" aria-hidden="true" />
+            ) : null}
             <CelebrationFireworks
               key={`${islandClearStats.islandNumber}-${islandClearStats.isCycleCapstone ? 'capstone' : 'hero'}`}
               variant={islandClearStats.isCycleCapstone ? 'capstone' : 'hero'}
