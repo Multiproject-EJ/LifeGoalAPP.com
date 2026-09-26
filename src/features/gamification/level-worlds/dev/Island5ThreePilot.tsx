@@ -399,6 +399,8 @@ interface Island5ThreePilotProps {
   onFirstArrivalWelcome?: () => void;
   firstArrivalPreviewTime?: number;
   firstArrivalActive?: boolean;
+  /** Island-complete celebration: slow washed-out orbit of the whole island behind the modal. */
+  celebrationOrbit?: boolean;
   firstArrivalSkip?: boolean;
   onFirstArrivalComplete?: () => void;
   onFirstArrivalBeat?: (beat: string) => void;
@@ -3583,6 +3585,7 @@ export default function Island5ThreePilot({
   visibleTechnologyFragments = [], trafficLightCharge = 0,
   firstArrivalWaitForWelcome = false, firstArrivalWelcomeComplete = false, onFirstArrivalWelcome,
   firstArrivalPreviewTime, firstArrivalActive = false, firstArrivalSkip = false, onFirstArrivalComplete, onFirstArrivalBeat,
+  celebrationOrbit = false,
   openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
@@ -3822,6 +3825,8 @@ export default function Island5ThreePilot({
   const landmarkBuildLevelsRef = useRef(landmarkBuildLevels);
   landmarkBuildLevelsRef.current = landmarkBuildLevels;
   const island15CrystalPalaceRuntimeRef = useRef<Island15CrystalPalaceRuntime | null>(null);
+  const celebrationOrbitRef = useRef(celebrationOrbit);
+  celebrationOrbitRef.current = celebrationOrbit;
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
   constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
@@ -7319,6 +7324,9 @@ export default function Island5ThreePilot({
     // drifts slowly around the landmark, pushes in as a level fills, and
     // cranes up for each level reveal. A camera drag pauses it for a while.
     let constructionShotBase: { target: THREE.Vector3; offset: THREE.Vector3 } | null = null;
+    // Island-complete celebration orbit: starts from the overview shot.
+    let celebrationOrbitBase: { target: THREE.Vector3; offset: THREE.Vector3; startedAt: number } | null = null;
+    let celebrationOrbitRequested = false;
     let constructionCinematicStartedAt = 0;
     let constructionCinematicPausedUntil = 0;
     let constructionRevealStartedAt = Number.NEGATIVE_INFINITY;
@@ -10379,6 +10387,38 @@ export default function Island5ThreePilot({
         camera.position.copy(cactusCanyonBlastCameraPose.position);
         controls.target.copy(cactusCanyonBlastCameraPose.target);
         camera.lookAt(controls.target);
+      }
+      if (celebrationOrbitRef.current && !isReducedMotion) {
+        if (!celebrationOrbitRequested) {
+          celebrationOrbitRequested = true;
+          celebrationOrbitBase = null;
+          applyPreset('overview', 0.7);
+        } else if (!transition) {
+          if (!celebrationOrbitBase) {
+            celebrationOrbitBase = {
+              target: controls.target.clone(),
+              offset: camera.position.clone().sub(controls.target),
+              startedAt: now,
+            };
+          }
+          const orbitSeconds = (now - celebrationOrbitBase.startedAt) / 1000;
+          // A slow full turn roughly every 50 s, easing a little closer.
+          const orbitAngle = orbitSeconds * 0.125 * THREE.MathUtils.smoothstep(orbitSeconds, 0, 1.5);
+          const zoom = 1 - 0.16 * THREE.MathUtils.smoothstep(orbitSeconds, 0, 10);
+          const offset = celebrationOrbitBase.offset.clone()
+            .applyAxisAngle(THREE.Object3D.DEFAULT_UP, orbitAngle)
+            .multiplyScalar(zoom);
+          camera.position.copy(celebrationOrbitBase.target).add(offset);
+          controls.target.copy(celebrationOrbitBase.target);
+          camera.lookAt(controls.target);
+          ambientCameraEligibleAt = Number.POSITIVE_INFINITY;
+          canvas.dataset.celebrationOrbit = 'orbiting';
+        }
+      } else if (celebrationOrbitRequested) {
+        celebrationOrbitRequested = false;
+        celebrationOrbitBase = null;
+        ambientCameraEligibleAt = now + ISLAND_3D_BOARD_POV_IDLE_DELAY_MS;
+        canvas.dataset.celebrationOrbit = 'off';
       }
       const constructionCinematic = constructionPresentationRef.current;
       if (
