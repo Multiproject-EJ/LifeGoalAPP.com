@@ -326,7 +326,9 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         source.includes('while (holdBuildSpendActiveRef.current) {') &&
           source.includes('const spendApplied = await handleSpendEssenceOnBuild(stopIndex, 1);') &&
           source.includes('const cadence = resolveIslandRunBuildHoldCadence(holdStepsApplied);') &&
-          source.includes('await wait(cadence.delayMs);') &&
+          // Auto-build (Island 18+) plays the same beats at a fixed speed factor.
+          source.includes('await wait(cadence.delayMs * speedFactor);') &&
+          source.includes('const speedFactor = options.auto ? ISLAND_RUN_AUTO_BUILD_SPEED_FACTOR : 1;') &&
           source.includes('buildLevelCompletionRef.current') &&
           !source.includes('holdInterval = window.setInterval(() => {'),
         'Hold-to-build should apply one awaited canonical step per accelerating beat and stop at each level review.',
@@ -357,7 +359,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
             source.includes('const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;') ||
             buildModalV2Source.includes('const isDisabled = isComplete || !part.canAfford || disabledByTutorial || disabledByAnimation || isBuildHoldActive;')
           ) &&
-          buildModalV2Source.includes('onStartBuildHold(activeStopIndex)') && buildModalV2Source.includes('isDisabled={isBuildInteractionLocked || !canBuildActive}'),
+          buildModalV2Source.includes('onStartBuildHold(activeStopIndex)') && buildModalV2Source.includes('isDisabled={isBuildInteractionLocked || !canBuildActive || isAutoBuildActive}'),
         'Build choices and hold control should expose true affordability/interaction disabled states.',
       );
       assert(

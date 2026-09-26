@@ -757,6 +757,8 @@ import {
   ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
   ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS,
   resolveIslandRunBuildHoldCadence,
+  ISLAND_RUN_AUTO_BUILD_SPEED_FACTOR,
+  isIslandRunAutoBuildUnlocked,
 } from '../services/islandRunBuildCadence';
 import { deriveIslandRunConstructionPresentation } from '../services/islandRunConstructionPresentation';
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
@@ -7381,8 +7383,29 @@ export function IslandRunBoardPrototype({
   const fastBuildQuotes = useMemo(() => {
     if (!showBuildPanel) return [];
     const index = buildModalV2ViewModel.activeLandmark?.stopIndex ?? 0;
-    return (['landmark', 'island'] as const).map(mode => quoteIslandRunFastBuild(__storeState, mode, index, activeBuildDiscountRate, buildDiscountExpiresAtMs)).filter((quote): quote is FastBuildQuote => Boolean(quote));
+    // Auto-build (Fast Build) is an Island 18+ convenience for the current
+    // landmark only. 'Build all landmarks' is a dev tool outside the modal.
+    if (!isIslandRunAutoBuildUnlocked(__storeState.currentIslandNumber, __storeState.cycleIndex)) return [];
+    const quote = quoteIslandRunFastBuild(__storeState, 'landmark', index, activeBuildDiscountRate, buildDiscountExpiresAtMs);
+    return quote ? [quote] : [];
   }, [showBuildPanel, __storeState, buildModalV2ViewModel.activeLandmark?.stopIndex, activeBuildDiscountRate, buildDiscountExpiresAtMs]);
+  // Once per Build visit: record whether Fast Build was on offer, so usage
+  // (build_auto_start) can be compared against availability.
+  const fastBuildOfferLoggedRef = useRef(false);
+  useEffect(() => {
+    if (!showBuildPanel) {
+      fastBuildOfferLoggedRef.current = false;
+      return;
+    }
+    if (fastBuildOfferLoggedRef.current || fastBuildQuotes.length === 0) return;
+    fastBuildOfferLoggedRef.current = true;
+    void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_fast_offered', island_number: islandNumber, cost: fastBuildQuotes[0].cost, levels: fastBuildQuotes[0].levels } });
+  }, [showBuildPanel, fastBuildQuotes, islandNumber, session]);
+  const devBuildAllQuote = useMemo(() => {
+    if (!showBuildPanel || !isDevModeEnabled) return null;
+    const index = buildModalV2ViewModel.activeLandmark?.stopIndex ?? 0;
+    return quoteIslandRunFastBuild(__storeState, 'island', index, activeBuildDiscountRate, buildDiscountExpiresAtMs);
+  }, [showBuildPanel, isDevModeEnabled, __storeState, buildModalV2ViewModel.activeLandmark?.stopIndex, activeBuildDiscountRate, buildDiscountExpiresAtMs]);
   const constructionPresentation = useMemo(() => fastBuildBurst ? {
     active: true, working: true, cameraLocked: true, phase: 'assemble' as const,
     progress: 1, sequence: 1000 + buildLevelReviewIdRef.current, sourceLevel: fastBuildBurst.previousLevel,
@@ -11985,6 +12008,10 @@ export function IslandRunBoardPrototype({
   // boundary, so the physical press is tracked at window level: if it is
   // still held when the review ends, building carries on by itself.
   const buildHoldIntentRef = useRef(false);
+  // Auto-build (Fast Build): keeps building this landmark to Level 3 at
+  // twice hold speed with every beat and celebration, without a held press.
+  const autoBuildStopIndexRef = useRef<number | null>(null);
+  const [isAutoBuildActive, setIsAutoBuildActive] = useState(false);
 
   const stopBuildHold = useCallback((): void => {
     buildHoldGenerationRef.current += 1;
@@ -12050,7 +12077,7 @@ export function IslandRunBoardPrototype({
     }
   }, [session, client, islandStopPlan, markBuildChoreographyActive, playIslandRunSound]);
 
-  const startBuildHold = useCallback((stopIndex: number): void => {
+  const startBuildHold = useCallback((stopIndex: number, options: { auto?: boolean } = {}): void => {
     if (
       holdBuildSpendActiveRef.current
       || buildLevelCompletionRef.current
@@ -12060,7 +12087,8 @@ export function IslandRunBoardPrototype({
     ) return;
     const holdGeneration = ++buildHoldGenerationRef.current;
     holdBuildSpendActiveRef.current = true;
-    buildHoldIntentRef.current = true;
+    if (!options.auto) buildHoldIntentRef.current = true;
+    const speedFactor = options.auto ? ISLAND_RUN_AUTO_BUILD_SPEED_FACTOR : 1;
     setBuildActionError(null);
     setIsBuildHoldActive(true);
     markBuildChoreographyActive(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS);
@@ -12074,6 +12102,11 @@ export function IslandRunBoardPrototype({
         if (!spendApplied || runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built') {
           // Out of Money, an error, or a tutorial beat: never auto-resume.
           buildHoldIntentRef.current = false;
+          if (autoBuildStopIndexRef.current !== null) {
+            autoBuildStopIndexRef.current = null;
+            setIsAutoBuildActive(false);
+            void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_auto_stop', reason: spendApplied ? 'tutorial' : 'spend_stopped', island_number: islandNumber } });
+          }
           stopBuildHold();
           return;
         }
@@ -12085,20 +12118,46 @@ export function IslandRunBoardPrototype({
         }
         holdStepsApplied += 1;
         const cadence = resolveIslandRunBuildHoldCadence(holdStepsApplied);
-        setBuildHoldFeedbackLabel(cadence.feedbackLabel);
-        await wait(cadence.delayMs);
+        setBuildHoldFeedbackLabel(options.auto ? '⚡ Auto-build · every part animating' : cadence.feedbackLabel);
+        await wait(cadence.delayMs * speedFactor);
       }
     })();
-  }, [handleSpendEssenceOnBuild, isBuildCameraHandoffActive, isBuildCameraHandoffPending, markBuildChoreographyActive, stopBuildHold]);
+  }, [handleSpendEssenceOnBuild, isBuildCameraHandoffActive, isBuildCameraHandoffPending, markBuildChoreographyActive, stopBuildHold, session, islandNumber]);
+
+  /** The player's own Hold press (tracked so Fast Build usage can be compared). */
+  const startBuildHoldFromPlayer = useCallback((stopIndex: number): void => {
+    if (autoBuildStopIndexRef.current !== null) return;
+    void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_hold_start', island_number: islandNumber, stop_index: stopIndex } });
+    startBuildHold(stopIndex);
+  }, [islandNumber, session, startBuildHold]);
+
+  const stopAutoBuild = useCallback((reason: 'player_stop' | 'landmark_complete' | 'panel_closed'): void => {
+    if (autoBuildStopIndexRef.current === null) return;
+    autoBuildStopIndexRef.current = null;
+    setIsAutoBuildActive(false);
+    stopBuildHold();
+    void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_auto_stop', reason, island_number: islandNumber } });
+  }, [islandNumber, session, stopBuildHold]);
+
+  /** Fast Build (Island 18+): auto-build this landmark at twice hold speed. */
+  const startAutoBuild = useCallback((quote: FastBuildQuote): void => {
+    if (holdBuildSpendActiveRef.current || buildLevelCompletionRef.current || isBuildSequenceActiveRef.current) return;
+    autoBuildStopIndexRef.current = quote.stopIndex;
+    setIsAutoBuildActive(true);
+    void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'build_auto_start', island_number: islandNumber, stop_index: quote.stopIndex, levels: quote.levels, cost: quote.cost } });
+    startBuildHold(quote.stopIndex, { auto: true });
+  }, [islandNumber, session, startBuildHold]);
 
   useEffect(() => {
     if (!showBuildPanel) {
       buildHoldIntentRef.current = false;
+      stopAutoBuild('panel_closed');
       return undefined;
     }
     const release = () => {
       buildHoldIntentRef.current = false;
-      if (holdBuildSpendActiveRef.current) stopBuildHold();
+      // Auto-build runs without a held press; a tap elsewhere must not stop it.
+      if (holdBuildSpendActiveRef.current && autoBuildStopIndexRef.current === null) stopBuildHold();
     };
     const onKeyUp = (event: KeyboardEvent) => {
       if (event.key === ' ' || event.key === 'Enter') release();
@@ -12113,7 +12172,7 @@ export function IslandRunBoardPrototype({
       window.removeEventListener('blur', release);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [showBuildPanel, stopBuildHold]);
+  }, [showBuildPanel, stopBuildHold, stopAutoBuild]);
 
   const continuousHoldStopIndex = buildModalPresentationViewModel.activeLandmark?.canAffordNextTap
     ? buildModalPresentationViewModel.activeLandmark.stopIndex
@@ -12121,9 +12180,17 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     // Continuous hold: once a level's celebration and any camera move to the
     // next landmark have finished, keep building while the press is held.
+    const autoBuildContinues = autoBuildStopIndexRef.current !== null
+      && autoBuildStopIndexRef.current === continuousHoldStopIndex;
+    if (autoBuildStopIndexRef.current !== null && !buildLevelCompletion && !isBuildHoldActive
+      && !isBuildSequenceActive && autoBuildStopIndexRef.current !== continuousHoldStopIndex) {
+      // The auto-built landmark reached Level 3 (or can no longer be afforded).
+      stopAutoBuild('landmark_complete');
+      return undefined;
+    }
     if (
       !showBuildPanel
-      || !buildHoldIntentRef.current
+      || !(buildHoldIntentRef.current || autoBuildContinues)
       || buildLevelCompletion
       || isBuildHoldActive
       || isBuildSequenceActive
@@ -12133,7 +12200,8 @@ export function IslandRunBoardPrototype({
       || continuousHoldStopIndex === null
     ) return undefined;
     const timer = window.setTimeout(() => {
-      if (buildHoldIntentRef.current) startBuildHold(continuousHoldStopIndex);
+      if (autoBuildStopIndexRef.current === continuousHoldStopIndex) startBuildHold(continuousHoldStopIndex, { auto: true });
+      else if (buildHoldIntentRef.current) startBuildHold(continuousHoldStopIndex);
     }, 280);
     return () => window.clearTimeout(timer);
   }, [
@@ -12146,6 +12214,7 @@ export function IslandRunBoardPrototype({
     isBuildModalHatcheryGuidanceActive,
     continuousHoldStopIndex,
     startBuildHold,
+    stopAutoBuild,
   ]);
 
   const handleCompleteActiveStop = (successMessage?: string) => {
@@ -18920,7 +18989,9 @@ export function IslandRunBoardPrototype({
           fastBuildQuotes={fastBuildQuotes}
           fastBuildMode={fastBuildBurst?.quote.mode}
           buildActionError={buildActionError}
-          onFastBuild={handleFastBuild}
+          onFastBuild={startAutoBuild}
+          isAutoBuildActive={isAutoBuildActive}
+          onStopAutoBuild={() => stopAutoBuild('player_stop')}
           onClose={() => setShowBuildPanel(false)}
           viewModel={buildModalPresentationViewModel}
           isBuildHoldActive={isBuildHoldActive}
@@ -18935,10 +19006,21 @@ export function IslandRunBoardPrototype({
           levelReview={buildModalPresentationLevelReview}
           onAdvanceLevelReview={handleAdvanceBuildLevelReview}
           onBuildPartChoice={handleBuildPartChoice}
-          onStartBuildHold={startBuildHold}
+          onStartBuildHold={startBuildHoldFromPlayer}
           onStopBuildHold={stopBuildHold}
         />
       )}
+      {showBuildPanel && devBuildAllQuote && typeof document !== 'undefined' ? createPortal(
+        <button
+          type="button"
+          className="island-run-dev-build-all"
+          onClick={() => void handleFastBuild(devBuildAllQuote)}
+          disabled={isBuildHoldActive || isBuildSequenceActive || Boolean(buildLevelCompletion)}
+        >
+          🧪 Build all (dev) · {devBuildAllQuote.cost} 💰
+        </button>,
+        document.body,
+      ) : null}
 
       <CreatureArenaBattleOverlay
         open={isArenaBattleOpen}
