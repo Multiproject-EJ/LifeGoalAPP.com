@@ -81,6 +81,28 @@ function getPrizeIconAsset(type: SpinPrize['type']): string {
   return `${DAILY_MOMENTUM_ASSET_ROOT}/prizes/${prizeAssets[type]}`;
 }
 
+/** Big prize number that counts up once when the reward appears. */
+function SpinRewardCount({ value }: { value: number }) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || value <= 0) {
+      setShown(value);
+      return undefined;
+    }
+    let frame = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / 900);
+      setShown(Math.round(value * (1 - Math.pow(1 - progress, 3))));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+  return <>{shown.toLocaleString()}</>;
+}
+
 function getWheelLabelLines(segment: WheelSegment): string[] {
   const compactLabels: Record<SpinPrize['type'], string> = {
     gold: `${segment.value} Money`,
@@ -219,7 +241,8 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
   const [error, setError] = useState<string | null>(null);
   const [showReward, setShowReward] = useState(false);
   const [winnerRevealPending, setWinnerRevealPending] = useState(false);
-  const [showMultiplierInfo, setShowMultiplierInfo] = useState(false);
+  const [lastAwards, setLastAwards] = useState<SpinAward[]>([]);
+  const [lastMultiplier, setLastMultiplier] = useState(1);
   const [showGiftOpening, setShowGiftOpening] = useState(false);
   const [giftRewards, setGiftRewards] = useState<GiftBoxRewardItem[]>([]);
   const [isOffline, setIsOffline] = useState(
@@ -397,6 +420,8 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
 
       const { prize, spinsRemaining, awardedRewards } = data;
       const resolvedGiftRewards = toGiftBoxRewards(awardedRewards);
+      setLastAwards(awardedRewards);
+      setLastMultiplier(multiplierOption.multiplier);
 
       const segment = wheelSegments.find(
         (c) => c.type === prize.type && c.value === prize.value && c.label === prize.label,
@@ -447,21 +472,6 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
     setShowGiftOpening(false);
     setGiftRewards([]);
   }, []);
-
-  const affordableMultiplierOptions = useMemo(
-    () => SPIN_REWARD_MULTIPLIER_OPTIONS.filter((option) => option.essenceCost <= essenceBalance),
-    [essenceBalance],
-  );
-
-  const cycleMultiplier = () => {
-    if (hasIslandThreeJackpot || !canSpin || charging || spinning || affordableMultiplierOptions.length === 0) return;
-    const currentIndex = affordableMultiplierOptions.findIndex(
-      (option) => option.multiplier === selectedMultiplier,
-    );
-    const nextOption = affordableMultiplierOptions[(currentIndex + 1) % affordableMultiplierOptions.length];
-    setSelectedMultiplier(nextOption.multiplier);
-    triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 });
-  };
 
   /* ── Render ── */
 
@@ -588,24 +598,32 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
             <span aria-hidden="true">🎲</span>
           </div>
         ) : (
-          <div className="new-daily-spin-modal__multiplier-controls" aria-label="Reward multiplier controls">
-            <button
-              type="button"
-              className="new-daily-spin-modal__multiplier-orb"
-              onClick={cycleMultiplier}
-              disabled={!canSpin || charging || spinning}
-              aria-label={`Reward multiplier ×${selectedMultiplier}. Click to change.`}
-            >
-              ×{selectedMultiplier}
-            </button>
-            <button
-              type="button"
-              className="new-daily-spin-modal__multiplier-info-button"
-              onClick={() => setShowMultiplierInfo(true)}
-              aria-label="How reward multipliers work"
-            >
-              i
-            </button>
+          <div className="new-daily-spin-modal__boosts" role="radiogroup" aria-label="Reward boost">
+            {SPIN_REWARD_MULTIPLIER_OPTIONS.map((option) => {
+              const affordable = essenceBalance >= option.essenceCost;
+              const active = selectedMultiplier === option.multiplier;
+              return (
+                <button
+                  key={option.multiplier}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  className={`new-daily-spin-modal__boost${active ? ' is-active' : ''}${affordable ? '' : ' is-locked'}`}
+                  disabled={!canSpin || charging || spinning || !affordable}
+                  onClick={() => {
+                    setSelectedMultiplier(option.multiplier);
+                    triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 });
+                  }}
+                  aria-label={option.essenceCost === 0
+                    ? `Times ${option.multiplier}, free`
+                    : `Times ${option.multiplier}, costs ${option.essenceCost} money${affordable ? '' : ', not enough money'}`}
+                >
+                  <strong>×{option.multiplier}</strong>
+                  <span>{option.essenceCost === 0 ? 'Free' : `💰 ${option.essenceCost}`}</span>
+                </button>
+              );
+            })}
+            <small className="new-daily-spin-modal__boost-balance" aria-label={`${essenceBalance} money available`}>💰 {essenceBalance}</small>
           </div>
         )}
 
@@ -672,9 +690,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
             aria-label="Spin reward"
             onClick={() => setShowReward(false)}
           >
-            {isTreasureChest || isIslandThreeJackpot
-              ? <CelebrationFireworks variant="rapid" fit="contain" />
-              : null}
+            <CelebrationFireworks variant={isTreasureChest || isIslandThreeJackpot || lastMultiplier > 1 ? 'hero' : 'rapid'} fit="contain" />
             <div
               className={`new-daily-spin-modal__reward-card${
                 isSpecialPrize ? ' new-daily-spin-modal__reward-card--chest' : ''
@@ -691,14 +707,28 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
                     ? 'Mystery Revealed!'
                     : 'You won!'}
               </h3>
-              <div
-                className={`new-daily-spin-modal__reward-icon${
-                  isSpecialPrize ? ' new-daily-spin-modal__reward-icon--chest' : ''
-                }`}
-              >
-                {wonPrize.icon}
-              </div>
-              <p className="new-daily-spin-modal__reward-name">{wonPrize.label}</p>
+              {isSpecialPrize ? (
+                <>
+                  <div className="new-daily-spin-modal__reward-icon new-daily-spin-modal__reward-icon--chest">
+                    {wonPrize.icon}
+                  </div>
+                  <p className="new-daily-spin-modal__reward-name">{wonPrize.label}</p>
+                </>
+              ) : (
+                <div className="new-daily-spin-modal__reward-hero">
+                  <img
+                    className="new-daily-spin-modal__reward-hero-art"
+                    src={getPrizeIconAsset(wonPrize.type)}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <strong className="new-daily-spin-modal__reward-amount" aria-label={`${lastAwards[0]?.amount ?? wonPrize.value} ${lastAwards[0]?.label ?? wonPrize.label}`}>
+                    +<SpinRewardCount value={lastAwards[0]?.amount ?? wonPrize.value} />
+                  </strong>
+                  <span className="new-daily-spin-modal__reward-unit">{lastAwards[0]?.label ?? wonPrize.label}</span>
+                  {lastMultiplier > 1 ? <span className="new-daily-spin-modal__reward-boost">×{lastMultiplier} boost</span> : null}
+                </div>
+              )}
               <p className="new-daily-spin-modal__reward-subtitle">{rewardSubtitle}</p>
               <button
                 type="button"
@@ -754,67 +784,11 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
                   : hasIslandThreeJackpot
                     ? 'UNLEASH 2,000 DICE!'
                     : selectedMultiplier > 1
-                      ? `SPIN ×${selectedMultiplier}!`
+                      ? `SPIN ×${selectedMultiplier} · 💰${selectedMultiplierOption.essenceCost}`
                       : 'SPIN!'}
             </button>
           ) : null}
         </div>
-
-        {showMultiplierInfo && (
-          <div
-            className="new-daily-spin-modal__multiplier-info-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="daily-spin-multiplier-title"
-            onClick={() => setShowMultiplierInfo(false)}
-          >
-            <div
-              className="new-daily-spin-modal__multiplier-info-card"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <button
-                type="button"
-                className="new-daily-spin-modal__multiplier-info-close"
-                onClick={() => setShowMultiplierInfo(false)}
-                aria-label="Close multiplier information"
-              >
-                ✕
-              </button>
-              <span className="new-daily-spin-modal__multiplier-info-symbol" aria-hidden="true">×</span>
-              <h3 id="daily-spin-multiplier-title">Reward multiplier</h3>
-              <p>Choose a boost before spinning. It multiplies the prize you land on.</p>
-              <div className="new-daily-spin-modal__multiplier-balance">💰 {essenceBalance} available</div>
-              <div className="new-daily-spin-modal__multiplier-info-options">
-                {SPIN_REWARD_MULTIPLIER_OPTIONS.map((option) => {
-                  const affordable = essenceBalance >= option.essenceCost;
-                  return (
-                    <button
-                      key={option.multiplier}
-                      type="button"
-                      className={`new-daily-spin-modal__multiplier-info-option${selectedMultiplier === option.multiplier ? ' new-daily-spin-modal__multiplier-info-option--active' : ''}`}
-                      onClick={() => {
-                        setSelectedMultiplier(option.multiplier);
-                        triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 });
-                      }}
-                      disabled={!canSpin || charging || spinning || !affordable}
-                      aria-pressed={selectedMultiplier === option.multiplier}
-                    >
-                      <strong>×{option.multiplier}</strong>
-                      <span>{option.essenceCost === 0 ? 'Free' : `${option.essenceCost} money`}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                type="button"
-                className="new-daily-spin-modal__multiplier-done"
-                onClick={() => setShowMultiplierInfo(false)}
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        )}
 
         {showGiftOpening && wonPrize?.type === 'mystery' && (
           <div className="new-daily-spin-modal__gift-opening" role="presentation">
