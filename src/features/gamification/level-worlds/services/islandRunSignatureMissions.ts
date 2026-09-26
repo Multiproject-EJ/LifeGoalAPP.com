@@ -1,4 +1,5 @@
 import { sanitizeTitanAwakening, mergeTitanAwakening, type TitanAwakening } from './island17Awakening';
+import { WORLD_PORTAL_KEY, sanitizeWorldPortalProgress, mergeWorldPortalProgress, type WorldPortalProgress } from './worldPortalProgress';
 import { ARENA_JOURNEY_KEY, sanitizeArenaJourney, mergeArenaJourney, type ArenaJourneyProgress } from './arenaJourney';
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import {
@@ -351,6 +352,7 @@ export interface StagedRestorationMissionProgress {
 }
 
 export type IslandRunSignatureMissionProgress =
+  | WorldPortalProgress
   | ArenaJourneyProgress
   | OpeningGamesCampaignMarker
   | OpeningGamesCeremonyProgress
@@ -405,6 +407,11 @@ export function sanitizeIslandRunSignatureMissionProgress(
   Object.entries(value as Record<string, unknown>).forEach(([key, raw]) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
     const record = raw as Record<string, unknown>;
+    if (key === WORLD_PORTAL_KEY || record.missionId === 'world-portal') {
+      const portal = sanitizeWorldPortalProgress(record);
+      if (key === WORLD_PORTAL_KEY && portal) result[key] = portal;
+      return;
+    }
     if (record.missionId === 'arena-journey') {
       if (key === ARENA_JOURNEY_KEY && record.version === 1) result[key] = sanitizeArenaJourney(record);
       return;
@@ -1595,6 +1602,11 @@ export function mergeIslandRunSignatureMissionProgress(
   new Set([...Object.keys(remote), ...Object.keys(local)]).forEach((key) => {
     let a = remote[key];
     let b = local[key];
+    if (key === WORLD_PORTAL_KEY) {
+      const portal = mergeWorldPortalProgress(a, b);
+      if (portal) merged[key] = portal;
+      return;
+    }
     if (a?.missionId === 'first-light-assembly-crater' && a.version !== 2) {
       a = sanitizeIslandRunSignatureMissionProgress({ [key]: a })[key];
     }

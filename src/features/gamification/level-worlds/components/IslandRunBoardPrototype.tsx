@@ -223,6 +223,8 @@ import { isIslandFragmentAnsweredForUser } from '../../../compass-book/services/
 import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
 import { useIslandRunState } from '../hooks/useIslandRunState';
+import { WorldPortalCouncilControl } from './WorldPortalCouncil';
+import { canAttendWorldPortalCouncil, resolveWorldPortalProgress } from '../services/worldPortalProgress';
 import {
   getIslandRunBuildPromptInitialTransitionTarget,
   getIslandRunFirstCreaturePackContinueTarget,
@@ -2036,6 +2038,7 @@ export function IslandRunBoardPrototype({
   const suppressNextControllerTuckClickRef = useRef(false);
   const controllerMainRef = useRef<HTMLDivElement | null>(null);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
+  const [showWorldPortalCouncil, setShowWorldPortalCouncil] = useState(false);
   const [showVaultIslandCollection, setShowVaultIslandCollection] = useState(false);
   const [showVaultIslandGiftUnlock, setShowVaultIslandGiftUnlock] = useState(false);
   const [vaultIslandFeaturedTreasure, setVaultIslandFeaturedTreasure] = useState<VaultIslandCollectionEntry | null>(null);
@@ -3355,6 +3358,7 @@ export function IslandRunBoardPrototype({
   // board. When one opens we dismiss the top-bar (☰) menu so it is not left hanging
   // behind the overlay.
   const anyBlockingModalOpen =
+    showWorldPortalCouncil ||
     showSolarMapOverlay || showDevDailySpinPreview ||
     isCompassBookCeremonyPlaying || showShopPanel ||
     showMarketPanel ||
@@ -15941,6 +15945,11 @@ export function IslandRunBoardPrototype({
               >
                 <span aria-hidden="true">✕</span> Exit Island Run
               </button>
+              {(canAttendWorldPortalCouncil(__storeState) || resolveWorldPortalProgress(__storeState.signatureMissionProgressByIsland)) && (
+                <button type="button" className="island-run-board__topbar-menu-item" onClick={() => {
+                  stopAutoRoll(); setShowTopbarMenu(false); setShowWorldPortalCouncil(true);
+                }}>✦ {resolveWorldPortalProgress(__storeState.signatureMissionProgressByIsland) ? 'Replay caretaker council' : 'Caretaker council · portal ready'}</button>
+              )}
               <button
                 type="button"
                 className="island-run-board__topbar-menu-item"
@@ -21618,6 +21627,10 @@ export function IslandRunBoardPrototype({
           onClose={() => setShowDebugPanel(false)}
         />
       )}
+
+      {showWorldPortalCouncil && <WorldPortalCouncilControl key={session.user.id}
+        session={session} client={client} onOpenApp={onExitBoard}
+        onClose={() => setShowWorldPortalCouncil(false)} />}
 
       <DemoWaitlistModal
         open={showDemoWaitlistModal}

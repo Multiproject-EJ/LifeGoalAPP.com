@@ -2,6 +2,34 @@
 
 Date: 2026-09-26. Status: implementation in progress; local review only.
 
+## Council handover slice — approved continuation 2026-09-26
+
+- Implement a replayable caretaker council and one permanent portal receipt in
+  the existing owner-scoped signature JSON, using the canonical action mutex.
+- Island 040 arrival (or a later island/cycle) qualifies; player XP, query
+  previews, developer flags and purchases do not manufacture story progress.
+- No currency, stop completion, travel or AI-answer consent is granted.
+- Verify duplicate/stale actions, serialization, conflict merge, reload, owner
+  isolation and local-storage failure. Test the actual dialog at phone/desktop
+  sizes, keyboard focus and reduced motion.
+- App-wide game-first gating stays a separate slice: no partial exit-only lock.
+  Preserve account/privacy/support/recovery and existing Today data meanwhile.
+- Re-fetch main and inspect overlap before local integration. Preserve Claude's
+  dirty checkouts and the separate Cosmic Outpost work. No push/live changes.
+- Rollback UI/action integration independently; retain the receipt sanitizer so
+  an already-earned portal is not erased by rollback.
+
+Implemented council menu entry, responsive portaled meeting and once-only
+acceptance. Eight portal suites, four browser viewports (including reduced
+motion), storage recovery/owner switching, 299 Arena integration cases and the
+Journey progression regression checks passed. Evidence and precise limitations:
+`docs/investigations/world-portal-20260926/README.md`.
+The short-phone screenshot was reviewed and tightened so both actions fit.
+This does not activate the 36-rank model or app-wide access gate. Main refreshed
+with no upstream changes. Final full-app TypeScript, rank/policy suites and
+architecture guard passed. Dedicated main is clean and fast-forward eligible;
+the local integration includes the prior 040 placeholder and this handover only.
+
 ## Island 040 placeholder slice — approved 2026-09-26
 
 User approved proceeding after clarification that 001–020 have routed 3D worlds,

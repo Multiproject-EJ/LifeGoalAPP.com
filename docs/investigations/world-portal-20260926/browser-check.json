@@ -1,0 +1,38 @@
+{
+  "scope": "Actual React council/control and canonical local action under StrictMode; synthetic accounts, no remote client, not full-board E2E",
+  "results": [
+    {
+      "name": "phone",
+      "width": 390,
+      "height": 844,
+      "reducedMotion": "no-preference",
+      "errors": []
+    },
+    {
+      "name": "short-phone",
+      "width": 360,
+      "height": 640,
+      "reducedMotion": "no-preference",
+      "errors": []
+    },
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 900,
+      "reducedMotion": "no-preference",
+      "errors": []
+    },
+    {
+      "name": "reduced-motion",
+      "width": 430,
+      "height": 932,
+      "reducedMotion": "reduce",
+      "errors": []
+    }
+  ],
+  "extraChecks": [
+    "pre-040",
+    "storage failure/reopen/retry",
+    "owner switch"
+  ]
+}

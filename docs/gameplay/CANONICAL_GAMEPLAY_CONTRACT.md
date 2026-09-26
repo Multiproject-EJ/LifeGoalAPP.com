@@ -505,6 +505,28 @@ into Journey Disc Arena. It must yield the centre as soon as the mandatory Boss
 stop becomes available; the exhibition never completes, unlocks, or replaces a
 canonical stop and never creates a second ticket or reward write path.
 
+### Island 040 caretaker portal handover
+
+The board menu offers the caretaker council at canonical Island 040 and later,
+or in later cycles for players who missed it. A display rank, island-art preview,
+developer access flag or purchase is not story completion. The meeting is a
+replayable, viewport-portaled dialog; the temporary 040 scenery remains a separate
+presentation and does not grant ownership.
+
+Explicit acceptance records one `world-portal` receipt under
+`island-040-caretaker-world-portal-v1` in the owner-scoped signature progress JSON.
+The action holds the canonical mutex, rechecks island/cycle context, and changes
+no stops, wallets, XP, travel or personal answers. Ordinary conflict merge retains
+the earliest receipt across cycles. Replay and duplicate acceptance give nothing
+again. The UI confirms local durability only after reading the receipt back;
+existing account sync can still be pending. Storage failure offers a retry.
+
+This slice does not activate the app-wide game-first gate. Verified developer
+bypass, all navigation/deep-link guarding and unrestricted essential
+account/privacy/support/recovery access must ship together in the next slice.
+Paid access and consent to use answers for AI suggestions are separate features;
+accepting the portal authorizes neither.
+
 ### Timed event rotation
 
 | Event | Duration | Icon | Description |
