@@ -1,4 +1,4 @@
-.egg-card-stack { position: fixed; inset: 0; z-index: 9900; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; color: #e7f8ff; background: radial-gradient(ellipse at center, #234c63, #07121ef5 75%); overflow: auto; }
+.egg-card-stack { position: fixed; inset: 0; z-index: 12000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; color: #e7f8ff; background: radial-gradient(ellipse at center, #234c63, #07121ef5 75%); overflow: auto; }
 .egg-card-stack p { margin: 0; text-align: center; font-size: .9rem; }
 .egg-card-stack__cards { position: relative; width: min(320px, 78vw, 46dvh); touch-action: none; perspective: 1000px; }
 .egg-card-stack__front { position: relative; transition: transform 260ms ease-in, opacity 260ms ease-in; }

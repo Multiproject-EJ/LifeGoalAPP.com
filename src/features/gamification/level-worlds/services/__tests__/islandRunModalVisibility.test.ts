@@ -23,6 +23,12 @@ export const islandRunModalVisibilityTests: TestCase[] = [
       assert(boardSource.includes('{showShopPanel && typeof document !== \'undefined\' && createPortal(')
         && boardSource.includes('{showEncounterModal && typeof document !== \'undefined\' ? createPortal(('), 'Shop and Bonus Encounter are body portals covered by that rule');
       assert(/\.island-run-solar-map-overlay \{\s*position: fixed;\s*inset: 0;/.test(mapCss), 'the Island Map root is a viewport-anchored overlay');
+      const craterCss = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandAssemblyCraterModal.css', 'utf8');
+      const craterZ = Number(/\.assembly-v2-overlay\{[^}]*z-index:var\(--island-run-mission-overlay-z,(\d+)\)/.exec(craterCss)?.[1]);
+      assert(craterZ > gameLayerZ, 'the Island 001 Assembly Crater mission renders above the game layer');
+      const eggRevealCss = fsMod.readFileSync('src/features/gamification/level-worlds/components/EggBatchReveal.css', 'utf8');
+      const eggRevealZ = Number(/\.egg-card-stack \{[^}]*z-index: (\d+)/.exec(eggRevealCss)?.[1]);
+      assert(eggRevealZ > gameLayerZ, 'hatched creature cards render above the game layer');
       assert(/\.island-run-board__topbar-menu-panel \{\s*max-height:[^;]+;\s*overflow-y: auto;/.test(levelWorldsCss), 'the board menu scrolls so Exit Island Run stays reachable');
     },
   },
