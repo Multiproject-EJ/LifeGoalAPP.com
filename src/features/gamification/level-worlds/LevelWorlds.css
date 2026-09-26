@@ -28141,3 +28141,43 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 @media (prefers-reduced-motion: reduce) {
   .island-clear-celebration__island { animation: none; }
 }
+
+/* Mission Phone: an unsent 'assignment completed' signal. A pulsing green
+   message dot, and the phone wriggles every few seconds like an unread text. */
+/* The phone buttons already use position and transform for placement, so
+   the wriggle uses the independent 'rotate' property, which composes with
+   their transform instead of replacing it. */
+.island-run-mission-phone--signal {
+  animation: island-run-mission-phone-wriggle 4.2s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+.island-run-mission-phone__signal-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #37e27b;
+  border: 2px solid #eafff2;
+  box-shadow: 0 0 0 0 rgba(55, 226, 123, 0.7);
+  animation: island-run-mission-phone-signal-pulse 1.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes island-run-mission-phone-signal-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(55, 226, 123, 0.75); transform: scale(1); }
+  60% { box-shadow: 0 0 0 10px rgba(55, 226, 123, 0); transform: scale(1.12); }
+  100% { box-shadow: 0 0 0 0 rgba(55, 226, 123, 0); transform: scale(1); }
+}
+@keyframes island-run-mission-phone-wriggle {
+  0%, 78%, 100% { rotate: 0deg; }
+  81% { rotate: -11deg; }
+  84% { rotate: 10deg; }
+  87% { rotate: -8deg; }
+  90% { rotate: 6deg; }
+  93% { rotate: -3deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-run-mission-phone--signal,
+  .island-run-mission-phone__signal-dot { animation: none; }
+}
