@@ -3407,6 +3407,9 @@ export function IslandRunBoardPrototype({
   const [isIslandClearCelebrationDeparting, setIsIslandClearCelebrationDeparting] = useState(false);
   // Claim appears once the title and rewards have landed (~3 s).
   const [isIslandClearClaimReady, setIsIslandClearClaimReady] = useState(false);
+  // After the rewards are claimed the island hands off through the Mission
+  // Phone: the player sends the 'assignment completed' signal to depart.
+  const [isIslandClearSignalPending, setIsIslandClearSignalPending] = useState(false);
   // A snapshot of the island (taken by the 3D scene, which then pauses) is
   // the celebration backdrop, animated with compositor-only CSS.
   const [islandClearBackdropUrl, setIslandClearBackdropUrl] = useState<string | null>(null);
@@ -11797,11 +11800,25 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timer);
   }, [showIslandClearCelebration]);
 
-  const handleKeepPlayingAfterIslandClear = useCallback(() => {
-    setIsIslandClearCelebrationDeparting(false);
-    setShowIslandClearCelebration(false);
-    setLandingText('Island complete! Keep collecting for now — tap Finish Island when you are ready to travel.');
-  }, []);
+  // Claim -> let the reward animation land -> close the celebration and open
+  // the Mission Phone on its 'send signal' step. Travel starts from there.
+  useEffect(() => {
+    if (!showIslandClearCelebration || !isIslandClearRewardClaimed || !islandClearStats) return undefined;
+    const timer = window.setTimeout(() => {
+      setShowIslandClearCelebration(false);
+      setIsIslandClearSignalPending(true);
+      setShowMissionPhoneBriefing(true);
+      setLandingText('Mission complete! Send the assignment completed signal from your Mission Phone.');
+    }, 1800);
+    return () => window.clearTimeout(timer);
+  }, [showIslandClearCelebration, isIslandClearRewardClaimed, islandClearStats]);
+
+  const handleSendAssignmentCompletedSignal = () => {
+    setShowMissionPhoneBriefing(false);
+    setIsIslandClearSignalPending(false);
+    triggerIslandRunHaptic('reward_claim');
+    void handleTravelFromCelebration();
+  };
 
   // B3-2: handleCompleteStopById helper
   const handleCompleteStopById = (stopId: string) => {
@@ -16144,14 +16161,15 @@ export function IslandRunBoardPrototype({
                   <span key="mission-phone" className="island-run-board__rewardbar-side-slot">
                     <button
                       type="button"
-                      className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}`}
-                      aria-label={`Open Island ${String(isIslandVisualPreview ? islandArtPreviewNumber : islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+                      className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}`}
+                      aria-label={`${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(isIslandVisualPreview ? islandArtPreviewNumber : islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
                       title="Mission tracker"
                       onClick={() => setShowMissionPhoneBriefing(true)}
                     >
                       <MissionPhoneRailIcon />
                       <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
                       <small>Mission</small>
+                      {isIslandClearSignalPending ? <i className="island-run-mission-phone__signal-dot" aria-hidden="true" /> : null}
                     </button>
                   </span>
                 );
@@ -16660,13 +16678,14 @@ export function IslandRunBoardPrototype({
       {!diplomaticRewardChannelVisible && (featureAccess.gradual || islandNumber === 1) ? (
         <button
           type="button"
-          className="island-run-board__mission-phone-floating"
-          aria-label={`Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+          className={`island-run-board__mission-phone-floating${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}`}
+          aria-label={`${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
           title="Mission tracker"
           onClick={() => setShowMissionPhoneBriefing(true)}
         >
           <MissionPhoneRailIcon />
           <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
+          {isIslandClearSignalPending ? <i className="island-run-mission-phone__signal-dot" aria-hidden="true" /> : null}
         </button>
       ) : null}
 
@@ -18848,25 +18867,12 @@ export function IslandRunBoardPrototype({
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-clear-celebration__cta"
-                    onClick={isIslandClearRewardClaimed ? handleTravelFromCelebration : handleClaimIslandClearCelebrationRewards}
-                    disabled={isIslandClearCelebrationDeparting || !isIslandClearClaimReady}
+                    onClick={handleClaimIslandClearCelebrationRewards}
+                    disabled={isIslandClearCelebrationDeparting || !isIslandClearClaimReady || isIslandClearRewardClaimed}
                     aria-hidden={!isIslandClearClaimReady || undefined}
                   >
-                    {isIslandClearRewardClaimed
-                      ? (getTreasurePathMilestoneMetadata(islandClearStats.islandNumber)
-                        ? 'Start Treasure Path'
-                        : 'Travel to Next Island')
-                      : 'Claim Rewards'}
+                    {isIslandClearRewardClaimed ? '✓ Rewards collected' : 'Claim Rewards'}
                   </button>
-                  {isIslandClearRewardClaimed && !isIslandClearCelebrationDeparting && (
-                    <button
-                      type="button"
-                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary island-clear-celebration__cta island-clear-celebration__cta--secondary"
-                      onClick={handleKeepPlayingAfterIslandClear}
-                    >
-                      Keep Playing For Now
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -20489,7 +20495,9 @@ export function IslandRunBoardPrototype({
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
-        primaryActionLabel={showMissionPhoneBriefing && featureAccess.gradual && islandNumber === 2
+        primaryActionLabel={showMissionPhoneBriefing && isIslandClearSignalPending
+          ? '📡 Send assignment completed signal'
+          : showMissionPhoneBriefing && featureAccess.gradual && islandNumber === 2
           ? 'Open ceremony preparations'
           : showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
           ? firstLightAssemblyProgress.mandateSignedAtMs != null ? 'View sealed mandate' : 'Sign the peacekeeping mandate'
@@ -20514,7 +20522,9 @@ export function IslandRunBoardPrototype({
               ? `Pour nectar · stage ${greatHoneyfallProgress.activatedReservoirs + 1} of ${GREAT_HONEYFALL_MAX_STAGE}`
               : 'Find royal nectar on the route'
           : undefined}
-        primaryActionHint={showMissionPhoneBriefing && islandNumber === 17 && stagedRestorationProgress?.activatedStages === 8
+        primaryActionHint={showMissionPhoneBriefing && isIslandClearSignalPending
+          ? `Everything is green. Signal Mission Command and set sail for Island ${String(islandClearStats?.pendingNextIsland ?? islandNumber + 1).padStart(3, '0')}.`
+          : showMissionPhoneBriefing && islandNumber === 17 && stagedRestorationProgress?.activatedStages === 8
           ? 'Brew the potion, summon the skull and unlock the spirit within. Free to tinker; progress saves.'
           : showMissionPhoneBriefing && jungleMissionAction ? jungleMissionAction.hint : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
           ? stagedRestorationDescriptor.islandNumber === 20 && !lavaLabyrinthEscapeMissionStarted
@@ -20535,7 +20545,9 @@ export function IslandRunBoardPrototype({
               ? 'The mission phone will fold so you can watch the reservoir fill in 3D.'
               : 'Land on a glowing honey tile, then return here to pour it.'
           : undefined}
-        primaryActionDisabled={showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
+        primaryActionDisabled={showMissionPhoneBriefing && isIslandClearSignalPending
+          ? false
+          : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
           ? !lavaLabyrinthEscapeMissionStarted
             || (stagedRestorationProgress.completedAtMs === null
               && stagedRestorationAvailableCharges < stagedRestorationDescriptor.chargeCostPerStage)
@@ -20549,7 +20561,9 @@ export function IslandRunBoardPrototype({
         milestoneCount={showMissionPhoneBriefing && stagedRestorationDescriptor
           ? stagedRestorationDescriptor.stageCount
           : showMissionPhoneBriefing && islandNumber === 14 ? GREAT_HONEYFALL_MAX_STAGE : 0}
-        onPrimaryAction={showMissionPhoneBriefing && featureAccess.gradual && islandNumber === 2
+        onPrimaryAction={showMissionPhoneBriefing && isIslandClearSignalPending
+          ? handleSendAssignmentCompletedSignal
+          : showMissionPhoneBriefing && featureAccess.gradual && islandNumber === 2
           ? () => { setShowMissionPhoneBriefing(false); setShowOpeningGamesCeremony(true); }
           : showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
           ? () => { setShowMissionPhoneBriefing(false); openAssemblyMandate(); }
