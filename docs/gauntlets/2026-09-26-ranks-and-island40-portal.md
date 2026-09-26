@@ -2,6 +2,32 @@
 
 Date: 2026-09-26. Status: implementation in progress; local review only.
 
+## Island 040 placeholder slice — approved 2026-09-26
+
+User approved proceeding after clarification that 001–020 have routed 3D worlds,
+while 021 onward uses the legacy board. Scope here is one explicit temporary
+3D setting for 040, not a final Cosmic Outpost replacement or mass placeholder
+rollout. This is presentation-only neutral procedural massing, not a
+reconstruction of the separate workstream's reference art.
+
+- Reuse shared renderer, route, camera, canonical landmark anchors and input.
+  Author a small original space deck and additive blockout landmarks; no new
+  textures or third-party assets. Label it temporary in both UI and routing.
+- Reserve a separate council/portal staging area without replacing 040's arena.
+  Empty seats and an inactive frame are placeholders, not the actual all-caretaker
+  meeting or an earned portal. No ownership, rewards or access mutations.
+- Actual council handover, durable once-only ownership and all-path app gating
+  remain the next gameplay slice. Geometry must never be the entitlement source.
+- Preserve the separate paused Cosmic Outpost worktree and all 001–020 routes.
+  No change to 021–039, 041+, demo travel cap (currently 003), player level or saves.
+- Verify routing, L0–L3 continuity, phone/desktop/side/rear views, reduced motion,
+  TypeScript and architecture guard. Physical phone/full authenticated journey
+  and production art approval are not implied.
+- Rollback: remove only the explicit 040 route to restore its legacy board.
+  No save migration is needed.
+- Earlier user approval permits safe local integration after checks; this slice
+  stays on the task branch until review. No push, deployment or live changes.
+
 ## User mandate
 
 Implement the approved 36-rank spaceship direction, with a full medal and purpose-designed compact pin for each. Check rank logic against player levels and the contribution of island progression. At Island 40, all caretakers gather and give the player a portal linking the game and real world. User said “maybe ... level 40”; do not confuse that with the explicitly requested Island 40 story beat.

@@ -1,9 +1,11 @@
-export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 17 | 18 | 19 | 20 | 22;
+// Source 040 is explicitly temporary; it is not the Cosmic Outpost production pack.
+export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 17 | 18 | 19 | 20 | 22 | 40;
 
 export interface IslandRun3DWorldRoute {
   runtimeIslandNumber: number;
   worldSourceNumber: IslandRunAuthored3DWorldSource;
   role: 'ordinary' | 'arena';
+  presentationStatus?: 'placeholder';
 }
 
 /**
@@ -54,6 +56,7 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   // Eivind reassigned that death/Titan world to runtime Island 017 so runtime
   // Island 016 can remain Fisherman's Village.
   { runtimeIslandNumber: 17, worldSourceNumber: 17, role: 'ordinary' },
+  { runtimeIslandNumber: 40, worldSourceNumber: 40, role: 'arena', presentationStatus: 'placeholder' },
 ];
 
 const ROUTES_BY_RUNTIME_ISLAND = new Map(
