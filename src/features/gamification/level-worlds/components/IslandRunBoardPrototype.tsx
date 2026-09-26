@@ -3407,6 +3407,9 @@ export function IslandRunBoardPrototype({
   const [isIslandClearCelebrationDeparting, setIsIslandClearCelebrationDeparting] = useState(false);
   // Claim appears once the title and rewards have landed (~3 s).
   const [isIslandClearClaimReady, setIsIslandClearClaimReady] = useState(false);
+  // A snapshot of the island (taken by the 3D scene, which then pauses) is
+  // the celebration backdrop, animated with compositor-only CSS.
+  const [islandClearBackdropUrl, setIslandClearBackdropUrl] = useState<string | null>(null);
   const [isIslandClearRewardClaimed, setIsIslandClearRewardClaimed] = useState(false);
   const [islandClearRewardPulseKey, setIslandClearRewardPulseKey] = useState(0);
   const [islandClearStats, setIslandClearStats] = useState<{
@@ -11785,11 +11788,12 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     if (!showIslandClearCelebration) {
       setIsIslandClearClaimReady(false);
+      setIslandClearBackdropUrl(null);
       return undefined;
     }
     const reduced = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const timer = window.setTimeout(() => setIsIslandClearClaimReady(true), reduced ? 900 : 3000);
+    const timer = window.setTimeout(() => setIsIslandClearClaimReady(true), reduced ? 900 : 3900);
     return () => window.clearTimeout(timer);
   }, [showIslandClearCelebration]);
 
@@ -15859,6 +15863,28 @@ export function IslandRunBoardPrototype({
                   >
                     {isDevMissionResetPending ? 'Clearing mission…' : 'Clear current island mission'}
                   </button>
+                  <button
+                    type="button"
+                    className="island-run-board__dev-island-jump-submit"
+                    onClick={() => {
+                      // Presentation-only replay: nothing is granted, and
+                      // Travel checks real completion before leaving.
+                      const reward = getBossReward(islandNumber);
+                      setIsIslandClearRewardClaimed(false);
+                      setIslandClearStats({
+                        islandNumber,
+                        diceEarned: reward.dice,
+                        essenceEarned: reward.essence,
+                        stopsCleared: 5,
+                        pendingNextIsland: islandNumber + 1,
+                        isCycleCapstone: islandNumber % 120 === 0,
+                      });
+                      setShowIslandClearCelebration(true);
+                      setShowTopbarMenu(false);
+                    }}
+                  >
+                    🎉 Preview island celebration (dev)
+                  </button>
                   <small className="island-run-board__dev-island-jump-hint">
                     {isDevIslandJumpTargetValid
                       ? 'First visit · mission, stops, egg and intros reset; creatures, wallet and dice are kept'
@@ -16277,6 +16303,8 @@ export function IslandRunBoardPrototype({
                   setWelcomePackClaimError(null);setWelcomePackBundleOnlyResult(null);setShowWelcomePackModal(true);
                 }}
                 firstArrivalActive={firstArrivalActive}
+                celebrationOrbit={showIslandClearCelebration && !isIslandClearCelebrationDeparting}
+                onCelebrationSnapshot={setIslandClearBackdropUrl}
                 firstArrivalSkip={firstArrivalSkip}
                 onFirstArrivalComplete={finishFirstArrival}
                 onFirstArrivalBeat={setFirstArrivalBeat}
@@ -18751,6 +18779,9 @@ export function IslandRunBoardPrototype({
             aria-hidden={islandNarrativeOpeningFlow.activeDialogue?.beatId === 'I001-B30' ? true : undefined}
             aria-label="Island completion celebration"
           >
+            {islandClearBackdropUrl ? (
+              <img className="island-clear-celebration__island" src={islandClearBackdropUrl} alt="" aria-hidden="true" />
+            ) : null}
             <CelebrationFireworks
               key={`${islandClearStats.islandNumber}-${islandClearStats.isCycleCapstone ? 'capstone' : 'hero'}`}
               variant={islandClearStats.isCycleCapstone ? 'capstone' : 'hero'}
@@ -18786,10 +18817,12 @@ export function IslandRunBoardPrototype({
                     className="island-clear-celebration__rewards"
                   >
                     <span className="island-clear-celebration__reward-item island-clear-celebration__reward-item--beat-1">
+                      <span className="island-clear-celebration__reward-burst" aria-hidden="true" />
                       <span className="island-clear-celebration__reward-icon" aria-hidden="true">🎲</span>
-                      <span className="island-clear-celebration__reward-value">+<IslandCompleteRewardCount value={islandClearStats.diceEarned} delayMs={1200} /></span>
+                      <span className="island-clear-celebration__reward-value">+<IslandCompleteRewardCount value={islandClearStats.diceEarned} delayMs={1150} /></span>
                     </span>
                     <span className="island-clear-celebration__reward-item island-clear-celebration__reward-item--beat-2">
+                      <span className="island-clear-celebration__reward-burst" aria-hidden="true" />
                       <span className="island-clear-celebration__reward-icon" aria-hidden="true">
                         <IslandMoneyNote
                           islandNumber={islandClearStats.islandNumber}
@@ -18797,11 +18830,12 @@ export function IslandRunBoardPrototype({
                           className="island-clear-celebration__money-note"
                         />
                       </span>
-                      <span className="island-clear-celebration__reward-value">+<IslandCompleteRewardCount value={islandClearStats.essenceEarned} delayMs={1850} /></span>
+                      <span className="island-clear-celebration__reward-value">+<IslandCompleteRewardCount value={islandClearStats.essenceEarned} delayMs={1950} /></span>
                     </span>
                     <span className="island-clear-celebration__reward-item island-clear-celebration__reward-item--beat-3">
+                      <span className="island-clear-celebration__reward-burst" aria-hidden="true" />
                       <span className="island-clear-celebration__reward-icon" aria-hidden="true">🟣</span>
-                      <span className="island-clear-celebration__reward-value">+<IslandCompleteRewardCount value={3} delayMs={2500} /></span>
+                      <span className="island-clear-celebration__reward-value">+<IslandCompleteRewardCount value={3} delayMs={2750} /></span>
                     </span>
                   </div>
                 )}

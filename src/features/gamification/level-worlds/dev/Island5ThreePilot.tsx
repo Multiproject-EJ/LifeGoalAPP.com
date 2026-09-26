@@ -399,6 +399,10 @@ interface Island5ThreePilotProps {
   onFirstArrivalWelcome?: () => void;
   firstArrivalPreviewTime?: number;
   firstArrivalActive?: boolean;
+  /** Island-complete celebration is open: snapshot the island once, then pause 3D rendering. */
+  celebrationOrbit?: boolean;
+  /** Receives a JPEG snapshot of the island (overview shot) for the celebration backdrop. */
+  onCelebrationSnapshot?: (dataUrl: string) => void;
   firstArrivalSkip?: boolean;
   onFirstArrivalComplete?: () => void;
   onFirstArrivalBeat?: (beat: string) => void;
@@ -3583,6 +3587,8 @@ export default function Island5ThreePilot({
   visibleTechnologyFragments = [], trafficLightCharge = 0,
   firstArrivalWaitForWelcome = false, firstArrivalWelcomeComplete = false, onFirstArrivalWelcome,
   firstArrivalPreviewTime, firstArrivalActive = false, firstArrivalSkip = false, onFirstArrivalComplete, onFirstArrivalBeat,
+  celebrationOrbit = false,
+  onCelebrationSnapshot,
   openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
@@ -3822,6 +3828,10 @@ export default function Island5ThreePilot({
   const landmarkBuildLevelsRef = useRef(landmarkBuildLevels);
   landmarkBuildLevelsRef.current = landmarkBuildLevels;
   const island15CrystalPalaceRuntimeRef = useRef<Island15CrystalPalaceRuntime | null>(null);
+  const celebrationOrbitRef = useRef(celebrationOrbit);
+  celebrationOrbitRef.current = celebrationOrbit;
+  const onCelebrationSnapshotRef = useRef(onCelebrationSnapshot);
+  onCelebrationSnapshotRef.current = onCelebrationSnapshot;
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
   constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
@@ -7319,6 +7329,10 @@ export default function Island5ThreePilot({
     // drifts slowly around the landmark, pushes in as a level fills, and
     // cranes up for each level reveal. A camera drag pauses it for a while.
     let constructionShotBase: { target: THREE.Vector3; offset: THREE.Vector3 } | null = null;
+    // Island-complete celebration: frame the overview shot, capture one
+    // snapshot for the modal's animated backdrop, then pause 3D rendering so
+    // the celebration stays perfectly smooth (and cheap) on every device.
+    let celebrationPhase: 'off' | 'framing' | 'capture' | 'paused' = 'off';
     let constructionCinematicStartedAt = 0;
     let constructionCinematicPausedUntil = 0;
     let constructionRevealStartedAt = Number.NEGATIVE_INFINITY;
@@ -9087,6 +9101,11 @@ export default function Island5ThreePilot({
     const animate = (now: number) => {
       // The opaque inspection portal owns the screen. Retain the world, but
       // avoid rendering two expensive WebGL scenes on a phone simultaneously.
+      if (celebrationPhase === 'paused' && celebrationOrbitRef.current) {
+        // The celebration shows a snapshot; skip all 3D work until it closes.
+        animationFrame = window.requestAnimationFrame(animate);
+        return;
+      }
       if (isTitansRest && stagedRestorationPresentationRef.current?.titanInspectionOpen) {
         animationFrame = window.requestAnimationFrame(animate);
         return;
@@ -10380,6 +10399,19 @@ export default function Island5ThreePilot({
         controls.target.copy(cactusCanyonBlastCameraPose.target);
         camera.lookAt(controls.target);
       }
+      if (celebrationOrbitRef.current) {
+        if (celebrationPhase === 'off') {
+          celebrationPhase = 'framing';
+          applyPreset('overview', 1, true);
+        } else if (celebrationPhase === 'framing') {
+          // One frame later the overview visibility has applied; capture next render.
+          celebrationPhase = 'capture';
+        }
+      } else if (celebrationPhase !== 'off') {
+        celebrationPhase = 'off';
+        ambientCameraEligibleAt = now + ISLAND_3D_BOARD_POV_IDLE_DELAY_MS;
+        canvas.dataset.celebrationBackdrop = 'off';
+      }
       const constructionCinematic = constructionPresentationRef.current;
       if (
         constructionCinematic?.active
@@ -10932,6 +10964,23 @@ export default function Island5ThreePilot({
       }
       try { renderer.render(scene, renderCamera); }
       finally { scene.matrixWorldAutoUpdate = automaticWorldMatrices; }
+      if (celebrationPhase === 'capture') {
+        // Read back in the same task as the render (no preserveDrawingBuffer needed).
+        try {
+          // Downscale before encoding: the backdrop is blurred anyway, and a
+          // full-resolution JPEG encode is the slowest step on a phone.
+          const snapshotScale = Math.min(1, 480 / Math.max(1, canvas.width));
+          const snapshot = document.createElement('canvas');
+          snapshot.width = Math.max(1, Math.round(canvas.width * snapshotScale));
+          snapshot.height = Math.max(1, Math.round(canvas.height * snapshotScale));
+          snapshot.getContext('2d')?.drawImage(canvas, 0, 0, snapshot.width, snapshot.height);
+          onCelebrationSnapshotRef.current?.(snapshot.toDataURL('image/jpeg', 0.78));
+          canvas.dataset.celebrationBackdrop = 'snapshot';
+        } catch {
+          canvas.dataset.celebrationBackdrop = 'snapshot-failed';
+        }
+        celebrationPhase = 'paused';
+      }
       if (isCoasterCarnival && island19CircuitFWorld && isCircuitFPreviewEnabled) {
         const atlasExterior = island19CircuitFWorld.root.userData.atlasExterior as
           | { root?: THREE.Object3D }
