@@ -10,6 +10,8 @@ import {
   ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
   ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS,
   resolveIslandRunBuildHoldCadence,
+  ISLAND_RUN_AUTO_BUILD_SPEED_FACTOR,
+  isIslandRunAutoBuildUnlocked,
 } from '../islandRunBuildCadence';
 import type { IslandRunContractV2BuildState } from '../islandRunContractV2EssenceBuild';
 import { assert, assertEqual, type TestCase } from './testHarness';
@@ -165,16 +167,36 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     },
   },
   {
+    name: 'Fast Build is an Island 18+ auto-build at twice hold speed, never instant',
+    run: async () => {
+      assertEqual(isIslandRunAutoBuildUnlocked(1, 0), false, 'early islands build by hand');
+      assertEqual(isIslandRunAutoBuildUnlocked(17, 0), false, 'still locked on Island 17');
+      assertEqual(isIslandRunAutoBuildUnlocked(18, 0), true, 'unlocks on Island 18');
+      assertEqual(isIslandRunAutoBuildUnlocked(3, 1), true, 'stays unlocked on later cycles');
+      assertEqual(ISLAND_RUN_AUTO_BUILD_SPEED_FACTOR, 0.5, 'auto-build takes half the time of a normal hold');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const modal = fsMod.readFileSync('src/features/gamification/level-worlds/components/BuildModalV2.tsx', 'utf8');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(!modal.includes('Build all landmarks'), 'Build all landmarks is not part of the Build modal');
+      assert(modal.includes("quote.mode === 'landmark'"), 'the modal only offers the landmark auto-build');
+      assert(board.includes("className=\"island-run-dev-build-all\"") && board.includes('if (!showBuildPanel || !isDevModeEnabled) return null;'), 'Build all is a floating dev-only tool');
+      assert(board.includes("stage: 'build_fast_offered'") && board.includes("stage: 'build_auto_start'") && board.includes("stage: 'build_hold_start'"), 'Fast Build availability and usage are tracked against manual holds');
+    },
+  },
+  {
     name: 'rapid build cadence is over twice as fast while retaining every visible beat',
     run: () => {
       assert(ISLAND_RUN_BUILD_TAP_STEP_DELAY_MS <= 575, 'ordinary build beats should be at least twice as fast as the former 1.15-second cadence');
       assert(ISLAND_RUN_BUILD_LEVEL_REVIEW_MIN_DWELL_MS <= 1_600, 'manual review access should arrive at least twice as fast as the former 3.2-second dwell');
       assert(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS <= 2_300, 'level review should finish at least twice as fast as the former 4.6-second window');
       const cadence = [0, 1, 2, 3, 4].map(resolveIslandRunBuildHoldCadence);
-      assertEqual(cadence[0].delayMs, 240, 'hold should begin with a readable rapid-build beat');
-      assertEqual(cadence[1].delayMs, 200, 'the first completed part should accelerate the hold');
-      assertEqual(cadence[2].delayMs, 160, 'the second completed part should accelerate again');
-      assertEqual(cadence[3].delayMs, 140, 'the full-sequence hold should settle at maximum speed');
+      assertEqual(cadence[0].delayMs, 480, 'hold should begin with a readable build beat');
+      assertEqual(cadence[1].delayMs, 400, 'the first completed part should accelerate the hold');
+      assertEqual(cadence[2].delayMs, 320, 'the second completed part should accelerate again');
+      assertEqual(cadence[3].delayMs, 280, 'the full-sequence hold should settle at maximum speed');
+      const levelHoldMs = [0, 1, 2, 3, 4].reduce((sum, step) => sum + resolveIslandRunBuildHoldCadence(step).delayMs, 0);
+      assert(levelHoldMs >= 1_500 && levelHoldMs <= 2_500, `a five-beat level should take about two seconds to watch (got ${levelHoldMs} ms)`);
       assert(cadence.every((entry, index) => index === 0 || entry.delayMs <= cadence[index - 1].delayMs), 'hold cadence should only accelerate, never stutter slower');
       assert(cadence[4].feedbackLabel.includes('full animation'), 'maximum speed should explicitly promise the preserved full animation');
     },

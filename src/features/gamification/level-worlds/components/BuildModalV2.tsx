@@ -1,7 +1,6 @@
-import { lazy, Suspense, useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
-import { ShopItemCostLine } from './ShopItemCostLine';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import type { FastBuildQuote } from '../services/islandRunFastBuild';
 import { ISLAND_RUN_FULL_RESTORATION_DICE_REWARD } from '../services/islandRunRestorationReward';
@@ -28,6 +27,9 @@ export interface BuildModalV2Props {
   fastBuildMode?: 'landmark' | 'island';
   buildActionError?: string | null;
   onFastBuild?: (quote: FastBuildQuote) => void;
+  /** Island 18+ auto-build is running for the active landmark. */
+  isAutoBuildActive?: boolean;
+  onStopAutoBuild?: () => void;
   onClose: () => void;
   viewModel: BuildModalV2ViewModel;
   isBuildHoldActive: boolean;
@@ -204,6 +206,7 @@ function BuildModalV2HoldButton({
   activeTitle,
   activeStopIndex,
   nextTapEssenceCost,
+  charge,
   isActive,
   isDisabled,
   onStartBuildHold,
@@ -212,6 +215,8 @@ function BuildModalV2HoldButton({
   activeTitle: string;
   activeStopIndex: number;
   nextTapEssenceCost: number;
+  /** Level funding 0..1: the button glows brighter as the level charges up. */
+  charge: number;
   isActive: boolean;
   isDisabled: boolean;
   onStartBuildHold: (stopIndex: number) => void;
@@ -224,7 +229,8 @@ function BuildModalV2HoldButton({
   return (
     <button
       type="button"
-      className={`bm2-hold-build${isActive ? ' bm2-hold-build--active' : ''}`}
+      className={`bm2-hold-build${isActive ? ' bm2-hold-build--active' : ''}${charge >= 0.8 ? ' bm2-hold-build--supercharged' : ''}`}
+      style={{ '--bm2-charge': Math.max(0, Math.min(1, charge)).toFixed(3) } as CSSProperties}
       disabled={isDisabled}
       aria-disabled={isDisabled}
       aria-label={`Press and hold to rapidly build ${activeTitle}. Every construction beat plays and costs up to ${nextTapEssenceCost} Money.`}
@@ -269,6 +275,7 @@ export function BuildModalV2({
   islandNumber,
   essenceAvailable,
   diceAvailable = 0, fastBuildQuotes = [], fastBuildMode, buildActionError, onFastBuild,
+  isAutoBuildActive = false, onStopAutoBuild,
   onClose,
   viewModel,
   isBuildHoldActive,
@@ -394,20 +401,26 @@ export function BuildModalV2({
                 activeTitle={active.title}
                 activeStopIndex={active.stopIndex}
                 nextTapEssenceCost={active.nextTapEssenceCost}
+                charge={progressPercent / 100}
                 isActive={isBuildHoldActive}
-                isDisabled={isBuildInteractionLocked || !canBuildActive}
+                isDisabled={isBuildInteractionLocked || !canBuildActive || isAutoBuildActive}
                 onStartBuildHold={onStartBuildHold}
                 onStopBuildHold={onStopBuildHold}
               />
               <div className="bm2-fast-actions">
-                {fastBuildQuotes.filter(quote => essenceAvailable >= quote.cost).map(quote => <button type="button" key={quote.mode}
-                  className={`bm2-fast-build bm2-fast-build--${quote.mode}`}
-                  disabled={isBuildHoldActive || isBuildInteractionLocked || isBuildModalHatcheryGuidanceActive}
-                  onClick={() => onFastBuild?.(quote)}>
-                  <span className="bm2-fast-build__icon" aria-hidden="true">{quote.mode === 'island' ? '🔥🔥🔥' : '🔥'}</span>
-                  <strong>{quote.mode === 'island' ? 'Build all landmarks' : 'Finish landmark'}</strong>
-                  <span className="bm2-fast-build__cost"><ShopItemCostLine cost={quote.cost} balance={essenceAvailable} currencyIcon="💰" currencyName="Money" /></span><small>+{quote.levels} 🎲</small>
-                </button>)}
+                {isAutoBuildActive ? (
+                  <button type="button" className="bm2-auto-build bm2-auto-build--running" onClick={onStopAutoBuild}>
+                    <span aria-hidden="true">■</span> Stop auto-build
+                  </button>
+                ) : fastBuildQuotes.filter(quote => quote.mode === 'landmark' && essenceAvailable >= quote.cost).map(quote => (
+                  <button type="button" key={quote.mode}
+                    className="bm2-auto-build"
+                    disabled={isBuildHoldActive || isBuildInteractionLocked || isBuildModalHatcheryGuidanceActive}
+                    aria-label={`Optional: auto-build ${active.title} to Level 3 at double speed for ${quote.cost} Money, earning ${quote.levels} dice`}
+                    onClick={() => onFastBuild?.(quote)}>
+                    <span aria-hidden="true">⚡</span> Auto-build ×2 · {quote.cost} 💰
+                  </button>
+                ))}
               </div>
               <details className="bm2-build-info"><summary aria-label="Building help and individual parts">? Build options</summary>
                 <p>Hold to build; release to stop. Each completed level earns 1 die. Fire builds finish the landmark, or all remaining island construction, for the shown total. Activities and adventures remain to play.</p>
