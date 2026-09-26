@@ -1645,8 +1645,16 @@
   box-shadow: 0 6px 14px rgba(2, 6, 23, 0.35);
 }
 
-/* Prize reveal: the reward itself is the hero. */
+/* Prize reveal: the reward itself is the hero, filling the whole screen
+   rather than the wheel's box (which clipped the Collect button). */
 .new-daily-spin-modal__result-overlay--reward {
+  position: fixed !important;
+  inset: 0;
+  border-radius: 0;
+  padding:
+    max(1.25rem, env(safe-area-inset-top, 0px))
+    1.25rem
+    max(1.25rem, env(safe-area-inset-bottom, 0px));
   background:
     radial-gradient(circle at 50% 42%, rgba(255, 196, 64, 0.32), transparent 46%),
     rgba(5, 8, 36, 0.62);
@@ -1655,9 +1663,21 @@
 
 .new-daily-spin-modal__result-overlay--reward .new-daily-spin-modal__reward-card {
   width: min(380px, 92vw);
+  max-height: none;
+  overflow: visible;
   border: 0;
   background: none;
   box-shadow: none;
+}
+
+.new-daily-spin-modal__result-overlay--reward .new-daily-spin-modal__reward-close {
+  min-width: 190px;
+  padding: 0.85rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 26px rgba(245, 158, 11, 0.5);
 }
 
 .new-daily-spin-modal__reward-hero {
