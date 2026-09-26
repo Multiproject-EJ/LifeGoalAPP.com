@@ -177,6 +177,7 @@ import { islandRunCompassBookReceiptTests } from './islandRunCompassBookReceipt.
 import { islandRunMissionTrackerTests } from './islandRunMissionTracker.test';
 import { islandRunCompletionTests } from './islandRunCompletion.test';
 import { islandRunMissionResetActionTests } from './islandRunMissionResetAction.test';
+import { islandRunBossRewardTests } from './islandRunBossReward.test';
 import { islandRunConcordHubEntryTests } from './islandRunConcordHubEntry.test';
 import { islandRunOrbitTopologyTests } from './islandRunOrbitTopology.test';
 import { islandRunOrbitProgressTests } from './islandRunOrbitProgress.test';
@@ -434,6 +435,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunMissionTracker', tests: islandRunMissionTrackerTests },
   { label: 'islandRunCompletion', tests: islandRunCompletionTests },
   { label: 'islandRunMissionResetAction', tests: islandRunMissionResetActionTests },
+  { label: 'islandRunBossReward', tests: islandRunBossRewardTests },
   { label: 'islandRunConcordHubEntry', tests: islandRunConcordHubEntryTests },
   { label: 'islandRunOrbitTopology', tests: islandRunOrbitTopologyTests },
   { label: 'islandRunOrbitProgress', tests: islandRunOrbitProgressTests },
