@@ -13,6 +13,8 @@ interface LevelWorldsHubProps {
   playerRank?: { title: string; tier: 'bronze' | 'command' };
   session: Session;
   onClose: () => void;
+  canExitToApp?: boolean;
+  onOpenGameSettings?: () => void;
   initialPanel?: 'default' | 'sanctuary';
   showTopBackButton?: boolean;
   isAdmin?: boolean;
@@ -27,6 +29,8 @@ export function LevelWorldsHub({
   playerRank,
   session,
   onClose,
+  canExitToApp = true,
+  onOpenGameSettings,
   initialPanel = 'default',
   showTopBackButton = false,
   isAdmin = false,
@@ -58,6 +62,8 @@ export function LevelWorldsHub({
         session={session}
         initialPanel={initialPanel}
         onExitBoard={onClose}
+        canExitToApp={canExitToApp}
+        onOpenGameSettings={onOpenGameSettings}
         showTopBackButton={showTopBackButton}
         isAdmin={isAdmin}
         onOpenSaveAccountSignup={onOpenSaveAccountSignup}

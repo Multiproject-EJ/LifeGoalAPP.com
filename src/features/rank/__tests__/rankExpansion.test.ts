@@ -98,6 +98,6 @@ export function runRankExpansionTests(): void {
   const lockedAccess = resolveWorldPortalAccess(portalInput);
   for (const workspace of ['game','account','support']) assert(canOpenWorkspaceWithWorldPortal(lockedAccess,workspace),'Essential workspace remains reachable');
   for (const workspace of ['planning','habits','goals','journal','actions']) assert(!canOpenWorkspaceWithWorldPortal(lockedAccess,workspace),'Menu/deep-link gate has one policy');
-  console.log('world-portal: island boundaries, gated ordinary players, dev/paid access, catch-up, replay and non-destructive recovery policy passed (not yet wired to runtime)');
+  console.log('world-portal: island boundaries, gated ordinary players, dev/paid policy, catch-up, replay and non-destructive recovery passed (runtime gate tested separately; paid provisioning not implemented)');
   console.log('rank-expansion: 36-rank boundaries, 12 preserved anchors, age gates, explicit endgame, asset variants and reward reset invariance passed');
 }

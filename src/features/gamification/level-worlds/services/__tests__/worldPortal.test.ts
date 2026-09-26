@@ -2,7 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { acceptWorldPortal } from '../worldPortalActions';
 import { canAttendWorldPortalCouncil, resolveWorldPortalProgress, sanitizeWorldPortalProgress, WORLD_PORTAL_KEY } from '../worldPortalProgress';
 import { mergeIslandRunSignatureMissionProgress, sanitizeIslandRunSignatureMissionProgress } from '../islandRunSignatureMissions';
-import { readIslandRunGameStateRecord, writeIslandRunGameStateRecord, resetIslandRunRuntimeCommitCoordinatorForTests, mergeRecordForConflict } from '../islandRunGameStateStore';
+import { hasSavedIslandRunRecord, readIslandRunGameStateRecord, writeIslandRunGameStateRecord, resetIslandRunRuntimeCommitCoordinatorForTests, mergeRecordForConflict } from '../islandRunGameStateStore';
 import { __resetIslandRunStateStoreForTests, getIslandRunStateSnapshot, resetIslandRunStateSnapshot } from '../islandRunStateStore';
 import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
 import { assert, assertEqual, assertDeepEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
@@ -18,6 +18,16 @@ async function seed(island = 40, cycle = 0) {
 }
 const accept = (expectedIsland = 40, expectedCycle = 0) => acceptWorldPortal({ session, client: null, expectedIsland, expectedCycle });
 export const worldPortalTests: TestCase[] = [
+  { name: 'offline entry requires a usable owner-scoped local save, not a default or corrupt record', async run() {
+    installWindowWithStorage(createMemoryStorage());
+    assertEqual(hasSavedIslandRunRecord(session), false, 'missing save is not playable proof');
+    const { storage } = await seed();
+    assertEqual(hasSavedIslandRunRecord(session), true, 'real saved run is available');
+    for (let i = 0; i < storage.length; i++) storage.setItem(storage.key(i)!, '{broken');
+    assertEqual(hasSavedIslandRunRecord(session), false, 'corrupt save fails closed');
+    storage.getItem = () => { throw Error('Storage unavailable'); };
+    assertEqual(hasSavedIslandRunRecord(session), false, 'unavailable storage fails closed');
+  }},
   { name: 'portal arrival boundary and later-cycle catch-up use island progress, not rank', run() {
     for (let island = 1; island <= 120; island++) assertEqual(canAttendWorldPortalCouncil({ currentIslandNumber: island, cycleIndex: 0 }), island >= 40, 'island threshold');
     assert(canAttendWorldPortalCouncil({ currentIslandNumber: 1, cycleIndex: 1 }), 'later-cycle catch-up');

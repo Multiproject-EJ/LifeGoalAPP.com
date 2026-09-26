@@ -1,6 +1,6 @@
 /**
- * Game-first entry policy. Not activated in App until canonical ownership,
- * trusted entitlement/admin inputs are wired. Existing regular users are gated
+ * Game-first entry policy, wired in App through owner-scoped save/admin checks.
+ * Paid entitlement provisioning remains unimplemented. Existing regular users are gated
  * too (explicit user decision); their saved real-world data must be preserved.
  * This is presentation policy, NOT server authorization for paid APIs.
  */

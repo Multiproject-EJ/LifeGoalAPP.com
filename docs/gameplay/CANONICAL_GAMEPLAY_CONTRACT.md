@@ -521,9 +521,23 @@ the earliest receipt across cycles. Replay and duplicate acceptance give nothing
 again. The UI confirms local durability only after reading the receipt back;
 existing account sync can still be pending. Storage failure offers a retry.
 
-This slice does not activate the app-wide game-first gate. Verified developer
-bypass, all navigation/deep-link guarding and unrestricted essential
-account/privacy/support/recovery access must ship together in the next slice.
+The app-wide game-first gate applies to new and existing ordinary players
+(2026-09-27). Both app layouts and their protected overlays are behind the same
+owner-scoped guard, not just a hidden Exit button. Verified developer access
+comes from the existing active admin lookup, never user-editable metadata or a
+local switch. Portal owners and verified developers retain full app entry;
+ordinary players enter Island Run and cannot leave for Today until handover.
+The handover screen stays mounted until explicit exit to Today.
+
+Essential account settings, privacy, support, accessibility and sign-in remain
+available before unlock. Recover game reloads/resumes; it does not delete saves.
+Startup waits for canonical hydration and developer verification where needed.
+With no usable local save, a failed remote load offers retry rather than a fresh
+playable run; existing local progress can be used offline. Account switches never
+reuse a previous player's developer result. Paid access is not inferred from
+Pro membership, and an optimistic receipt that failed local persistence cannot
+unlock the app. This is a client-side journey policy, not server authorization.
+
 Paid access and consent to use answers for AI suggestions are separate features;
 accepting the portal authorizes neither.
 

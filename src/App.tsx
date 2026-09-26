@@ -18,6 +18,9 @@ import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
 import { shouldDismissAuthOverlay } from './features/auth/authInitialization';
 import { readJourneyDay } from './features/onboarding/journeyAccess';
+import { useVerifiedDeveloper } from './features/onboarding/useVerifiedDeveloper';
+import { useWorldPortalEntry } from './features/onboarding/useWorldPortalEntry';
+import { GameFirstShell } from './features/onboarding/GameFirstShell';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { GoalWorkspace, LifeGoalsSection, MyQuestHub } from './features/goals';
 import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome, StarterHabitPicker } from './features/habits';
@@ -123,7 +126,7 @@ import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorlds
 import { getIslandBackgroundImageSrc } from './features/gamification/level-worlds/services/islandBackgrounds';
 import { getIslandDisplayName } from './features/gamification/level-worlds/services/islandNames';
 import { hasReceivedCompassBook } from './features/gamification/level-worlds/services/islandRunCompassBookReceipt';
-import { getIslandRunStateSnapshot, hydrateIslandRunState, subscribeIslandRunState } from './features/gamification/level-worlds/services/islandRunStateStore';
+import { getIslandRunStateSnapshot, subscribeIslandRunState } from './features/gamification/level-worlds/services/islandRunStateStore';
 import { fetchHolidayPreferences } from './services/holidayPreferences';
 import { fetchSoundEffectsEnabled, updateSoundEffectsEnabled } from './services/soundPreferences';
 import {
@@ -226,7 +229,6 @@ import { PeaceBetweenLanding } from './surfaces/peacebetween/PeaceBetweenLanding
 import { isConflictRoute, resolveSurface } from './surfaces/surfaceContext';
 import { getFeatureAvailability, type FeatureAvailabilityId } from './config/featureAvailability';
 import { resolveFeatureAccess } from './services/featureAccess';
-import { isAdminUser } from './services/adminRoles';
 import { loadGoalsOfflineFirst } from './data/goalsRepo';
 import { listHabitsV2 } from './services/habitsV2';
 import type { DualTrackRealLifeInput } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
@@ -714,19 +716,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
     () => (supabaseSession ?? localGuestSession) as Session,
     [localGuestSession, supabaseSession],
   );
-  const subscribeJourneyState = useCallback((onChange: () => void) => (
-    activeSession ? subscribeIslandRunState(activeSession, onChange) : () => {}
-  ), [activeSession]);
-  const readJourneyState = useCallback(() => (
-    activeSession ? getIslandRunStateSnapshot(activeSession) : null
-  ), [activeSession]);
-  const journeyState = useSyncExternalStore(subscribeJourneyState, readJourneyState, readJourneyState);
-  useEffect(() => {
-    if (!activeSession) return;
-    void hydrateIslandRunState({ session: activeSession, client }).catch(() => {
-      // Keep the canonical local snapshot usable if remote hydration fails.
-    });
-  }, [activeSession, client]);
+  const developerCheck = useVerifiedDeveloper(supabaseSession?.user.id ?? null);
+  const isAdmin = developerCheck.status === 'checking' ? null : developerCheck.verified;
+  const [guestClaimSettledOwner, setGuestClaimSettledOwner] = useState<string | null>(null);
+  const [guestClaimFailedOwner, setGuestClaimFailedOwner] = useState<string | null>(null);
+  const [guestClaimAttempt, setGuestClaimAttempt] = useState(0);
+  const guestClaimOwnerRef = useRef(supabaseSession?.user.id ?? null);
+  guestClaimOwnerRef.current = supabaseSession?.user.id ?? null;
+  const guestClaimRequestRef = useRef(0);
+  const guestTransferPending = Boolean(supabaseSession && guestClaimSettledOwner !== supabaseSession.user.id
+    && ['claim_pending', 'claiming', 'claim_failed'].includes(readIslandRunGuestFunnelState().claimStatus));
+  const portalEntry = useWorldPortalEntry(activeSession ?? null, client, developerCheck, guestTransferPending,
+    guestClaimFailedOwner === supabaseSession?.user.id);
+  const { journeyState } = portalEntry;
   const islandJourneyProgress = useMemo(() => journeyState ? {
     currentIslandNumber: journeyState.currentIslandNumber,
     cycleIndex: journeyState.cycleIndex,
@@ -797,7 +799,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     normalizeTimerSession(readTimerSession()),
   );
   const [scoreTabActiveTab, setScoreTabActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections'>('home');
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [soundEffectsEnabled, setSoundEffectsEnabledState] = useState(true);
   const [soundPreferenceSaving, setSoundPreferenceSaving] = useState(false);
   const [soundPreferenceError, setSoundPreferenceError] = useState<string | null>(null);
@@ -1964,15 +1965,27 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [supabaseSession]);
 
   useEffect(() => {
-    if (!supabaseSession || !client) return;
+    if (!supabaseSession) return;
     const guestState = readIslandRunGuestFunnelState();
     if (!['claim_pending', 'claiming', 'claim_failed'].includes(guestState.claimStatus)) return;
-    if (guestClaimInFlightUserIdRef.current === supabaseSession.user.id) return;
+    // A single local guest copy must not be imported concurrently into two
+    // accounts when a session changes while the first claim is still pending.
+    if (guestClaimInFlightUserIdRef.current !== null) return;
 
     guestClaimInFlightUserIdRef.current = supabaseSession.user.id;
+    setGuestClaimFailedOwner(null);
+    const request = ++guestClaimRequestRef.current;
+    const isCurrentOwner = () => guestClaimOwnerRef.current === supabaseSession.user.id && guestClaimRequestRef.current === request;
+    // Bound the UI wait. The claim service keeps the guest copy and its existing
+    // verification rules; this timer never cancels, marks claimed or grants data.
+    const waitTimer = window.setTimeout(() => {
+      if (isCurrentOwner()) setGuestClaimFailedOwner(supabaseSession.user.id);
+    }, 15000);
     void claimLocalIslandRunGuestProgress({ session: supabaseSession, client })
       .then((result) => {
+        if (!isCurrentOwner()) return;
         if (result.status === 'claimed' || result.status === 'already_claimed') {
+          setGuestClaimSettledOwner(supabaseSession.user.id);
           const latestGuestState = readIslandRunGuestFunnelState();
           setAuthError(null);
           setAuthMessage(
@@ -1989,20 +2002,30 @@ export default function App({ forceAuthOnMount }: AppProps) {
           return;
         }
         if (result.status === 'conflict') {
+          // The claim service verified an existing account run and refused to
+          // replace it. That run may resume; the guest copy remains untouched.
+          setGuestClaimSettledOwner(supabaseSession.user.id);
           setAuthError('This account already has different Island Run progress. Nothing was overwritten, and the guest run is still safe on this device.');
           setShowAuthPanel(true);
         }
+        if (result.status === 'skipped') setGuestClaimFailedOwner(supabaseSession.user.id);
       })
       .catch((error) => {
+        if (!isCurrentOwner()) return;
+        setGuestClaimFailedOwner(supabaseSession.user.id);
         setAuthError(error instanceof Error
           ? `We couldn’t verify the cloud save yet: ${error.message} Your guest run is still safe on this device.`
           : 'We couldn’t verify the cloud save yet. Your guest run is still safe on this device.');
         setShowAuthPanel(true);
       })
       .finally(() => {
-        guestClaimInFlightUserIdRef.current = null;
+        window.clearTimeout(waitTimer);
+        if (guestClaimInFlightUserIdRef.current === supabaseSession.user.id) {
+          guestClaimInFlightUserIdRef.current = null;
+          if (!isCurrentOwner()) setGuestClaimAttempt(value => value + 1);
+        }
       });
-  }, [client, supabaseSession]);
+  }, [client, supabaseSession, guestClaimAttempt]);
 
   useEffect(() => {
     if (!activeSession?.user?.id) return;
@@ -2024,29 +2047,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     loadVotes: Boolean(activeSession?.user?.id),
   });
 
-  useEffect(() => {
-    if (!supabaseSession?.user?.id) {
-      setIsAdmin(false);
-      return;
-    }
-
-    let active = true;
-    setIsAdmin(null);
-    isAdminUser(supabaseSession.user.id)
-      .then((value) => {
-        if (!active) return;
-        setIsAdmin(value);
-      })
-      .catch((error) => {
-        if (!active) return;
-        console.warn('Failed to resolve admin status for feature gating; defaulting to public access.', error);
-        setIsAdmin(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [supabaseSession?.user?.id]);
 
   useEffect(() => {
     let active = true;
@@ -2837,15 +2837,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // Gated on a dedicated `start_flow_complete` metadata flag so it stays
   // independent of the (now optional) Leap Progress / onboarding_complete flag.
   useEffect(() => {
-    if (!supabaseSession) return;
+    if (!supabaseSession || portalEntry.phase !== 'ready') return;
     const userId = supabaseSession.user.id;
     if (firstRunInitializedUserRef.current === userId) return;
     firstRunInitializedUserRef.current = userId;
+    // Ordinary players learn through Island Run, not the old Today spotlight.
+    if (portalEntry.access.reason !== 'developer') {
+      setFirstRunStep(null);
+      return;
+    }
     const startFlowComplete = Boolean(supabaseSession.user.user_metadata?.start_flow_complete);
     if (!startFlowComplete) {
       setFirstRunStep('welcome');
     }
-  }, [supabaseSession]);
+  }, [supabaseSession, portalEntry.phase, portalEntry.access.reason]);
 
   const completeFirstRunStartFlow = useCallback(() => {
     setFirstRunStep(null);
@@ -4322,7 +4327,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return <PeaceBetweenLanding />;
   }
 
-  if (shouldShowAppReadinessScreen) {
+  if (shouldShowAppReadinessScreen && !portalEntry.showGameFirst) {
     return (
       <LoadingReadinessScreen
         title="Preparing your Game of Life"
@@ -4481,6 +4486,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             </button>
           ) : null}
           <MyAccountPanel
+            key={activeSession.user.id}
             initialFolder={pendingSettingsFolder}
             onInitialFolderOpened={() => setPendingSettingsFolder(null)}
             session={activeSession}
@@ -4488,21 +4494,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
             isAuthenticated={isAuthenticated}
             onSignOut={handleSignOut}
             onEditProfile={handleEditAccountDetails}
-            onLaunchLeapProgress={handleLaunchLeapProgress}
-            onLaunchDayZeroOnboarding={handleLaunchDayZeroOnboarding}
+            onLaunchLeapProgress={portalEntry.showGameFirst ? undefined : handleLaunchLeapProgress}
+            onLaunchDayZeroOnboarding={portalEntry.showGameFirst ? undefined : handleLaunchDayZeroOnboarding}
             onLaunchFirstRunOnboarding={isAdmin === true ? handleLaunchFirstRunOnboardingFromAdmin : undefined}
             onRunDeveloperDayLoop={isAdmin === true ? handleRunDeveloperDayLoop : undefined}
-            profile={workspaceProfile}
-            stats={workspaceStats}
+            profile={workspaceProfile?.user_id === activeSession?.user.id ? workspaceProfile : null}
+            stats={workspaceProfileLoadedUserId === activeSession?.user.id ? workspaceStats : null}
             profileLoading={workspaceProfileLoading}
             onProfileUpdate={setWorkspaceProfile}
-            onLaunchWeeklyHabitReview={() => setActiveWorkspaceNav('planning')}
-            onLaunchDailyCatchUpPrompt={() => setActiveWorkspaceNav('planning')}
-            onLaunchDailyTreatCalendar={() => {
+            onLaunchWeeklyHabitReview={portalEntry.showGameFirst ? undefined : () => setActiveWorkspaceNav('planning')}
+            onLaunchDailyCatchUpPrompt={portalEntry.showGameFirst ? undefined : () => setActiveWorkspaceNav('planning')}
+            onLaunchDailyTreatCalendar={portalEntry.showGameFirst ? undefined : () => {
               setCalendarLaunchMode('auto');
               setShowCalendarPlaceholder(true);
             }}
-            onLaunchYesterdayTodoCleanup={() => handleLaunchYesterdayTodoCleanup({ force: true })}
+            onLaunchYesterdayTodoCleanup={portalEntry.showGameFirst ? undefined : () => handleLaunchYesterdayTodoCleanup({ force: true })}
             billingReturnBanner={billingReturnBanner}
             soundEffectsEnabled={soundEffectsEnabled}
             soundPreferenceSaving={soundPreferenceSaving}
@@ -5812,6 +5818,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   };
 
   const handleCloseLevelWorldsEntry = () => {
+    if (!portalEntry.access.canLeaveGameForToday) return;
     const guestState = readIslandRunGuestFunnelState();
     if (isDemoSession(activeSession) && guestState.claimStatus !== 'claimed') {
       setShowGuestExitSavePrompt(true);
@@ -5858,6 +5865,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         }}
       >
         <LevelWorldsHub
+          key={activeSession.user.id}
           session={activeSession}
           playerRank={menuRankProgress.current}
           initialPanel={levelWorldsEntryPanel}
@@ -6054,6 +6062,62 @@ export default function App({ forceAuthOnMount }: AppProps) {
       </div>
     </div>
   ) : null;
+
+  // One guard above BOTH render branches. Blocked workspaces and their overlays
+  // are never mounted behind the game, regardless of navigation/deep-link state.
+  if (activeSession && portalEntry.showGameFirst) {
+    const leaveForToday = () => {
+      if (!portalEntry.access.canLeaveGameForToday) return;
+      setShowLevelWorldsFromEntry(false);
+      setShowGameBoardOverlay(false);
+      setShowMobileGamification(false);
+      setReopenGameBoardOverlayOnLevelWorldsClose(false);
+      setFirstRunStep(null);
+      // Discard protected launch requests received while their views were gated.
+      // In particular, do not mount a queued AI coach or habit editor on unlock.
+      setShowAiCoachModal(false); setAiCoachStarterQuestion(undefined);
+      setIsStarterQuestSheetOpen(false); setShowQuickGainsMenu(false);
+      setShowTipOfDay(false); setComebackCelebration(null);
+      setShowCalendarPlaceholder(false); setShowHolidaySeasonDialog(false);
+      setIsMobileMenuOpen(false); setIsLauncherHandOverlayOpen(false);
+      setIsMobileProfileDialogOpen(false); setAppPreviewFeature(null);
+      setShowLeapProgress(false); setShowDayZeroOnboarding(false);
+      setActiveWorkspaceNav('planning');
+      setShowMobileHome(true);
+      portalEntry.leaveGame();
+    };
+    return <GameFirstShell key={activeSession.user.id}
+      guestTransferPending={guestTransferPending}
+      phase={portalEntry.phase} offline={portalEntry.offline} developerError={developerCheck.status === 'error'}
+      accountRequested={activeWorkspaceNav === 'account'}
+      account={activeWorkspaceNav === 'account' ? renderWorkspaceSection() : null}
+      onAccount={() => setActiveWorkspaceNav('account')}
+      onCloseAccount={() => setActiveWorkspaceNav('game')}
+      onSignIn={!isAuthenticated ? () => openAuthOverlay('login') : undefined}
+      onRetry={() => {
+        portalEntry.retry(); developerCheck.retry();
+        if (!guestClaimInFlightUserIdRef.current) {
+          setGuestClaimSettledOwner(null); setGuestClaimAttempt(value => value + 1);
+        }
+      }}
+      renderGame={openHelp => <LevelWorldsHub session={activeSession} playerRank={menuRankProgress.current}
+        canExitToApp={portalEntry.access.canLeaveGameForToday} onClose={leaveForToday}
+        onOpenGameSettings={openHelp} isAdmin={isAdmin === true}
+        onOpenSaveAccountSignup={handleOpenSaveAccountSignup}
+        onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
+        dailySpinAvailable={spinAvailable} dailySpinCount={spinsAvailable} isPro={menuMembershipTier === 'pro'} />}
+      overlays={<>
+        {portalEntry.phase === 'ready' && <NativeNotificationCoordinator session={activeSession} />}
+        {authOverlay}
+        {shouldShowWorkspaceSetup && <WorkspaceSetupDialog isOpen session={supabaseSession}
+          profile={workspaceProfile?.user_id === activeSession.user.id ? workspaceProfile : null}
+          onClose={handleCloseWorkspaceSetup} onSaved={profile => {
+            setWorkspaceProfile(profile); setDisplayName(profile.full_name ?? displayName);
+            setShowWorkspaceSetup(false); setWorkspaceSetupDismissed(false); setAuthMessage('Profile saved!');
+          }} />}
+        {showDailySpinWheel && <NewDailySpinWheel session={activeSession} onClose={() => setShowDailySpinWheel(false)} />}
+      </>} />;
+  }
 
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${

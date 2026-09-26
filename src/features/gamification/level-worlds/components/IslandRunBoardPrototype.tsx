@@ -1875,6 +1875,8 @@ interface IslandRunBoardPrototypeProps {
   session: Session;
   initialPanel?: 'default' | 'sanctuary';
   onExitBoard?: () => void;
+  canExitToApp?: boolean;
+  onOpenGameSettings?: () => void;
   showTopBackButton?: boolean;
   isAdmin?: boolean;
   onOpenSaveAccountSignup?: (source?: IslandRunGuestClaimSource) => void;
@@ -1889,6 +1891,8 @@ export function IslandRunBoardPrototype({
   session,
   initialPanel = 'default',
   onExitBoard,
+  canExitToApp = true,
+  onOpenGameSettings,
   showTopBackButton: _showTopBackButton = false,
   isAdmin = false,
   onOpenSaveAccountSignup,
@@ -15934,7 +15938,7 @@ export function IslandRunBoardPrototype({
                   </small>
                 </section>
               ) : null}
-              <button
+              {canExitToApp && <button
                 type="button"
                 className="island-run-board__topbar-menu-item island-run-board__topbar-menu-item--exit"
                 aria-label="Exit Island Run"
@@ -15944,7 +15948,9 @@ export function IslandRunBoardPrototype({
                 }}
               >
                 <span aria-hidden="true">✕</span> Exit Island Run
-              </button>
+              </button>}
+              {onOpenGameSettings && <button type="button" className="island-run-board__topbar-menu-item"
+                onClick={() => { stopAutoRoll(); setShowTopbarMenu(false); onOpenGameSettings(); }}>Account &amp; help</button>}
               {(canAttendWorldPortalCouncil(__storeState) || resolveWorldPortalProgress(__storeState.signatureMissionProgressByIsland)) && (
                 <button type="button" className="island-run-board__topbar-menu-item" onClick={() => {
                   stopAutoRoll(); setShowTopbarMenu(false); setShowWorldPortalCouncil(true);
