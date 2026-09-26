@@ -21,6 +21,7 @@ export function IslandHudGlass() {
         <stop offset=".62" stopColor="var(--hud-cap-low, #9bbacc)" /><stop offset=".86" stopColor="var(--hud-cap-high, #fff)" />
       </linearGradient>
       <linearGradient id={`${id}-reflection`} x2="0" y2="1"><stop stopColor="#fff" stopOpacity=".65" /><stop offset="1" stopColor="#fff" stopOpacity="0" /></linearGradient>
+      <radialGradient id={`${id}-energy`}><stop stopColor="var(--hud-glow)" stopOpacity=".9" /><stop offset="1" stopColor="var(--hud-glow)" stopOpacity="0" /></radialGradient>
     </defs>
     <rect x="17" y="7" width="566" height="86" rx="31" fill={`url(#${id}-body)`} stroke={`url(#${id}-edge)`} strokeWidth="3" />
     <rect x="24" y="12" width="552" height="76" rx="27" fill="none" stroke="var(--hud-glow)" strokeOpacity=".7" />
@@ -30,6 +31,15 @@ export function IslandHudGlass() {
     <path d="M576 13Q596 22 598 49Q596 77 576 87L568 75Q578 50 568 25Z" fill={`url(#${id}-cap)`} stroke="#ffffff90" />
     <path d="M33 15Q18 50 33 85M567 15Q582 50 567 85" fill="none" stroke={`url(#${id}-edge)`} strokeWidth="4" />
     <path d="M48 14L65 14L40 75L34 65ZM524 15L538 15L566 69L560 78Z" fill="#c5f6ff" opacity=".13" />
+    <g className="island-hud-glass__energy">
+      {[[75, 24], [172, 81], [258, 16], [362, 85], [452, 19], [545, 74]].map(([x, y]) =>
+        <g className="island-hud-glass__spark" key={x}>
+          <ellipse cx={x} cy={y} rx="20" ry="11" fill={`url(#${id}-energy)`} />
+          <path d={`M${x - 6} ${y}h12M${x} ${y - 5}v10`} stroke="var(--hud-glow)" strokeWidth="1" />
+          <circle cx={x} cy={y} r="1.5" fill="#f2ffff" />
+        </g>,
+      )}
+    </g>
     <g className="island-hud-glass__glints" fill="#efffff">
       <path d="M132 8l2 6 7 2-7 2-2 5-2-5-7-2 7-2Z" />
       <path d="M471 80l2 4 5 1-5 1-2 4-1-4-5-1 5-1Z" />

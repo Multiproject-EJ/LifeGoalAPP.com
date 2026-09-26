@@ -30,9 +30,9 @@ export function resolveIslandRunFeatureAccess(context: IslandRunFeatureAccessCon
     arenaOrientation: gradual && island === 1,
     welcomeCheckIn: validIsland && island < GRADUAL_EGG_INTRODUCTION_ISLAND,
     // Presentation, progress accumulation and claims share this policy.
-    rewardChannel: !beginnerIsland && (!gradual || (validIsland && island >= 2 && ceremony.beaconLitAtMs !== null)),
-    eventLauncher: !beginnerIsland && (!gradual || (validIsland && island >= 2 && (games.ordinaryEvents || games.inauguralRound))),
-    ordinaryEvents: !gradual || (validIsland && island >= 2 && games.ordinaryEvents),
+    rewardChannel: validIsland && !beginnerIsland && (!gradual || (island >= 2 && ceremony.beaconLitAtMs !== null)),
+    eventLauncher: validIsland && !beginnerIsland && (!gradual || (island >= 2 && (games.ordinaryEvents || games.inauguralRound))),
+    ordinaryEvents: validIsland && !beginnerIsland && (!gradual || (island >= 2 && games.ordinaryEvents)),
     inauguralRound: gradual && validIsland && games.inauguralRound,
     puzzleCollection: gradual ? island >= GRADUAL_PUZZLE_INTRODUCTION_ISLAND : (!Number.isFinite(context.currentIslandNumber) || island >= 2),
     trafficLight: !beginnerIsland && (!gradual || island >= GRADUAL_PUZZLE_INTRODUCTION_ISLAND),

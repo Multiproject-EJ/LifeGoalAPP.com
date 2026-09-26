@@ -151,3 +151,35 @@
 /* Sit the top bar 10px higher (user request, 2026-09-25); the panels above
    hang from it and moved up by the same amount. */
 .island-run-board__topbar.island-run-themed-topbar { top: calc(env(safe-area-inset-top, 0px) + 2px); }
+
+/* 15% shorter housing; retain the existing horizontal geometry and 44px controls. */
+.island-run-board__topbar.island-run-themed-topbar {
+  min-height: 64.6px;
+  padding-block: 8px;
+}
+.island-run-prototype:has(.island-run-themed-topbar) .island-run-board__rewardbar-cluster { top: calc(env(safe-area-inset-top, 0px) + 78.6px); }
+.island-run-themed-topbar ~ .island-run-board__topbar-menu-panel,
+.island-run-themed-topbar ~ .island-run-board__audio-menu-panel { top: calc(env(safe-area-inset-top, 0px) + 72.6px); }
+.island-hud-glass__energy {
+  pointer-events: none;
+  opacity: .24;
+  animation: island-hud-energy-arrival 3.6s ease-out both;
+}
+.island-hud-glass__spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: island-hud-energy-breathe 7s ease-in-out infinite;
+}
+.island-hud-glass__spark:nth-child(2n) { animation-delay: -2.6s; }
+.island-hud-glass__spark:nth-child(3n) { animation-delay: -4.8s; }
+@keyframes island-hud-energy-arrival {
+  0% { opacity: .12; } 18% { opacity: .9; } 100% { opacity: .24; }
+}
+@keyframes island-hud-energy-breathe {
+  0%, 100% { opacity: .25; transform: scale(.75); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-hud-glass__energy { animation: none; opacity: .16; }
+  .island-hud-glass__spark { animation: none; opacity: .65; }
+}

@@ -1,0 +1,54 @@
+{
+  "measurements": [
+    {
+      "viewportWidth": 360,
+      "variant": "before",
+      "x": 7,
+      "y": 32,
+      "width": 346,
+      "height": 76
+    },
+    {
+      "viewportWidth": 360,
+      "variant": "after",
+      "x": 7,
+      "y": 32,
+      "width": 346,
+      "height": 64.59375
+    },
+    {
+      "viewportWidth": 390,
+      "variant": "before",
+      "x": 14,
+      "y": 32,
+      "width": 362,
+      "height": 76
+    },
+    {
+      "viewportWidth": 390,
+      "variant": "after",
+      "x": 14,
+      "y": 32,
+      "width": 362,
+      "height": 64.59375
+    },
+    {
+      "viewportWidth": 1280,
+      "variant": "before",
+      "x": 344,
+      "y": 32,
+      "width": 592,
+      "height": 76
+    },
+    {
+      "viewportWidth": 1280,
+      "variant": "after",
+      "x": 344,
+      "y": 32,
+      "width": 592,
+      "height": 64.59375
+    }
+  ],
+  "errors": [],
+  "scope": "Actual HUD glass and controller components in isolated presentation fixture; puzzle briefing screenshots are not full playtests."
+}

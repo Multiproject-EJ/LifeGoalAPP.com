@@ -1,4 +1,5 @@
 import {drawJackpotButton} from './jackpot-effects.js';
+import {drawAmbientSparkles} from './ambient-sparkles.js';
 import * as THREE from 'three';
 import {createMultiplierHologram,PILL} from './multiplier-hologram.js';
 import {controllerFraming} from './framing.js';
@@ -78,8 +79,18 @@ function drawButton(b,t){
  const c=b.ctx,W=b.canvas.width,H=b.canvas.height,jackpot=state.phase==='jackpot',ink=themes[theme].ink;
  c.clearRect(0,0,W,H);
  if(b.id!=='roll'){
-   const fx=b.root.userData.fireworks;fx.face.visible=jackpot;
+   const fx=b.root.userData.fireworks,ambient=(b.id==='shop'||b.id==='build')&&!pose.dark;
+   fx.face.visible=jackpot||ambient;
    if(jackpot){const context=fx.canvas.getContext('2d');context.clearRect(0,0,512,512);drawJackpotButton(context,b.id,t,reduced,true);fx.texture.needsUpdate=true;}
+   else if(ambient){
+     fx.ambientStartedAt??=t;
+     const key=theme+':'+(reduced?'still':Math.floor(t*12));
+     if(fx.ambientFrame!==key||fx.wasJackpot){
+       drawAmbientSparkles(fx.canvas.getContext('2d'),t,t-fx.ambientStartedAt,themes[theme].light,reduced);
+       fx.texture.needsUpdate=true;fx.ambientFrame=key;
+     }
+   }
+   fx.wasJackpot=jackpot;
    b.mat.color.set(jackpot?'#a96a12':themes[theme].panel);
    const glass=!!themes[theme].translucentButtons&&!jackpot;
    b.mat.transparent=glass;b.mat.opacity=glass?.48:1;b.mat.depthWrite=!glass;
