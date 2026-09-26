@@ -2,7 +2,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { getEffectiveIslandNumber, initStopBuildStatesForIsland } from './islandRunContractV2EssenceBuild';
-import { getIslandMissionBriefingBeatId } from './islandRunMissionBriefing';
+import { getIslandMissionBriefingBeatId, type IslandMissionBriefingTrigger } from './islandRunMissionBriefing';
 import { getIslandRunSignatureMissionKey } from './islandRunSignatureMissions';
 import { TOKEN_START_TILE_INDEX } from './islandBoardLayout';
 import { isIslandRunFragmentOnlyBoardPhase } from './islandRunFirstSessionTutorialUi';
@@ -13,6 +13,8 @@ export interface ResetCurrentIslandMissionForDevResult {
   islandNumber: number;
   cycleIndex: number;
   record: IslandRunGameStateRecord;
+  /** Set for a fresh arrival: the briefing to present straight away. */
+  briefingTrigger: IslandMissionBriefingTrigger | null;
 }
 
 /**
@@ -88,6 +90,28 @@ export function buildCurrentIslandMissionResetRecord(
 }
 
 /**
+ * Developer "first visit" for the currently loaded island: the mission reset
+ * above plus this island's Hatchery egg, so the dev island jump feels like
+ * landing somewhere new. Creature collections, wallet, dice and every other
+ * island's progress are kept.
+ */
+export function buildDevFreshIslandArrivalRecord(
+  current: IslandRunGameStateRecord,
+): IslandRunGameStateRecord {
+  const reset = buildCurrentIslandMissionResetRecord(current);
+  const perIslandEggs = { ...(reset.perIslandEggs ?? {}) };
+  delete perIslandEggs[String(current.currentIslandNumber)];
+  return {
+    ...reset,
+    activeEggTier: null,
+    activeEggSetAtMs: null,
+    activeEggHatchDurationMs: null,
+    activeEggIsDormant: false,
+    perIslandEggs,
+  };
+}
+
+/**
  * Canonical developer action for replaying the current island mission.
  * `replace` conflict mode is required because mission/briefing ledgers merge
  * monotonically during ordinary gameplay; a deliberate reset tombstone would
@@ -96,15 +120,19 @@ export function buildCurrentIslandMissionResetRecord(
 export function resetCurrentIslandMissionForDev(options: {
   session: Session;
   client: SupabaseClient | null;
+  /** Also clear this island's egg and return the briefing to play at once. */
+  freshArrival?: boolean;
 }): Promise<ResetCurrentIslandMissionForDevResult> {
   return withIslandRunActionLock(options.session.user.id, async () => {
     const current = getIslandRunStateSnapshot(options.session);
-    const record = buildCurrentIslandMissionResetRecord(current);
+    const record = options.freshArrival
+      ? buildDevFreshIslandArrivalRecord(current)
+      : buildCurrentIslandMissionResetRecord(current);
     const result = await commitIslandRunState({
       session: options.session,
       client: options.client,
       record,
-      triggerSource: 'dev_reset_current_island_mission',
+      triggerSource: options.freshArrival ? 'dev_fresh_island_arrival' : 'dev_reset_current_island_mission',
       conflictMode: 'replace',
     });
     if (!result.ok) {
@@ -115,6 +143,14 @@ export function resetCurrentIslandMissionForDev(options: {
       islandNumber: current.currentIslandNumber,
       cycleIndex: current.cycleIndex,
       record,
+      briefingTrigger: options.freshArrival
+        ? {
+            beatId: getIslandMissionBriefingBeatId(current.cycleIndex, current.currentIslandNumber),
+            islandNumber: current.currentIslandNumber,
+            cycleIndex: current.cycleIndex,
+            triggerTileIndex: record.tokenIndex,
+          }
+        : null,
     };
   });
 }
