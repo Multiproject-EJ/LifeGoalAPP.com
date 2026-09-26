@@ -1795,32 +1795,61 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* Super Slice: gold fill, pulsing light and a star. */
-.spin-wheel-super-glow {
-  mix-blend-mode: screen;
-  opacity: 0;
-  animation: spin-wheel-super-pulse 1.6s ease-in-out infinite;
+/* Super Slice: multicolour, colour-shifting and energised so it stands
+   out from every other slice. */
+.spin-wheel-segment--super {
+  animation: spin-wheel-super-hue 3.2s linear infinite;
+  filter: saturate(1.35) drop-shadow(0 0 6px rgba(255, 255, 255, 0.85));
 }
 
-.spin-wheel-segment--super {
-  filter: drop-shadow(0 0 5px rgba(255, 214, 90, 0.9));
+.spin-wheel-super-glow {
+  mix-blend-mode: overlay;
+  opacity: 0;
+  animation: spin-wheel-super-pulse 1.2s ease-in-out infinite;
+}
+
+.spin-wheel-super-edge {
+  filter: drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 6px #7df9ff);
+  animation: spin-wheel-super-crackle 0.9s linear infinite;
+}
+
+.spin-wheel-super-spark {
+  opacity: 0;
+  filter: drop-shadow(0 0 3px #ffffff);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin-wheel-super-spark 1.35s ease-in-out infinite;
 }
 
 .spin-wheel-super-star {
-  filter: drop-shadow(0 0 4px rgba(255, 244, 190, 0.95));
+  filter: drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 8px #ff6bf0);
   transform-box: fill-box;
   transform-origin: center;
-  animation: spin-wheel-super-twinkle 1.6s ease-in-out infinite;
+  animation: spin-wheel-super-twinkle 1.2s ease-in-out infinite;
+}
+
+@keyframes spin-wheel-super-hue {
+  from { filter: saturate(1.35) hue-rotate(0deg) drop-shadow(0 0 6px rgba(255, 255, 255, 0.85)); }
+  to { filter: saturate(1.35) hue-rotate(360deg) drop-shadow(0 0 6px rgba(255, 255, 255, 0.85)); }
 }
 
 @keyframes spin-wheel-super-pulse {
   0%, 100% { opacity: 0; }
-  50% { opacity: 0.28; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes spin-wheel-super-crackle {
+  to { stroke-dashoffset: -28; }
+}
+
+@keyframes spin-wheel-super-spark {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  45% { opacity: 1; transform: scale(1.5); }
 }
 
 @keyframes spin-wheel-super-twinkle {
   0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.18) rotate(12deg); }
+  50% { transform: scale(1.22) rotate(18deg); }
 }
 
 .new-daily-spin-modal__reward-extras {
@@ -1842,7 +1871,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .spin-wheel-segment--super,
   .spin-wheel-super-glow,
+  .spin-wheel-super-edge,
+  .spin-wheel-super-spark,
   .spin-wheel-super-star {
     animation: none;
   }

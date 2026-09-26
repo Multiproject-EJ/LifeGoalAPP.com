@@ -146,11 +146,13 @@ function WheelSVG({
       }}
     >
       <defs>
-        <radialGradient id="spin-wheel-super-fill" cx="50%" cy="50%" r="60%">
-          <stop offset="0%" stopColor="#ffe066" />
-          <stop offset="55%" stopColor="#f5b400" />
-          <stop offset="100%" stopColor="#b45309" />
-        </radialGradient>
+        <linearGradient id="spin-wheel-super-fill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ff3fd4" />
+          <stop offset="25%" stopColor="#ffb020" />
+          <stop offset="50%" stopColor="#34f5a0" />
+          <stop offset="75%" stopColor="#35c8ff" />
+          <stop offset="100%" stopColor="#9b5cff" />
+        </linearGradient>
       </defs>
 
       {/* Segments */}
@@ -164,16 +166,36 @@ function WheelSVG({
           strokeWidth="1.25"
         />
       ))}
-      {/* Pulsing glow over the Super Slice */}
-      {segments.map((seg, i) => seg.type === 'super' ? (
-        <path
-          key={`super-glow-${i}`}
-          className="spin-wheel-super-glow"
-          d={segmentPath(CX, CY, OUTER_R - 10, seg.startAngle, seg.endAngle)}
-          fill="#fff7cc"
-          style={{ pointerEvents: 'none' }}
-        />
-      ) : null)}
+      {/* Super Slice energy: pulsing light, a crackling edge and sparks */}
+      {segments.map((seg, i) => {
+        if (seg.type !== 'super') return null;
+        const d = segmentPath(CX, CY, OUTER_R - 10, seg.startAngle, seg.endAngle);
+        const span = seg.endAngle - seg.startAngle;
+        const sparks = [
+          { r: 0.36, t: 0.3 }, { r: 0.52, t: 0.78 }, { r: 0.74, t: 0.18 },
+          { r: 0.84, t: 0.62 }, { r: 0.6, t: 0.45 },
+        ];
+        return (
+          <g key={`super-energy-${i}`} style={{ pointerEvents: 'none' }}>
+            <path className="spin-wheel-super-glow" d={d} fill="#ffffff" />
+            <path className="spin-wheel-super-edge" d={d} fill="none" stroke="#ffffff" strokeWidth="2.2" strokeDasharray="5 9" strokeLinejoin="round" />
+            {sparks.map((spark, sparkIndex) => {
+              const point = polarToCart(CX, CY, (OUTER_R - 10) * spark.r, seg.startAngle + span * spark.t);
+              return (
+                <circle
+                  key={sparkIndex}
+                  className="spin-wheel-super-spark"
+                  cx={point.x}
+                  cy={point.y}
+                  r={sparkIndex % 2 === 0 ? 1.8 : 1.3}
+                  fill="#ffffff"
+                  style={{ animationDelay: `${sparkIndex * 0.27}s` }}
+                />
+              );
+            })}
+          </g>
+        );
+      })}
 
       {/* Segment prize artwork */}
       {segments.map((seg, i) => {
@@ -192,8 +214,8 @@ function WheelSVG({
               key={`asset-${i}`}
               className="spin-wheel-super-star"
               points={star}
-              fill="#fffbe6"
-              stroke="#b45309"
+              fill="#ffffff"
+              stroke="#6d28d9"
               strokeWidth="1.4"
               strokeLinejoin="round"
               style={{ pointerEvents: 'none' }}
@@ -232,7 +254,10 @@ function WheelSVG({
             dominantBaseline="central"
             fontSize="7.4"
             fontWeight="900"
-            fill={seg.type === 'super' ? '#5a2a00' : '#fff'}
+            fill="#fff"
+            stroke={seg.type === 'super' ? '#3b0a57' : undefined}
+            strokeWidth={seg.type === 'super' ? 1.6 : undefined}
+            paintOrder={seg.type === 'super' ? 'stroke' : undefined}
             style={{ pointerEvents: 'none' }}
           >
             {lines.map((line, lineIndex) => (
