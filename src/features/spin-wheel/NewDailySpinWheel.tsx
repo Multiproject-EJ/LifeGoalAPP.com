@@ -1,6 +1,6 @@
 // New Daily Spin Wheel Modal - SVG-based wheel with economy-aligned prizes
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {canPreviewDailySpin,previewDailySpin} from '../../services/dailySpinDevPreview';
 import type { Session } from '@supabase/supabase-js';
 import confetti from 'canvas-confetti';
@@ -26,7 +26,18 @@ import {
   preloadGiftBoxOpeningAnimation,
   type GiftBoxRewardItem,
 } from '../../components/GiftBoxOpeningAnimation';
+import { IslandMoneyNote } from '../gamification/level-worlds/components/IslandMoney';
+import { getIslandMoneyPaletteId } from '../gamification/level-worlds/services/islandMoneyThemes';
+import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 import './NewDailySpinWheel.css';
+
+/** Money on the wheel uses the current island's banknote, like the top bar. */
+const MoneyIslandContext = React.createContext(1);
+
+function MoneyIcon({ className = '' }: { className?: string }) {
+  const islandNumber = React.useContext(MoneyIslandContext);
+  return <IslandMoneyNote islandNumber={islandNumber} tone={2} className={`new-daily-spin-modal__money-note${className ? ` ${className}` : ''}`} />;
+}
 
 interface NewDailySpinWheelProps {
   devPreview?:boolean;
@@ -128,12 +139,14 @@ function WheelSVG({
   spinning,
   winningSegmentIndex,
   superState = 'normal',
+  moneyPaletteId = 'prism',
 }: {
   segments: WheelSegment[];
   rotation: number;
   spinning: boolean;
   winningSegmentIndex: number;
   superState?: 'normal' | 'charged' | 'cooldown';
+  moneyPaletteId?: string;
 }) {
   return (
     <svg
@@ -262,6 +275,30 @@ function WheelSVG({
             </g>
           );
         }
+        if (seg.type === 'essence') {
+          const w = iconSize * 1.25;
+          const h = w * 0.5;
+          const x = p.x - w / 2;
+          const y = p.y - h / 2;
+          return (
+            <g
+              key={`asset-${i}`}
+              className={`spin-wheel-money-note island-money-note--palette-${moneyPaletteId} island-money-note--tone-2`}
+              style={{ pointerEvents: 'none' }}
+            >
+              <linearGradient id={`spin-wheel-money-fill-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: 'var(--money-note-b)' }} />
+                <stop offset="48%" style={{ stopColor: 'var(--money-note-a)' }} />
+                <stop offset="100%" style={{ stopColor: 'var(--money-note-c)' }} />
+              </linearGradient>
+              <rect x={x} y={y} width={w} height={h} rx={h * 0.12} fill={`url(#spin-wheel-money-fill-${i})`} stroke="#ffffff" strokeOpacity="0.8" strokeWidth="0.9" />
+              <rect x={x + w * 0.05} y={y + h * 0.1} width={w * 0.9} height={h * 0.8} rx={h * 0.08} fill="none" style={{ stroke: 'var(--money-note-ink)' }} strokeOpacity="0.45" strokeWidth="0.6" />
+              <ellipse cx={p.x} cy={p.y} rx={w * 0.11} ry={h * 0.3} style={{ fill: 'var(--money-note-gem)' }} stroke="#ffffff" strokeOpacity="0.8" strokeWidth="0.6" />
+              <circle cx={p.x - w * 0.03} cy={p.y - h * 0.1} r={h * 0.06} fill="#ffffff" />
+              <rect x={x + w * 0.7} y={y + h * 0.66} width={w * 0.18} height={h * 0.06} rx={h * 0.03} style={{ fill: 'var(--money-note-ink)' }} opacity="0.6" />
+            </g>
+          );
+        }
         return (
           <image
             key={`asset-${i}`}
@@ -350,6 +387,9 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
   const [winnerRevealPending, setWinnerRevealPending] = useState(false);
   const [lastAwards, setLastAwards] = useState<SpinAward[]>([]);
   const [superLuck, setSuperLuck] = useState<SuperSliceLuck>(NEUTRAL_SUPER_SLICE_LUCK);
+  // Read-only: which island's banknote to show for money.
+  const { state: islandRunState } = useIslandRunState(session, null);
+  const currentIslandNumber = Math.max(1, islandRunState.currentIslandNumber || 1);
   const [lastMultiplier, setLastMultiplier] = useState(1);
   const [showGiftOpening, setShowGiftOpening] = useState(false);
   const [giftRewards, setGiftRewards] = useState<GiftBoxRewardItem[]>([]);
@@ -645,6 +685,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
       : null;
 
   return (
+    <MoneyIslandContext.Provider value={currentIslandNumber}>
     <div className="new-daily-spin-modal" onClick={onClose}>
       <div
         className="new-daily-spin-modal__content"
@@ -728,11 +769,11 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
                     : `Times ${option.multiplier}, costs ${option.essenceCost} money${affordable ? '' : ', not enough money'}`}
                 >
                   <strong>×{option.multiplier}</strong>
-                  <span>{option.essenceCost === 0 ? 'Free' : `💰 ${option.essenceCost}`}</span>
+                  <span>{option.essenceCost === 0 ? 'Free' : <><MoneyIcon /> {option.essenceCost}</>}</span>
                 </button>
               );
             })}
-            <small className="new-daily-spin-modal__boost-balance" aria-label={`${essenceBalance} money available`}>💰 {essenceBalance}</small>
+            <small className="new-daily-spin-modal__boost-balance" aria-label={`${essenceBalance} money available`}><MoneyIcon /> {essenceBalance}</small>
             {!superLuck.onCooldown && (superLuck.guaranteed || superLuck.multiplier > 1) ? (
               <span
                 className="new-daily-spin-modal__super-luck"
@@ -756,6 +797,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
             }`}
           >
             <WheelSVG
+              moneyPaletteId={getIslandMoneyPaletteId(currentIslandNumber)}
               superState={superLuck.onCooldown ? 'cooldown' : superLuck.guaranteed || superLuck.multiplier > 1 ? 'charged' : 'normal'}
               segments={wheelSegments}
               rotation={spinning ? rotation : rotation + idleAngle}
@@ -839,12 +881,16 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
                 </>
               ) : (
                 <div className="new-daily-spin-modal__reward-hero">
-                  <img
-                    className="new-daily-spin-modal__reward-hero-art"
-                    src={getPrizeIconAsset(lastAwards[0]?.currency ?? wonPrize.type)}
-                    alt=""
-                    aria-hidden="true"
-                  />
+                  {(lastAwards[0]?.currency ?? wonPrize.type) === 'essence' ? (
+                    <MoneyIcon className="new-daily-spin-modal__money-note--hero" />
+                  ) : (
+                    <img
+                      className="new-daily-spin-modal__reward-hero-art"
+                      src={getPrizeIconAsset(lastAwards[0]?.currency ?? wonPrize.type)}
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  )}
                   <strong className="new-daily-spin-modal__reward-amount" aria-label={`${lastAwards[0]?.amount ?? wonPrize.value} ${lastAwards[0]?.label ?? wonPrize.label}`}>
                     +<SpinRewardCount value={lastAwards[0]?.amount ?? wonPrize.value} />
                   </strong>
@@ -852,7 +898,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
                   {lastAwards.length > 1 ? (
                     <span className="new-daily-spin-modal__reward-extras">
                       {lastAwards.slice(1).map((award) => (
-                        <span key={award.currency}>+{award.amount.toLocaleString()} {award.icon}</span>
+                        <span key={award.currency}>+{award.amount.toLocaleString()} {award.currency === 'essence' ? <MoneyIcon /> : award.icon}</span>
                       ))}
                     </span>
                   ) : null}
@@ -914,7 +960,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
                   : hasIslandThreeJackpot
                     ? 'UNLEASH 2,000 DICE!'
                     : selectedMultiplier > 1
-                      ? `SPIN ×${selectedMultiplier} · 💰${selectedMultiplierOption.essenceCost}`
+                      ? <>SPIN ×{selectedMultiplier} · <MoneyIcon className="new-daily-spin-modal__money-note--button" />{selectedMultiplierOption.essenceCost}</>
                       : 'SPIN!'}
             </button>
           ) : null}
@@ -931,5 +977,6 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
 
       </div>
     </div>
+    </MoneyIslandContext.Provider>
   );
 }
