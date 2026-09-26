@@ -32,6 +32,19 @@ function updateFixture(patch: Partial<IslandRunGameStateRecord>) {
   resetIslandRunStateSnapshot(session, { ...getIslandRunStateSnapshot(session), ...patch });
 }
 export const arenaJourneyTests: TestCase[] = [
+  { name: 'Miners event rotation carries career digs without faking a fresh stadium round', async run() {
+    const state=await seed(3,{signatureMissionProgressByIsland:{[ARENA_JOURNEY_KEY]:all()}});
+    const oldCareer={...createCrystalMinersProgress(),digs:8,revision:10};
+    const eventId=state.activeTimedEvent!.eventId;
+    updateFixture({crystalMinersProgressByEvent:{old:oldCareer}});
+    await stadiumAction({kind:'enter'});await stadiumAction({kind:'play',gameId:'crystal_miners',eventId});
+    updateFixture({crystalMinersProgressByEvent:{old:oldCareer,[eventId]:{...oldCareer,revision:11}}});
+    await stadiumAction({kind:'refresh'});
+    assert(!currentArenaStadium(getIslandRunStateSnapshot(session))?.playedAtMs,'gift/workshop career copy not a new dig');
+    updateFixture({crystalMinersProgressByEvent:{old:oldCareer,[eventId]:{...oldCareer,revision:12,digs:9}}});
+    await stadiumAction({kind:'refresh'});
+    assert(currentArenaStadium(getIslandRunStateSnapshot(session))?.playedAtMs,'next actual dig counts');
+  }},
   { name: 'stadium requires L3 from004, respects001 and preserves completed legacy stops', async run() {
     await seed(1); assertEqual(await stadiumAction({kind:'enter'}),null,'quiet island');
     await seed(4); assertEqual(await stadiumAction({kind:'enter'}),null,'unbuilt');

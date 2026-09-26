@@ -17657,7 +17657,6 @@ export function IslandRunBoardPrototype({
                     nextRewardIcon={nextRewardIcon}
                     nextRewardLabel={nextRewardKind.replace(/_/g, ' ')}
                     onLaunch={handleLaunchArenaGame}
-                    onTune={openRewardDetailsModal}
                   />) : <p role="status">Waiting for the shared event channel.</p>}
                   </ArenaStadiumActivity>
                 ) : featureAccess.inauguralRound || (featureAccess.gradual && islandNumber === 2) ? (

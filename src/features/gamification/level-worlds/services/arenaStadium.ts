@@ -3,6 +3,7 @@ import type { ArenaGameId } from './islandRunArenaCatalog';
 import { arenaJourney } from './arenaJourney';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolver';
+import { getCrystalMinersCareer } from './crystalMinersGame';
 
 export function arenaStadiumVisitKey(state: IslandRunGameStateRecord) {
   return `${state.cycleIndex}:${state.currentIslandNumber}:${state.islandStartedAtMs}`;
@@ -22,7 +23,9 @@ export function currentArenaStadium(state: IslandRunGameStateRecord) {
   return visit?.key === arenaStadiumVisitKey(state) ? visit : null;
 }
 export function arenaSettledRoundCount(state: IslandRunGameStateRecord, gameId: ArenaGameId, eventId: string) {
-  if (gameId === 'crystal_miners') return state.crystalMinersProgressByEvent[eventId]?.digs ?? 0;
+  // Miners copies its permanent career into a new event on ordinary workshop
+  // actions. An event-local zero baseline would falsely count opening a gift.
+  if (gameId === 'crystal_miners') return getCrystalMinersCareer(state.crystalMinersProgressByEvent)?.digs ?? 0;
   if (gameId === 'journey_disc_arena') return state.journeyDiscArenaProgressByEvent[eventId]?.roundsCompleted ?? 0;
   return 0; // Signal Path uses its funded attempt receipt, never a UI score counter.
 }

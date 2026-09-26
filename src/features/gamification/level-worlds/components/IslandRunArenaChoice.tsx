@@ -27,7 +27,7 @@ interface IslandRunArenaChoiceProps {
   nextRewardIcon: string;
   nextRewardLabel: string;
   onLaunch: (gameId: ArenaGameId) => void;
-  onTune: () => void;
+  onTune?: () => void;
 }
 
 function ArenaChoiceMiniature({ game }: { game: ArenaGameDefinition }) {
@@ -136,7 +136,7 @@ export function IslandRunArenaChoice(props: IslandRunArenaChoiceProps) {
           <h3 id="arena-choice-title">Choose your Arena game</h3>
           <p>{pair.alternative ? 'Choose an introduced game.' : pair.primary ? 'Your first Arena game.' : 'Meet your next game in the catalogue.'}</p>
         </div>
-        <button type="button" onClick={props.onTune}>Tune</button>
+        {props.onTune && <button type="button" onClick={props.onTune}>Tune</button>}
       </div>
       <div className="arena-choice__cards">
         {pair.primary && <ArenaChoiceCard game={pair.primary} tickets={props.tickets} onChoose={() => choose(pair.primary!.id)} />}
