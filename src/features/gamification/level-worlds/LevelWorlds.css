@@ -27952,3 +27952,93 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   .bm2-hold-build--active::after,
   .bm2-hold-build--supercharged .bm2-hold-build__icon { animation: none; }
 }
+
+/* "Island Complete!" as individual letters. Each island uses one entrance
+   (wave, explode, pop, shrink); afterwards all letters share a gentle ripple. */
+.island-complete-title {
+  display: grid;
+  justify-items: center;
+  gap: 0.02em;
+  margin: 0.2rem auto 0.5rem;
+  font: 900 clamp(1.8rem, 9.2vw, 2.7rem)/0.95 'Arial Black', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  perspective: 600px;
+}
+.island-complete-title__line { display: flex; }
+.island-complete-title__line:last-child { font-size: 1.12em; }
+.island-complete-title__letter {
+  display: inline-block;
+  color: #ffd84a;
+  background: linear-gradient(180deg, #fff6b8 0%, #ffd23c 45%, #f39a12 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px #6b2f00;
+  filter: drop-shadow(0 3px 0 #7a3600) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55));
+  transform-origin: 50% 80%;
+  animation:
+    var(--island-title-entrance) 720ms cubic-bezier(0.2, 1.3, 0.35, 1) both,
+    island-title-ripple 2.6s ease-in-out infinite;
+  animation-delay:
+    calc(var(--letter-index) * 55ms),
+    calc(1.4s + var(--letter-index) * 90ms);
+}
+.island-complete-title--wave { --island-title-entrance: island-title-enter-wave; }
+.island-complete-title--explode { --island-title-entrance: island-title-enter-explode; }
+.island-complete-title--pop { --island-title-entrance: island-title-enter-pop; }
+.island-complete-title--shrink { --island-title-entrance: island-title-enter-shrink; }
+@keyframes island-title-enter-wave {
+  0% { opacity: 0; transform: translateY(60px) rotate(-12deg); }
+  70% { opacity: 1; transform: translateY(-10px) rotate(4deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes island-title-enter-explode {
+  0% { opacity: 0; transform: translate(calc(var(--letter-drift) * 22px), calc(var(--letter-drift) * -14px)) scale(2.4) rotate(calc(var(--letter-drift) * 18deg)); }
+  65% { opacity: 1; transform: scale(0.9); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes island-title-enter-pop {
+  0% { opacity: 0; transform: scale(0); }
+  55% { opacity: 1; transform: scale(1.35); }
+  78% { transform: scale(0.9); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes island-title-enter-shrink {
+  0% { opacity: 0; transform: scale(3.2) rotateX(70deg); }
+  60% { opacity: 1; transform: scale(0.82) rotateX(0deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes island-title-ripple {
+  0%, 60%, 100% { transform: none; }
+  30% { transform: translateY(-7px) scale(1.06); }
+}
+
+/* Rewards arrive one at a time, then Claim appears. */
+.island-clear-celebration__reward-item--beat-1,
+.island-clear-celebration__reward-item--beat-2,
+.island-clear-celebration__reward-item--beat-3 {
+  animation: island-clear-reward-arrive 560ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+.island-clear-celebration__reward-item--beat-1 { animation-delay: 1.2s; }
+.island-clear-celebration__reward-item--beat-2 { animation-delay: 1.85s; }
+.island-clear-celebration__reward-item--beat-3 { animation-delay: 2.5s; }
+@keyframes island-clear-reward-arrive {
+  0% { opacity: 0; transform: translateY(18px) scale(0.3); }
+  60% { opacity: 1; transform: translateY(-4px) scale(1.18); }
+  100% { opacity: 1; transform: none; }
+}
+.island-clear-celebration__actions {
+  opacity: 0;
+  transform: translateY(12px) scale(0.92);
+  pointer-events: none;
+  transition: opacity 320ms ease, transform 420ms cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.island-clear-celebration__actions--ready { opacity: 1; transform: none; pointer-events: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .island-complete-title__letter,
+  .island-clear-celebration__reward-item--beat-1,
+  .island-clear-celebration__reward-item--beat-2,
+  .island-clear-celebration__reward-item--beat-3 { animation: none; }
+  .island-clear-celebration__actions { transition: none; }
+}
