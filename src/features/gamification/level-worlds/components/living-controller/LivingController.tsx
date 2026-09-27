@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode, type PointerEvent } from 'react';
 import type { ControllerMenuFaces, ControllerSnapshot } from './renderer';
 import { controllerSwipe, resolveControllerTheme } from './policy.js';
+import { controllerSunlight } from './controller-sunlight.js';
 import './LivingController.css';
 
 type Action = 'shop' | 'build' | 'creatures' | 'concord' | 'roll';
@@ -44,6 +45,7 @@ export function LivingController(p:LivingControllerProps){
  snapshot.current.onArrivalImpact=p.onArrivalImpact;
  snapshot.current.navigationOnly=p.surface==='treasure';
  snapshot.current.menuFaces=p.menuFaces;
+ snapshot.current.sunlight=controllerSunlight(p.islandNumber);snapshot.current.islandNumber=p.islandNumber;
  snapshot.current.theme=resolveControllerTheme(false,p.dev,selection,p.islandNumber,p.preferredTheme,p.surface);
  const resolvedTheme=snapshot.current.theme;
  useEffect(()=>{p.onThemeChange?.(resolvedTheme);},[resolvedTheme,p.onThemeChange]);
