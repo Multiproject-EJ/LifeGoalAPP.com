@@ -1,0 +1,550 @@
+/* Two Tracks road: two lanes on a tilted plane receding into fog. */
+.tt-road {
+  --row-h: clamp(4.3rem, 10.5vh, 5.3rem);
+  --tilt: 40deg;
+  --spine-w: 2.2rem;
+  --life: #bef264;
+  --life-strong: #84cc16;
+  --game: #7dd3fc;
+  --game-strong: #38bdf8;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.tt-road__viewport {
+  position: absolute;
+  inset: 0;
+  perspective: 760px;
+  perspective-origin: 50% 8%;
+  overflow: hidden;
+}
+
+.tt-road__plane {
+  position: absolute;
+  left: 0.2rem;
+  right: 0.2rem;
+  bottom: calc(var(--row-h) * 2.3);
+  height: calc(var(--rows) * var(--row-h));
+  transform: rotateX(var(--tilt));
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+}
+
+.tt-road__track {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: tt-road-glide 1500ms cubic-bezier(0.2, 0.8, 0.2, 1) 380ms both;
+}
+
+@keyframes tt-road-glide {
+  from {
+    transform: translate3d(0, calc(var(--glide-rows) * var(--row-h) * -1), 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.tt-road__lane {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(50% - var(--spine-w) / 2);
+  transform-style: preserve-3d;
+}
+
+.tt-road__lane--life {
+  left: 0;
+}
+
+.tt-road__lane--game {
+  right: 0;
+}
+
+/* ── Tiles ── */
+.tt-tile {
+  --accent: var(--life);
+  --accent-strong: var(--life-strong);
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--row) * var(--row-h) + 0.28rem);
+  height: calc(var(--row-h) - 0.56rem);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.4rem;
+  padding: 0.38rem 0.5rem;
+  border-radius: 0.9rem;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  background: linear-gradient(160deg, rgba(10, 30, 56, 0.9), rgba(4, 12, 28, 0.86));
+  box-shadow: 0 10px 22px rgba(2, 6, 23, 0.45);
+  color: #f8fafc;
+  overflow: hidden;
+  animation: tt-tile-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(420ms + var(--row) * 90ms);
+}
+
+.tt-tile--game {
+  --accent: var(--game);
+  --accent-strong: var(--game-strong);
+}
+
+@keyframes tt-tile-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.8rem, -0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tt-tile__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+.tt-tile--art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, rgba(4, 12, 28, 0.9) 0%, rgba(4, 12, 28, 0.55) 60%, rgba(4, 12, 28, 0.2) 100%);
+}
+
+.tt-tile__icon,
+.tt-tile__copy,
+.tt-tile__points {
+  position: relative;
+  z-index: 1;
+}
+
+.tt-tile__icon {
+  grid-row: 1 / -1;
+  width: 1.7rem;
+  height: 1.7rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1.5px solid var(--accent);
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--accent) 45%, #0f172a), #0b1a33);
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.tt-tile__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+}
+
+.tt-tile__copy strong {
+  font-size: clamp(0.66rem, 2.9vw, 0.8rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: #ffffff;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.tt-tile__copy > span {
+  font-size: clamp(0.52rem, 2.3vw, 0.62rem);
+  line-height: 1.15;
+  color: rgba(226, 232, 240, 0.82);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tt-tile__copy > span.tt-tile__pips {
+  display: flex;
+  gap: 0.18rem;
+  margin-top: 0.12rem;
+}
+
+.tt-tile__pips i {
+  display: block;
+  flex: 0 0 auto;
+  width: 0.46rem;
+  height: 0.46rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: rgba(2, 6, 23, 0.5);
+}
+
+.tt-tile__pips i.is-done {
+  background: radial-gradient(circle at 35% 30%, #ffffff, var(--accent) 55%, var(--accent-strong));
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.tt-tile__points {
+  grid-column: 2;
+  justify-self: start;
+  padding: 0.04rem 0.38rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 22%, rgba(2, 6, 23, 0.7));
+  color: var(--accent);
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.tt-tile--done .tt-tile__icon {
+  background: radial-gradient(circle at 35% 30%, #ffffff, var(--accent) 55%, var(--accent-strong));
+  color: #0f172a;
+}
+
+.tt-tile--today {
+  border-width: 2px;
+  border-color: var(--accent);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 22%, #0a1e38), rgba(4, 12, 28, 0.92));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent), 0 0 24px color-mix(in srgb, var(--accent) 45%, transparent), 0 12px 26px rgba(2, 6, 23, 0.55);
+}
+
+/* The hub stands between today's two tiles; keep their copy clear of it. */
+.tt-tile--life.tt-tile--today {
+  padding-right: 1.3rem;
+}
+
+.tt-tile--game.tt-tile--today {
+  padding-left: 1.3rem;
+}
+
+.tt-tile--next {
+  border-style: dashed;
+  background: rgba(8, 22, 44, 0.72);
+}
+
+.tt-tile--next .tt-tile__art {
+  opacity: 0.35;
+  filter: saturate(0.6);
+}
+
+.tt-tile--fog {
+  border-style: dashed;
+  border-color: rgba(148, 163, 184, 0.35);
+  background: rgba(15, 30, 55, 0.45);
+  box-shadow: none;
+}
+
+.tt-tile--fog .tt-tile__icon {
+  border-color: rgba(148, 163, 184, 0.5);
+  background: transparent;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.tt-tile--fog .tt-tile__art {
+  opacity: 0.22;
+  filter: grayscale(1) brightness(0.6);
+}
+
+.tt-tile--fog .tt-tile__copy strong {
+  color: rgba(226, 232, 240, 0.6);
+}
+
+/* ── Spine: done below today, filling toward the horizon reward above ── */
+.tt-road__spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 0.34rem;
+  transform: translateX(-50%);
+}
+
+.tt-road__spine-done,
+.tt-road__spine-ahead {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: 999px;
+}
+
+.tt-road__spine-done {
+  bottom: 0;
+  height: calc(var(--today) * var(--row-h) + var(--row-h) / 2);
+  background: linear-gradient(0deg, var(--life), #facc15, var(--game));
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.6);
+}
+
+.tt-road__spine-ahead {
+  bottom: calc(var(--today) * var(--row-h) + var(--row-h) / 2);
+  top: calc(var(--row-h) * 0.35);
+  overflow: hidden;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.tt-road__spine-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--progress) * 1%);
+  border-radius: inherit;
+  background: linear-gradient(0deg, #facc15, #fde68a);
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.8);
+  transform-origin: bottom;
+  animation: tt-spine-fill 1100ms cubic-bezier(0.22, 1, 0.36, 1) 1500ms both;
+}
+
+@keyframes tt-spine-fill {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* ── Sync bridge: lights when both lanes moved today ── */
+.tt-road__bridge {
+  position: absolute;
+  left: calc(50% - var(--spine-w) / 2 - 0.4rem);
+  right: calc(50% - var(--spine-w) / 2 - 0.4rem);
+  bottom: calc(var(--today) * var(--row-h) + var(--row-h) / 2 - 0.2rem);
+  height: 0.4rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--life), #facc15 50%, var(--game));
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.85);
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.tt-road--sync .tt-road__bridge {
+  animation: tt-bridge-on 700ms cubic-bezier(0.22, 1, 0.36, 1) 1700ms both;
+}
+
+@keyframes tt-bridge-on {
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* ── Billboards stand upright on the plane ── */
+.tt-road__billboard {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) rotateX(calc(var(--tilt) * -1));
+  transform-origin: 50% 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tt-road__billboard--hub {
+  bottom: calc((var(--today) + 1) * var(--row-h) - 0.5rem);
+  z-index: 3;
+}
+
+.tt-road__hud {
+  position: absolute;
+  z-index: 3;
+  top: 1.7rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  opacity: 0;
+  animation: tt-hud-in 600ms ease 900ms both;
+}
+
+@keyframes tt-hud-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+
+/* ── Fog and labels ── */
+.tt-road__fog {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 46%;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(186, 214, 240, 0.28), transparent 70%),
+    linear-gradient(180deg, rgba(6, 16, 34, 0.94) 0%, rgba(10, 28, 54, 0.62) 38%, rgba(10, 28, 54, 0) 100%);
+  animation: tt-fog-drift 9s ease-in-out infinite alternate;
+}
+
+@keyframes tt-fog-drift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 30px 0, 0 0;
+  }
+}
+
+.tt-road__lane-labels {
+  position: absolute;
+  z-index: 2;
+  top: 0.2rem;
+  left: 0.4rem;
+  right: 0.4rem;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.tt-road__lane-label {
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: rgba(4, 12, 28, 0.7);
+}
+
+.tt-road__lane-label--life {
+  color: var(--life);
+  border: 1px solid color-mix(in srgb, var(--life) 50%, transparent);
+}
+
+.tt-road__lane-label--game {
+  color: var(--game);
+  border: 1px solid color-mix(in srgb, var(--game) 50%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-road__track,
+  .tt-tile,
+  .tt-road__spine-fill,
+  .tt-road__fog {
+    animation: none;
+  }
+
+  .tt-road--sync .tt-road__bridge {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The hub and horizon live inside billboards on the road, not absolutely on the stage. */
+.tt-road__billboard .game-board-overlay__hub {
+  --hub-size: clamp(3.9rem, 17vw, 4.6rem);
+  position: relative;
+  top: auto;
+  left: auto;
+  width: auto;
+  transform: none;
+  gap: 0.22rem;
+  opacity: 1;
+  animation: tt-hub-in 620ms cubic-bezier(0.22, 1, 0.36, 1) 1250ms both;
+}
+
+@keyframes tt-hub-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.8rem) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.game-board-overlay__hub--promotion .game-board-overlay__hub-ring {
+  animation: game-board-overlay-rank-pulse 1600ms ease-in-out infinite;
+}
+
+.game-board-overlay__horizon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.game-board-overlay__horizon .game-board-overlay__hub-chest {
+  font-size: 0.66rem;
+  padding: 0.3rem 0.75rem;
+  box-shadow: 0 0 22px rgba(250, 204, 21, 0.45), 0 6px 16px rgba(2, 6, 23, 0.6);
+  animation: tt-horizon-float 3.2s ease-in-out infinite;
+}
+
+.game-board-overlay__horizon-icon {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.9));
+}
+
+@keyframes tt-horizon-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.25rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-road__hud,
+  .tt-road__billboard .game-board-overlay__hub,
+  .game-board-overlay__horizon .game-board-overlay__hub-chest {
+    animation: none;
+  }
+}
+
+/* In sync: both of today's tiles take the gold of the bridge. */
+.tt-road--sync .tt-tile--today {
+  border-color: #facc15;
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.5), 0 0 26px rgba(250, 204, 21, 0.45), 0 12px 26px rgba(2, 6, 23, 0.55);
+  transition: border-color 400ms ease 1700ms, box-shadow 400ms ease 1700ms;
+}
+
+/* Sparks leave today's two tiles and meet in the ring. */
+.tt-road__billboard .game-board-overlay__spark--life {
+  --spark-from-x: -6.5rem;
+}
+
+.tt-road__billboard .game-board-overlay__spark--game {
+  --spark-from-x: 6.5rem;
+}
+
+.tt-road__billboard .game-board-overlay__spark {
+  animation-name: tt-spark-fly;
+}
+
+@keyframes tt-spark-fly {
+  0% {
+    opacity: 0;
+    transform: translate(var(--spark-from-x), 2.4rem) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 0) scale(2.4);
+  }
+}

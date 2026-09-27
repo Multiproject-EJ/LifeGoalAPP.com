@@ -231,7 +231,8 @@ import { isConflictRoute, resolveSurface } from './surfaces/surfaceContext';
 import { getFeatureAvailability, type FeatureAvailabilityId } from './config/featureAvailability';
 import { resolveFeatureAccess } from './services/featureAccess';
 import { loadGoalsOfflineFirst } from './data/goalsRepo';
-import { listHabitsV2 } from './services/habitsV2';
+import { countHabitCheckInsV2, listHabitsV2, listTodayHabitLogsV2 } from './services/habitsV2';
+import { useTwoTracksDaily } from './features/gamification/level-worlds/hooks/useTwoTracksDaily';
 import type { DualTrackRealLifeInput } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import { ISLAND_RUN_LAUNCH_NEW_HABIT_EVENT } from './features/gamification/level-worlds/services/islandRunHabitLandmarkEvents';
 import './styles/workspace.css';
@@ -1234,10 +1235,18 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const overlayRealLifeInput = overlayRealLifeData?.userId === overlayRealLifeUserId
     ? overlayRealLifeData?.input : undefined;
 
+  // Daily "both tracks" check: a habit check-in AND a roll/build today.
+  const twoTracksDaily = useTwoTracksDaily(
+    overlayRealLifeUserId,
+    journeyState,
+    overlayRealLifeInput ? overlayRealLifeInput.habitCheckInsToday ?? 0 : null,
+  );
+
   // Shared Combined Journey Level inputs (chest claim + player-menu rank header).
   const currentJourneyInput = buildJourneyLevelInputFromOverlay({
     islandJourneyProgress,
     realLife: overlayRealLifeInput,
+    twoTracksSparkXp: twoTracksDaily.sparkXp,
   });
   const earnedJourneyXp = useEarnedJourneyXp(
     activeSession?.user.id ?? null,
@@ -1319,9 +1328,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     void (async () => {
       try {
-        const [goals, habitsResult] = await Promise.all([
+        const [goals, habitsResult, todayLogsResult, checkInsTotal] = await Promise.all([
           loadGoalsOfflineFirst(overlayRealLifeUserId).catch(() => []),
           listHabitsV2().catch(() => ({ data: [], error: null as unknown })),
+          listTodayHabitLogsV2(overlayRealLifeUserId).catch(() => ({ data: [], error: null as unknown })),
+          countHabitCheckInsV2(overlayRealLifeUserId).catch(() => null),
         ]);
         if (cancelled) return;
 
@@ -1330,11 +1341,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
           .map((goal) => ({ id: goal.id, title: goal.title, status: goal.status ?? null }));
         const habitSummaries = (habitsResult?.data ?? [])
           .map((habit) => ({ id: habit.id, title: habit.title, emoji: habit.emoji ?? null }));
+        const activeHabitIds = new Set(habitSummaries.map((habit) => habit.id));
+        const habitCheckInsToday = new Set((todayLogsResult?.data ?? [])
+          .filter((log) => log.done && activeHabitIds.has(log.habit_id))
+          .map((log) => log.habit_id)).size;
 
         setOverlayRealLifeData({ userId: overlayRealLifeUserId, input: {
           isAuthenticated: true,
           goals: goalSummaries,
           habits: habitSummaries,
+          habitCheckInsToday,
+          habitCheckInsTotal: checkInsTotal ?? undefined,
         } });
       } catch {
         if (!cancelled) {
@@ -6268,6 +6285,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
           islandJourneyProgress={islandJourneyProgress}
           earnedXpFloor={earnedJourneyXp}
           viewerId={overlayRealLifeUserId ?? undefined}
+          twoTracksToday={twoTracksDaily.today}
+          twoTracksSparkXp={twoTracksDaily.sparkXp}
+          onTwoTracksSparkSeen={twoTracksDaily.markSparkSeen}
           {...combinedJourneyChestProps}
           {...rankSpineProps}
         />
@@ -6617,6 +6637,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
         islandJourneyProgress={islandJourneyProgress}
         earnedXpFloor={earnedJourneyXp}
         viewerId={overlayRealLifeUserId ?? undefined}
+        twoTracksToday={twoTracksDaily.today}
+        twoTracksSparkXp={twoTracksDaily.sparkXp}
+        onTwoTracksSparkSeen={twoTracksDaily.markSparkSeen}
         {...combinedJourneyChestProps}
         {...rankSpineProps}
       />
