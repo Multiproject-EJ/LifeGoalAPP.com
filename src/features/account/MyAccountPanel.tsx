@@ -26,6 +26,7 @@ import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { MyCasesPanel } from '../cases/MyCasesPanel';
 import { AdminInboxPanel } from '../admin/AdminInboxPanel';
 import { AdminTelemetryPanel } from '../admin/AdminTelemetryPanel';
+import { PlayerInsightsPanel } from '../admin/PlayerInsightsPanel';
 import { AdminAlertsPanel } from '../admin/AdminAlertsPanel';
 import { FutureFeatureVotingPanel } from './FutureFeatureVotingPanel';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
@@ -1376,6 +1377,16 @@ export function MyAccountPanel({
             </section>
 
             <AdminAlertsPanel session={session} />
+
+            <section className="account-panel__card" aria-labelledby="admin-tools-player-insights">
+              <p className="account-panel__eyebrow">Player insights</p>
+              <h3 id="admin-tools-player-insights">Where players stop, and where the fun drops</h3>
+              <p className="account-panel__hint">
+                Island funnel, play time per island, and retention by first-play week, from each
+                player&apos;s daily play counts. Admin-only.
+              </p>
+              <PlayerInsightsPanel session={session} />
+            </section>
 
             <section className="account-panel__card" aria-labelledby="admin-tools-telemetry">
               <p className="account-panel__eyebrow">Admin telemetry</p>
