@@ -3,6 +3,7 @@ import {drawAmbientSparkles} from './ambient-sparkles.js';
 import * as THREE from 'three';
 import {createMultiplierHologram,PILL} from './multiplier-hologram.js';
 import {controllerFraming} from './framing.js';
+import {iconBacklight} from './icon-backlight.js';
 import {ARRIVAL_FLIGHT,createPersonalityClock,personalityPose} from './personality.js';
 // While flying in, the canvas draws beyond its box (the controller starts
 // off-frame) so the flight is never cut off by the canvas edge.
@@ -46,7 +47,7 @@ function curvedFace(shape,offset){const source=new THREE.ShapeGeometry(shape).to
 function svgShape(d,transform=p=>new THREE.Vector2((p.x-300)/100,(175-p.y)/100)){const path=new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`).paths[0];return new THREE.Shape(SVGLoader.createShapes(path)[0].getPoints(40).map(transform));}
 function conform(g,offset){const p=g.attributes.position;for(let i=0;i<p.count;i++)p.setZ(i,p.getZ(i)+surface(p.getX(i),p.getY(i))+offset);g.computeVertexNormals();}
 
- let snapshot=getSnapshot(),state,theme=snapshot.theme,reduced=snapshot.reduced,now=0,level=0,power=1,buildAffordable=false,buildCueStarted=-10;
+ let snapshot=getSnapshot(),state,theme=snapshot.theme,reduced=snapshot.reduced,now=0,level=0,power=1,buildAffordable=false,buildCueStarted=-10,lastInteractionAt=0;
  const buttons=[],lights=[],buttonOutlines=new Map(),group=new THREE.Group();scene.add(group);
 const chassis=createChassisDetails(THREE,{surface,curvedFace,mergeVertices});group.add(chassis.root);
 const powerPill=createMultiplierHologram(THREE);group.add(powerPill.root);
@@ -66,7 +67,8 @@ const powerPill=createMultiplierHologram(THREE);group.add(powerPill.root);
  // Feathered light spill: nested additive sleeves, not a wider opaque stripe.
  const neonLayers=[.045,.075,.11].map((radius,i)=>{const material=new THREE.MeshBasicMaterial({color:'#63ddff',transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false});const mesh=new THREE.Mesh(new THREE.TubeGeometry(edgeCurve,200,radius,8,false),material);mesh.visible=false;root.add(mesh);return {mesh,material,falloff:[.10,.045,.018][i]};});
  root.userData.neonLayers=neonLayers;
- const hit=controls[id];const item={id,root,mat,glow,haloMat,ctx,tex,canvas,x,y,w,h,hit,press:-10};buttons.push(item);return item;}
+ const hit=controls[id];const item={id,root,mat,glow,haloMat,ctx,tex,canvas,x,y,w,h,hit,press:-10};buttons.push(item);
+ hit?.addEventListener('pointerdown',()=>{item.press=now;lastInteractionAt=now;},{passive:true});return item;}
 const shoulder='M48 46L177 27Q187 26 190 37L168 77L190 122Q185 130 174 127L37 98Q30 96 34 81Z';
 cap('shop',svgShape(shoulder),-1.87,.99,1.1,.47);cap('build',svgShape(shoulder,p=>new THREE.Vector2((300-p.x)/100,(175-p.y)/100)),1.87,.99,1.1,.47);
 const centre='M209 38L391 38Q398 38 401 46L423 80L400 123Q396 130 387 130L213 130Q204 130 200 123L177 80L199 46Q202 38 209 38Z';
@@ -110,7 +112,8 @@ function drawButton(b,t){
    else if(jackpot)jackpotEmblem(c,b,t);
    else if(b.id==='concord'){
      // A crisp open-book mark for the story device, not a reduced leaf glyph.
-     c.save();c.strokeStyle=themes[theme].iconInk||ink;c.lineWidth=9;c.lineJoin='round';
+     const concordLight=iconBacklight({now:t,pressAt:b.press,lastInteractionAt,isBuild:false,buildReady:false,baseColor:themes[theme].iconGlow||themes[theme].light,reduced});
+     c.save();c.globalAlpha=concordLight.alpha;c.shadowColor=concordLight.color;c.shadowBlur=concordLight.blur;c.strokeStyle=themes[theme].iconInk||ink;c.lineWidth=9;c.lineJoin='round';
      c.beginPath();c.moveTo(256,220);c.quadraticCurveTo(198,184,130,196);
      c.lineTo(130,76);c.quadraticCurveTo(198,64,256,100);
      c.quadraticCurveTo(314,64,382,76);c.lineTo(382,196);
@@ -120,7 +123,11 @@ function drawButton(b,t){
      const restored=snapshot.concordTitle==='Concord & Story';
      if(restored){c.font='700 76px system-ui';c.fillText('Concord &',256,305,490);}
      c.fillText('Story',256,restored?410:335,480);
-   }else drawEmblem(c,b.id,themes[theme].iconInk||themes[theme].ink,false,themes[theme].iconGlow);
+   }else{
+     const light=iconBacklight({now:t,pressAt:b.press,lastInteractionAt,isBuild:b.id==='build',buildReady:buildAffordable,baseColor:themes[theme].iconGlow||themes[theme].light,reduced});
+     const redBuild=b.id==='build'&&buildAffordable;
+     drawEmblem(c,b.id,redBuild?'#ffe1e7':(themes[theme].iconInk||themes[theme].ink),false,light.color,light.blur,light.alpha);
+   }
    c.shadowBlur=0;b.tex.needsUpdate=true;return;
  }
  // Light belongs to the full sculpted cap, never a rectangular inset screen.
@@ -232,13 +239,17 @@ for(const side of [-1,1]){
  if(snapshot.buildReady&&!buildAffordable)buildCueStarted=now;buildAffordable=snapshot.buildReady;
  power=THREE.MathUtils.damp(power,snapshot.dice>0?1:0,4,dt);level=THREE.MathUtils.damp(level,snapshot.multiplier/Math.max(1,snapshot.maximum),3,dt);
  if(snapshot.rolling&&!lastRolling)buttons.find(b=>b.id==='roll').press=now;lastRolling=snapshot.rolling;
+ if(snapshot.rolling||snapshot.autoRolling)lastInteractionAt=now;
  const rollAge=now-buttons.find(b=>b.id==='roll').press;
  const clickGlow=Math.max(0,1-rollAge/.7);
  rollLight.intensity=reduced?0:clickGlow*2.5+(snapshot.rolling?.5:0);
  shell.position.x=group.position.x=jackpot&&!reduced?Math.sin(now*45)*.014:0;
  paintUniforms.paintTime.value=reduced?0:now;paintUniforms.paintPower.value=snapshot.dice>0?power:0;paintUniforms.paintEnergy.value=snapshot.dice>0?power*level:0;paintUniforms.paintJackpot.value=jackpot?1:0;
  for(const [i,b] of buttons.entries()){
- const age=now-b.press,pressed=b.hit?.matches(':active')??false;b.hover=b.hit?.matches(':hover,:focus-visible')??false;
+ const pressed=b.hit?.matches(':active')??false;b.hover=b.hit?.matches(':hover,:focus-visible')??false;
+ // Every button flares its icon backlight on press; any touch wakes the strips.
+ if(pressed&&!b.wasPressed){b.press=now;lastInteractionAt=now;}b.wasPressed=pressed;
+ const age=now-b.press;
  b.root.position.z=reduced?0:pressed?-.025:age<.4?-.025*Math.sin(Math.PI*age/.4):0;
  const ready=b.id==='build'&&buildAffordable,charge=ready?1:power;
  const tint=jackpot?'#fff0a3':ready?(themes[theme].readyLight||'#ffc56b'):themes[theme].light;
