@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type PointerEvent } from 'react';
-import type { ControllerSnapshot } from './renderer';
+import type { ControllerMenuFaces, ControllerSnapshot } from './renderer';
 import { controllerSwipe, resolveControllerTheme } from './policy.js';
 import './LivingController.css';
 
@@ -17,6 +17,8 @@ export interface LivingControllerProps {
  onRoll:()=>void; onHoldStart:()=>void; onHoldEnd:()=>void; onHoldCancel?:()=>void; onStopAuto:()=>void;
  onMultiplier:()=>void; onShop:()=>void; onBuild:()=>void; onCreatures:()=>void; onConcord:()=>void;
  fallback:ReactNode;
+ /** Menu surface (Two Tracks overlay): per-button glyph + label, no multiplier. */
+ menuFaces?:ControllerMenuFaces;
 }
 export function LivingController(p:LivingControllerProps){
  const [failed,setFailed]=useState(false),[ready,setReady]=useState(false),[collapsed,setCollapsed]=useState(p.surface==='treasure');
@@ -41,6 +43,7 @@ export function LivingController(p:LivingControllerProps){
  snapshot.current.arrivalKey=p.arrivalKey;snapshot.current.blocked=p.blocked||p.tutorial;
  snapshot.current.onArrivalImpact=p.onArrivalImpact;
  snapshot.current.navigationOnly=p.surface==='treasure';
+ snapshot.current.menuFaces=p.menuFaces;
  snapshot.current.theme=resolveControllerTheme(false,p.dev,selection,p.islandNumber,p.preferredTheme,p.surface);
  const resolvedTheme=snapshot.current.theme;
  useEffect(()=>{p.onThemeChange?.(resolvedTheme);},[resolvedTheme,p.onThemeChange]);
@@ -58,7 +61,7 @@ export function LivingController(p:LivingControllerProps){
    if(!cancel&&!p.tutorial){const action=controllerSwipe(e.clientX-g.x,e.clientY-g.y,isCollapsed);if(action){suppress.current=true;p.onStopAuto();setCollapsed(action==='hide');}}
  };
  const actions:Record<Action,()=>void>={shop:p.onShop,build:p.onBuild,creatures:p.onCreatures,concord:p.onConcord,roll:p.onRoll};
- const labels:Record<Action,string>={shop:'Shop',build:p.buildReady?'Build — next step affordable':'Build',creatures:'Creatures',concord:p.concordLabel,roll:`${p.rollTitle} · ${Math.floor(p.dice/Math.max(1,p.cost))} rolls left`};
+ const labels:Record<Action,string>=p.menuFaces?{shop:p.menuFaces.shop.label,build:p.menuFaces.build.label,creatures:p.menuFaces.creatures.label,concord:p.menuFaces.concord.label,roll:`${p.menuFaces.roll.title} · ${p.menuFaces.roll.detail}`}:{shop:'Shop',build:p.buildReady?'Build — next step affordable':'Build',creatures:'Creatures',concord:p.concordLabel,roll:`${p.rollTitle} · ${Math.floor(p.dice/Math.max(1,p.cost))} rolls left`};
  return <div className={`living-controller-dock${isCollapsed?' is-collapsed':''}`} data-theme={snapshot.current.theme}>
    <div className={`living-controller${ready?' is-ready':''}`} aria-label={isCollapsed?'Controller hidden — swipe up or press Enter to restore':'Game controller — swipe down to hide'} tabIndex={0}
      onKeyDown={e=>{if(e.target!==e.currentTarget)return;if((isCollapsed&&(e.key==='Enter'||e.key==='ArrowUp'))||(!isCollapsed&&e.key==='ArrowDown'&&!p.tutorial)){e.preventDefault();p.onStopAuto();setCollapsed(!isCollapsed);}}}
@@ -71,17 +74,17 @@ export function LivingController(p:LivingControllerProps){
      {!isCollapsed&&powerFeedback&&<span key={p.multiplierFeedbackKey} className="living-controller-power-feedback" role="status">{powerFeedback}</span>}
      {(['shop','build','roll','creatures','concord'] as Action[]).map(id=><button key={id} ref={el=>{if(el)controls.current[id]=el;}} type="button" className={`living-controller-hit living-controller-hit--${id}`} aria-label={labels[id]} title={id==='roll'?p.rollHint:labels[id]} tabIndex={isCollapsed?-1:0}
        disabled={isCollapsed||(id==='build'?false:p.blocked)||(id==='roll'&&p.rollDisabled&&!p.autoRolling)}
-       onFocus={()=>setLabel(id==='roll'?'':id==='concord'?(p.concordTitle??'Story'):labels[id])} onBlur={()=>{setLabel('');if(id==='roll'){keyboardHeld.current=false;p.onHoldCancel?.();}}}
-       onPointerEnter={()=>setLabel(id==='roll'?'':id==='concord'?(p.concordTitle??'Story'):labels[id])} onPointerLeave={()=>{setLabel('');if(id==='roll')p.onHoldCancel?.();}}
+       onFocus={()=>setLabel(id==='roll'?'':id==='concord'&&!p.menuFaces?(p.concordTitle??'Story'):labels[id])} onBlur={()=>{setLabel('');if(id==='roll'){keyboardHeld.current=false;p.onHoldCancel?.();}}}
+       onPointerEnter={()=>setLabel(id==='roll'?'':id==='concord'&&!p.menuFaces?(p.concordTitle??'Story'):labels[id])} onPointerLeave={()=>{setLabel('');if(id==='roll')p.onHoldCancel?.();}}
        onPointerDown={e=>{if(id==='roll'&&e.button===0&&p.canHold)p.onHoldStart();}} onPointerUp={()=>{if(id==='roll')p.onHoldEnd();}} onPointerCancel={()=>{if(id==='roll')p.onHoldCancel?.();}}
        onKeyDown={e=>{if(id==='roll'&&(e.key===' '||e.key==='Enter')){e.preventDefault();if(!e.repeat){keyboardHeld.current=true;if(p.canHold)p.onHoldStart();}}}}
        onKeyUp={e=>{if(id==='roll'&&(e.key===' '||e.key==='Enter')){e.preventDefault();if(keyboardHeld.current){keyboardHeld.current=false;p.onHoldEnd();p.onRoll();}}}}
        onClick={()=>{if(id!=='roll')p.onStopAuto();actions[id]();}}><span>{labels[id]}</span>{id==='creatures'&&p.creatureRewardReady&&<i className="living-controller-ready-dot" aria-label="Creature reward ready" />}</button>)}
-     <button ref={el=>{if(el)controls.current.multiplier=el;}} className="living-controller-multiplier" type="button" tabIndex={isCollapsed?-1:0} disabled={isCollapsed||p.blocked||p.multiplierDisabled}
+     {!p.menuFaces&&<button ref={el=>{if(el)controls.current.multiplier=el;}} className="living-controller-multiplier" type="button" tabIndex={isCollapsed?-1:0} disabled={isCollapsed||p.blocked||p.multiplierDisabled}
        aria-label={`Multiplier ×${p.multiplier}. Costs ${p.cost} dice per roll. Maximum ×${p.maximum}. Change multiplier.`}
        onClick={()=>{p.onStopAuto();p.onMultiplier();}}>
        <small>{p.multiplier===p.maximum&&p.maximum>1?'MAX POWER':'ROLL POWER'}</small><strong>×{p.multiplier}</strong><span className="living-controller-meter" aria-hidden="true"><i style={{width:`${Math.min(100,p.multiplier/Math.max(1,p.maximum)*100)}%`}} /></span>
-     </button>
+     </button>}
    </div>
  </div>;
 }

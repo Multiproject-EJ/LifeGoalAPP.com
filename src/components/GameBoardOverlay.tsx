@@ -18,6 +18,8 @@ import {
   ISLAND_RUN_CONTROLLER_SLOT_MAP,
   getIslandRunControllerSlotStyle,
 } from '../features/gamification/level-worlds/services/islandRunControllerVisualContract';
+import { LivingController } from '../features/gamification/level-worlds/components/living-controller/LivingController';
+import type { ControllerMenuFaces } from '../features/gamification/level-worlds/components/living-controller/renderer';
 
 /**
  * Presentational-only memory of the last island the dual-track ladder was shown for,
@@ -77,6 +79,8 @@ type GameBoardOverlayProps = {
   onLuckyRollClick?: () => void;
   onCreatureCollectionClick?: () => void;
   onGarageClick?: () => void;
+  /** Today-menu Actions (same destination as the Today footer's ⚡️ Actions). */
+  onActionsClick?: () => void;
   onCompassClick?: () => void;
   profilePlaystyleIcon?: string;
   profileAvatarUrl?: string;
@@ -130,6 +134,8 @@ type DualTrackColumnProps = {
   tone: 'life' | 'game';
   cards: DualTrackMilestoneCard[];
 };
+
+const noop = () => {};
 
 type ControllerHandleActionProps = {
   side: 'left' | 'right';
@@ -251,6 +257,7 @@ export function GameBoardOverlay({
   onSpinWinClick,
   onCreatureCollectionClick,
   onGarageClick,
+  onActionsClick,
   onCompassClick,
   essenceBalance = 0,
   rewardBarProgress = 0,
@@ -352,6 +359,90 @@ export function GameBoardOverlay({
     ? `${goalCount} goal${goalCount === 1 ? '' : 's'} · ${habitCount} habit${habitCount === 1 ? '' : 's'}`
     : 'Goals, habits, and growth milestones.';
   const rankExtensionBadge = RANK_EXTENSION_BADGES[rankExtensionTierForRank(currentRank)];
+
+  // Same controller as the game; its four buttons mirror the Today footer
+  // (✅ Today, ⚡️ Actions, 🌬️ Breathe, 🏆 Score) in the same positions.
+  const controllerMenuFaces: ControllerMenuFaces = {
+    shop: { glyph: '✅', label: 'Today' },
+    build: { glyph: '⚡️', label: 'Actions' },
+    creatures: { glyph: '🌬️', label: 'Breathe' },
+    concord: { glyph: '🏆', label: 'Score' },
+    roll: {
+      title: 'PLAY',
+      detail: `${islandDisplayName} · ${progressPercent}%`,
+      hint: `💰 ${essenceBalance.toLocaleString()} · TAP TO PLAY`,
+    },
+  };
+  const controllerShell = (
+          <div className="game-board-overlay__controller-shell" aria-label="Game overlay controller menu">
+            <button
+              type="button"
+              className="game-board-overlay__controller-compass-btn"
+              onClick={onCompassClick}
+              disabled={!onCompassClick}
+              aria-label="Open full navigation menu"
+              title="Open menu"
+            >
+              <span className="game-board-overlay__controller-compass-icon" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="game-board-overlay__controller-nav-btn game-board-overlay__controller-nav-btn--slot-quest"
+              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.leftUpper)}
+              onClick={onTopbarClick}
+              disabled={!onTopbarClick}
+            >
+              ✅ Today
+            </button>
+            <ControllerHandleAction
+              side="left"
+              slot="creatures"
+              icon="🛡️"
+              label="Shield"
+              onClick={onCreatureCollectionClick}
+            />
+            <ControllerHandleAction
+              side="right"
+              slot="offers"
+              icon="🏆"
+              label="Score"
+              onClick={onSpinWinClick}
+            />
+            <button
+              type="button"
+              className="game-board-overlay__controller-nav-btn game-board-overlay__controller-nav-btn--slot-garage"
+              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.rightUpper)}
+              onClick={onGarageClick}
+              disabled={!onGarageClick}
+            >
+              🚀 Garage
+            </button>
+            <div
+              className="game-board-overlay__controller-badge game-board-overlay__controller-badge--slot"
+              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.centerBadge)}
+            >
+              {islandDisplayName} · {progressPercent}%
+            </div>
+            <div
+              className="game-board-overlay__controller-play-group"
+              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.centerCore)}
+            >
+              <button
+                type="button"
+                className={`game-board-overlay__play-button${
+                  spotlightPlay ? ' game-board-overlay__play-button--spotlight' : ''
+                }`}
+                onClick={onPlayClick}
+                aria-label="Play level one"
+              >
+                <span className="game-board-overlay__play-button-content">
+                  <span className="game-board-overlay__play-button-chip">💰 {essenceBalance.toLocaleString()}</span>
+                  <span>PLAY</span>
+                </span>
+              </button>
+            </div>
+          </div>
+  );
 
   return (
     <div
@@ -491,74 +582,62 @@ export function GameBoardOverlay({
             />
           ) : null}
 
-          <div className="game-board-overlay__controller-shell" aria-label="Game overlay controller menu">
-            <button
-              type="button"
-              className="game-board-overlay__controller-compass-btn"
-              onClick={onCompassClick}
-              disabled={!onCompassClick}
-              aria-label="Open full navigation menu"
-              title="Open menu"
-            >
-              <span className="game-board-overlay__controller-compass-icon" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="game-board-overlay__controller-nav-btn game-board-overlay__controller-nav-btn--slot-quest"
-              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.leftUpper)}
-              onClick={onTopbarClick}
-              disabled={!onTopbarClick}
-            >
-              ✅ Today
-            </button>
-            <ControllerHandleAction
-              side="left"
-              slot="creatures"
-              icon="🛡️"
-              label="Shield"
-              onClick={onCreatureCollectionClick}
-            />
-            <ControllerHandleAction
-              side="right"
-              slot="offers"
-              icon="🏆"
-              label="Score"
-              onClick={onSpinWinClick}
-            />
-            <button
-              type="button"
-              className="game-board-overlay__controller-nav-btn game-board-overlay__controller-nav-btn--slot-garage"
-              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.rightUpper)}
-              onClick={onGarageClick}
-              disabled={!onGarageClick}
-            >
-              🚀 Garage
-            </button>
-            <div
-              className="game-board-overlay__controller-badge game-board-overlay__controller-badge--slot"
-              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.centerBadge)}
-            >
-              {islandDisplayName} · {progressPercent}%
+          {spotlightPlay ? controllerShell : (
+            <div className="game-board-overlay__living-controller">
+              <div className="game-board-overlay__controller-extras">
+                <button
+                  type="button"
+                  className="game-board-overlay__controller-extra"
+                  onClick={onCompassClick}
+                  disabled={!onCompassClick}
+                  aria-label="Open full navigation menu"
+                >
+                  <span aria-hidden="true">☰</span> Menu
+                </button>
+                <button
+                  type="button"
+                  className="game-board-overlay__controller-extra"
+                  onClick={onGarageClick}
+                  disabled={!onGarageClick}
+                >
+                  <span aria-hidden="true">🚀</span> Garage
+                </button>
+              </div>
+              <LivingController
+                arrivalKey={`overlay-${islandNumber}`}
+                islandNumber={islandNumber}
+                dark={false}
+                dev={false}
+                dice={1}
+                multiplier={1}
+                maximum={1}
+                cost={1}
+                rolling={false}
+                autoRolling={false}
+                jackpot={false}
+                buildReady={false}
+                tutorial={false}
+                blocked={false}
+                rollDisabled={!onPlayClick}
+                multiplierDisabled
+                canHold={false}
+                rollTitle="PLAY"
+                regenLabel=""
+                concordLabel="Score"
+                menuFaces={controllerMenuFaces}
+                onRoll={() => onPlayClick?.()}
+                onHoldStart={noop}
+                onHoldEnd={noop}
+                onStopAuto={noop}
+                onMultiplier={noop}
+                onShop={() => onTopbarClick?.()}
+                onBuild={() => (onActionsClick ?? onTopbarClick)?.()}
+                onCreatures={() => onCreatureCollectionClick?.()}
+                onConcord={() => onSpinWinClick?.()}
+                fallback={controllerShell}
+              />
             </div>
-            <div
-              className="game-board-overlay__controller-play-group"
-              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.centerCore)}
-            >
-              <button
-                type="button"
-                className={`game-board-overlay__play-button${
-                  spotlightPlay ? ' game-board-overlay__play-button--spotlight' : ''
-                }`}
-                onClick={onPlayClick}
-                aria-label="Play level one"
-              >
-                <span className="game-board-overlay__play-button-content">
-                  <span className="game-board-overlay__play-button-chip">💰 {essenceBalance.toLocaleString()}</span>
-                  <span>PLAY</span>
-                </span>
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

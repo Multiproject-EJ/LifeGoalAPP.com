@@ -96,7 +96,15 @@ function drawButton(b,t){
    b.mat.transparent=glass;b.mat.opacity=glass?.48:1;b.mat.depthWrite=!glass;
    b.mat.roughness=jackpot?.28:glass?.16:(themes[theme].panelRoughness??.4);b.mat.metalness=jackpot?.65:glass?.04:(themes[theme].panelMetalness??.15);b.mat.clearcoat=glass?.85:(themes[theme].panelClearcoat??.15);
    c.shadowColor=jackpot?'#ffbf36':themes[theme].light;c.shadowBlur=0;c.fillStyle='#fff3c2';
-   if(jackpot)jackpotEmblem(c,b,t);
+   const menuFace=snapshot.menuFaces&&snapshot.menuFaces[b.id];
+   if(menuFace&&!jackpot){
+     // Menu surfaces (Two Tracks overlay) show the Today-menu glyph and label.
+     c.save();c.textAlign='center';c.textBaseline='middle';
+     c.font='170px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui';c.fillText(menuFace.glyph,256,180);
+     c.fillStyle=themes[theme].iconInk||ink;const handle=b.id==='creatures'||b.id==='concord';c.font='900 '+(handle?80:104)+'px system-ui';c.fillText(menuFace.label,256,382,handle?340:490);
+     c.restore();
+   }
+   else if(jackpot)jackpotEmblem(c,b,t);
    else if(b.id==='concord'){
      // A crisp open-book mark for the story device, not a reduced leaf glyph.
      c.save();c.strokeStyle=themes[theme].iconInk||ink;c.lineWidth=9;c.lineJoin='round';
@@ -129,6 +137,14 @@ function drawButton(b,t){
   c.fillStyle=light;c.fillRect(x-32,y-32,64,64);
  }c.restore();
  c.textAlign='center';c.textBaseline='middle';c.fillStyle=ink;c.shadowColor='#072a56';c.shadowBlur=8;c.shadowOffsetY=3;
+ const menuRoll=snapshot.menuFaces&&snapshot.menuFaces.roll;
+ if(menuRoll){
+  c.font='800 150px system-ui';c.fillText(menuRoll.title,512,215,900);
+  c.font='700 58px system-ui';c.fillText(menuRoll.detail,512,345,860);
+  c.font='600 40px system-ui';c.fillText(menuRoll.hint,512,448,860);
+  const age=t-b.press;if(age<.7){const flash=c.createRadialGradient(512,256,30,512,256,620);flash.addColorStop(0,'#55cfff00');flash.addColorStop(.75,'rgba(74,192,255,'+(.24*(1-age/.7))+')');flash.addColorStop(1,'#55cfff00');c.fillStyle=flash;c.fillRect(0,0,W,H);}
+  c.shadowBlur=0;c.shadowOffsetY=0;b.tex.needsUpdate=true;return;
+ }
  const remaining=Math.floor(state.dice/state.multiplier);
  c.font='800 94px system-ui';c.fillText(String(remaining),310,118);c.font='600 42px system-ui';c.fillText('ROLLS LEFT',500,116);
  
@@ -222,7 +238,7 @@ for(const side of [-1,1]){
  for(const child of b.root.children)if(child.material?.map===b.tex)child.material.opacity=pose.dark?.12:1;
  if(b.hit)placeHit(b.hit,b.x,b.y,b.w,b.h);
  }
- powerPill.update(snapshot,now,reduced);powerPill.root.visible=!pose.dark&&!pose.cowboy;
+ powerPill.update(snapshot,now,reduced);powerPill.root.visible=!pose.dark&&!pose.cowboy&&!snapshot.menuFaces;
  if(pose.dark){paintUniforms.paintPower.value=0;paintUniforms.paintEnergy.value=0;rollLight.intensity=0;seasonal.visible=false;}
  else seasonal.visible=!!themes[theme].holiday;
  if(controls.multiplier)placeHit(controls.multiplier,PILL.x,PILL.y,PILL.width,.5);
