@@ -483,6 +483,8 @@ import {
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
+import { CompassBookIcon } from './CompassBookIcon';
+import { compassIslandKey, hasUnseenCompassInsight, readSeenCompassIsland, writeSeenCompassIsland } from '../services/compassBookIconCue';
 import { isMinerCampaignComplete, resolveCrystalMinersProgressForEvent } from '../services/crystalMinersGame';
 import { ArenaJourneyControls } from './ArenaJourneyControls';
 import { ArenaStadiumActivity } from './ArenaStadiumActivity';
@@ -3640,6 +3642,18 @@ export function IslandRunBoardPrototype({
   const lavaLabyrinthEscapeMissionStarted = islandNumber !== 20
     || isLavaLabyrinthEscapeMissionStarted(stagedRestorationProgress);
   const compassBookReceived = useMemo(() => hasReceivedCompassBook(runtimeState), [runtimeState]);
+  // Presentation-only "seen" marker: the icon glows and pops a tiny message
+  // until the current island's Compass fragment has been opened once.
+  const compassIconIslandKey = compassIslandKey(__storeState.cycleIndex, islandNumber);
+  const [compassSeenIslandKey, setCompassSeenIslandKey] = useState(() => readSeenCompassIsland(session.user.id));
+  const hasCompassInsight = compassBookReceived && hasUnseenCompassInsight({
+    islandNumber, islandKey: compassIconIslandKey, seenIslandKey: compassSeenIslandKey,
+  });
+  useEffect(() => {
+    if (!showHatcheryCompassModal || !compassBookReceived) return;
+    writeSeenCompassIsland(session.user.id, compassIconIslandKey);
+    setCompassSeenIslandKey(compassIconIslandKey);
+  }, [compassBookReceived, compassIconIslandKey, session.user.id, showHatcheryCompassModal]);
   const jungleMissionAction = stagedRestorationDescriptor?.missionId === 'jungle-expedition-living-compass'
     && stagedRestorationProgress
     ? getJungleMissionActionPresentation(
@@ -17201,11 +17215,11 @@ export function IslandRunBoardPrototype({
         <button
           type="button"
           className="island-run-prototype__compass-floating"
-          aria-label="Open Compass Book"
+          aria-label={hasCompassInsight ? 'Open Compass Book — new insight' : 'Open Compass Book'}
           title="Compass Book"
           onClick={() => setShowHatcheryCompassModal(true)}
         >
-          <span className="island-run-board__hatchery-compass-icon" aria-hidden="true" />
+          <CompassBookIcon islandNumber={islandNumber} hasInsight={hasCompassInsight} />
         </button>
       ) : null}
 
