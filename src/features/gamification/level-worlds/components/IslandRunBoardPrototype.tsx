@@ -484,6 +484,8 @@ import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { CompassBookIcon } from './CompassBookIcon';
+import { AssemblyTopbarBlast } from './AssemblyTopbarBlast';
+import { ASSEMBLY_TOPBAR_BLAST_MS, shouldAssemblyBlastHitTopbar } from '../services/assemblyTopbarBlast';
 import { FishingCastMeter } from './FishingCastMeter';
 import { isFishingCastHit } from '../services/fishingCastSkill';
 import { compassIslandKey, hasUnseenCompassInsight, readSeenCompassIsland, writeSeenCompassIsland } from '../services/compassBookIconCue';
@@ -2155,6 +2157,7 @@ export function IslandRunBoardPrototype({
   const [firstLightAssemblyError, setFirstLightAssemblyError] = useState<string | null>(null);
   const [isDetonatingFirstLightAssembly, setIsDetonatingFirstLightAssembly] = useState(false);
   const [firstLightAssemblyConstructionSequence, setFirstLightAssemblyConstructionSequence] = useState(0);
+  const [assemblyTopbarBlastId, setAssemblyTopbarBlastId] = useState<number | null>(null);
   const [firstLightAssemblyPendingSector, setFirstLightAssemblyPendingSector] = useState<number | null>(null);
   const [showCactusCanyonSpiral, setShowCactusCanyonSpiral] = useState(false);
   const [isBlastingCactusCanyonSpiral, setIsBlastingCactusCanyonSpiral] = useState(false);
@@ -14194,6 +14197,16 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
+  // Island 001 Assembly blast/build beat: everything stays visible but inert
+  // (controller, floating buttons, top bar, explore dots) so it plays through.
+  const firstLightAssemblyAnimating = firstLightAssemblyPendingSector !== null;
+  useEffect(() => {
+    if (!firstLightAssemblyAnimating) return;
+    stopAutoRoll();
+    setShowTopbarMenu(false);
+    setShowAudioMenu(false);
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  }, [firstLightAssemblyAnimating, stopAutoRoll]);
   const missionOwnsController = worldMissionPresentationActive || firstArrivalActive || islandDeparture !== null || exploreViewActive
     || openingCeremonyPlayback !== null || isCompassBookCeremonyPlaying
     || moonwellThawActive || frostwellSequence.phase === 'drilling'
@@ -14724,6 +14737,11 @@ export function IslandRunBoardPrototype({
       triggerIslandRunHaptic('boss_trial_resolve');
       const prefersReducedMotion = typeof window !== 'undefined'
         && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReducedMotion && shouldAssemblyBlastHitTopbar(result.sectorAfter)) {
+        const blastId = Date.now();
+        setAssemblyTopbarBlastId(blastId);
+        window.setTimeout(() => setAssemblyTopbarBlastId((current) => (current === blastId ? null : current)), ASSEMBLY_TOPBAR_BLAST_MS);
+      }
       if (!prefersReducedMotion) {
         await new Promise<void>((resolve) => window.setTimeout(resolve, result.sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 13_400 : 5_400));
       }
@@ -15441,7 +15459,8 @@ export function IslandRunBoardPrototype({
 
   return (
     <section
-      className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}${showBuildPanel ? ' island-run-prototype--build-exclusive' : ''}${isArenaBattleOpen ? ' island-run-prototype--arena-battle' : ''}`}
+      className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}${showBuildPanel ? ' island-run-prototype--build-exclusive' : ''}${isArenaBattleOpen ? ' island-run-prototype--arena-battle' : ''}${firstLightAssemblyAnimating ? ' island-run-prototype--input-locked' : ''}`}
+      aria-busy={firstLightAssemblyAnimating || undefined}
       {...(isCompassBookCeremonyPlaying ? { inert: '' } : {})}
       data-compass-book-ceremony={isCompassBookCeremonyPlaying ? 'playing' : undefined}
       data-island-number={islandNumber}
@@ -16002,7 +16021,8 @@ export function IslandRunBoardPrototype({
         <div className="island-run-board__discovery-atmosphere" aria-hidden="true" />
 
         <div ref={topbarMenuRef}>
-          <div className="island-run-board__topbar island-run-themed-topbar" data-controller-theme={topbarControllerTheme} aria-label="Island Run top bar">
+          <div key={assemblyTopbarBlastId ?? 'topbar'} className={`island-run-board__topbar island-run-themed-topbar${assemblyTopbarBlastId !== null ? ' island-run-board__topbar--assembly-blast' : ''}`} data-controller-theme={topbarControllerTheme} aria-label="Island Run top bar">
+            {assemblyTopbarBlastId !== null ? <AssemblyTopbarBlast /> : null}
             <IslandHudGlass />
             <button type="button" className="island-run-board__topbar-avatar" data-rank-tier={playerRank?.tier ?? 'bronze'} title={playerRank?.title ?? 'Player profile'} aria-label={playerRank ? `Player profile · ${playerRank.title}` : 'Player profile'}>
               {avatarImageUrl ? (
@@ -16805,7 +16825,7 @@ export function IslandRunBoardPrototype({
                   : threeCameraFocusPreset}
                 cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
                 cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
-                interactionPaused={doesModalOwnAttention || openingCeremonyPlayback !== null}
+                interactionPaused={doesModalOwnAttention || openingCeremonyPlayback !== null || firstLightAssemblyAnimating}
                 openingCeremonyPlayback={openingCeremonyPlayback}
                 constructionPresentation={constructionPresentation}
                 arenaBattlePresentation={arenaBattlePresentation}

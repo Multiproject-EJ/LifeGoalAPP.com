@@ -28445,3 +28445,13 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   animation: island-explore-hint 3.2s ease-out 1.2s both;
 }
 @keyframes island-explore-hint { 0% { opacity: 0; } 15%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Island 001 Assembly blast/build: the whole board is visible but inert until
+   the animation finishes (controller, floating buttons, top bar, explore dots). */
+.island-run-prototype--input-locked,
+.island-run-prototype--input-locked * {
+  pointer-events: none !important;
+}
+.island-run-prototype--input-locked :is(button, [role='button'], a) {
+  cursor: default;
+}
