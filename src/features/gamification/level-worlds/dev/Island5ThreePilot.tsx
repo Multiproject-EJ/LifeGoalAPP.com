@@ -1,4 +1,5 @@
 import { sunshoreCreatureClearanceLift } from './SunshoreCreatureClearance';
+import { FISHERMANS_DRAGON_CINEMATIC_SECONDS } from '../services/fishermansFishingWatchdog';
 import { createSunshoreArenaRetraction } from './SunshoreArenaRetraction';
 import { createSunshoreLandmarkMagicRuntime } from './Island5SunshoreV2Architecture';
 import { resolveSunshoreCreatureCelebration, type CelebrationPoint } from '../services/islandRunCreatureCelebration';
@@ -10710,7 +10711,7 @@ export default function Island5ThreePilot({
         || livingAmbience.root.userData.missionPresentationActive
         || (isFishermansVillage && fishermansFishingPresentationRef.current.fishingInteraction?.active)
         || (isFishermansVillage && fishermansFishingPresentationRef.current.fishCaughtKg >= 78
-          && Math.max(0, fishermansFishingPresentationRef.current.previewElapsedSeconds ?? 0) < 23.5)
+          && Math.max(0, fishermansFishingPresentationRef.current.previewElapsedSeconds ?? 0) < FISHERMANS_DRAGON_CINEMATIC_SECONDS)
         || (isRootheartCanopyCity && Number.isFinite(rootheartConstructionStartedAtMs)
           && now - rootheartConstructionStartedAtMs < (rootheartPowerworksPresentationRef.current.buildStage >= 3 ? 5200 : 3200)));
       if (missionPresentationActive !== missionPresentationActiveRef.current) {
