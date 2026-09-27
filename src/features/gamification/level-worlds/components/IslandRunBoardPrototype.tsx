@@ -2590,6 +2590,8 @@ export function IslandRunBoardPrototype({
   const [isBackgroundHidden, setIsBackgroundHidden] = useState(false);
   const [timeLeftSec, setTimeLeftSec] = useState(ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
+  // An island explore-point view is open: the controller steps aside.
+  const [exploreViewActive, setExploreViewActive] = useState(false);
   // Island departure cinematic (Island Complete, part B): ship folds, lifts
   // off and streaks away before the travel overlay. Presentation only.
   const [islandDeparture, setIslandDeparture] = useState<{ fromIsland: number; toIsland: number } | null>(null);
@@ -14120,7 +14122,7 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
-  const missionOwnsController = worldMissionPresentationActive || firstArrivalActive || islandDeparture !== null
+  const missionOwnsController = worldMissionPresentationActive || firstArrivalActive || islandDeparture !== null || exploreViewActive
     || openingCeremonyPlayback !== null || isCompassBookCeremonyPlaying
     || moonwellThawActive || frostwellSequence.phase === 'drilling'
     || frostwellSequence.phase === 'commissioning' || isBuildSequenceActive;
@@ -16688,6 +16690,7 @@ export function IslandRunBoardPrototype({
                 island20SkiffNavigation={lavaSkiffNavigation}
                 onIsland20SkiffRunComplete={handleLavaSkiffRunComplete}
                 onAssemblyMeetingComplete={isIslandVisualPreview ? undefined : openAssemblyMandate}
+                onExplorePointChange={(id) => setExploreViewActive(id !== null)}
                 fishermansFishingPresentation={{
                   fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === 16
                     ? FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG
