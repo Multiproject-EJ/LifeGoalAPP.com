@@ -12267,6 +12267,26 @@ export function IslandRunBoardPrototype({
     startBuildHold(stopIndex);
   }, [islandNumber, session, startBuildHold]);
 
+  /** Skill build: one precision-timed tap performs exactly one ordinary build step. */
+  const buildPrecisionStepFromPlayer = useCallback(async (stopIndex: number): Promise<boolean> => {
+    if (
+      autoBuildStopIndexRef.current !== null
+      || holdBuildSpendActiveRef.current
+      || buildLevelCompletionRef.current
+      || isBuildSequenceActiveRef.current
+      || isBuildCameraHandoffActive
+      || isBuildCameraHandoffPending
+    ) return false;
+    holdBuildSpendActiveRef.current = true;
+    setBuildActionError(null);
+    markBuildChoreographyActive(ISLAND_RUN_BUILD_LEVEL_AUTO_DISMISS_MS);
+    try {
+      return await handleSpendEssenceOnBuild(stopIndex, 1);
+    } finally {
+      holdBuildSpendActiveRef.current = false;
+    }
+  }, [handleSpendEssenceOnBuild, isBuildCameraHandoffActive, isBuildCameraHandoffPending, markBuildChoreographyActive]);
+
   const stopAutoBuild = useCallback((reason: 'player_stop' | 'landmark_complete' | 'panel_closed'): void => {
     if (autoBuildStopIndexRef.current === null) return;
     autoBuildStopIndexRef.current = null;
@@ -19449,6 +19469,7 @@ export function IslandRunBoardPrototype({
           onBuildPartChoice={handleBuildPartChoice}
           onStartBuildHold={startBuildHoldFromPlayer}
           onStopBuildHold={stopBuildHold}
+          onPrecisionBuild={buildPrecisionStepFromPlayer}
         />
       )}
       {showBuildPanel && devBuildAllQuote && typeof document !== 'undefined' ? createPortal(
