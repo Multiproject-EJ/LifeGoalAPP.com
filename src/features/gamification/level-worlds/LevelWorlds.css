@@ -28192,3 +28192,160 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   pointer-events: none;
   filter: blur(7px) brightness(0.55) saturate(0.8);
 }
+
+/* Mission Phone: incoming mission message. A red "1" badge, and the phone
+   shakes as the message lands; the board remounts the button every 30 s to
+   replay the shake until the message is read. 'rotate' composes with the
+   buttons' own placement transform. */
+.island-run-mission-phone--message {
+  animation: island-run-mission-phone-ring 1.15s ease-in-out both;
+  transform-origin: 50% 85%;
+}
+.island-run-mission-phone__message-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  background: #ff2d4b;
+  color: #fff;
+  font: 800 11px/15px system-ui, sans-serif;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(120, 0, 20, 0.45);
+  pointer-events: none;
+  animation: island-run-mission-message-badge-pop 420ms cubic-bezier(.2, 1.6, .4, 1) both;
+}
+@keyframes island-run-mission-phone-ring {
+  0%, 100% { rotate: 0deg; scale: 1; }
+  8% { rotate: -16deg; scale: 1.12; }
+  16% { rotate: 14deg; scale: 1.12; }
+  24% { rotate: -14deg; }
+  32% { rotate: 12deg; }
+  40% { rotate: -10deg; }
+  48% { rotate: 8deg; }
+  56% { rotate: -6deg; scale: 1.05; }
+  64% { rotate: 4deg; }
+  72% { rotate: -2deg; scale: 1; }
+}
+@keyframes island-run-mission-message-badge-pop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+.island-run-mission-message-banner {
+  position: fixed;
+  z-index: 12500;
+  top: max(10px, calc(env(safe-area-inset-top) + 6px));
+  left: 50%;
+  width: min(360px, calc(100vw - 24px));
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  background: rgba(246, 250, 255, 0.94);
+  box-shadow: 0 14px 34px rgba(8, 24, 48, 0.28);
+  color: #13283f;
+  text-align: left;
+  cursor: pointer;
+  animation: island-run-mission-message-banner-in 520ms cubic-bezier(.2, 1.3, .35, 1) both;
+}
+.island-run-mission-message-banner__icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #1d4f7a, #0d2a45);
+  color: #bff3ff;
+}
+.island-run-mission-message-banner__icon svg { width: 26px; height: 26px; }
+.island-run-mission-message-banner__copy { display: grid; gap: 1px; min-width: 0; }
+.island-run-mission-message-banner__copy small { color: #5a6f86; font-size: 11px; font-weight: 700; }
+.island-run-mission-message-banner__copy strong { font-size: 15px; }
+.island-run-mission-message-banner__copy span { color: #3b516a; font-size: 12px; }
+@keyframes island-run-mission-message-banner-in {
+  0% { translate: -50% -140%; opacity: 0; }
+  100% { translate: -50% 0; opacity: 1; }
+}
+
+/* Picture message: three illustrated steps, readable at a glance. */
+.island-mission-tracker__picture-message {
+  margin: 4px 0 10px;
+  padding: 10px 8px 8px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(127, 214, 255, 0.2), rgba(255, 213, 74, 0.16));
+  border: 1px solid rgba(127, 214, 255, 0.35);
+}
+.island-mission-tracker__picture-message-kicker {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.island-mission-tracker__picture-message ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.island-mission-tracker__picture-message li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+  animation: island-run-mission-picture-in 460ms cubic-bezier(.2, 1.3, .35, 1) both;
+}
+.island-mission-tracker__picture-message li:nth-child(2) { animation-delay: 140ms; }
+.island-mission-tracker__picture-message li:nth-child(3) { animation-delay: 280ms; }
+.island-mission-tracker__picture-message-art {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(8, 24, 48, 0.18);
+}
+.island-mission-tracker__picture-message-art svg { width: 46px; height: 46px; }
+.island-mission-tracker__picture-message li > b {
+  position: absolute;
+  top: -5px;
+  left: calc(50% - 36px);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #16324a;
+  color: #fff;
+  font-size: 10px;
+  line-height: 18px;
+}
+.island-mission-tracker .island-mission-tracker__picture-message li > small {
+  display: block;
+  min-height: 2.4em;
+  color: #e4f6ff;
+  opacity: 1;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.island-mission-tracker .island-mission-tracker__picture-message { flex: 0 0 auto; color: #e4f6ff; }
+@keyframes island-run-mission-picture-in {
+  0% { opacity: 0; transform: translateY(8px) scale(0.8); }
+  100% { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-run-mission-phone--message,
+  .island-run-mission-phone__message-badge,
+  .island-run-mission-message-banner,
+  .island-mission-tracker__picture-message li { animation: none; }
+}

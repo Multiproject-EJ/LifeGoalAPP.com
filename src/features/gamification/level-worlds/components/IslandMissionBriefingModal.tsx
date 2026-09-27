@@ -2,6 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
 import { triggerIslandRunHaptic } from '../services/islandRunAudio';
+import { buildMissionMessageSteps, type MissionMessageStepKind } from '../services/islandRunMissionMessage';
 import type { IslandMissionBriefingPresentation } from '../services/islandRunMissionBriefing';
 import type { IslandMissionStats, IslandMissionTrackerObjective } from '../services/islandRunMissionTracker';
 import type { resolveIslandRunCompletion } from '../services/islandRunCompletion';
@@ -33,6 +34,8 @@ export interface IslandMissionBriefingModalProps {
   objectiveActions?: readonly MissionObjectiveAction[];
   objectiveDetails?: readonly string[];
   acknowledgeLabel?: string;
+  /** Opened from the incoming mission message: lead with a picture explainer. */
+  pictureMessage?: boolean;
   onObjectiveSelect?: (objectiveIndex: number) => void;
   primaryActionLabel?: string;
   primaryActionHint?: string;
@@ -280,6 +283,89 @@ function setMissionPhoneLaunchOrigin(phone: HTMLElement | null): void {
   phone.style.setProperty('--mission-phone-launch-y', `${Math.round(targetY - packCenterY)}px`);
 }
 
+/** Original illustrations for the picture message; one per step kind. */
+function MissionMessagePicture({ kind }: { kind: MissionMessageStepKind }): React.JSX.Element {
+  switch (kind) {
+    case 'roll':
+      return (
+        <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <rect x="10" y="14" width="34" height="34" rx="8" fill="#fff" stroke="#16324a" strokeWidth="3" transform="rotate(-10 27 31)" />
+          <g fill="#16324a" transform="rotate(-10 27 31)"><circle cx="19" cy="23" r="3.2" /><circle cx="27" cy="31" r="3.2" /><circle cx="35" cy="39" r="3.2" /></g>
+          <rect x="34" y="28" width="22" height="22" rx="6" fill="#ffd54a" stroke="#16324a" strokeWidth="3" transform="rotate(14 45 39)" />
+          <g fill="#16324a" transform="rotate(14 45 39)"><circle cx="40" cy="34" r="2.6" /><circle cx="50" cy="44" r="2.6" /></g>
+          <path d="M8 56c10-4 22-4 32 0" fill="none" stroke="#7fd6ff" strokeWidth="3" strokeLinecap="round" strokeDasharray="2 5" />
+        </svg>
+      );
+    case 'build':
+      return (
+        <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <path d="M10 54h44" stroke="#16324a" strokeWidth="3" strokeLinecap="round" />
+          <path d="M16 54V30l16-12 16 12v24z" fill="#ffe7b0" stroke="#16324a" strokeWidth="3" strokeLinejoin="round" />
+          <rect x="27" y="38" width="10" height="16" fill="#7fd6ff" stroke="#16324a" strokeWidth="2.5" />
+          <path d="M44 12l8 8-14 14-8-8z" fill="#ffb03a" stroke="#16324a" strokeWidth="2.5" strokeLinejoin="round" />
+          <path d="M52 20l6 6" stroke="#16324a" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
+    case 'boss':
+      return (
+        <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <path d="M12 44l-2-24 12 10 10-16 10 16 12-10-2 24z" fill="#ffd54a" stroke="#16324a" strokeWidth="3" strokeLinejoin="round" />
+          <rect x="12" y="44" width="40" height="8" rx="2" fill="#ffb03a" stroke="#16324a" strokeWidth="3" />
+          <circle cx="32" cy="36" r="4" fill="#e8264f" stroke="#16324a" strokeWidth="2" />
+        </svg>
+      );
+    case 'egg':
+      return (
+        <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <path d="M32 8c11 0 20 17 20 30a20 20 0 0 1-40 0C12 25 21 8 32 8z" fill="#fff4dc" stroke="#16324a" strokeWidth="3" />
+          <path d="M18 36l7-5 7 6 7-6 7 5" fill="none" stroke="#ffb03a" strokeWidth="3" strokeLinejoin="round" />
+          <circle cx="26" cy="22" r="3" fill="#7fd6ff" /><circle cx="39" cy="46" r="3.5" fill="#7fd6ff" />
+        </svg>
+      );
+    case 'dynamite':
+      return (
+        <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <g stroke="#16324a" strokeWidth="3"><rect x="14" y="26" width="10" height="28" rx="2" fill="#e8264f" /><rect x="27" y="24" width="10" height="30" rx="2" fill="#e8264f" /><rect x="40" y="26" width="10" height="28" rx="2" fill="#e8264f" /></g>
+          <path d="M12 36h40" stroke="#16324a" strokeWidth="5" />
+          <path d="M32 24c0-8 6-10 10-14" fill="none" stroke="#16324a" strokeWidth="2.5" />
+          <path d="M44 4l2 5 5-1-3 4 4 3-5 1 1 5-4-3-3 4v-5l-5-1 4-3z" fill="#ffd54a" stroke="#16324a" strokeWidth="1.5" />
+        </svg>
+      );
+    case 'fish':
+      return (
+        <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <path d="M8 32c8-12 26-14 38-2l10-8v20l-10-8C34 46 16 44 8 32z" fill="#7fd6ff" stroke="#16324a" strokeWidth="3" strokeLinejoin="round" />
+          <circle cx="20" cy="30" r="3" fill="#16324a" />
+          <path d="M10 52c6 4 14 4 20 0s14-4 20 0" fill="none" stroke="#7fd6ff" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <path d="M32 6l7 16 17 2-13 11 4 17-15-9-15 9 4-17L8 24l17-2z" fill="#ffd54a" stroke="#16324a" strokeWidth="3" strokeLinejoin="round" />
+        </svg>
+      );
+  }
+}
+
+function MissionPictureMessage({ labels }: { labels: readonly string[] }): React.JSX.Element {
+  const steps = buildMissionMessageSteps(labels);
+  return (
+    <section className="island-mission-tracker__picture-message" aria-label="What to do on this island">
+      <p className="island-mission-tracker__picture-message-kicker">📩 New mission · here&apos;s what to do</p>
+      <ol>
+        {steps.map((step, index) => (
+          <li key={`${step.kind}-${index}`} data-kind={step.kind}>
+            <span className="island-mission-tracker__picture-message-art"><MissionMessagePicture kind={step.kind} /></span>
+            <b aria-hidden="true">{index + 1}</b>
+            <small>{step.label}</small>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function MissionObjectiveGlyph({ label }: { label: string }): React.JSX.Element {
   const normalizedLabel = label.toLowerCase();
 
@@ -324,6 +410,7 @@ export function IslandMissionBriefingModal({
   objectiveActions = [],
   objectiveDetails = [],
   acknowledgeLabel = 'Accept field order',
+  pictureMessage = false,
   onObjectiveSelect,
   primaryActionLabel,
   primaryActionHint,
@@ -540,6 +627,8 @@ export function IslandMissionBriefingModal({
                   </div>
                 </section>
               ) : (
+                <>
+                {pictureMessage ? <MissionPictureMessage labels={normalizedProgress.map((item) => item.label)} /> : null}
                 <ol className="island-mission-tracker__checklist" aria-label="Mission objectives">
                   {normalizedProgress.map((item, objectiveIndex) => {
                     const objectiveLabel = `${item.label}: ${item.complete ? item.completeLabel : `${item.value} of ${item.target}`}`;
@@ -586,6 +675,7 @@ export function IslandMissionBriefingModal({
                     );
                   })}
                 </ol>
+                </>
               )}
 
               {primaryActionLabel && onPrimaryAction ? (

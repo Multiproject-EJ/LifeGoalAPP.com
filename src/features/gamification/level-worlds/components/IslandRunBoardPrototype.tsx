@@ -778,6 +778,7 @@ import {
 } from '../dev/island5ThreePilotContract';
 import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } from '../dev/Island5ThreePilot';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
+import { MISSION_MESSAGE_BANNER_MS, MISSION_MESSAGE_NUDGE_INTERVAL_MS, playMissionMessageRing } from '../services/islandRunMissionMessage';
 import { ISLAND_DEPARTURE_FALLBACK_MS, shouldPlayIslandDepartureCinematic } from '../services/islandRunDepartureCinematic';
 
 // The legacy Island Mission narrative was designed around unsolicited story
@@ -2068,6 +2069,11 @@ export function IslandRunBoardPrototype({
   const [showBoardSymbolLegend, setShowBoardSymbolLegend] = useState(showBoardLegendPreview);
   const [pendingMissionBriefing, setPendingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [activeMissionBriefing, setActiveMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
+  // The briefing arrives as a message on the Mission Phone (red badge, ring,
+  // shake every 30 s) and the mission starts when the player opens it.
+  const [incomingMissionBriefing, setIncomingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
+  const [missionMessageNudge, setMissionMessageNudge] = useState(0);
+  const [showMissionMessageBanner, setShowMissionMessageBanner] = useState(false);
   // Dev island jump intro sequence (arrival + mission briefing) that the
   // bottom-right Skip button can dismiss in one tap.
   const [devFreshArrivalBriefing, setDevFreshArrivalBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
@@ -11704,6 +11710,7 @@ export function IslandRunBoardPrototype({
       runtimeStateRef.current = result.record;
       setActiveEgg(null);
       setActiveMissionBriefing(null);
+      setIncomingMissionBriefing(null);
       setShowMissionPhoneBriefing(false);
       setQueuedSignatureMissionPresentation(null);
       setShowIslandClearCelebration(false);
@@ -11724,14 +11731,14 @@ export function IslandRunBoardPrototype({
   };
 
   useEffect(() => {
-    if (devFreshArrivalBriefing && !firstArrivalActive && !pendingMissionBriefing && !activeMissionBriefing) {
+    if (devFreshArrivalBriefing && !firstArrivalActive && !pendingMissionBriefing && !activeMissionBriefing && !incomingMissionBriefing) {
       setDevFreshArrivalBriefing(null);
     }
-  }, [devFreshArrivalBriefing, firstArrivalActive, pendingMissionBriefing, activeMissionBriefing]);
+  }, [devFreshArrivalBriefing, firstArrivalActive, pendingMissionBriefing, activeMissionBriefing, incomingMissionBriefing]);
 
   const handleSkipDevFreshArrivalIntro = () => {
     if (firstArrivalActive) setFirstArrivalSkip(true);
-    const trigger = activeMissionBriefing ?? pendingMissionBriefing ?? devFreshArrivalBriefing;
+    const trigger = activeMissionBriefing ?? incomingMissionBriefing ?? pendingMissionBriefing ?? devFreshArrivalBriefing;
     if (trigger) {
       const acknowledgement = acknowledgeIslandMissionBriefing({ session, client, trigger, triggerSource: 'dev_fresh_arrival_skip_intro' });
       runtimeStateRef.current = acknowledgement.record;
@@ -11739,6 +11746,7 @@ export function IslandRunBoardPrototype({
     }
     setPendingMissionBriefing(null);
     setActiveMissionBriefing(null);
+    setIncomingMissionBriefing(null);
     setDevFreshArrivalBriefing(null);
   };
 
@@ -11751,6 +11759,7 @@ export function IslandRunBoardPrototype({
       runtimeStateRef.current = result.record;
       setActiveMissionBriefing(null);
       setPendingMissionBriefing(null);
+      setIncomingMissionBriefing(null);
       setShowMissionPhoneBriefing(false);
       setQueuedSignatureMissionPresentation(null);
       setShowIslandClearCelebration(false);
@@ -14187,11 +14196,42 @@ export function IslandRunBoardPrototype({
     if (!pendingMissionBriefing || doesModalOwnAttention || queuedSignatureMissionPresentation) return;
     if (isRolling || pendingHopSequence) return;
     const timer = window.setTimeout(() => {
-      setActiveMissionBriefing(pendingMissionBriefing);
+      setIncomingMissionBriefing(pendingMissionBriefing);
+      setShowMissionMessageBanner(true);
       setPendingMissionBriefing(null);
     }, pendingMissionBriefing.islandNumber === 1 ? 850 : 0);
     return () => window.clearTimeout(timer);
   }, [doesModalOwnAttention, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
+  // Ring and shake as the message lands, then again every 30 s until read.
+  useEffect(() => {
+    if (!incomingMissionBriefing) return undefined;
+    const nudge = () => {
+      setMissionMessageNudge((value) => value + 1);
+      playMissionMessageRing();
+      triggerIslandRunHaptic('mission_phone_latch');
+    };
+    nudge();
+    const interval = window.setInterval(nudge, MISSION_MESSAGE_NUDGE_INTERVAL_MS);
+    return () => window.clearInterval(interval);
+  }, [incomingMissionBriefing]);
+  useEffect(() => {
+    if (!showMissionMessageBanner) return undefined;
+    const timer = window.setTimeout(() => setShowMissionMessageBanner(false), MISSION_MESSAGE_BANNER_MS);
+    return () => window.clearTimeout(timer);
+  }, [showMissionMessageBanner]);
+  const openIncomingMissionBriefing = useCallback(() => {
+    if (!incomingMissionBriefing) return false;
+    setActiveMissionBriefing(incomingMissionBriefing);
+    setIncomingMissionBriefing(null);
+    setShowMissionMessageBanner(false);
+    return true;
+  }, [incomingMissionBriefing]);
+  useEffect(() => {
+    setIncomingMissionBriefing((current) => (current && current.islandNumber !== islandNumber ? null : current));
+  }, [islandNumber]);
+  const handleMissionPhoneButton = useCallback(() => {
+    if (!openIncomingMissionBriefing()) setShowMissionPhoneBriefing(true);
+  }, [openIncomingMissionBriefing]);
   useEffect(() => {
     if (!queuedSignatureMissionPresentation || doesModalOwnAttention) return undefined;
     const mission = queuedSignatureMissionPresentation;
@@ -16325,16 +16365,18 @@ export function IslandRunBoardPrototype({
                 return (
                   <span key="mission-phone" className="island-run-board__rewardbar-side-slot">
                     <button
+                      key={`mission-phone-${missionMessageNudge}`}
                       type="button"
-                      className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}`}
-                      aria-label={`${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(isIslandVisualPreview ? islandArtPreviewNumber : islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+                      className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing ? ' island-run-mission-phone--message' : ''}`}
+                      aria-label={`${incomingMissionBriefing ? 'New mission message. ' : ''}${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(isIslandVisualPreview ? islandArtPreviewNumber : islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
                       title="Mission tracker"
-                      onClick={() => setShowMissionPhoneBriefing(true)}
+                      onClick={handleMissionPhoneButton}
                     >
                       <MissionPhoneRailIcon />
                       <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
                       <small>Mission</small>
                       {isIslandClearSignalPending ? <i className="island-run-mission-phone__signal-dot" aria-hidden="true" /> : null}
+                      {incomingMissionBriefing ? <b className="island-run-mission-phone__message-badge" aria-hidden="true">1</b> : null}
                     </button>
                   </span>
                 );
@@ -16845,15 +16887,17 @@ export function IslandRunBoardPrototype({
           phone has no reward-bar slot, so it sits directly above the magnifier. */}
       {!islandDeparture && !diplomaticRewardChannelVisible && (featureAccess.gradual || islandNumber === 1) ? (
         <button
+          key={`mission-phone-floating-${missionMessageNudge}`}
           type="button"
-          className={`island-run-board__mission-phone-floating${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}`}
-          aria-label={`${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+          className={`island-run-board__mission-phone-floating${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing ? ' island-run-mission-phone--message' : ''}`}
+          aria-label={`${incomingMissionBriefing ? 'New mission message. ' : ''}${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
           title="Mission tracker"
-          onClick={() => setShowMissionPhoneBriefing(true)}
+          onClick={handleMissionPhoneButton}
         >
           <MissionPhoneRailIcon />
           <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
           {isIslandClearSignalPending ? <i className="island-run-mission-phone__signal-dot" aria-hidden="true" /> : null}
+          {incomingMissionBriefing ? <b className="island-run-mission-phone__message-badge" aria-hidden="true">1</b> : null}
         </button>
       ) : null}
 
@@ -20406,9 +20450,18 @@ export function IslandRunBoardPrototype({
         document.body,
       ) : null}
 
-      {devFreshArrivalBriefing && (firstArrivalActive || pendingMissionBriefing || activeMissionBriefing) ? createPortal(
+      {devFreshArrivalBriefing && (firstArrivalActive || pendingMissionBriefing || activeMissionBriefing || incomingMissionBriefing) ? createPortal(
         <button type="button" className="island-run-dev-skip-intro" onClick={handleSkipDevFreshArrivalIntro} aria-label="Skip intro">
           Skip <span aria-hidden="true">⏭</span>
+        </button>, document.body) : null}
+      {incomingMissionBriefing && showMissionMessageBanner && !doesModalOwnAttention ? createPortal(
+        <button type="button" className="island-run-mission-message-banner" onClick={openIncomingMissionBriefing}>
+          <span className="island-run-mission-message-banner__icon" aria-hidden="true"><MissionPhoneRailIcon /></span>
+          <span className="island-run-mission-message-banner__copy">
+            <small>Mission Phone · now</small>
+            <strong>📩 New mission message</strong>
+            <span>Tap to read what to do on Island {String(incomingMissionBriefing.islandNumber).padStart(3, '0')}</span>
+          </span>
         </button>, document.body) : null}
       {islandDeparture ? createPortal(
         <div className="arrival-caption island-departure-caption" aria-label={`Leaving Island ${islandDeparture.fromIsland}`}>
@@ -20736,6 +20789,7 @@ export function IslandRunBoardPrototype({
         islandCompletion={displayedMissionTracker.islandCompletion}
         stats={displayedMissionTracker.stats}
         overallProgressPercent={displayedMissionTracker.overallProgressPercent}
+        pictureMessage={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing}
         objectiveActions={showMissionPhoneBriefing ? missionPhoneObjectiveActions : undefined}
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
