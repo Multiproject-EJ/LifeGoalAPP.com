@@ -283,6 +283,7 @@ import {
   applyDevGrantDice,
   applyDevGrantEssence,
   applyDevGrantTimedEventTickets,
+  applyDevSkipToNextTimedEvent,
   applyTimedEventTicketTileGrant,
   applyDevBuildAllToL3,
   applyDevClearCurrentIslandForTravel,
@@ -482,6 +483,7 @@ import {
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
+import { isMinerCampaignComplete, resolveCrystalMinersProgressForEvent } from '../services/crystalMinersGame';
 import { ArenaJourneyControls } from './ArenaJourneyControls';
 import { ArenaStadiumActivity } from './ArenaStadiumActivity';
 import { applyArenaStadiumAction } from '../services/arenaStadiumActions';
@@ -7795,6 +7797,14 @@ export function IslandRunBoardPrototype({
       version: 1,
     };
   }, [activeTimedEvent, __storeState.currentIslandNumber, arenaDemoFlags, session.user.id, devTimedEventOverrideEventId, devTimedEventOverrideType, featureAccess.inauguralRound, isAdmin, isDevModeEnabled, islandNumber]);
+  // A game whose journey is finished for this event is never offered, so it can
+  // never trap the stadium; it returns as a new season with the next event.
+  const arenaFinishedGameIds = useMemo<ArenaGameId[]>(() => {
+    const eventId = effectiveActiveTimedEvent?.eventId;
+    if (!eventId) return [];
+    const miners = resolveCrystalMinersProgressForEvent(__storeState.crystalMinersProgressByEvent, eventId);
+    return miners && isMinerCampaignComplete(miners) ? ['crystal_miners'] : [];
+  }, [__storeState.crystalMinersProgressByEvent, effectiveActiveTimedEvent?.eventId]);
   const timedEventRemainingLabel = effectiveActiveTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
@@ -11372,6 +11382,14 @@ export function IslandRunBoardPrototype({
     persistDevEventGridOrder(next);
     setDevEventGridOrder(next);
   }, [eventGridAvailableOrderIds, isDevEventGridControlEnabled]);
+  const handleDevSkipToNextTimedEvent = useCallback(() => {
+    if (!isDevModeEnabled) return;
+    const result = applyDevSkipToNextTimedEvent({ session, client });
+    if (result.changed) {
+      setRuntimeState(result.record);
+      setLandingText('Dev: skipped to the next timed event.');
+    }
+  }, [client, isDevModeEnabled, session]);
   const handleGrantDevTimedEventTickets = useCallback((amount: number) => {
     if (!isDevModeEnabled || !devTimedEventOverrideEventId) return;
     const result = applyDevGrantTimedEventTickets({
@@ -18105,6 +18123,9 @@ export function IslandRunBoardPrototype({
                     nextRewardIcon={nextRewardIcon}
                     nextRewardLabel={nextRewardKind.replace(/_/g, ' ')}
                     onLaunch={handleLaunchArenaGame}
+                    finishedGameIds={arenaFinishedGameIds}
+                    nextEventLabel={timedEventRemainingLabel}
+                    onDevSkipEvent={isDevModeEnabled ? handleDevSkipToNextTimedEvent : undefined}
                   />) : <p role="status">Waiting for the shared event channel.</p>}
                   </ArenaStadiumActivity>
                 ) : featureAccess.inauguralRound || (featureAccess.gradual && islandNumber === 2) ? (

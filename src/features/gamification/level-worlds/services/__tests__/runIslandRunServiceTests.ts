@@ -3,6 +3,7 @@ import { landmarkAttentionTests } from './landmarkAttention.test';
 import {islandRunFirstArrivalTests} from './islandRunFirstArrival.test';
 import { islandRunFastBuildTests } from './islandRunFastBuild.test';
 import { crystalMinersTests } from './crystalMiners.test';
+import { crystalMinersSeasonTests } from './crystalMinersSeason.test';
 import { creatureCatalogTests } from './creatureCatalog.test';
 import { creatureCollectionServiceTests } from './creatureCollectionService.test';
 import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryService.test';
@@ -296,6 +297,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunFirstArrival', tests: islandRunFirstArrivalTests },
   { label: 'islandRunFastBuild', tests: islandRunFastBuildTests },
   { label: 'crystalMiners', tests: crystalMinersTests },
+  { label: 'crystalMinersSeason', tests: crystalMinersSeasonTests },
   { label: 'momentumMatrixGame', tests: momentumMatrixGameTests },
   { label: 'skyboundExpeditionFlight', tests: skyboundExpeditionFlightTests },
   { label: 'skyboundPilotAcademy', tests: skyboundPilotAcademyTests },

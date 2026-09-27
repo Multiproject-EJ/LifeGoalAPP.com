@@ -2329,6 +2329,27 @@ export function applyDevGrantTimedEventTickets(
 }
 
 /**
+ * DEV-ONLY helper action: end the active timed event now and rotate to the next
+ * one in the canonical sequence (fresh ladder, wallet and arena seasons).
+ */
+export function applyDevSkipToNextTimedEvent(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  nowMs?: number;
+}): { record: IslandRunGameStateRecord; changed: boolean } {
+  const current = getIslandRunStateSnapshot(options.session);
+  const nowMs = Math.floor(options.nowMs ?? Date.now());
+  const expired = current.activeTimedEvent
+    ? { ...current, activeTimedEvent: { ...current.activeTimedEvent, expiresAtMs: Math.min(current.activeTimedEvent.expiresAtMs, nowMs) } }
+    : current;
+  const rotated = ensureIslandRunContractV2ActiveTimedEvent({ state: expired, nowMs }).state;
+  if (rotated.activeTimedEvent?.eventId === current.activeTimedEvent?.eventId) return { record: current, changed: false };
+  const next: IslandRunGameStateRecord = { ...current, ...rotated, runtimeVersion: current.runtimeVersion + 1 };
+  void commitIslandRunState({ session: options.session, client: options.client, record: next, triggerSource: 'dev_skip_to_next_timed_event' });
+  return { record: next, changed: true };
+}
+
+/**
  * DEV-ONLY helper action: force the active island egg into a hatch-ready state.
  *
  * This keeps all mutations on the canonical store commit path and intentionally
