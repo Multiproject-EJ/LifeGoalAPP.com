@@ -73,6 +73,7 @@ const GAME_BOARD_OVERLAY_PREVIEW_PATH = '/dev/game-board-overlay-preview';
 const CRASH_REPORT_PREVIEW_PATH = '/dev/crash-report-preview';
 const SCOREBOARD_PREVIEW_PATH = '/dev/scoreboard-preview';
 const PLAYER_INSIGHTS_PREVIEW_PATH = '/dev/player-insights-preview';
+const CREATOR_STORY_PREVIEW_PATH = '/dev/creator-story-preview';
 const VOYAGE_MAP_PREVIEW_PATH = '/dev/voyage-map-preview';
 const ARENA_PUZZLE_PREVIEW_PATH = '/dev/arena-puzzle-preview';
 const HOLIDAY_MODAL_PREVIEW_PATH = '/dev/holiday-modal-preview';
@@ -175,6 +176,23 @@ function ScoreboardPreviewRoute() {
   }, []);
 
   return Preview ? <Preview /> : null;
+}
+
+function CreatorStoryPreviewRoute() {
+  const [Story, setStory] = useState<ComponentType<{ onClose: () => void; initialBeat?: number; onReadFullNote?: () => void }> | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/onboarding/CreatorStory').then((module) => {
+      if (isMounted) setStory(() => module.CreatorStory);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const beat = Number.parseInt(new URLSearchParams(window.location.search).get('beat') ?? '0', 10) || 0;
+  return Story ? <Story initialBeat={beat} onClose={() => console.info('[preview] close story')} onReadFullNote={() => console.info('[preview] read full note')} /> : null;
 }
 
 function PlayerInsightsPreviewRoute() {
@@ -723,6 +741,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === SCOREBOARD_PREVIEW_PATH;
+  const isCreatorStoryPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === CREATOR_STORY_PREVIEW_PATH;
   const isPlayerInsightsPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -832,6 +854,10 @@ function Root() {
 
   if (isScoreboardPreviewRoute) {
     return <ScoreboardPreviewRoute />;
+  }
+
+  if (isCreatorStoryPreviewRoute) {
+    return <CreatorStoryPreviewRoute />;
   }
 
   if (isPlayerInsightsPreviewRoute) {
