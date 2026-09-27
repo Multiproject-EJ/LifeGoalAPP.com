@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { createRobotFamilyModel } from '../dev/RobotFamilyThreeModel';
+import { createRobotFamilyModel, type RobotRole } from '../dev/RobotFamilyThreeModel';
+import { pickCelebrationCrew, type CelebrationCrewSize } from '../services/buildCelebrationCrew';
 
 /** Modal-owned presentation, never a second game state. One renderer per open panel. */
-export default function BuildCelebrationCrew({ active, orbit = false }: { active: boolean; orbit?: boolean }) {
+export default function BuildCelebrationCrew({ active, orbit = false, crew = 'all' }: { active: boolean; orbit?: boolean; crew?: CelebrationCrewSize }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const stateRef = useRef({ active, orbit });
-  stateRef.current = { active, orbit };
+  const stateRef = useRef({ active, orbit, crew });
+  stateRef.current = { active, orbit, crew };
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -21,6 +22,20 @@ export default function BuildCelebrationCrew({ active, orbit = false }: { active
     const family = createRobotFamilyModel({ quality: 'low', showAddonRack: false });
     family.setMotion('celebrate'); family.setEmotion('delighted'); family.setBrainState('energized');
     scene.add(family.root);
+    const roles = Object.keys(family.members) as RobotRole[];
+    const homeX = new Map(roles.map((role) => [role, family.members[role].position.x]));
+    // Level celebrations use one or two robots (random); the whole crew is kept for 100% island.
+    const castCrew = () => {
+      const chosen = pickCelebrationCrew(stateRef.current.crew, Math.random);
+      const xs = chosen.map((role) => homeX.get(role) ?? 0);
+      const centre = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0;
+      const squeeze = chosen.length === 2 ? 0.7 : 1;
+      roles.forEach((role) => {
+        const member = family.members[role];
+        member.visible = chosen.includes(role);
+        member.position.x = ((homeX.get(role) ?? 0) - centre) * squeeze;
+      });
+    };
     const camera = new THREE.PerspectiveCamera(30, 1, .1, 60);
     camera.position.set(0, 2.5, 20); camera.lookAt(0, 1.45, 0);
     const resize = () => {
@@ -39,7 +54,7 @@ export default function BuildCelebrationCrew({ active, orbit = false }: { active
       const dt = Math.min(.05, (now - last) / 1000); last = now;
       const state = stateRef.current;
       if (state.active && !document.hidden) {
-        if (!wasActive) elapsed = 0;
+        if (!wasActive) { elapsed = 0; castCrew(); }
         elapsed += dt;
         family.update(elapsed, dt, motion.matches);
         family.root.rotation.y = state.orbit && !motion.matches ? elapsed * Math.PI * 2 : 0;

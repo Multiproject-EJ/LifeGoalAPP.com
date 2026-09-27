@@ -1089,7 +1089,12 @@ function updateFaceRig(
     ? 0.08 + 0.92 * Math.abs(Math.cos((blinkPhase / 0.18) * Math.PI))
     : 1;
   const config = expression[emotion];
-  const motionSquint = motion === 'work' || motion === 'inspect' || motion === 'paint' ? 0.9 : 1;
+  const partyFace = motion === 'celebrate' && !reducedMotion;
+  // Celebrating eyes drift between happy squints and wide-eyed delight.
+  const eyeMood = partyFace
+    ? 1 + 0.3 * Math.sin(elapsedSeconds * 1.9 + roleIndex * 2.1) + 0.12 * Math.sin(elapsedSeconds * 5.3 + roleIndex)
+    : 1;
+  const motionSquint = (motion === 'work' || motion === 'inspect' || motion === 'paint' ? 0.9 : 1) * eyeMood;
   const eyeShift = face.role === 'project-manager' ? 0.018 : 0.032;
 
   face.eyeConfigs.forEach((eye, index) => {
@@ -1130,7 +1135,11 @@ function updateFaceRig(
     face.brows.instanceMatrix.needsUpdate = true;
   }
 
-  const mouthPulse = reducedMotion || motion !== 'listen' ? 1 : 1 + Math.sin(elapsedSeconds * 4.2) * 0.13;
+  const mouthPulse = partyFace
+    // Chatter and laugh: quick syllables riding a slower "big laugh" swell.
+    ? 0.72 + 0.46 * Math.abs(Math.sin(elapsedSeconds * 8.6 + roleIndex * 1.3))
+      * (0.65 + 0.35 * Math.sin(elapsedSeconds * 1.7 + roleIndex)) + 0.18 * Math.max(0, Math.sin(elapsedSeconds * 0.9 + roleIndex * 2))
+    : reducedMotion || motion !== 'listen' ? 1 : 1 + Math.sin(elapsedSeconds * 4.2) * 0.13;
   const referenceFriendlyMouthY = face.role === 'project-manager' && emotion === 'friendly' ? 0.9 : 1;
   face.mouth.scale.set(config.mouthX, config.mouthY * mouthPulse * referenceFriendlyMouthY, 1);
   face.mouth.position.copy(face.mouthHomePosition);
@@ -2750,6 +2759,26 @@ export function createRobotFamilyModel(options: {
     });
   }
   const rigs: Record<RobotRole, MemberRig> = { 'heavy-worker': heavy, 'project-manager': manager, 'mini-artist': mini };
+  // The manager's neon gets private copies so a celebration can cycle its
+  // colours without tinting the other robots.
+  const managerNeon: Array<{ material: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial | THREE.MeshPhysicalMaterial; base: THREE.Color; baseEmissive?: THREE.Color }> = [];
+  {
+    const copies = new Map<THREE.Material, THREE.Material>();
+    manager.root.traverse((node) => {
+      if (!(node instanceof THREE.Mesh) || Array.isArray(node.material)) return;
+      const source = node.material as THREE.Material;
+      if (source !== materials.cyan && source !== materials.cyanGlass && source !== materials.glowComposite) return;
+      let copy = copies.get(source);
+      if (!copy) {
+        copy = source.clone();
+        copies.set(source, copy);
+        const typed = copy as THREE.MeshStandardMaterial;
+        managerNeon.push({ material: typed, base: typed.color.clone(), baseEmissive: typed.emissive?.clone() });
+      }
+      node.material = copy;
+    });
+  }
+  const neonColor = new THREE.Color();
 
   const addons = createAddonLibrary(quality, materials);
   const rack = namePart(new THREE.Group(), 'robot-addon-rack', 'shared', 'addon-rack');
@@ -2998,6 +3027,65 @@ export function createRobotFamilyModel(options: {
       heavy.body.rotation.y = THREE.MathUtils.lerp(heavy.body.rotation.y, heavyMotion === 'celebrate' && animateCelebration ? Math.sin(elapsedSeconds * 2.2) * 0.08 : 0, response);
       manager.body.rotation.y = THREE.MathUtils.lerp(manager.body.rotation.y, managerMotion === 'celebrate' && animateCelebration ? Math.sin(elapsedSeconds * 2.5 + 1) * 0.09 : 0, response);
       mini.body.rotation.y = THREE.MathUtils.lerp(mini.body.rotation.y, miniMotion === 'celebrate' && animateCelebration ? Math.sin(elapsedSeconds * 3 + 2) * 0.14 : 0, response);
+
+      // ── Party choreography: real jumps, arms, spins and flips ──
+      const t = elapsedSeconds;
+      const resetParty = (rig: MemberRig) => {
+        rig.body.scale.set(1, 1, 1);
+        rig.body.rotation.x = THREE.MathUtils.lerp(rig.body.rotation.x, 0, response);
+      };
+      // Heavy worker: stomping jumps with squash on landing, arms pumping overhead.
+      if (heavyMotion === 'celebrate' && animateCelebration) {
+        const beat = (t % 1.05) / 1.05;
+        heavy.root.position.y += Math.sin(beat * Math.PI) * 0.85;
+        const land = Math.max(0, 1 - beat * 7) + Math.max(0, (beat - 0.93) * 14);
+        heavy.body.scale.set(1 + land * 0.07, 1 - land * 0.1, 1 + land * 0.07);
+        const pump = Math.sin(t * 5.8);
+        heavy.joints.leftShoulder.rotation.z = (-125 + pump * 42) * DEG;
+        heavy.joints.rightShoulder.rotation.z = (125 - pump * 42) * DEG;
+        heavy.joints.leftElbow.rotation.z = (-25 - pump * 30) * DEG;
+        heavy.joints.rightElbow.rotation.z = (25 + pump * 30) * DEG;
+        heavy.joints.crownLeftBase.rotation.z = (70 + Math.sin(t * 7) * 25) * DEG;
+        heavy.joints.crownRightBase.rotation.z = (-70 - Math.sin(t * 7) * 25) * DEG;
+      } else resetParty(heavy);
+      // Manager: bouncy grin, fast spin bursts, neon cycling through colours.
+      if (managerMotion === 'celebrate' && animateCelebration) {
+        manager.root.position.y += Math.abs(Math.sin(t * 3.4)) * 0.35;
+        const cycle = t % 3.2;
+        if (cycle < 0.85) {
+          const u = cycle / 0.85;
+          manager.body.rotation.y = ((u * u * (3 - 2 * u)) * Math.PI * 4) % (Math.PI * 2);
+        }
+        manager.joints.pointer.rotation.z = (40 + Math.sin(t * 6.5) * 55) * DEG;
+        managerNeon.forEach(({ material, baseEmissive }, index) => {
+          neonColor.setHSL((t * 0.45 + index * 0.18) % 1, 0.95, 0.6);
+          material.color.copy(neonColor);
+          const standard = material as THREE.MeshStandardMaterial;
+          if (baseEmissive && standard.emissive) standard.emissive.copy(neonColor).multiplyScalar(0.8);
+        });
+      } else {
+        resetParty(manager);
+        managerNeon.forEach(({ material, base, baseEmissive }) => {
+          material.color.copy(base);
+          const standard = material as THREE.MeshStandardMaterial;
+          if (baseEmissive && standard.emissive) standard.emissive.copy(baseEmissive);
+        });
+      }
+      // Mini artist: big bounding hops; every third a somersault, the next a super spin.
+      if (miniMotion === 'celebrate' && animateCelebration) {
+        const hopLength = 0.8;
+        const hopIndex = Math.floor(t / hopLength);
+        const u = (t % hopLength) / hopLength;
+        mini.root.position.y += Math.sin(u * Math.PI) * 1.35;
+        const trick = hopIndex % 3;
+        mini.body.rotation.x = trick === 0 ? ((u * u * (3 - 2 * u)) * Math.PI * 2) % (Math.PI * 2) : 0;
+        if (trick === 1) mini.body.rotation.y = ((u * u * (3 - 2 * u)) * Math.PI * 6) % (Math.PI * 2);
+        const squash = Math.max(0, 1 - u * 8);
+        mini.body.scale.set(1 + squash * 0.12, 1 - squash * 0.16, 1 + squash * 0.12);
+        const wave = Math.sin(t * 9);
+        mini.joints.leftShoulder.rotation.z = (-60 + wave * 40) * DEG;
+        mini.joints.rightShoulder.rotation.z = (60 - wave * 40) * DEG;
+      } else resetParty(mini);
     },
     dispose() {
       const geometries = new Set<THREE.BufferGeometry>();

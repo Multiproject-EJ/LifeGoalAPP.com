@@ -318,7 +318,7 @@ export function BuildModalV2({
   return createPortal(
     <div className={`island-run-overlay-root bm2-build-mode${isBuildHoldActive ? ' bm2-build-mode--rapid' : ''}${isComplete && !levelReview ? ' bm2-build-mode--complete' : ''}${!fastBuildMode && (levelReview || isComplete) ? ' bm2-build-mode--celebrating' : ''}`} role="presentation">
       <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} construction mode`}>
-        <Suspense fallback={null}><BuildCelebrationCrew active={Boolean(levelReview || isComplete || fastBuildMode)} orbit={Boolean(fastBuildMode)} /></Suspense>
+        <Suspense fallback={null}><BuildCelebrationCrew active={Boolean(levelReview || isComplete || fastBuildMode)} orbit={Boolean(fastBuildMode)} crew={isComplete || fastBuildMode ? 'all' : 'random'} /></Suspense>
         {!fastBuildMode && (levelReview ? levelReview.level === 3 : isComplete) && <CelebrationFireworks key={levelReview?.presentationSequence ?? 'complete'} active variant="rapid" backdrop="none" placement="local" />}
         {!fastBuildMode && levelReview && <div className="bm2-celebration-title" role="status">
           <span>{levelReview?.fastMode ? 'POW! Beautifully built.' : 'Beautifully built!'}</span>
