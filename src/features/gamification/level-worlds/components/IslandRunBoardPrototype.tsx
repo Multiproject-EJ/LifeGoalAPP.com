@@ -5,7 +5,7 @@ import { useControllerPreference } from './living-controller/useControllerPrefer
 import { islandControllerTheme } from './living-controller/policy.js';
 import { createMaxTapGuard } from './living-controller/max-tap-guard.js';
 import { DevDailySpinPreviewModal } from '../../../spin-wheel/DevDailySpinPreviewModal';
-import { IslandRunSolarMapOverlay } from './IslandRunSolarMapOverlay';
+import { IslandRunVoyageMap } from './IslandRunVoyageMap';
 import { resolveIslandRunOrbitProgress } from '../services/islandRunOrbitProgress';
 import { shouldCelebrateSunshoreMaxRoll } from '../services/islandRunCreatureCelebration';
 import { Island17AwakeningMission } from './Island17AwakeningMission';
@@ -17184,7 +17184,7 @@ export function IslandRunBoardPrototype({
 
       {showDevDailySpinPreview&&isDevModeEnabled&&<DevDailySpinPreviewModal session={session} onClose={()=>setShowDevDailySpinPreview(false)}/>}
       {showSolarMapOverlay && typeof document !== 'undefined' ? createPortal(
-        <IslandRunSolarMapOverlay currentIslandNumber={islandNumber}
+        <IslandRunVoyageMap currentIslandNumber={islandNumber}
           currentIslandCompletedStopCount={completedStops.length}
           maxIslandCount={ISLAND_RUN_MAX_ISLAND}
           completedIslandNumbers={orbitProgress.completedIslandNumbers}

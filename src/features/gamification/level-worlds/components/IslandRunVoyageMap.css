@@ -1,0 +1,86 @@
+.voyage-map {
+  position: fixed; inset: 0; z-index: 12700; display: flex; flex-direction: column;
+  background: radial-gradient(120% 70% at 50% 0%, #1d4a73 0%, #0c2440 45%, #06142a 100%);
+  color: #eef6ff; font-family: system-ui, sans-serif;
+  animation: voyage-map-in 360ms ease-out both;
+}
+.voyage-map__header {
+  display: flex; align-items: center; gap: 12px; padding: max(14px, env(safe-area-inset-top)) 16px 12px;
+  background: linear-gradient(180deg, rgba(6, 20, 42, .96), rgba(6, 20, 42, .6));
+  border-bottom: 1px solid rgba(143, 220, 255, .18); z-index: 2;
+}
+.voyage-map__header > span { display: grid; flex: 1; }
+.voyage-map__header small { color: #8fdcff; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.voyage-map__header strong { font-size: 22px; }
+.voyage-map__header em { color: #b9cde3; font-size: 13px; font-style: normal; }
+.voyage-map__close { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff; font-size: 24px; cursor: pointer; }
+.voyage-map__scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+.voyage-map__track { position: relative; width: min(480px, 100%); margin: 0 auto; }
+.voyage-map__path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.voyage-map__path-ahead { fill: none; stroke: rgba(180, 220, 255, .35); stroke-width: 4; stroke-dasharray: 2 10; stroke-linecap: round; }
+.voyage-map__path-done { fill: none; stroke: #ffd54a; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px rgba(255, 213, 74, .6)); }
+.voyage-map__era {
+  position: absolute; left: 50%; translate: -50% 0; width: min(340px, calc(100% - 32px)); margin-top: 18px;
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 18px;
+  background: color-mix(in srgb, var(--era) 22%, rgba(6, 20, 42, .9)); border: 1px solid color-mix(in srgb, var(--era) 60%, transparent);
+  box-shadow: 0 8px 22px rgba(0,0,0,.3);
+}
+.voyage-map__era > span { font-size: 34px; }
+.voyage-map__era div { display: grid; }
+.voyage-map__era small { color: #b9cde3; font-size: 11px; font-weight: 700; }
+.voyage-map__era strong { font-size: 19px; color: #fff; }
+.voyage-map__era em { font-style: normal; color: color-mix(in srgb, var(--era) 80%, #fff); font-size: 13px; font-weight: 700; }
+.voyage-map__node {
+  position: absolute; translate: -50% -50%; width: 64px; height: 64px; padding: 0; border: 0; background: none; cursor: pointer;
+}
+.voyage-map__medallion {
+  position: absolute; inset: 0; border-radius: 50%; display: grid; place-items: center;
+  background: #16345a center / 135% no-repeat; border: 3px solid rgba(180, 220, 255, .45);
+  box-shadow: 0 6px 14px rgba(0,0,0,.35);
+}
+.voyage-map__node--milestone { width: 78px; height: 78px; }
+.voyage-map__node--completed .voyage-map__medallion { border-color: #ffd54a; }
+.voyage-map__node--locked .voyage-map__medallion { filter: grayscale(.85) brightness(.55); border-style: dashed; }
+.voyage-map__node--current { width: 86px; height: 86px; z-index: 1; }
+.voyage-map__node--current .voyage-map__medallion { border-color: #fff; box-shadow: 0 0 0 6px rgba(58, 208, 255, .35), 0 0 28px rgba(58, 208, 255, .7); animation: voyage-map-current 1.8s ease-in-out infinite; }
+.voyage-map__node--next .voyage-map__medallion { border-color: #8fdcff; border-style: dashed; }
+.voyage-map__node.is-selected .voyage-map__medallion { outline: 3px solid #ffd54a; outline-offset: 4px; }
+.voyage-map__check { position: absolute; right: -4px; top: -4px; width: 24px; height: 24px; border-radius: 50%; background: #ffd54a; color: #3a2600; font-style: normal; font-weight: 900; font-size: 14px; display: grid; place-items: center; }
+.voyage-map__lock { font-style: normal; font-size: 20px; filter: grayscale(0); opacity: .9; }
+.voyage-map__number {
+  position: absolute; left: 50%; bottom: -10px; translate: -50% 0; min-width: 26px; padding: 1px 6px; border-radius: 999px;
+  background: #06142a; border: 2px solid rgba(180, 220, 255, .55); color: #fff; font-size: 12px; line-height: 18px;
+}
+.voyage-map__node--completed .voyage-map__number { border-color: #ffd54a; color: #ffd54a; }
+.voyage-map__node--current .voyage-map__number { border-color: #3ad0ff; background: #0a5a7a; }
+.voyage-map__name {
+  position: absolute; top: 50%; left: calc(100% + 10px); translate: 0 -50%; width: max-content; max-width: 130px;
+  text-align: left; font-size: 13px; font-weight: 800; color: #eef6ff; text-shadow: 0 2px 6px rgba(0,0,0,.6);
+}
+.voyage-map__name--left { left: auto; right: calc(100% + 10px); text-align: right; }
+.voyage-map__node--locked .voyage-map__name { color: #7f95ad; font-weight: 600; }
+.voyage-map__here {
+  position: absolute; left: 50%; top: -30px; translate: -50% 0; white-space: nowrap; padding: 3px 10px; border-radius: 999px;
+  background: #ffd54a; color: #3a2600; font-size: 12px; font-weight: 900;
+}
+.voyage-map__here--next { background: #8fdcff; color: #06283a; top: -26px; }
+.voyage-map__ship { position: absolute; left: -22px; top: -14px; font-size: 26px; animation: voyage-map-ship 2.4s ease-in-out infinite; }
+.voyage-map__sheet {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px max(14px, env(safe-area-inset-bottom));
+  background: linear-gradient(0deg, rgba(6, 20, 42, .98), rgba(6, 20, 42, .85)); border-top: 1px solid rgba(143, 220, 255, .2);
+}
+.voyage-map__sheet-art { width: 56px; height: 56px; flex: 0 0 auto; border-radius: 14px; background: #16345a center / 135% no-repeat; border: 2px solid rgba(180, 220, 255, .45); }
+.voyage-map__sheet-copy { display: grid; flex: 1; min-width: 0; }
+.voyage-map__sheet-copy small { color: #8fdcff; font-size: 12px; font-weight: 800; }
+.voyage-map__sheet-copy strong { font-size: 17px; }
+.voyage-map__sheet-copy em { font-style: normal; color: #b9cde3; font-size: 13px; }
+.voyage-map__dots { display: flex; gap: 5px; margin-top: 4px; }
+.voyage-map__dots i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #8fdcff; }
+.voyage-map__dots i.is-done { background: #ffd54a; border-color: #ffd54a; }
+.voyage-map__continue { border: 0; border-radius: 999px; padding: 11px 16px; font-weight: 900; cursor: pointer; color: #3a2600; background: linear-gradient(135deg, #ffe07a, #ffb03a); }
+@keyframes voyage-map-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes voyage-map-current { 0%, 100% { box-shadow: 0 0 0 6px rgba(58, 208, 255, .35), 0 0 24px rgba(58, 208, 255, .6); } 50% { box-shadow: 0 0 0 12px rgba(58, 208, 255, .15), 0 0 36px rgba(58, 208, 255, .8); } }
+@keyframes voyage-map-ship { 0%, 100% { translate: 0 0; rotate: -8deg; } 50% { translate: 0 -6px; rotate: 6deg; } }
+@media (prefers-reduced-motion: reduce) { .voyage-map, .voyage-map__node--current .voyage-map__medallion, .voyage-map__ship { animation: none; } }
+.voyage-map__here-inline { display: block; width: max-content; margin-top: 4px; padding: 2px 9px; border-radius: 999px; background: #ffd54a; color: #3a2600; font-size: 11px; font-weight: 900; text-shadow: none; }
+.voyage-map__name--left .voyage-map__here-inline { margin-left: auto; }
