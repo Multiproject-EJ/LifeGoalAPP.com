@@ -179,6 +179,7 @@ import { islandRunMissionTrackerTests } from './islandRunMissionTracker.test';
 import { islandRunCompletionTests } from './islandRunCompletion.test';
 import { islandRunMissionResetActionTests } from './islandRunMissionResetAction.test';
 import { islandRunBossRewardTests } from './islandRunBossReward.test';
+import { islandVoyageMapTests } from './islandVoyageMap.test';
 import { quickArchetypeQuizTests } from './quickArchetypeQuiz.test';
 import { islandExplorePointsTests } from './islandExplorePoints.test';
 import { crashReportsTests } from './crashReports.test';
@@ -445,6 +446,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunCompletion', tests: islandRunCompletionTests },
   { label: 'islandRunMissionResetAction', tests: islandRunMissionResetActionTests },
   { label: 'islandRunBossReward', tests: islandRunBossRewardTests },
+  { label: 'islandVoyageMap', tests: islandVoyageMapTests },
   { label: 'quickArchetypeQuiz', tests: quickArchetypeQuizTests },
   { label: 'islandExplorePoints', tests: islandExplorePointsTests },
   { label: 'crashReports', tests: crashReportsTests },
