@@ -3427,9 +3427,9 @@ export function IslandRunBoardPrototype({
   // After the rewards are claimed the island hands off through the Mission
   // Phone: the player sends the 'assignment completed' signal to depart.
   const [isIslandClearSignalPending, setIsIslandClearSignalPending] = useState(false);
-  // A snapshot of the island (taken by the 3D scene, which then pauses) is
-  // the celebration backdrop, animated with compositor-only CSS.
-  const [islandClearBackdropUrl, setIslandClearBackdropUrl] = useState<string | null>(null);
+  // A snapshot of the island (taken by the 3D scene, which then pauses) is the
+  // backdrop for full-screen moments (Island Complete, Journey Disc Arena).
+  const [islandBackdropSnapshotUrl, setIslandBackdropSnapshotUrl] = useState<string | null>(null);
   const [isIslandClearRewardClaimed, setIsIslandClearRewardClaimed] = useState(false);
   const [islandClearRewardPulseKey, setIslandClearRewardPulseKey] = useState(0);
   const [islandClearStats, setIslandClearStats] = useState<{
@@ -11861,7 +11861,7 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     if (!showIslandClearCelebration) {
       setIsIslandClearClaimReady(false);
-      setIslandClearBackdropUrl(null);
+      setIslandBackdropSnapshotUrl(null);
       return undefined;
     }
     const reduced = typeof window !== 'undefined'
@@ -11882,6 +11882,10 @@ export function IslandRunBoardPrototype({
     }, 1800);
     return () => window.clearTimeout(timer);
   }, [showIslandClearCelebration, isIslandClearRewardClaimed, islandClearStats]);
+
+  useEffect(() => {
+    if (activeLaunchedMinigameId !== 'journey_disc_arena' && !showIslandClearCelebration) setIslandBackdropSnapshotUrl(null);
+  }, [activeLaunchedMinigameId, showIslandClearCelebration]);
 
   const handleSendAssignmentCompletedSignal = () => {
     setShowMissionPhoneBriefing(false);
@@ -16400,8 +16404,9 @@ export function IslandRunBoardPrototype({
                   setWelcomePackClaimError(null);setWelcomePackBundleOnlyResult(null);setShowWelcomePackModal(true);
                 }}
                 firstArrivalActive={firstArrivalActive}
-                celebrationOrbit={showIslandClearCelebration && !isIslandClearCelebrationDeparting}
-                onCelebrationSnapshot={setIslandClearBackdropUrl}
+                celebrationOrbit={(showIslandClearCelebration && !isIslandClearCelebrationDeparting)
+                  || activeLaunchedMinigameId === 'journey_disc_arena'}
+                onCelebrationSnapshot={setIslandBackdropSnapshotUrl}
                 firstArrivalSkip={firstArrivalSkip}
                 onFirstArrivalComplete={finishFirstArrival}
                 onFirstArrivalBeat={setFirstArrivalBeat}
@@ -18905,8 +18910,8 @@ export function IslandRunBoardPrototype({
             aria-hidden={islandNarrativeOpeningFlow.activeDialogue?.beatId === 'I001-B30' ? true : undefined}
             aria-label="Island completion celebration"
           >
-            {islandClearBackdropUrl ? (
-              <img className="island-clear-celebration__island" src={islandClearBackdropUrl} alt="" aria-hidden="true" />
+            {islandBackdropSnapshotUrl ? (
+              <img className="island-clear-celebration__island" src={islandBackdropSnapshotUrl} alt="" aria-hidden="true" />
             ) : null}
             <CelebrationFireworks
               key={`${islandClearStats.islandNumber}-${islandClearStats.isCycleCapstone ? 'capstone' : 'hero'}`}
@@ -20403,6 +20408,11 @@ export function IslandRunBoardPrototype({
       ) : null}
       {activeLaunchedMinigameId && createPortal((
         <div style={{ position: 'fixed', inset: 0, zIndex: 13000, overflow: 'hidden' }}>
+          {activeLaunchedMinigameId === 'journey_disc_arena' && islandBackdropSnapshotUrl ? (
+            // The island behind the arena: a blurred, dimmed still (the 3D
+            // scene pauses), so the arena is the only thing asking for focus.
+            <img className="island-run-arena-backdrop" src={islandBackdropSnapshotUrl} alt="" aria-hidden="true" />
+          ) : null}
           <IslandRunMinigameLauncher
             minigameId={activeLaunchedMinigameId}
             islandNumber={islandNumber}
@@ -20433,6 +20443,9 @@ export function IslandRunBoardPrototype({
               if (arenaLaunchOwnerRef.current !== session.user.id
                 || (activeLaunchedMinigameConfig?.arenaLaunchVisitKey
                   && activeLaunchedMinigameConfig.arenaLaunchVisitKey !== arenaStadiumVisitKey(getIslandRunStateSnapshot(session)))) return;
+              // Always close the minigame, even if a reward step throws: a
+              // failure here must never leave the player stuck inside a game.
+              try {
               if (activeLaunchedMinigameSource === 'boss_trial' && result.completed) {
                 handleResolveBossTrial();
                 setBossTrialPhase('success');
@@ -20519,9 +20532,13 @@ export function IslandRunBoardPrototype({
                   },
                 });
               }
-              setActiveLaunchedMinigameId(null);
-              setActiveLaunchedMinigameSource(null);
-              setActiveLaunchedMinigameConfig(undefined);
+              } catch (error) {
+                console.error('[island-run] Minigame completion step failed; closing anyway', error);
+              } finally {
+                setActiveLaunchedMinigameId(null);
+                setActiveLaunchedMinigameSource(null);
+                setActiveLaunchedMinigameConfig(undefined);
+              }
             }}
           />
         </div>

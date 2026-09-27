@@ -181,7 +181,7 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
       <div className="journey-disc-arena__vignette" aria-hidden="true" />
 
       <header className="journey-disc-arena__topbar">
-        <button className="journey-disc-arena__exit" type="button" onClick={() => onComplete({ completed: false })} aria-label="Leave Journey Disc Arena">×</button>
+        <button className="journey-disc-arena__exit" type="button" onClick={() => onComplete({ completed: false })} aria-label="Leave Journey Disc Arena"><span aria-hidden="true">✕</span> Leave</button>
         <div className="journey-disc-arena__title-block">
           <p>{snapshot.mode === 'prep' ? `Stage ${campaignStageNumber} · ${campaign.current.shortLabel}` : encounter.class === 'guardian' ? 'Boss prize battle' : `${encounter.class} class`}</p>
           <h1>{snapshot.mode === 'prep' ? 'Battle Setup' : 'Journey Disc Arena'}</h1>
@@ -437,28 +437,24 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
           </div>
           <strong className="journey-disc-arena__result-score">+{snapshot.lastRoundScore} DISC POINTS</strong>
           {battle?.winner === 'player' && encounter.victoryScoreMultiplier > 1 ? <em className="journey-disc-arena__boss-bonus">{encounter.label} victory ×{encounter.victoryScoreMultiplier} included</em> : null}
-          <div className="journey-disc-arena__result-stats">
-            <span><b>{scoreReport?.survivors ?? playerAlive}</b> Survivors</span>
-            <span><b>{scoreReport?.shieldPercent ?? 0}%</b> Shield</span>
-            <span><b>{nextMilestone?.state === 'claimable' ? 'READY' : nextMilestone?.points ?? rewardTrack.maximum}</b> {nextMilestone?.state === 'claimable' ? 'Claim reward' : 'Next reward'}</span>
-          </div>
-          <span>{snapshot.progress.eventPoints} total · Best {snapshot.progress.bestRoundScore}</span>
-          <div className="journey-disc-arena__result-progress" data-advanced={stageAdvanced || undefined}>
-            <small>{stageAdvanced ? 'NEW CAMPAIGN STAGE UNLOCKED' : 'CAMPAIGN PROGRESS'}</small>
-            <strong>{stageAdvanced ? nextEncounter.label : campaign.current.label}</strong>
-            <span>{campaign.next ? `${campaign.pointsToNext} more Disc Points to ${campaign.next.label}` : 'Final Guardian reached · finish the 1350-point prize track'}</span>
-          </div>
+          {stageAdvanced ? (
+            <div className="journey-disc-arena__result-progress" data-advanced="true">
+              <small>NEW STAGE UNLOCKED</small>
+              <strong>{nextEncounter.label}</strong>
+            </div>
+          ) : null}
           {claimableMilestone ? (
             <button type="button" className="journey-disc-arena__claim" onClick={() => controller.claimMilestone(claimableMilestone.id)}>
               Claim reward · {claimableMilestone.label}
             </button>
           ) : null}
           <div className="journey-disc-arena__result-actions">
-            <button type="button" className="journey-disc-arena__secondary" onClick={controller.prepareNextRound}>Adjust team</button>
             <button type="button" className="journey-disc-arena__launch" onClick={() => { audio.prime(); controller.launchRematch(); }}>
-              {stageAdvanced ? `Continue to ${nextEncounter.label} →` : campaign.next ? 'Next campaign battle →' : 'Replay final Guardian →'}
+              {campaign.next || stageAdvanced ? 'Next battle →' : 'Replay final Guardian →'}
             </button>
           </div>
+          <div className="journey-disc-arena__result-links">
+          <button type="button" className="journey-disc-arena__secondary" onClick={controller.prepareNextRound}>Change team</button>
           <button type="button" className="journey-disc-arena__bank" onClick={() => onComplete({ completed: battle?.winner === 'player', arenaPerformance: {
               gameId: 'journey_disc_arena',
               rawScore: snapshot.lastRoundScore,
@@ -467,7 +463,8 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
               durationMs: Math.round((battle?.elapsedSeconds ?? 0) * 1000),
               mistakes: Math.max(0, snapshot.deployedDiscCount - playerAlive),
               hintsUsed: 0,
-            } })}>Return to Island Run · progress saved</button>
+            } })}>Back to island ✓ saved</button>
+          </div>
         </section>
       ) : null}
 
