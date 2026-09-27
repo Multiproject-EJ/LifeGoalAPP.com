@@ -21,7 +21,7 @@ export const islandRunFeatureAccessTests: TestCase[] = [
     for(const ledger of [{},fresh(),earned]){
       const before=JSON.stringify(ledger);
       const a=resolveIslandRunFeatureAccess({currentIslandNumber:1,signatureMissionProgressByIsland:ledger});
-      assert(!a.rewardChannel&&!a.dailyWheel&&!a.trafficLight&&!a.eventLauncher,'beginner island has no advanced activity');
+      assert(!a.rewardChannel&&!a.dailyWheel&&!a.trafficLight&&!a.eventLauncher&&!a.ordinaryEvents,'beginner island hides and rejects ordinary event launches, including returning saves');
       assertEqual(JSON.stringify(ledger),before,'earned progress is preserved');
       assertEqual(generateTileMap(1,'normal','forest',0,{signatureMissionProgressByIsland:ledger}).filter(t=>t.tileType==='traffic_light').length,0,'no signal in actual 3D tile map');
     }
@@ -144,6 +144,12 @@ export const islandRunFeatureAccessTests: TestCase[] = [
     for(const island of [NaN,Infinity,-1,0]){
       const a=access(island);
       assert(!a.trafficLight&&!a.puzzleCollection&&!a.eggs&&!a.rewardChannel&&!a.eventLauncher,'invalid location not eligible');
+    }
+  }},
+  {name:'invalid legacy location cannot open or earn from an event',run(){
+    for(const island of [NaN,Infinity,-1,0]){
+      const a=resolveIslandRunFeatureAccess({currentIslandNumber:island});
+      assert(!a.rewardChannel&&!a.eventLauncher&&!a.ordinaryEvents,'legacy paths also fail closed');
     }
   }},
   {name:'policy survives JSON round-trip without resetting unlocks',run(){

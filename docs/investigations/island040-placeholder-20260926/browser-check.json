@@ -1,0 +1,65 @@
+{
+  "scope": "Actual shared renderer in viewport-sized development fixture; not authenticated full-board E2E or physical-phone performance",
+  "results": [
+    {
+      "name": "phone-l3",
+      "width": 390,
+      "height": 844,
+      "canvasSize": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 3,
+      "reducedMotion": false,
+      "errors": []
+    },
+    {
+      "name": "phone-l0",
+      "width": 390,
+      "height": 844,
+      "canvasSize": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 0,
+      "reducedMotion": false,
+      "errors": []
+    },
+    {
+      "name": "short-phone",
+      "width": 360,
+      "height": 640,
+      "canvasSize": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 3,
+      "reducedMotion": false,
+      "errors": []
+    },
+    {
+      "name": "wide-phone-reduced",
+      "width": 430,
+      "height": 932,
+      "canvasSize": {
+        "width": 430,
+        "height": 932
+      },
+      "level": 3,
+      "reducedMotion": true,
+      "errors": []
+    },
+    {
+      "name": "desktop",
+      "width": 1280,
+      "height": 900,
+      "canvasSize": {
+        "width": 1280,
+        "height": 900
+      },
+      "level": 3,
+      "reducedMotion": false,
+      "errors": []
+    }
+  ]
+}

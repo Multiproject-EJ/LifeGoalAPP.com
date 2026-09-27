@@ -7,6 +7,7 @@ import {
   type DualTrackRealLifeInput,
 } from '../features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import type { JourneyChestClaimViewModel } from '../features/gamification/level-worlds/services/combinedJourneyChestClaim';
+import type { IslandJourneyProgress } from '../features/gamification/level-worlds/services/islandJourneyMilestones';
 import {
   RankBadge,
   RankJourneyModal,
@@ -101,6 +102,8 @@ type GameBoardOverlayProps = {
   islandSceneSrc?: string;
   /** Read-only goal/habit summary used to personalize the Real Life Journey track. */
   realLife?: DualTrackRealLifeInput;
+  islandJourneyProgress?: IslandJourneyProgress;
+  earnedXpFloor?: number;
   /** Stable per-viewer id used to scope the "catch-up climb" memory (presentational only). */
   viewerId?: string;
   /** Claimable Combined Journey Level chest (R5); null/omitted hides the CTA. */
@@ -256,6 +259,8 @@ export function GameBoardOverlay({
   islandDisplayName = 'Island',
   islandSceneSrc = getIslandBackgroundImageSrc(1),
   realLife,
+  islandJourneyProgress,
+  earnedXpFloor,
   viewerId,
   journeyChest,
   journeyChestPending = false,
@@ -335,6 +340,8 @@ export function GameBoardOverlay({
     rewardBarProgress,
     rewardBarThreshold,
     realLife,
+    islandJourneyProgress,
+    earnedXpFloor,
   });
   const { collectedCount, totalCount } = dualTrackViewModel.gameProgress;
   const gameTrackSubtitle = collectedCount > 0

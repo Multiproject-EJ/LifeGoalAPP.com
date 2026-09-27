@@ -1,0 +1,76 @@
+{
+  "status": "pass",
+  "boxes": [
+    {
+      "width": 360,
+      "dialog": {
+        "x": 10,
+        "y": 170.78125,
+        "width": 340,
+        "height": 502.4375
+      },
+      "halves": [
+        {
+          "x": 23,
+          "y": 298.21875,
+          "width": 148,
+          "height": 300
+        },
+        {
+          "x": 189,
+          "y": 298.21875,
+          "width": 148,
+          "height": 300
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "dialog": {
+        "x": 10,
+        "y": 170.78125,
+        "width": 370,
+        "height": 502.4375
+      },
+      "halves": [
+        {
+          "x": 23,
+          "y": 298.21875,
+          "width": 163,
+          "height": 300
+        },
+        {
+          "x": 204,
+          "y": 298.21875,
+          "width": 163,
+          "height": 300
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "dialog": {
+        "x": 260,
+        "y": 144.453125,
+        "width": 760,
+        "height": 555.09375
+      },
+      "halves": [
+        {
+          "x": 279,
+          "y": 288.546875,
+          "width": 349,
+          "height": 334
+        },
+        {
+          "x": 652,
+          "y": 288.546875,
+          "width": 349,
+          "height": 334
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "scope": "Actual controls, chooser and canonical store with synthetic owner; no authenticated full-board or live database test."
+}

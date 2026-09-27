@@ -65,6 +65,7 @@ import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBo
 import { getIslandBoardThemeForIslandNumber } from './islandBoardThemes';
 import { generateTileMap, getFreeTicketTileIndexForTileCount, getIslandRarity, type IslandTileType } from './islandBoardTileMap';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
+import { arenaStadiumBlocksRoll } from './arenaStadium';
 import { advanceOpeningGamesForRoll, OPENING_GAMES_CEREMONY_KEY } from './islandRunOpeningGames';
 import { resolveIslandRunContractV2EssenceEarnForTile } from './islandRunContractV2EssenceBuild';
 import { collectMoonwellHeatForLanding } from './islandRunMoonwellThermal';
@@ -195,6 +196,7 @@ function resolveFirstSessionTutorialRollTotal(options: {
 export type IslandRunRollActionStatus =
   | 'ok'
   | 'tutorial_order_required'
+  | 'arena_activity_required'
   | 'insufficient_dice';
 
 export interface IslandRunRollActionResult {
@@ -357,6 +359,7 @@ async function performRollAction(options: {
   //    persistence, so overlapping background commits cannot make a later roll
   //    start from stale localStorage.
   const state = getIslandRunStateSnapshot(session);
+  if (arenaStadiumBlocksRoll(state)) return { status: 'arena_activity_required' };
 
   if (
     state.currentIslandNumber === 1

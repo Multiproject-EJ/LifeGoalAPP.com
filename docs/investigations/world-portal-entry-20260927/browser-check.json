@@ -1,0 +1,15 @@
+{
+  "scope": "Actual entry/admin hooks, GameFirstShell and canonical local handover; synthetic accounts and controlled remote/admin responses, not authenticated full-App E2E",
+  "results": [
+    "ordinary/legacy user gated; navigation containment; metadata ignored; essential links and non-destructive recovery",
+    "verified developer bypass, account-switch and late-admin response isolation",
+    "late prior-owner remote receipt cannot unlock current account",
+    "storage failure cannot unlock; successful handover retains ceremony; explicit exit to Today; reload starts outside game",
+    "uncached remote failure blocks fresh game; explicit retry/no-row opens new journey",
+    "offline saved play, failed developer verification, retry recovery",
+    "developer revocation on refresh returns to gated game",
+    "pending and failed guest transfer cannot mount board; verified/resolved transfer resumes hydration",
+    "bounded unresolved startup exposes help/retry without granting access or starting over"
+  ],
+  "errors": []
+}

@@ -229,6 +229,8 @@ function hashSeed(value: string): number {
 }
 
 export interface ArenaPairSelectionInput {
+  /** Authoritative introduced catalogue. Empty means no available games. */
+  allowedGameIds: readonly ArenaGameId[];
   islandNumber: number;
   activeEventId: EventId | null;
   rankedGameIds: readonly ArenaGameId[];
@@ -238,8 +240,8 @@ export interface ArenaPairSelectionInput {
 }
 
 export interface ArenaPairSelection {
-  primary: ArenaGameDefinition;
-  alternative: ArenaGameDefinition;
+  primary: ArenaGameDefinition | null;
+  alternative: ArenaGameDefinition | null;
 }
 
 /**
@@ -255,16 +257,14 @@ export function selectArenaGamePair(input: ArenaPairSelectionInput): ArenaPairSe
   const journeyDiscOwnsTimedEventSurface = isIslandRunFeatureEnabled('journeyDiscArenaEnabled')
     && isJourneyDiscArenaIsland(input.islandNumber);
   const eligible = ARENA_GAME_CATALOG.filter((game) => {
+    if (!input.allowedGameIds.includes(game.id)) return false;
     if (disabled.has(game.id)) return false;
     if (game.id === 'journey_disc_arena' && (!isIslandRunFeatureEnabled('journeyDiscArenaEnabled') || !isJourneyDiscArenaIsland(input.islandNumber))) return false;
     if (journeyDiscOwnsTimedEventSurface && game.availability === 'active_event') return false;
     return game.availability === 'exhibition' || game.id === input.activeEventId;
   });
 
-  const fallback = ARENA_GAME_CATALOG.filter((game) => game.availability === 'exhibition' && (
-    game.id !== 'journey_disc_arena' || (isIslandRunFeatureEnabled('journeyDiscArenaEnabled') && isJourneyDiscArenaIsland(input.islandNumber))
-  ));
-  const pool = eligible.length >= 2 ? eligible : fallback;
+  const pool = eligible;
   const score = (game: ArenaGameDefinition, salt: string) => {
     const rank = rankIndex.get(game.id) ?? input.rankedGameIds.length;
     const preference = Math.max(0, input.rankedGameIds.length - rank) * 100;
@@ -274,13 +274,13 @@ export function selectArenaGamePair(input: ArenaPairSelectionInput): ArenaPairSe
   };
 
   const orderedPrimary = [...pool].sort((a, b) => score(b, 'primary') - score(a, 'primary'));
-  const primary = orderedPrimary[0] ?? fallback[0]!;
+  const primary = orderedPrimary[0] ?? null;
+  if (!primary) return { primary: null, alternative: null };
   const alternatives = pool.filter((game) => game.id !== primary.id);
   const differentFamily = alternatives.filter((game) => game.family !== primary.family);
   const secondPool = differentFamily.length > 0 ? differentFamily : alternatives;
   const alternative = [...secondPool].sort((a, b) => score(b, 'alternative') - score(a, 'alternative'))[0]
-    ?? fallback.find((game) => game.id !== primary.id)
-    ?? primary;
+    ?? null;
 
   return { primary, alternative };
 }

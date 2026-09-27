@@ -1,0 +1,19 @@
+.island-40-placeholder-label {
+  position: absolute;
+  left: 50%;
+  top: 36px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  padding: 7px 12px;
+  border: 1px solid #94c9db55;
+  border-radius: 12px;
+  background: #101b32e8;
+  color: #e0ecf5;
+  font: 11px/1.4 system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+.island-40-placeholder-label strong,
+.island-40-placeholder-label span { display: block; }
+.island-40-placeholder-label span { color: #b1c8d9; font-size: 10px; }

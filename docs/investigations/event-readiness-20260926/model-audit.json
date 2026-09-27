@@ -1,0 +1,131 @@
+{
+  "suites": [
+    {
+      "name": "islandRunFeatureAccess",
+      "total": 17,
+      "passed": 17,
+      "failures": []
+    },
+    {
+      "name": "arenaPuzzleGames",
+      "total": 10,
+      "passed": 10,
+      "failures": []
+    },
+    {
+      "name": "islandWorkshopGame",
+      "total": 26,
+      "passed": 26,
+      "failures": []
+    },
+    {
+      "name": "fortuneEngineGame",
+      "total": 14,
+      "passed": 14,
+      "failures": []
+    },
+    {
+      "name": "fortuneEngineProgression",
+      "total": 10,
+      "passed": 10,
+      "failures": []
+    },
+    {
+      "name": "fortuneEngineStateActions",
+      "total": 8,
+      "passed": 8,
+      "failures": []
+    },
+    {
+      "name": "companionFeastGame",
+      "total": 21,
+      "passed": 21,
+      "failures": []
+    },
+    {
+      "name": "companionFeastProgression",
+      "total": 8,
+      "passed": 8,
+      "failures": []
+    },
+    {
+      "name": "spaceExcavatorDepths",
+      "total": 3,
+      "passed": 3,
+      "failures": []
+    },
+    {
+      "name": "spaceExcavatorClues",
+      "total": 6,
+      "passed": 6,
+      "failures": []
+    },
+    {
+      "name": "spaceExcavatorObjects",
+      "total": 2,
+      "passed": 2,
+      "failures": []
+    },
+    {
+      "name": "spaceExcavatorRewardUx",
+      "total": 3,
+      "passed": 3,
+      "failures": []
+    },
+    {
+      "name": "skyboundPilotAcademy",
+      "total": 11,
+      "passed": 11,
+      "failures": []
+    },
+    {
+      "name": "momentumMatrixGame",
+      "total": 5,
+      "passed": 5,
+      "failures": []
+    },
+    {
+      "name": "momentumMatrixStateActions",
+      "total": 3,
+      "passed": 3,
+      "failures": []
+    },
+    {
+      "name": "crystalMiners",
+      "total": 73,
+      "passed": 73,
+      "failures": []
+    },
+    {
+      "name": "crystalMinersProgression",
+      "total": 9,
+      "passed": 9,
+      "failures": []
+    },
+    {
+      "name": "journeyDiscArenaGame",
+      "total": 27,
+      "passed": 27,
+      "failures": []
+    },
+    {
+      "name": "journeyDiscArenaStateActions",
+      "total": 4,
+      "passed": 4,
+      "failures": []
+    },
+    {
+      "name": "journeyDiscArenaProgression",
+      "total": 2,
+      "passed": 2,
+      "failures": []
+    }
+  ],
+  "puzzles": {
+    "concord": 6,
+    "lexicon": 6,
+    "signalPath": 12,
+    "twinSigils": 6
+  },
+  "scope": "Local model/action tests only. Passing does not certify full playability, mobile UX, or live settlement."
+}

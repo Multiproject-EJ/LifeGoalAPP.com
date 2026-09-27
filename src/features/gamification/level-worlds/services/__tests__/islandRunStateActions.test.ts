@@ -399,7 +399,7 @@ export const islandRunStateActionsTests: TestCase[] = [
     },
   },
   {
-    name: 'Event Arena first boost grants active-event tickets once through canonical action',
+    name: 'retired first-island Arena boost stays blocked without deleting earned tickets',
     run: () => {
       resetAll();
       seedState({
@@ -424,16 +424,16 @@ export const islandRunStateActionsTests: TestCase[] = [
         stopId: 'mystery',
         activeTimedEventId: 'feeding_frenzy:arena',
       });
-      assertEqual(first.status, 'claimed', 'first Arena open should claim');
-      assertEqual(first.granted, ARENA_FIRST_TICKET_BOOST_AMOUNT, 'grant amount');
-      assertEqual(first.record.minigameTicketsByEvent['feeding_frenzy:arena'], 5, 'tickets added to active event bucket');
-      assertEqual(first.record.arenaFirstTicketBoostClaimedByEvent['feeding_frenzy:arena'], true, 'marker written with ticket grant');
-      assertEqual(second.status, 'already_claimed', 'reopen should not grant again');
-      assertEqual(second.record.minigameTicketsByEvent['feeding_frenzy:arena'], 5, 'ticket bucket stays unchanged on retry');
+      assertEqual(first.status, 'ineligible', 'Island001 is quiet');
+      assertEqual(first.granted, 0, 'no grant');
+      assertEqual(first.record.minigameTicketsByEvent['feeding_frenzy:arena'], 2, 'earned bucket preserved');
+      assertEqual(first.record.arenaFirstTicketBoostClaimedByEvent['feeding_frenzy:arena'], undefined, 'no new marker');
+      assertEqual(second.status, 'ineligible', 'retry still blocked');
+      assertEqual(second.record.minigameTicketsByEvent['feeding_frenzy:arena'], 2, 'no duplicate grant');
     },
   },
   {
-    name: 'Event Arena first boost does not grant without active event and scopes marker by event id',
+    name: 'retired first-island boost cannot reopen on event rotation and preserves old markers',
     run: () => {
       resetAll();
       seedState({
@@ -458,12 +458,12 @@ export const islandRunStateActionsTests: TestCase[] = [
         stopId: 'mystery',
         activeTimedEventId: 'space_excavator:new',
       });
-      assertEqual(missing.status, 'no_active_event', 'missing active event should not grant');
+      assertEqual(missing.status, 'ineligible', 'quiet island gate precedes event availability');
       assertEqual(Object.keys(missing.record.minigameTicketsByEvent).length, 0, 'missing active event leaves tickets empty');
-      assertEqual(scoped.status, 'claimed', 'different active event id remains eligible');
-      assertEqual(scoped.record.minigameTicketsByEvent['space_excavator:new'], ARENA_FIRST_TICKET_BOOST_AMOUNT, 'new event bucket receives tickets');
+      assertEqual(scoped.status, 'ineligible', 'rotating event cannot bypass quiet island');
+      assertEqual(scoped.record.minigameTicketsByEvent['space_excavator:new'], undefined, 'no new grant');
       assertEqual(scoped.record.arenaFirstTicketBoostClaimedByEvent['lucky_spin:old'], true, 'old event marker preserved');
-      assertEqual(scoped.record.arenaFirstTicketBoostClaimedByEvent['space_excavator:new'], true, 'new event marker written');
+      assertEqual(scoped.record.arenaFirstTicketBoostClaimedByEvent['space_excavator:new'], undefined, 'no new marker');
     },
   },
   {
@@ -2270,6 +2270,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       resetAll();
       const session = makeSession();
       seedState({
+        currentIslandNumber: 2,
         runtimeVersion: 10,
         spinTokens: 9,
         minigameTicketsByEvent: { 'lucky_spin@1': 4, 'space_excavator@1': 7 },
@@ -6086,7 +6087,9 @@ export const islandRunStateActionsTests: TestCase[] = [
         tokenIndex: 1,
         essence: 200,
         essenceLifetimeSpent: 0,
-        completedStopsByIsland: { '3': [] },
+        // Existing genuine stadium credit may reconcile through the compatibility
+        // path. New stadium completion is tested via arenaStadiumActions instead.
+        completedStopsByIsland: { '3': ['mystery'] },
         stopTicketsPaidByIsland: { '3': [] },
         stopStatesByIndex: [
           { objectiveComplete: false, buildComplete: false },
@@ -6555,8 +6558,8 @@ export const islandRunStateActionsTests: TestCase[] = [
         nowMs: 4000,
       });
 
-      assertEqual(blockedByLimit.ok, false, 'postponement should be blocked when opening the next stop would exceed the open limit');
-      if (!blockedByLimit.ok) assertEqual(blockedByLimit.reason, 'open_limit_reached', 'blocked stale callback should report the open-limit reason');
+      assertEqual(blockedByLimit.ok, false, 'stadium cannot be postponed at any open-stop count');
+      if (!blockedByLimit.ok) assertEqual(blockedByLimit.reason, 'not_postponable', 'required stadium gate precedes open-limit checks');
       assertEqual(blockedByLimit.record.stopStatesByIndex[3].accessUnlocked === true, false, 'blocked stale callback must not unlock Wisdom');
     },
   },

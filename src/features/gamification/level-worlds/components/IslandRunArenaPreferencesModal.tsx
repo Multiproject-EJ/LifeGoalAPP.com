@@ -4,7 +4,6 @@ import type { Session } from '@supabase/supabase-js';
 import { lockPageScroll } from '../../../../utils/scrollLock';
 import {
   DEFAULT_ARENA_MINIGAME_PREFERENCES,
-  getArenaDisabledLimit,
   getArenaPreferenceRows,
   loadArenaMinigamePreferences,
   moveArenaEvent,
@@ -16,6 +15,7 @@ import {
 import type { EventId } from '../services/islandRunEventEngine';
 
 interface IslandRunArenaPreferencesModalProps {
+  allowedGameIds: readonly ArenaGameId[];
   open: boolean;
   session: Session;
   onClose: () => void;
@@ -25,6 +25,7 @@ interface IslandRunArenaPreferencesModalProps {
 }
 
 export function IslandRunArenaPreferencesModal({
+  allowedGameIds,
   open,
   session,
   onClose,
@@ -37,7 +38,7 @@ export function IslandRunArenaPreferencesModal({
   );
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const rows = useMemo(() => getArenaPreferenceRows(preferences), [preferences]);
+  const rows = useMemo(() => getArenaPreferenceRows(preferences, allowedGameIds).filter(row => allowedGameIds.includes(row.eventId)), [preferences, allowedGameIds]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -67,12 +68,12 @@ export function IslandRunArenaPreferencesModal({
 
   const move = (eventId: ArenaGameId, direction: -1 | 1) => {
     setMessage(null);
-    setPreferences((current) => moveArenaEvent(current, eventId, direction));
+    setPreferences((current) => moveArenaEvent(current, eventId, direction, allowedGameIds));
   };
 
   const toggle = (eventId: ArenaGameId) => {
     setPreferences((current) => {
-      const result = toggleArenaEvent(current, eventId);
+      const result = toggleArenaEvent(current, eventId, allowedGameIds);
       setMessage(result.reason);
       return result.preferences;
     });
@@ -99,7 +100,7 @@ export function IslandRunArenaPreferencesModal({
         <h2 id="arena-preferences-title">Shape your Arena rotation</h2>
         <p className="arena-preferences__intro">
           Put favourites first for full missions. Middle games become quick fights; your lowest active game becomes a
-          15-second flash. You can pause {getArenaDisabledLimit()} of {rows.length} games (25%).
+          15-second flash. Only games introduced on this part of your journey appear here.
         </p>
 
         <div className="arena-preferences__catalog" aria-label="Arena game catalog">

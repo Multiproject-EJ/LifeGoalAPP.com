@@ -14,9 +14,21 @@
  * thumbnails; only this map changes when it does.
  */
 
-import { getRankById, type RankDefinition } from './rankModel';
+import { RANKS, type RankDefinition } from './rankModel';
 
 const RANK_ASSET_BASE = '/assets/ranks';
+
+export type RankBadgeVariant = 'medal' | 'pin';
+
+// Family IDs still belong to the current model. Do not index this registry
+// with expanded ordinals until the versioned V2 integration is complete.
+const REVIEWED_RANK_PAIRS: Readonly<Partial<Record<number, Record<RankBadgeVariant, string>>>> = {
+  1: { medal: 'v2/deckhand-I-medal.png', pin: 'v2/deckhand-I-pin.png' },
+};
+
+export function rankBadgeVariantForSize(size: number): RankBadgeVariant {
+  return Number.isFinite(size) && size > 0 && size <= 48 ? 'pin' : 'medal';
+}
 
 /** Current on-disk badge filename per rank id. Normalized in PR 6. */
 const RANK_BADGE_FILES: Readonly<Record<number, string>> = {
@@ -52,8 +64,8 @@ const MEMBERSHIP_BADGE_LABELS: Readonly<Record<MembershipBadge, string>> = {
 };
 
 /** Public URL for a rank's badge image, or undefined for an unknown id. */
-export function rankBadgeSrc(rankId: number): string | undefined {
-  const file = RANK_BADGE_FILES[rankId];
+export function rankBadgeSrc(rankId: number, variant: RankBadgeVariant = 'medal'): string | undefined {
+  const file = REVIEWED_RANK_PAIRS[rankId]?.[variant] ?? RANK_BADGE_FILES[rankId];
   return file ? `${RANK_ASSET_BASE}/${file}` : undefined;
 }
 
@@ -81,9 +93,8 @@ export function membershipBadgeAlt(badge: MembershipBadge): string {
 
 /** True when every rank in the model has a badge asset mapped. */
 export function everyRankHasBadge(): boolean {
-  for (let id = 1; id <= 12; id += 1) {
-    if (!getRankById(id)) return false;
-    if (!RANK_BADGE_FILES[id]) return false;
+  for (const rank of RANKS) {
+    if (!rankBadgeSrc(rank.id)) return false;
   }
   return true;
 }

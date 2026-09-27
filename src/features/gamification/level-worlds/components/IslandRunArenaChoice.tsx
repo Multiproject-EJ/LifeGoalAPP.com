@@ -12,6 +12,7 @@ import { EVENT_MINIGAME_REWARD_BAR_PROGRESS } from '../services/islandRunContrac
 import './IslandRunArenaChoice.css';
 
 interface IslandRunArenaChoiceProps {
+  allowedGameIds: readonly ArenaGameId[];
   playerKey: string;
   islandNumber: number;
   activeEventId: EventId | null;
@@ -26,7 +27,7 @@ interface IslandRunArenaChoiceProps {
   nextRewardIcon: string;
   nextRewardLabel: string;
   onLaunch: (gameId: ArenaGameId) => void;
-  onTune: () => void;
+  onTune?: () => void;
 }
 
 function ArenaChoiceMiniature({ game }: { game: ArenaGameDefinition }) {
@@ -92,13 +93,14 @@ function ArenaChoiceCard(props: {
 export function IslandRunArenaChoice(props: IslandRunArenaChoiceProps) {
   const [recent, setRecent] = useState(() => loadRecentArenaGameIds(props.playerKey));
   const pair = useMemo(() => selectArenaGamePair({
+    allowedGameIds: props.allowedGameIds,
     islandNumber: props.islandNumber,
     activeEventId: props.activeEventId,
     rankedGameIds: props.preferences.rankedEventIds,
     disabledGameIds: props.preferences.disabledEventIds,
     recentGameIds: recent,
     seed: `${props.activeEventRuntimeId ?? 'no-event'}:${props.islandNumber}:${recent.join(',')}`,
-  }), [props.activeEventId, props.activeEventRuntimeId, props.islandNumber, props.preferences, recent]);
+  }), [props.allowedGameIds, props.activeEventId, props.activeEventRuntimeId, props.islandNumber, props.preferences, recent]);
 
   const choose = (gameId: ArenaGameId) => {
     setRecent(recordRecentArenaGame(props.playerKey, gameId));
@@ -132,19 +134,19 @@ export function IslandRunArenaChoice(props: IslandRunArenaChoiceProps) {
         <div>
           <span>Host challenge</span>
           <h3 id="arena-choice-title">Choose your Arena game</h3>
-          <p>One ticket. Two ways to advance.</p>
+          <p>{pair.alternative ? 'Choose an introduced game.' : pair.primary ? 'Your first Arena game.' : 'Meet your next game in the catalogue.'}</p>
         </div>
-        <button type="button" onClick={props.onTune}>Tune</button>
+        {props.onTune && <button type="button" onClick={props.onTune}>Tune</button>}
       </div>
       <div className="arena-choice__cards">
-        <ArenaChoiceCard game={pair.primary} tickets={props.tickets} onChoose={() => choose(pair.primary.id)} />
-        <span className="arena-choice__or" aria-hidden="true">or</span>
-        <ArenaChoiceCard game={pair.alternative} tickets={props.tickets} onChoose={() => choose(pair.alternative.id)} />
+        {pair.primary && <ArenaChoiceCard game={pair.primary} tickets={props.tickets} onChoose={() => choose(pair.primary!.id)} />}
+        {pair.alternative && <><span className="arena-choice__or" aria-hidden="true">or</span>
+          <ArenaChoiceCard game={pair.alternative} tickets={props.tickets} onChoose={() => choose(pair.alternative!.id)} /></>}
       </div>
       <p className="arena-choice__note">
         {props.tickets > 0
-          ? `Complete either game: +${EVENT_MINIGAME_REWARD_BAR_PROGRESS} event progress.`
-          : 'Earn an event ticket on the reward bar to enter either challenge.'}
+          ? `Complete a challenge: +${EVENT_MINIGAME_REWARD_BAR_PROGRESS} event progress.`
+          : 'Earn event tickets from island play to enter a challenge.'}
       </p>
     </section>
   );

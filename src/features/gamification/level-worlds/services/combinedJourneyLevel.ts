@@ -1,15 +1,15 @@
 /**
  * Combined Journey Level — read-only derivation (R2).
  *
- * Pure, deterministic function of durable milestones so the level can always be
- * recomputed and never silently corrupts. This module performs NO grants and
+ * Pure, deterministic function of milestones and a previously earned XP floor.
+ * The caller retains the checkpoint when visible milestones change. This module performs NO grants and
  * holds NO state; it only derives the displayed level for the dual-track overlay
  * spine. Server-authoritative reward claims are a later slice (see
  * docs/investigations/dual-track-combined-journey-level-rewards-plan.md).
  *
  * Design notes:
- * - XP is derived, not accrued. Inputs are durable milestones (islands
- *   completed, in-island progress, completed goals, habit consistency).
+ * - XP is the greater of current milestone XP and previously recorded XP.
+ *   Removing a habit/goal must not retract previously recorded progress.
  * - A balance multiplier rewards progressing BOTH sides ("rise together"). It
  *   can only raise XP, never remove earned levels, so the level is monotonic for
  *   a fixed milestone set.
@@ -19,6 +19,8 @@
  */
 
 export type CombinedJourneyLevelInput = {
+  /** Previously recorded owner-scoped Journey XP, not activity XP or reward authority. */
+  earnedXpFloor?: number;
   /** Islands fully completed (durable). */
   islandsCompleted?: number;
   /** Progress within the current island, 0..100. */
@@ -38,6 +40,8 @@ export type CombinedJourneyLevelSummary = {
   gameXp: number;
   lifeXp: number;
   balanceMultiplier: number;
+  /** Retained earned XP above today's currently visible milestones. */
+  retainedXp: number;
   /** XP accumulated inside the current level. */
   xpIntoLevel: number;
   /** XP span from the current level to the next. */
@@ -68,6 +72,11 @@ export const BALANCE_SYNERGY_MAX = 0.25;
 // Level curve: cost to advance from level L to L+1 grows linearly.
 export const LEVEL_BASE_XP = 150;
 export const LEVEL_STEP_XP = 30;
+
+/** Stored profile XP is a Postgres integer; reject non-finite/corrupt values. */
+export function normalizeJourneyXp(value: number | undefined): number {
+  return Number.isFinite(value) ? Math.min(2147483647, Math.max(0, Math.floor(value!))) : 0;
+}
 
 function sanitizeCount(value: number | undefined): number {
   if (!Number.isFinite(value)) return 0;
@@ -125,7 +134,8 @@ export function deriveCombinedJourneyLevel(
     habitConsistency * JOURNEY_XP_WEIGHTS.perConsistentHabit;
 
   const balanceMultiplier = computeBalanceMultiplier(gameXp, lifeXp);
-  const xp = Math.round((gameXp + lifeXp) * balanceMultiplier);
+  const milestoneXp = normalizeJourneyXp(Math.round((gameXp + lifeXp) * balanceMultiplier));
+  const xp = Math.max(milestoneXp, normalizeJourneyXp(input.earnedXpFloor));
 
   const level = levelForXp(xp);
   const levelFloor = cumulativeXpForLevel(level);
@@ -143,6 +153,7 @@ export function deriveCombinedJourneyLevel(
     gameXp: Math.round(gameXp),
     lifeXp: Math.round(lifeXp),
     balanceMultiplier,
+    retainedXp: xp - milestoneXp,
     xpIntoLevel,
     xpForNextLevel,
     progressPercentToNextLevel,

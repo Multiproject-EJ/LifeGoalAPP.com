@@ -237,7 +237,7 @@ Stop rules:
 - All stops are designed to be completed **in-game** — the player should never need to leave the game to complete a stop (e.g., breathing is done via an in-game mini exercise).
 
 ### Come back later / postponement rules
-- Eligible ordinary reflective stops are: **Habit**, **Mystery**, and **Wisdom** (`habit`, `mystery`, `wisdom`).
+- Eligible ordinary reflective stops are **Habit** and **Wisdom**. Legacy non-event Mystery orientation may retain its introductory path; the ordinary Event Stadium cannot be postponed (2026-09-26 amendment).
 - Choosing **Come back later** leaves the current stop objective incomplete, records a postponed marker, keeps that stop accessible, and unlocks access eligibility for only the immediate next ordinary stop.
 - Postponement never grants stop rewards, completion credit, boss victory, island-clear rewards, or travel eligibility.
 - If the next stop normally requires an Essence ticket, the ticket is still required; postponement does not waive or prepay tickets.
@@ -461,6 +461,19 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 
 ## 6) Timed minigame system
 
+### Progressive event catalogue (approved 2026-09-26)
+
+- Island001 has no event catalogue, reward bar or comparison, including verified developers and returning players. The saved event clock and earned balances remain intact.
+- First release introductions are Signal Path on002, Crystal Miners on003 and Journey Disc Arena on006. A free, explicit introduction acknowledgement adds the game; a later-island catch-up can introduce a missed earlier game. Existing completed Signal Path ceremony participation also supplies introduction and play evidence. This does not silently enrol legacy saves in the separate opening-games cohort or award starter currency.
+- Returning to an earlier island hides later introductions without deleting them. Disc Arena stays in the learned catalogue but is playable only on its existing chapter exhibition islands (006/011/016/etc.).
+- Twin Sigils, Concord Categories and Lexicon Relay are demo-only. Other games without an approved introduction remain unreleased. A verified admin **and** enabled developer mode **and** an individual, off-by-default preview flag are required for the separate developer lab. Preview flags do not add catalogue or comparison credit. They reset when the board session ends.
+- Catalogue, chooser, settings and launch callbacks use the same introduction policy. A one-game catalogue has one launch card; zero/one eligible game never triggers a broad fallback. Visible-game rankings own session pacing.
+- An enterable Event Stadium starts a required saved activity when its landmark door is landed on or the landmark is deliberately opened. From004 the existing Level3 construction gate applies;002–003 retain beginner access. Passing a door does not start the activity. Meet any pending introductions, finish one new round for this visit, then answer any eligible unanswered comparison. There is no stadium Later or evaluator Skip, and Escape does not dismiss the required answer. Previously completed landmarks remain complete.
+- Comparison opens automatically after stadium participation, with two equal game choices; players may also revisit comparisons in the catalogue. It requires two distinct introduced games and genuine settled-play evidence for this owner, checked again on submission. Merely opening/starting/cancelling is not play. Miners uses settled dig counts; Disc Arena uses banked rounds including losses; Signal Path uses a funded attempt and terminal performance report (including a timed-out round). No fabricated legacy play credit. Previously answered pairs need not repeat for each new stadium.
+- The current stadium receipt is scoped to cycle, island and visit start. Closing a game or reloading does not complete it. A player without tickets can return to board earning without activity credit or postponement; once funded, the waiting activity resumes. A played round awaiting an answer cannot use that recovery path to skip the vote. Canonical roll and generic completion/postponement actions enforce the obligation; completion rewards and the receipt settle atomically once.
+- Bounded introductions, Signal Path receipts and comparisons use the canonical `arena-journey-v1` entry in `signatureMissionProgressByIsland`, through mutex-protected actions and existing JSON persistence/merge. A comparison grants no currency, changes no score and does not automatically rewrite session preferences. Adding a later game requires its own introduction and settlement adapter.
+- Hiding an unreleased rotating game never removes the shared clock/ticket/reward channel. The normal-player header opens the introduced catalogue, not the hidden rotating game.
+
 - At any given time, there is exactly **one** active timed minigame/event.
 - The active timed minigame/event is global for the player and persists across island transitions.
 - The active timed minigame/event remains available until its timer expires.
@@ -491,6 +504,42 @@ landmark presentation may temporarily transform the ordinary island's centre
 into Journey Disc Arena. It must yield the centre as soon as the mandatory Boss
 stop becomes available; the exhibition never completes, unlocks, or replaces a
 canonical stop and never creates a second ticket or reward write path.
+
+### Island 040 caretaker portal handover
+
+The board menu offers the caretaker council at canonical Island 040 and later,
+or in later cycles for players who missed it. A display rank, island-art preview,
+developer access flag or purchase is not story completion. The meeting is a
+replayable, viewport-portaled dialog; the temporary 040 scenery remains a separate
+presentation and does not grant ownership.
+
+Explicit acceptance records one `world-portal` receipt under
+`island-040-caretaker-world-portal-v1` in the owner-scoped signature progress JSON.
+The action holds the canonical mutex, rechecks island/cycle context, and changes
+no stops, wallets, XP, travel or personal answers. Ordinary conflict merge retains
+the earliest receipt across cycles. Replay and duplicate acceptance give nothing
+again. The UI confirms local durability only after reading the receipt back;
+existing account sync can still be pending. Storage failure offers a retry.
+
+The app-wide game-first gate applies to new and existing ordinary players
+(2026-09-27). Both app layouts and their protected overlays are behind the same
+owner-scoped guard, not just a hidden Exit button. Verified developer access
+comes from the existing active admin lookup, never user-editable metadata or a
+local switch. Portal owners and verified developers retain full app entry;
+ordinary players enter Island Run and cannot leave for Today until handover.
+The handover screen stays mounted until explicit exit to Today.
+
+Essential account settings, privacy, support, accessibility and sign-in remain
+available before unlock. Recover game reloads/resumes; it does not delete saves.
+Startup waits for canonical hydration and developer verification where needed.
+With no usable local save, a failed remote load offers retry rather than a fresh
+playable run; existing local progress can be used offline. Account switches never
+reuse a previous player's developer result. Paid access is not inferred from
+Pro membership, and an optimistic receipt that failed local persistence cannot
+unlock the app. This is a client-side journey policy, not server authorization.
+
+Paid access and consent to use answers for AI suggestions are separate features;
+accepting the portal authorizes neither.
 
 ### Timed event rotation
 

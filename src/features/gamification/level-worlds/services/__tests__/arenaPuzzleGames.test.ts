@@ -34,6 +34,7 @@ export const arenaPuzzleGamesTests: TestCase[] = [
     name: 'pair selector offers two different families and excludes inactive event games',
     run: () => {
       const pair = selectArenaGamePair({
+        allowedGameIds: ARENA_GAME_CATALOG.map(game => game.id),
         islandNumber: 6,
         activeEventId: 'lucky_spin',
         rankedGameIds: ARENA_GAME_CATALOG.map((game) => game.id),
@@ -41,6 +42,7 @@ export const arenaPuzzleGamesTests: TestCase[] = [
         recentGameIds: ['momentum_matrix'],
         seed: 'island-1-event-1',
       });
+      if (!pair.primary || !pair.alternative) throw new Error('expected two eligible games');
       assert(pair.primary.id !== pair.alternative.id, 'pair entries must differ');
       assert(pair.primary.family !== pair.alternative.family, 'pair should span different game families');
       const pairIds = [pair.primary.id, pair.alternative.id];

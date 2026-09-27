@@ -2947,6 +2947,18 @@ export function readIslandRunGameStateRecord(session: Session): IslandRunGameSta
 
 export type IslandRunGameStateHydrationSource = IslandRunRuntimeHydrationSource;
 
+/** A failed first remote load must not silently create/overwrite an existing run. */
+export function hasSavedIslandRunRecord(session: Session): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const raw = window.localStorage.getItem(getStorageKey(session.user.id));
+    if (!raw) return false;
+    const value = JSON.parse(raw);
+    return Boolean(value && Number.isSafeInteger(value.currentIslandNumber) && value.currentIslandNumber >= 1
+      && Number.isSafeInteger(value.runtimeVersion) && value.runtimeVersion >= 0);
+  } catch { return false; }
+}
+
 export async function hydrateIslandRunGameStateRecordWithSource(options: {
   session: Session;
   client: SupabaseClient | null;
