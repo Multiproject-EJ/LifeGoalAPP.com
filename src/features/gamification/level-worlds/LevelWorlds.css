@@ -28181,3 +28181,14 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   .island-run-mission-phone--signal,
   .island-run-mission-phone__signal-dot { animation: none; }
 }
+
+/* Journey Disc Arena: the island behind it is a blurred, dimmed still. */
+.island-run-arena-backdrop {
+  position: absolute;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  object-fit: cover;
+  pointer-events: none;
+  filter: blur(7px) brightness(0.55) saturate(0.8);
+}

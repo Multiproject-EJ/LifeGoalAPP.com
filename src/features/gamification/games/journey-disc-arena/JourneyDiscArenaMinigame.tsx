@@ -181,7 +181,7 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
       <div className="journey-disc-arena__vignette" aria-hidden="true" />
 
       <header className="journey-disc-arena__topbar">
-        <button className="journey-disc-arena__exit" type="button" onClick={() => onComplete({ completed: false })} aria-label="Leave Journey Disc Arena">×</button>
+        <button className="journey-disc-arena__exit" type="button" onClick={() => onComplete({ completed: false })} aria-label="Leave Journey Disc Arena"><span aria-hidden="true">✕</span> Leave</button>
         <div className="journey-disc-arena__title-block">
           <p>{snapshot.mode === 'prep' ? `Stage ${campaignStageNumber} · ${campaign.current.shortLabel}` : encounter.class === 'guardian' ? 'Boss prize battle' : `${encounter.class} class`}</p>
           <h1>{snapshot.mode === 'prep' ? 'Battle Setup' : 'Journey Disc Arena'}</h1>
