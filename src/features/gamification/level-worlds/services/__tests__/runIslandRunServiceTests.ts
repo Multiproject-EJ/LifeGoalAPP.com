@@ -179,6 +179,7 @@ import { islandRunMissionTrackerTests } from './islandRunMissionTracker.test';
 import { islandRunCompletionTests } from './islandRunCompletion.test';
 import { islandRunMissionResetActionTests } from './islandRunMissionResetAction.test';
 import { islandRunBossRewardTests } from './islandRunBossReward.test';
+import { islandExplorePointsTests } from './islandExplorePoints.test';
 import { crashReportsTests } from './crashReports.test';
 import { controllerArrivalStylesTests } from './controllerArrivalStyles.test';
 import { twoTracksControllerTests } from './twoTracksController.test';
@@ -443,6 +444,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunCompletion', tests: islandRunCompletionTests },
   { label: 'islandRunMissionResetAction', tests: islandRunMissionResetActionTests },
   { label: 'islandRunBossReward', tests: islandRunBossRewardTests },
+  { label: 'islandExplorePoints', tests: islandExplorePointsTests },
   { label: 'crashReports', tests: crashReportsTests },
   { label: 'controllerArrivalStyles', tests: controllerArrivalStylesTests },
   { label: 'twoTracksController', tests: twoTracksControllerTests },

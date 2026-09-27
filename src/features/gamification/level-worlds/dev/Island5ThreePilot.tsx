@@ -17,6 +17,7 @@ import './Island40Placeholder.css';
 import {createAssemblySeaGeometry} from './Island1V2Terrain';
 import { createWonderRideCameraFilter } from './island19WonderRideCamera';
 import { resolveUnoccludedCameraPosition } from './islandCameraOcclusion';
+import { getIslandExplorePoints, type IslandExplorePoint, type IslandExplorePointId } from '../services/islandExplorePoints';
 import * as THREE from 'three';
 import { choosePawnCamera, shortestPawnAngle, pawnSightBlocked, completedPawnHops, type PawnObstacle, type PawnPoint } from './islandPawnPresentation';
 import { createIslandPawnTileTrail } from './islandPawnTileTrail';
@@ -457,6 +458,8 @@ interface Island5ThreePilotProps {
   };
   onSignatureMissionClick?: () => void;
   onAssemblyMeetingComplete?: () => void;
+  /** An explore point view opened (id) or closed (null). */
+  onExplorePointChange?: (id: string | null) => void;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
   interactionPaused?: boolean;
@@ -3649,6 +3652,7 @@ export default function Island5ThreePilot({
   },
   onSignatureMissionClick,
   onAssemblyMeetingComplete,
+  onExplorePointChange,
   caretakerEncounterOpen = false,
   onCaretakerClick,
   interactionPaused = false,
@@ -3902,6 +3906,19 @@ export default function Island5ThreePilot({
   cactusCanyonSpiralPresentationRef.current = cactusCanyonSpiralPresentation;
   const firstLightAssemblyCraterPresentationRef = useRef(firstLightAssemblyCraterPresentation);
   firstLightAssemblyCraterPresentationRef.current = firstLightAssemblyCraterPresentation;
+  // Explore points: pulsing energy dots that fly the camera to a fun view.
+  const explorePoints = useMemo(() => getIslandExplorePoints(
+    resolvedWorldSourceNumber === 1 && islandNumber === 1 ? 1 : 0,
+    { assemblyComplete: Boolean(firstLightAssemblyCraterPresentation?.completed) },
+  ), [firstLightAssemblyCraterPresentation?.completed, islandNumber, resolvedWorldSourceNumber]);
+  const explorePointsRef = useRef<IslandExplorePoint[]>(explorePoints);
+  explorePointsRef.current = explorePoints;
+  const exploreDotRefs = useRef(new Map<IslandExplorePointId, HTMLButtonElement>());
+  const exploreRequestRef = useRef<{ kind: 'enter'; id: IslandExplorePointId } | { kind: 'exit' } | null>(null);
+  const [activeExplorePointId, setActiveExplorePointId] = useState<IslandExplorePointId | null>(null);
+  const onExplorePointChangeRef = useRef(onExplorePointChange);
+  onExplorePointChangeRef.current = onExplorePointChange;
+  useEffect(() => { onExplorePointChangeRef.current?.(activeExplorePointId); }, [activeExplorePointId]);
   const greatHoneyfallPresentationRef = useRef(greatHoneyfallPresentation);
   greatHoneyfallPresentationRef.current = greatHoneyfallPresentation;
   const stagedRestorationPresentationRef = useRef(stagedRestorationPresentation);
@@ -7345,6 +7362,8 @@ export default function Island5ThreePilot({
       finalImpactTriggered: boolean;
     } | null = null;
     let idleOverviewAt: number | null = null;
+    let exploreActive: IslandExplorePoint | null = null;
+    const exploreProjection = new THREE.Vector3();
     let ambientCameraContext: 'board' | 'build-modal' = constructionPresentationRef.current?.active
       ? 'build-modal'
       : 'board';
@@ -10981,6 +11000,58 @@ export default function Island5ThreePilot({
           renderCamera = plantingMicroscopeCamera;
         }
       }
+      // Explore points: enter/exit requests from the dots and the Back button.
+      const exploreRequest = exploreRequestRef.current;
+      if (exploreRequest) {
+        exploreRequestRef.current = null;
+        const point = exploreRequest.kind === 'enter'
+          ? explorePointsRef.current.find((entry) => entry.id === exploreRequest.id) ?? null
+          : null;
+        if (point) {
+          exploreActive = point;
+          setBoardActorsVisibleForPreset(point.assemblyCutaway ? 'boss' : 'manual');
+          // Loosen the orbit clamps (restored by applyPreset on exit).
+          marinaInspectionActive = true;
+          controls.minDistance = 0.5;
+          controls.minPolarAngle = 0;
+          controls.maxPolarAngle = Math.PI;
+          controls.enabled = false;
+          const toPosition = new THREE.Vector3(...point.camera.position);
+          const controlPosition = camera.position.clone().lerp(toPosition, 0.5);
+          controlPosition.y += 3;
+          transition = {
+            startedAt: performance.now(),
+            durationMs: isReducedMotion ? 220 : 1600,
+            fromPosition: camera.position.clone(),
+            fromTarget: controls.target.clone(),
+            controlPosition,
+            toPosition,
+            toTarget: new THREE.Vector3(...point.camera.target),
+            fromFov: camera.fov,
+            toFov: point.camera.fov,
+          };
+        } else if (exploreActive) {
+          exploreActive = null;
+          controls.enabled = true;
+          applyPreset('overview', 0.8);
+        }
+      }
+      if (exploreActive) idleOverviewAt = null;
+      canvas.dataset.explorePoint = exploreActive?.id ?? '';
+      const exploreDotsVisible = !exploreActive
+        && !(firstArrivalRef.current.active && !firstArrivalCompletedRef.current)
+        && !constructionPresentationRef.current?.active
+        && !interactionPausedRef.current;
+      for (const point of explorePointsRef.current) {
+        const dot = exploreDotRefs.current.get(point.id);
+        if (!dot) continue;
+        exploreProjection.set(...point.anchor).project(camera);
+        const onScreen = exploreProjection.z < 1 && Math.abs(exploreProjection.x) < 0.94 && Math.abs(exploreProjection.y) < 0.92;
+        if (!exploreDotsVisible || !onScreen) { dot.style.display = 'none'; continue; }
+        dot.style.display = '';
+        dot.style.left = `${(exploreProjection.x + 1) * 50}%`;
+        dot.style.top = `${(1 - exploreProjection.y) * 50}%`;
+      }
       // DOM presentation follows the camera without React updates every frame.
       const occupiedLabelRects: Array<{ left: number; top: number; right: number; bottom: number }> = [];
       for (const item of landmarkProgressRef.current ?? []) {
@@ -11492,6 +11563,27 @@ export default function Island5ThreePilot({
           <span><strong>{item.title}</strong><small>{item.status}</small></span>
         </button>)}
       </div> : null}
+      {explorePoints.length > 0 ? <div className="island-explore-layer">
+        {explorePoints.map((point) => <button key={point.id} type="button"
+          ref={(element) => { if (element) exploreDotRefs.current.set(point.id, element); else exploreDotRefs.current.delete(point.id); }}
+          className="island-explore-dot"
+          style={{ display: 'none' }}
+          aria-label={`Explore: ${point.label}`}
+          title={point.label}
+          onClick={() => { exploreRequestRef.current = { kind: 'enter', id: point.id }; setActiveExplorePointId(point.id); }}>
+          <span aria-hidden="true" />
+        </button>)}
+      </div> : null}
+      {activeExplorePointId ? (() => {
+        const point = explorePoints.find((entry) => entry.id === activeExplorePointId);
+        if (!point) return null;
+        return (
+          <div className="island-explore-caption" role="status">
+            <span><small>🔭 Explore</small><strong>{point.label}</strong><em>{point.blurb}</em></span>
+            <button type="button" onClick={() => { exploreRequestRef.current = { kind: 'exit' }; setActiveExplorePointId(null); }}>Back</button>
+          </div>
+        );
+      })() : null}
       {!hasRenderedFrame ? (
         <div className="island-5-three-pilot__loading" role="status" aria-live="polite">
           <span aria-hidden="true" />

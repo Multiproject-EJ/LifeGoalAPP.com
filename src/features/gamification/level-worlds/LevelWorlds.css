@@ -28349,3 +28349,72 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   .island-run-mission-message-banner,
   .island-mission-tracker__picture-message li { animation: none; }
 }
+
+/* Explore points: pulsing energy dots (not tasks) that open a fun view. */
+.island-explore-layer { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.island-explore-dot {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.island-explore-dot span {
+  position: absolute;
+  inset: 13px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0 22%, #8ff3ff 40%, #2cc7ff 64%, #2cc7ff00 72%);
+  box-shadow: 0 0 12px #58dcff;
+  animation: island-explore-dot-pulse 1.6s ease-in-out infinite;
+}
+.island-explore-dot span::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 2px solid #9ff0ff;
+  animation: island-explore-dot-ring 1.6s ease-out infinite;
+}
+@keyframes island-explore-dot-pulse { 0%, 100% { scale: 0.85; } 50% { scale: 1.1; } }
+@keyframes island-explore-dot-ring { 0% { scale: 0.6; opacity: 0.9; } 100% { scale: 1.9; opacity: 0; } }
+.island-explore-caption {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: auto;
+  bottom: max(22px, calc(env(safe-area-inset-bottom) + 16px));
+  translate: -50% 0;
+  width: min(360px, calc(100% - 24px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 14px;
+  border-radius: 18px;
+  background: rgba(10, 26, 46, 0.86);
+  color: #eef8ff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  animation: island-explore-caption-in 420ms cubic-bezier(.2, 1.2, .35, 1) both;
+}
+.island-explore-caption > span { display: grid; flex: 1; min-width: 0; }
+.island-explore-caption small { color: #8fe7ff; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.island-explore-caption strong { font-size: 16px; }
+.island-explore-caption em { color: #bcd2e6; font-size: 12px; font-style: normal; }
+.island-explore-caption button {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #3ad0ff, #6a7dff);
+  color: #fff;
+  cursor: pointer;
+}
+@keyframes island-explore-caption-in { 0% { opacity: 0; translate: -50% 12px; } 100% { opacity: 1; translate: -50% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .island-explore-dot span, .island-explore-dot span::after, .island-explore-caption { animation: none; }
+}
