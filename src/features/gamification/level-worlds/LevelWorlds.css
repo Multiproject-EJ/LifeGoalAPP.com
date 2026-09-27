@@ -28418,3 +28418,30 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 @media (prefers-reduced-motion: reduce) {
   .island-explore-dot span, .island-explore-dot span::after, .island-explore-caption { animation: none; }
 }
+
+/* Explore view exit: viewport layer above the controller so Back, a tap
+   anywhere or Escape always returns to the island. */
+.island-explore-exit-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.island-explore-exit-layer .island-explore-caption { cursor: default; }
+.island-explore-exit-layer__hint {
+  position: absolute;
+  top: max(84px, calc(env(safe-area-inset-top) + 76px));
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(6, 18, 34, 0.55);
+  color: #e6f4ff;
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+  animation: island-explore-hint 3.2s ease-out 1.2s both;
+}
+@keyframes island-explore-hint { 0% { opacity: 0; } 15%, 70% { opacity: 1; } 100% { opacity: 0; } }

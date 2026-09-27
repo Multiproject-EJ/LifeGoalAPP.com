@@ -13,6 +13,7 @@ import {createIsland001FirstArrival} from './Island001FirstArrival';
 import { createIslandDepartureCinematic } from './IslandDepartureCinematic';
 import { buildIsland40PlaceholderLandmark, createIsland40PlaceholderWorld, ISLAND_40_PLACEHOLDER_LABEL } from './Island40PlaceholderThreeWorld';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './Island19WonderRide.css';
 import './Island40Placeholder.css';
 import {createAssemblySeaGeometry} from './Island1V2Terrain';
@@ -3928,6 +3929,16 @@ export default function Island5ThreePilot({
   const onExplorePointChangeRef = useRef(onExplorePointChange);
   onExplorePointChangeRef.current = onExplorePointChange;
   useEffect(() => { onExplorePointChangeRef.current?.(activeExplorePointId); }, [activeExplorePointId]);
+  useEffect(() => {
+    if (!activeExplorePointId) return undefined;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      exploreRequestRef.current = { kind: 'exit' };
+      setActiveExplorePointId(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [activeExplorePointId]);
   const greatHoneyfallPresentationRef = useRef(greatHoneyfallPresentation);
   greatHoneyfallPresentationRef.current = greatHoneyfallPresentation;
   const stagedRestorationPresentationRef = useRef(stagedRestorationPresentation);
@@ -11600,12 +11611,20 @@ export default function Island5ThreePilot({
       {activeExplorePointId ? (() => {
         const point = explorePoints.find((entry) => entry.id === activeExplorePointId);
         if (!point) return null;
-        return (
-          <div className="island-explore-caption" role="status">
-            <span><small>🔭 Explore</small><strong>{point.label}</strong><em>{point.blurb}</em></span>
-            <button type="button" onClick={() => { exploreRequestRef.current = { kind: 'exit' }; setActiveExplorePointId(null); }}>Back</button>
+        const exitExplore = () => { exploreRequestRef.current = { kind: 'exit' }; setActiveExplorePointId(null); };
+        // Viewport-level layer above the controller/footer: Back, a tap anywhere
+        // or Escape always returns to the island (the footer used to swallow Back).
+        const layer = (
+          <div className="island-explore-exit-layer" role="dialog" aria-label={`${point.label} view`} onClick={exitExplore}>
+            <div className="island-explore-caption" role="status">
+              <span><small>🔭 Explore</small><strong>{point.label}</strong><em>{point.blurb}</em></span>
+              <button type="button" autoFocus onClick={(event) => { event.stopPropagation(); exitExplore(); }}
+                onKeyDown={(event) => { if (event.key === 'Escape') exitExplore(); }}>Back</button>
+            </div>
+            <p className="island-explore-exit-layer__hint">Tap anywhere to return</p>
           </div>
         );
+        return typeof document === 'undefined' ? layer : createPortal(layer, document.body);
       })() : null}
       {!hasRenderedFrame ? (
         <div className="island-5-three-pilot__loading" role="status" aria-live="polite">
