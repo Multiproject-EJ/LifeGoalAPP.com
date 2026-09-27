@@ -32,13 +32,6 @@ export type CombinedJourneyLevelInput = {
    * (capped); a richer streak-based score is a later refinement.
    */
   habitConsistencyScore?: number;
-  /**
-   * Lifetime habit check-ins (one per habit per day). Small steps that move
-   * the life track every day, not just when a goal completes.
-   */
-  habitCheckIns?: number;
-  /** Lifetime "both tracks today" spark bonus XP (see twoTracksDaily). */
-  twoTracksSparkXp?: number;
 };
 
 export type CombinedJourneyLevelSummary = {
@@ -68,7 +61,6 @@ export const JOURNEY_XP_WEIGHTS = {
   perCurrentIslandPercent: 1, // up to 100 within the current island
   perCompletedGoal: 60,
   perConsistentHabit: 15,
-  perHabitCheckIn: 3,
 } as const;
 
 /** Habit consistency is capped so habit count cannot dominate the life side. */
@@ -132,8 +124,6 @@ export function deriveCombinedJourneyLevel(
   const currentIslandProgress = sanitizePercent(input.currentIslandProgressPercent);
   const completedGoals = sanitizeCount(input.completedGoals);
   const habitConsistency = Math.min(HABIT_CONSISTENCY_CAP, sanitizeCount(input.habitConsistencyScore));
-  const habitCheckIns = sanitizeCount(input.habitCheckIns);
-  const sparkXp = sanitizeCount(input.twoTracksSparkXp);
 
   const gameXp =
     islandsCompleted * JOURNEY_XP_WEIGHTS.perCompletedIsland +
@@ -141,12 +131,10 @@ export function deriveCombinedJourneyLevel(
     currentIslandProgress * JOURNEY_XP_WEIGHTS.perCurrentIslandPercent;
   const lifeXp =
     completedGoals * JOURNEY_XP_WEIGHTS.perCompletedGoal +
-    habitConsistency * JOURNEY_XP_WEIGHTS.perConsistentHabit +
-    habitCheckIns * JOURNEY_XP_WEIGHTS.perHabitCheckIn;
+    habitConsistency * JOURNEY_XP_WEIGHTS.perConsistentHabit;
 
   const balanceMultiplier = computeBalanceMultiplier(gameXp, lifeXp);
-  // The spark is already the "both tracks" reward, so it sits outside the multiplier.
-  const milestoneXp = normalizeJourneyXp(Math.round((gameXp + lifeXp) * balanceMultiplier) + sparkXp);
+  const milestoneXp = normalizeJourneyXp(Math.round((gameXp + lifeXp) * balanceMultiplier));
   const xp = Math.max(milestoneXp, normalizeJourneyXp(input.earnedXpFloor));
 
   const level = levelForXp(xp);

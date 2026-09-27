@@ -20,7 +20,6 @@ import {
 } from '../features/gamification/level-worlds/services/islandRunControllerVisualContract';
 import { LivingController } from '../features/gamification/level-worlds/components/living-controller/LivingController';
 import type { ControllerMenuFaces } from '../features/gamification/level-worlds/components/living-controller/renderer';
-import type { TwoTracksToday } from '../features/gamification/level-worlds/services/twoTracksDaily';
 
 /**
  * Presentational-only memory of the last island the dual-track ladder was shown for,
@@ -127,12 +126,6 @@ type GameBoardOverlayProps = {
   rankLevel?: number;
   /** When true, the spine rank node pulses to signal an unacknowledged promotion. */
   rankHasPendingPromotion?: boolean;
-  /** Today's "both tracks" check; null while today's habit logs load. */
-  twoTracksToday?: TwoTracksToday | null;
-  /** Lifetime spark XP (feeds the Combined Journey Level). */
-  twoTracksSparkXp?: number;
-  /** Called once today's spark animation has played. */
-  onTwoTracksSparkSeen?: () => void;
 };
 
 type DualTrackColumnProps = {
@@ -246,138 +239,12 @@ function DualTrackColumn({ title, subtitle, tone, cards }: DualTrackColumnProps)
               <span className="game-board-overlay__milestone-kicker">{card.progressLabel}</span>
               <strong>{card.title}</strong>
               <span>{card.subtitle}</span>
-              {card.steps ? (
-                <span className="game-board-overlay__milestone-steps" aria-label={card.steps.label}>
-                  <span className="game-board-overlay__milestone-steps-pips" aria-hidden="true">
-                    {Array.from({ length: Math.min(card.steps.total, 8) }, (_, index) => (
-                      <i key={index} className={index < card.steps!.done ? 'is-done' : undefined} />
-                    ))}
-                  </span>
-                  <span className="game-board-overlay__milestone-steps-label" aria-hidden="true">{card.steps.label}</span>
-                </span>
-              ) : null}
             </span>
             <span className="game-board-overlay__milestone-reward">{card.rewardPreviewLabel}</span>
           </div>
         ))}
       </div>
     </section>
-  );
-}
-
-type JourneyHubProps = {
-  level: number;
-  progressPercent: number;
-  nextThresholdLevel: number;
-  journeyChest?: JourneyChestClaimViewModel | null;
-  journeyChestPending: boolean;
-  journeyChestFeedback?: string | null;
-  onClaimJourneyChest?: (thresholdLevel: number) => void;
-  onOpenRankJourney?: () => void;
-  today: TwoTracksToday | null;
-  sparkPlaying: boolean;
-};
-
-const HUB_RING_RADIUS = 44;
-const HUB_RING_LENGTH = 2 * Math.PI * HUB_RING_RADIUS;
-
-/** Centre of the climb: level ring, the next chest, and today's both-tracks check. */
-function JourneyHub({
-  level,
-  progressPercent,
-  nextThresholdLevel,
-  journeyChest,
-  journeyChestPending,
-  journeyChestFeedback,
-  onClaimJourneyChest,
-  onOpenRankJourney,
-  today,
-  sparkPlaying,
-}: JourneyHubProps) {
-  const claimable = journeyChest && journeyChest.claimableThreshold != null ? journeyChest : null;
-  const dash = (Math.min(100, Math.max(0, progressPercent)) / 100) * HUB_RING_LENGTH;
-  const ringLabel = `Combined Journey Level ${level}, ${progressPercent} percent to the level ${nextThresholdLevel} chest`;
-  const ring = (
-    <>
-      <svg className="game-board-overlay__hub-ring-svg" viewBox="0 0 100 100" aria-hidden="true">
-        <circle className="game-board-overlay__hub-ring-track" cx="50" cy="50" r={HUB_RING_RADIUS} />
-        <circle
-          className="game-board-overlay__hub-ring-fill"
-          cx="50"
-          cy="50"
-          r={HUB_RING_RADIUS}
-          strokeDasharray={`${dash} ${HUB_RING_LENGTH}`}
-        />
-      </svg>
-      <span className="game-board-overlay__hub-level" aria-hidden="true">
-        <span>Lv</span>
-        <strong>{level}</strong>
-      </span>
-    </>
-  );
-  const dailyLabel = !today
-    ? 'Habit + roll today'
-    : today.bothDone
-      ? `Both tracks today${today.streak > 1 ? ` · 🔥${today.streak}` : ''}`
-      : today.lifeDone
-        ? 'Now roll or build'
-        : today.gameDone
-          ? 'Now check in a habit'
-          : 'Habit + roll today';
-
-  return (
-    <div
-      className={`game-board-overlay__hub${sparkPlaying ? ' game-board-overlay__hub--spark' : ''}${
-        today?.bothDone ? ' game-board-overlay__hub--both' : ''
-      }`}
-    >
-      {onOpenRankJourney ? (
-        <button type="button" className="game-board-overlay__hub-ring" onClick={onOpenRankJourney} aria-label={`${ringLabel}. Open rank journey`}>
-          {ring}
-        </button>
-      ) : (
-        <span className="game-board-overlay__hub-ring" role="img" aria-label={ringLabel}>{ring}</span>
-      )}
-      {claimable ? (
-        <button
-          type="button"
-          className="game-board-overlay__hub-chest game-board-overlay__hub-chest--ready"
-          onClick={() => onClaimJourneyChest?.(claimable.claimableThreshold as number)}
-          disabled={journeyChestPending}
-          aria-label={`${claimable.ctaLabel}: ${claimable.rewardPreviewLabel}`}
-        >
-          <span aria-hidden="true">🎁</span>
-          <span>{journeyChestPending ? 'Claiming…' : claimable.rewardPreviewLabel}</span>
-        </button>
-      ) : (
-        <span className="game-board-overlay__hub-chest" aria-label={`Next chest at level ${nextThresholdLevel}`}>
-          <span aria-hidden="true">🎁</span>
-          <span aria-hidden="true">Lv {nextThresholdLevel}</span>
-        </span>
-      )}
-      {journeyChestFeedback ? (
-        <span className="game-board-overlay__hub-feedback" role="status">{journeyChestFeedback}</span>
-      ) : null}
-      <span
-        className="game-board-overlay__hub-daily"
-        role="status"
-        aria-label={`Today: life track ${today?.lifeDone ? 'done' : 'not yet'}, game track ${today?.gameDone ? 'done' : 'not yet'}.`}
-      >
-        <span className="game-board-overlay__hub-daily-dots" aria-hidden="true">
-          <i className={`is-life${today?.lifeDone ? ' is-done' : ''}`}>🌱</i>
-          <b />
-          <i className={`is-game${today?.gameDone ? ' is-done' : ''}`}>🎲</i>
-        </span>
-        <span className="game-board-overlay__hub-daily-label" aria-hidden="true">{dailyLabel}</span>
-      </span>
-      {sparkPlaying ? (
-        <>
-          <span className="game-board-overlay__spark game-board-overlay__spark--life" aria-hidden="true" />
-          <span className="game-board-overlay__spark game-board-overlay__spark--game" aria-hidden="true" />
-          <span className="game-board-overlay__spark-xp" aria-hidden="true">+{today?.sparkXpToday ?? 0} XP ✦</span>
-        </>
-      ) : null}
-    </div>
   );
 }
 
@@ -410,37 +277,12 @@ export function GameBoardOverlay({
   rankProgress,
   rankLevel,
   rankHasPendingPromotion = false,
-  twoTracksToday = null,
-  twoTracksSparkXp,
-  onTwoTracksSparkSeen,
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const [isRankJourneyOpen, setIsRankJourneyOpen] = useState(false);
   const [isLadderClimbing, setIsLadderClimbing] = useState(false);
   const [climbDelta, setClimbDelta] = useState(0);
-  const [isSparkPlaying, setIsSparkPlaying] = useState(false);
-
-  // Today's spark plays once, after the track doors have closed, then is marked seen.
-  // Keyed to the open animation (not mount) so a slow first paint can't swallow it,
-  // and the "seen" timer only starts once the spark is actually on screen.
-  const sparkPending = Boolean(isOpen && isAnimating && twoTracksToday?.sparkPending);
-  useEffect(() => {
-    if (!sparkPending) return;
-    let done: ReturnType<typeof setTimeout> | undefined;
-    const start = setTimeout(() => {
-      setIsSparkPlaying(true);
-      done = setTimeout(() => {
-        setIsSparkPlaying(false);
-        onTwoTracksSparkSeen?.();
-      }, 2400);
-    }, 1150);
-    return () => {
-      clearTimeout(start);
-      if (done) clearTimeout(done);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sparkPending]);
 
   useEffect(() => {
     if (isOpen) {
@@ -507,7 +349,6 @@ export function GameBoardOverlay({
     realLife,
     islandJourneyProgress,
     earnedXpFloor,
-    twoTracksSparkXp,
   });
   const { collectedCount, totalCount } = dualTrackViewModel.gameProgress;
   const gameTrackSubtitle = collectedCount > 0
@@ -646,13 +487,22 @@ export function GameBoardOverlay({
                       rankHasPendingPromotion ? ' New rank earned.' : ''
                     } Open rank journey`}
                   >
-                    <span className="game-board-overlay__rank-extension-badge" aria-hidden="true">
-                      <RankBadge rank={currentRank} size={46} />
+                    <span className="game-board-overlay__rank-extension-flip" aria-hidden="true">
+                      <span className="game-board-overlay__rank-extension-flip-face game-board-overlay__rank-extension-flip-face--front">
+                        <span className="game-board-overlay__rank-extension-level">
+                          <span>Lv</span>
+                          <strong>{dualTrackViewModel.journeyLevel.level}</strong>
+                        </span>
+                      </span>
+                      <span className="game-board-overlay__rank-extension-flip-face game-board-overlay__rank-extension-flip-face--back">
+                        <RankBadge rank={currentRank} size={46} />
+                      </span>
                     </span>
                   </button>
                 ) : (
                   <span className="game-board-overlay__rank-extension-level" aria-hidden="true">
-                    <strong>✦</strong>
+                    <span>Lv</span>
+                    <strong>{dualTrackViewModel.journeyLevel.level}</strong>
                   </span>
                 )}
               </div>
@@ -682,25 +532,39 @@ export function GameBoardOverlay({
                 role="img"
                 aria-label={`Combined Journey Level ${dualTrackViewModel.journeyLevel.level}, ${dualTrackViewModel.journeyLevel.progressPercentToNextLevel} percent to ${dualTrackViewModel.journeyLevel.nextChestLabel}`}
               >
+                <span className="game-board-overlay__progress-spine-label" aria-hidden="true">{dualTrackViewModel.centerSpine.label}</span>
+                <span className="game-board-overlay__progress-spine-orb" aria-hidden="true">
+                  {dualTrackViewModel.centerSpine.icon}
+                </span>
                 <span className="game-board-overlay__progress-spine-rail" aria-hidden="true">
                   <span
                     className="game-board-overlay__progress-spine-fill"
                     style={{ height: `${dualTrackViewModel.centerSpine.progressPercent}%` }}
                   />
                 </span>
+                <span className="game-board-overlay__progress-spine-caption" aria-hidden="true">
+                  {dualTrackViewModel.journeyLevel.nextChestLabel}
+                </span>
+                {journeyChest && journeyChest.claimableThreshold != null ? (
+                  <button
+                    type="button"
+                    className="game-board-overlay__progress-spine-chest"
+                    onClick={() => onClaimJourneyChest?.(journeyChest.claimableThreshold as number)}
+                    disabled={journeyChestPending}
+                    aria-label={`${journeyChest.ctaLabel}: ${journeyChest.rewardPreviewLabel}`}
+                  >
+                    <span className="game-board-overlay__progress-spine-chest-icon" aria-hidden="true">🎁</span>
+                    <span className="game-board-overlay__progress-spine-chest-label">
+                      {journeyChestPending ? 'Claiming…' : journeyChest.rewardPreviewLabel}
+                    </span>
+                  </button>
+                ) : null}
+                {journeyChestFeedback ? (
+                  <span className="game-board-overlay__progress-spine-chest-feedback" role="status">
+                    {journeyChestFeedback}
+                  </span>
+                ) : null}
               </div>
-              <JourneyHub
-                level={dualTrackViewModel.journeyLevel.level}
-                progressPercent={dualTrackViewModel.journeyLevel.progressPercentToNextLevel}
-                nextThresholdLevel={dualTrackViewModel.journeyLevel.nextThresholdLevel}
-                journeyChest={journeyChest}
-                journeyChestPending={journeyChestPending}
-                journeyChestFeedback={journeyChestFeedback}
-                onClaimJourneyChest={onClaimJourneyChest}
-                onOpenRankJourney={currentRank && rankProgress ? () => setIsRankJourneyOpen(true) : undefined}
-                today={twoTracksToday}
-                sparkPlaying={isSparkPlaying}
-              />
               <DualTrackColumn
                 title="GAME JOURNEY"
                 subtitle={gameTrackSubtitle}

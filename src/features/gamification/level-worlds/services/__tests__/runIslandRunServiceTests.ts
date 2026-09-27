@@ -185,7 +185,6 @@ import { islandExplorePointsTests } from './islandExplorePoints.test';
 import { crashReportsTests } from './crashReports.test';
 import { controllerArrivalStylesTests } from './controllerArrivalStyles.test';
 import { twoTracksControllerTests } from './twoTracksController.test';
-import { twoTracksDailyTests } from './twoTracksDaily.test';
 import { islandRunMissionMessageTests } from './islandRunMissionMessage.test';
 import { islandRunDepartureCinematicTests } from './islandRunDepartureCinematic.test';
 import { islandCameraOcclusionTests } from './islandCameraOcclusion.test';
@@ -453,7 +452,6 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'crashReports', tests: crashReportsTests },
   { label: 'controllerArrivalStyles', tests: controllerArrivalStylesTests },
   { label: 'twoTracksController', tests: twoTracksControllerTests },
-  { label: 'twoTracksDaily', tests: twoTracksDailyTests },
   { label: 'islandRunMissionMessage', tests: islandRunMissionMessageTests },
   { label: 'islandRunDepartureCinematic', tests: islandRunDepartureCinematicTests },
   { label: 'islandCameraOcclusion', tests: islandCameraOcclusionTests },

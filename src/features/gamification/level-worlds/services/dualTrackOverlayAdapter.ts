@@ -1,5 +1,5 @@
 import { getIslandDisplayName } from './islandNames';
-import { deriveCombinedJourneyLevel, JOURNEY_XP_WEIGHTS, type CombinedJourneyLevelInput } from './combinedJourneyLevel';
+import { deriveCombinedJourneyLevel, type CombinedJourneyLevelInput } from './combinedJourneyLevel';
 import { buildIslandJourneyMilestones, type IslandJourneyProgress } from './islandJourneyMilestones';
 
 export type DualTrackMilestonePosition = 'achieved' | 'current' | 'next' | 'locked';
@@ -20,8 +20,6 @@ export type DualTrackMilestoneCard = {
   islandNumber?: number;
   /** Optional presentational artwork used by visual milestone cards. */
   imageSrc?: string;
-  /** Today's small steps on this rung (life track: habit check-ins). */
-  steps?: { done: number; total: number; label: string };
 };
 
 export type DualTrackOverlayViewModel = {
@@ -84,10 +82,6 @@ export type DualTrackRealLifeInput = {
   isAuthenticated?: boolean;
   goals?: DualTrackRealLifeGoalInput[];
   habits?: DualTrackRealLifeHabitInput[];
-  /** Distinct habits checked in today. */
-  habitCheckInsToday?: number;
-  /** Lifetime habit check-ins; each one is a small step on the life track. */
-  habitCheckInsTotal?: number;
 };
 
 type BuildDualTrackOverlayViewModelInput = {
@@ -98,8 +92,6 @@ type BuildDualTrackOverlayViewModelInput = {
   rewardBarProgress?: number;
   rewardBarThreshold?: number;
   realLife?: DualTrackRealLifeInput;
-  /** Lifetime "both tracks today" spark XP from the daily ledger. */
-  twoTracksSparkXp?: number;
 };
 
 const REAL_LIFE_PLACEHOLDERS = [
@@ -290,25 +282,9 @@ function createRealLifeTrackFromData(realLife: DualTrackRealLifeInput): DualTrac
 function createRealLifeTrack(realLife?: DualTrackRealLifeInput): DualTrackMilestoneCard[] {
   if (realLife) {
     const fromData = createRealLifeTrackFromData(realLife);
-    if (fromData) return withTodaySteps(fromData, realLife);
+    if (fromData) return fromData;
   }
   return createRealLifePlaceholderTrack();
-}
-
-function countValidHabits(realLife?: DualTrackRealLifeInput): number {
-  return (realLife?.habits ?? []).filter((habit) => habit && typeof habit.title === 'string' && habit.title.trim()).length;
-}
-
-/** Today's habit check-ins shown as small steps on the current life rung. */
-function withTodaySteps(cards: DualTrackMilestoneCard[], realLife: DualTrackRealLifeInput): DualTrackMilestoneCard[] {
-  const total = countValidHabits(realLife);
-  if (total === 0) return cards;
-  const done = Math.min(total, Math.max(0, Math.floor(realLife.habitCheckInsToday ?? 0)));
-  const xp = done * JOURNEY_XP_WEIGHTS.perHabitCheckIn;
-  const label = done === 0
-    ? 'Check in a habit to step up today'
-    : `${done} of ${total} habit${total === 1 ? '' : 's'} today · +${xp} XP`;
-  return cards.map((card) => (card.position === 'current' ? { ...card, steps: { done, total, label } } : card));
 }
 
 function createRealLifePlaceholderTrack(): DualTrackMilestoneCard[] {
@@ -440,8 +416,6 @@ export function buildJourneyLevelInputFromOverlay(
     earnedXpFloor: input.earnedXpFloor,
     completedGoals: completedGoalCount,
     habitConsistencyScore: habitCount,
-    habitCheckIns: input.realLife?.habitCheckInsTotal,
-    twoTracksSparkXp: input.twoTracksSparkXp,
   };
 }
 

@@ -591,35 +591,6 @@ export async function listHabitStreaksV2(
 }
 
 /**
- * Lifetime count of completed habit check-ins (one log per habit per day).
- * Feeds the Two Tracks life track, which moves a small step per check-in.
- * Falls back to the last successful count when the cloud is unreachable.
- */
-export async function countHabitCheckInsV2(userId: string): Promise<number | null> {
-  const cacheKey = `habit_logs_v2_checkins:${userId}`;
-  if (userId === DEMO_USER_ID) {
-    const habitIds = getDemoHabitsForUser(userId).map((habit) => habit.id);
-    const today = new Date().toISOString().split('T')[0];
-    return getDemoHabitLogsForRange(habitIds, '2000-01-01', today).filter((log) => log.done).length;
-  }
-  if (!canUseSupabaseDataForUser(userId)) return null;
-
-  const supabase = getSupabaseClient();
-  const result = await guardedCloudCall('database', async () => {
-    const response = await supabase
-      .from('habit_logs_v2')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('done', true);
-    if (response.error) throw response.error;
-    return response.count ?? 0;
-  });
-  if (!result.ok) return readReadFallbackCache<number>(cacheKey);
-  writeReadFallbackCache(cacheKey, result.data);
-  return result.data;
-}
-
-/**
  * List habit logs for a specific habit within a date range.
  * Used for generating insights and heatmap visualizations.
  * 
