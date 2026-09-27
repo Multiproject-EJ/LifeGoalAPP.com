@@ -27,6 +27,15 @@
 .living-controller.is-ready .living-controller-multiplier{border-radius:999px;background:transparent!important;border:0!important;box-shadow:none!important;min-height:44px!important}
 .living-controller.is-ready .living-controller-multiplier>*{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .living-controller.is-ready .living-controller-multiplier:focus-visible{outline:2px solid #bdf3ff!important;outline-offset:2px}
-.living-controller:not(.is-ready){background:linear-gradient(145deg,#225072,#0b1e32);border-radius:28px}
-.living-controller:not(.is-ready) .living-controller-hit{color:#eafaff!important}.living-controller:not(.is-ready) .living-controller-hit span{position:static;width:auto;height:auto;clip-path:none;font-size:12px}
 @media(prefers-reduced-motion:reduce){.living-controller-dock,.living-controller-meter i{transition:none}}
+
+/* Loading: an energy pulse gathers where the controller will land, instead
+   of a half-built box of button names. The 3D controller then arrives with
+   its island's entrance (spin, bubble pop, rise, rocket, swoop). */
+.living-controller:not(.is-ready) .living-controller-hit,.living-controller:not(.is-ready) .living-controller-multiplier{opacity:0!important;pointer-events:none}
+.living-controller:not(.is-ready)::before,.living-controller:not(.is-ready)::after{content:'';position:absolute;left:50%;top:48%;border-radius:50%;pointer-events:none;translate:-50% -50%}
+.living-controller:not(.is-ready)::before{width:22%;aspect-ratio:1;background:radial-gradient(circle,#e9fbff 0,#7fe3ff 28%,#2aa8ff55 55%,#2aa8ff00 72%);filter:blur(1px);animation:living-controller-energy 1.1s ease-in-out infinite}
+.living-controller:not(.is-ready)::after{width:40%;aspect-ratio:1;border:2px solid #8fe7ff;box-shadow:0 0 18px #48caff,inset 0 0 14px #48caff88;animation:living-controller-energy-ring 1.1s ease-out infinite}
+@keyframes living-controller-energy{0%,100%{scale:.82;opacity:.75}50%{scale:1.08;opacity:1}}
+@keyframes living-controller-energy-ring{0%{scale:.35;opacity:.9}100%{scale:1.25;opacity:0}}
+@media (prefers-reduced-motion:reduce){.living-controller:not(.is-ready)::before,.living-controller:not(.is-ready)::after{animation:none}}

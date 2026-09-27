@@ -1809,9 +1809,8 @@
   background: #ff2d55 !important;
 }
 
-/* Two Tracks overlay uses the same living controller as the game. The dock
-   stays invisible until the 3D controller has rendered its first frame, then
-   rises in, so there is never a half-loaded controller on screen. */
+/* Two Tracks overlay uses the same living controller as the game, including
+   its loading pulse and arrival entrance. */
 .game-board-overlay__living-controller {
   position: absolute;
   left: 50%;
@@ -1819,15 +1818,6 @@
   width: min(calc(100% - 0.5rem), 560px);
   transform: translateX(-50%);
   z-index: 2;
-}
-.game-board-overlay__living-controller .living-controller {
-  opacity: 0;
-  transform: translateY(18%) scale(0.94);
-  transition: opacity 360ms ease-out, transform 620ms cubic-bezier(0.18, 1.2, 0.3, 1);
-}
-.game-board-overlay__living-controller .living-controller.is-ready {
-  opacity: 1;
-  transform: none;
 }
 .game-board-overlay__living-controller .game-board-overlay__controller-shell {
   position: relative;
@@ -1866,6 +1856,3 @@
   cursor: pointer;
 }
 .game-board-overlay__controller-extra:disabled { opacity: 0.5; cursor: default; }
-@media (prefers-reduced-motion: reduce) {
-  .game-board-overlay__living-controller .living-controller { transition: none; transform: none; }
-}
