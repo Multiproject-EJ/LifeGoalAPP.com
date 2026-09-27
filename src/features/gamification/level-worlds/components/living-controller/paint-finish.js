@@ -90,11 +90,11 @@ roughnessFactor=mix(.24,.34,grip)+brush*.025;
 }
 
 // A single thin-line, monochrome etched-metal family; no sticker outlines.
-export function drawEmblem(c,id,ink='#e9faff',metallic=false,glow=null){
+export function drawEmblem(c,id,ink='#e9faff',metallic=false,glow=null,glowBlur=14,alpha=1){
  c.save();c.translate(256,256);c.scale(3.8,3.8);
  const metal=c.createLinearGradient(-20,-35,20,38);metal.addColorStop(0,'#fff0c8');metal.addColorStop(.35,'#e2bf7b');metal.addColorStop(.55,'#ac8242');metal.addColorStop(1,'#efcf8e');
  c.strokeStyle=metallic?metal:ink;c.fillStyle=ink;c.lineWidth=metallic?4.8:3;c.lineCap='round';c.lineJoin='round';
- c.shadowColor=glow||'#0005';c.shadowBlur=glow?14:1.5;c.shadowOffsetY=glow?0:1;
+ c.globalAlpha=alpha;c.shadowColor=glow||'#0005';c.shadowBlur=glow?glowBlur:1.5;c.shadowOffsetY=glow?0:1;
  c.beginPath();
  if(id==='concord'){
   c.moveTo(-25,33);c.bezierCurveTo(-33,8,-8,-27,29,-34);c.bezierCurveTo(32,-8,7,23,-19,27);
@@ -111,5 +111,8 @@ export function drawEmblem(c,id,ink='#e9faff',metallic=false,glow=null){
   c.moveTo(-23,-14);c.lineTo(23,-14);c.lineTo(27,32);c.lineTo(-27,32);c.closePath();
   c.moveTo(-11,-9);c.lineTo(-11,-23);c.bezierCurveTo(-11,-40,11,-40,11,-23);c.lineTo(11,-9);
  }
- c.stroke();c.restore();
+ c.stroke();
+ // Neon strip: a second, tighter pass keeps the outline crisp inside its glow.
+ if(glow&&!metallic){c.shadowBlur=glowBlur*.4;c.stroke();}
+ c.restore();
 }
