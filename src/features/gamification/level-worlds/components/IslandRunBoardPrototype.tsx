@@ -778,6 +778,7 @@ import {
 } from '../dev/island5ThreePilotContract';
 import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } from '../dev/Island5ThreePilot';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
+import { ISLAND_DEPARTURE_FALLBACK_MS, shouldPlayIslandDepartureCinematic } from '../services/islandRunDepartureCinematic';
 
 // The legacy Island Mission narrative was designed around unsolicited story
 // interruptions. Keep its authored data for future reuse, but do not surface
@@ -2582,6 +2583,10 @@ export function IslandRunBoardPrototype({
   const [isBackgroundHidden, setIsBackgroundHidden] = useState(false);
   const [timeLeftSec, setTimeLeftSec] = useState(ISLAND_DURATION_SEC);
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
+  // Island departure cinematic (Island Complete, part B): ship folds, lifts
+  // off and streaks away before the travel overlay. Presentation only.
+  const [islandDeparture, setIslandDeparture] = useState<{ fromIsland: number; toIsland: number } | null>(null);
+  const islandDepartureFinishRef = useRef<(() => void) | null>(null);
   const [travelOverlayDestinationIsland, setTravelOverlayDestinationIsland] = useState(2);
   const [travelOverlayMode, setTravelOverlayMode] = useState<'advance' | 'retry'>('advance');
   const [isIslandTimerPendingStart, setIsIslandTimerPendingStart] = useState(false);
@@ -11835,10 +11840,10 @@ export function IslandRunBoardPrototype({
     setTravelOverlayDestinationIsland(nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland);
     setTravelOverlayMode('advance');
     setIsIslandClearCelebrationDeparting(true);
-    window.setTimeout(() => {
-      setShowIslandClearCelebration(false);
-      setIsIslandClearCelebrationDeparting(false);
+    const resolvedDestination = nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland;
+    const startTravel = () => {
       setShowTravelOverlay(true);
+      setIslandDeparture(null);
       window.setTimeout(() => {
         setShowTravelOverlay(false);
         void performIslandTravel(nextIsland, { startTimer: true, completedVisitKey: completion.visitKey }).then(() => {
@@ -11851,6 +11856,29 @@ export function IslandRunBoardPrototype({
           setLandingText('Departure could not finish. Your progress is safe — tap Finish Island to try again.');
         });
       }, 1400);
+    };
+    window.setTimeout(() => {
+      setShowIslandClearCelebration(false);
+      setIsIslandClearCelebrationDeparting(false);
+      if (!shouldPlayIslandDepartureCinematic({
+        hasThreeScene: shouldRenderIsland5Three,
+        reducedMotion: typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches),
+      })) {
+        startTravel();
+        return;
+      }
+      // Whichever comes first: the scene finishing, Skip, or the fallback.
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        islandDepartureFinishRef.current = null;
+        window.clearTimeout(fallback);
+        startTravel();
+      };
+      const fallback = window.setTimeout(finish, ISLAND_DEPARTURE_FALLBACK_MS);
+      islandDepartureFinishRef.current = finish;
+      setIslandDeparture({ fromIsland: stats.islandNumber, toIsland: resolvedDestination });
     }, 760);
   };
 
@@ -14082,7 +14110,7 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
-  const missionOwnsController = worldMissionPresentationActive || firstArrivalActive
+  const missionOwnsController = worldMissionPresentationActive || firstArrivalActive || islandDeparture !== null
     || openingCeremonyPlayback !== null || isCompassBookCeremonyPlaying
     || moonwellThawActive || frostwellSequence.phase === 'drilling'
     || frostwellSequence.phase === 'commissioning' || isBuildSequenceActive;
@@ -16017,6 +16045,21 @@ export function IslandRunBoardPrototype({
                   >
                     🎉 Preview island celebration (dev)
                   </button>
+<button
+                    type="button"
+                    className="island-run-board__dev-island-jump-submit"
+                    onClick={() => {
+                      // Watch the departure without travelling: finish just clears it.
+                      setShowTopbarMenu(false);
+                      islandDepartureFinishRef.current = () => {
+                        islandDepartureFinishRef.current = null;
+                        setIslandDeparture(null);
+                      };
+                      setIslandDeparture({ fromIsland: islandNumber, toIsland: islandNumber + 1 });
+                    }}
+                  >
+                    🚀 Preview island departure (dev)
+                  </button>
                   <small className="island-run-board__dev-island-jump-hint">
                     {isDevIslandJumpTargetValid
                       ? 'First visit · mission, stops, egg and intros reset; creatures, wallet and dice are kept'
@@ -16425,7 +16468,7 @@ export function IslandRunBoardPrototype({
           }}
         /> : null}
         {shouldRenderIsland5Three ? (
-          <div className={`island-run-board__three-preview${firstArrivalActive ? " island-run-board__three-preview--arrival" : ""}`}>
+          <div className={`island-run-board__three-preview${firstArrivalActive || islandDeparture ? " island-run-board__three-preview--arrival" : ""}${islandDeparture ? " island-run-board__three-preview--departure" : ""}`}>
             <Suspense
               fallback={(
                 <div className="island-run-board__three-preview-loading" role="status">
@@ -16443,6 +16486,8 @@ export function IslandRunBoardPrototype({
                   setWelcomePackClaimError(null);setWelcomePackBundleOnlyResult(null);setShowWelcomePackModal(true);
                 }}
                 firstArrivalActive={firstArrivalActive}
+                departureCinematicActive={Boolean(islandDeparture)}
+                onDepartureCinematicComplete={() => islandDepartureFinishRef.current?.()}
                 celebrationOrbit={(showIslandClearCelebration && !isIslandClearCelebrationDeparting)
                   || activeLaunchedMinigameId === 'journey_disc_arena'}
                 onCelebrationSnapshot={setIslandBackdropSnapshotUrl}
@@ -16798,7 +16843,7 @@ export function IslandRunBoardPrototype({
 
       {/* Until the reward bar is revealed (First Light and gradual islands) the
           phone has no reward-bar slot, so it sits directly above the magnifier. */}
-      {!diplomaticRewardChannelVisible && (featureAccess.gradual || islandNumber === 1) ? (
+      {!islandDeparture && !diplomaticRewardChannelVisible && (featureAccess.gradual || islandNumber === 1) ? (
         <button
           type="button"
           className={`island-run-board__mission-phone-floating${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}`}
@@ -16812,15 +16857,17 @@ export function IslandRunBoardPrototype({
         </button>
       ) : null}
 
-      <button
-        type="button"
-        className="island-run-prototype__camera-reset-floating"
-        aria-label="Zoom out to the full island overview"
-        title="Full island overview"
-        onClick={resetCameraFromTopbarMenu}
-      >
-        🔎
-      </button>
+      {islandDeparture ? null : (
+        <button
+          type="button"
+          className="island-run-prototype__camera-reset-floating"
+          aria-label="Zoom out to the full island overview"
+          title="Full island overview"
+          onClick={resetCameraFromTopbarMenu}
+        >
+          🔎
+        </button>
+      )}
 
       {isVaultIslandUnlocked ? (
         <button
@@ -20363,6 +20410,13 @@ export function IslandRunBoardPrototype({
         <button type="button" className="island-run-dev-skip-intro" onClick={handleSkipDevFreshArrivalIntro} aria-label="Skip intro">
           Skip <span aria-hidden="true">⏭</span>
         </button>, document.body) : null}
+      {islandDeparture ? createPortal(
+        <div className="arrival-caption island-departure-caption" aria-label={`Leaving Island ${islandDeparture.fromIsland}`}>
+          <div className="arrival-caption__brand">HABITGAME / DEPARTURE</div>
+          <div className="arrival-caption__bottom"><div><small>ISLAND {String(islandDeparture.fromIsland).padStart(3, '0')} COMPLETE</small><h1>Next stop: Island {String(islandDeparture.toIsland).padStart(3, '0')}</h1></div>
+            <button type="button" onClick={() => islandDepartureFinishRef.current?.()}>Skip</button>
+          </div>
+        </div>, document.body) : null}
       {firstArrivalActive && !showWelcomePackModal ? createPortal(
         <div className="arrival-caption" aria-label="Your arrival on Island 001">
           <div className="arrival-caption__brand">HABITGAME / FIRST LIGHT</div>
