@@ -16,6 +16,7 @@ import {getConcordCollectedSlots, getConcordRewardedLines} from '../services/isl
 import {shouldPlayIsland001FirstArrival} from '../services/islandRunFirstArrival';
 import './Island001Arrival.css';
 import './LuckySpinTile.css';
+import { SKILL_BUILD_ISLAND_NUMBER } from '../services/precisionBuild';
 import {
   buildLuckySpinConfetti,
   LUCKY_SPIN_LAUNCH_OPEN_MS,
@@ -11750,10 +11751,10 @@ export function IslandRunBoardPrototype({
   };
 
   useEffect(() => {
-    if (devFreshArrivalBriefing && !firstArrivalActive && !pendingMissionBriefing && !activeMissionBriefing && !incomingMissionBriefing) {
+    if (devFreshArrivalBriefing && !firstArrivalActive && !pendingMissionBriefing && !activeMissionBriefing) {
       setDevFreshArrivalBriefing(null);
     }
-  }, [devFreshArrivalBriefing, firstArrivalActive, pendingMissionBriefing, activeMissionBriefing, incomingMissionBriefing]);
+  }, [devFreshArrivalBriefing, firstArrivalActive, pendingMissionBriefing, activeMissionBriefing]);
 
   const handleSkipDevFreshArrivalIntro = () => {
     if (firstArrivalActive) setFirstArrivalSkip(true);
@@ -19499,7 +19500,8 @@ export function IslandRunBoardPrototype({
           onBuildPartChoice={handleBuildPartChoice}
           onStartBuildHold={startBuildHoldFromPlayer}
           onStopBuildHold={stopBuildHold}
-          onPrecisionBuild={buildPrecisionStepFromPlayer}
+          // Skill build is Island 019's coaster build style; every other island holds to build.
+          onPrecisionBuild={islandNumber === SKILL_BUILD_ISLAND_NUMBER ? buildPrecisionStepFromPlayer : undefined}
         />
       )}
       {showBuildPanel && devBuildAllQuote && typeof document !== 'undefined' ? createPortal(
@@ -20701,7 +20703,9 @@ export function IslandRunBoardPrototype({
         document.body,
       ) : null}
 
-      {devFreshArrivalBriefing && (firstArrivalActive || pendingMissionBriefing || activeMissionBriefing || incomingMissionBriefing) ? createPortal(
+      {/* Only while an intro is playing or queued: an unopened phone message
+          must not leave the pill hovering over the controller. */}
+      {devFreshArrivalBriefing && (firstArrivalActive || pendingMissionBriefing || activeMissionBriefing) ? createPortal(
         <button type="button" className="island-run-dev-skip-intro" onClick={handleSkipDevFreshArrivalIntro} aria-label="Skip intro">
           Skip <span aria-hidden="true">⏭</span>
         </button>, document.body) : null}

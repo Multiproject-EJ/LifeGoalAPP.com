@@ -214,3 +214,44 @@
     animation-duration: 1ms;
   }
 }
+
+/* Build complete: glossy sky-blue pill in the controller/HUD family. */
+.bm2-back-to-island {
+  justify-self: center;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-width: min(100%, 16rem);
+  min-height: 3.1rem;
+  padding: 0.6rem 1.4rem;
+  border: 1px solid rgba(186, 236, 255, 0.85);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(180deg, #38bdf8, #0b6fb8 62%, #0a4f86);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 0 rgba(4, 38, 74, 0.45),
+    0 10px 24px rgba(3, 38, 76, 0.45), 0 0 18px rgba(56, 189, 248, 0.35);
+  color: #ffffff;
+  font-size: 1.02rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px rgba(4, 38, 74, 0.6);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.bm2-back-to-island:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -3px 0 rgba(4, 38, 74, 0.45),
+    0 12px 28px rgba(3, 38, 76, 0.5), 0 0 26px rgba(56, 189, 248, 0.55);
+}
+
+.bm2-back-to-island:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.bm2-back-to-island__icon {
+  font-size: 1.25rem;
+  filter: drop-shadow(0 1px 2px rgba(4, 38, 74, 0.55));
+}

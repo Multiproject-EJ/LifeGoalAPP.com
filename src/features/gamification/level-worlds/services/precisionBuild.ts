@@ -8,6 +8,9 @@
  * Pure presentation/pacing logic: it never grants or spends anything.
  */
 
+/** Skill build is the build style of Island 019's roller-coaster construction only. */
+export const SKILL_BUILD_ISLAND_NUMBER = 19;
+
 /** Tolerance knobs (degrees of arc the player may hit). */
 export const PRECISION_BUILD_START_ZONE_DEG = 72;
 export const PRECISION_BUILD_MIN_ZONE_DEG = 26;
