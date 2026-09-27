@@ -956,7 +956,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assertEqual(FISHERMANS_VILLAGE_ROD_TILE_INDICES.length, 6, 'six rod stations ship around the route');
       (['hatchery', 'habit', 'mystery', 'wisdom'] as const).forEach((expandedActiveStopId) => {
         const map = applyLandmarkDoorTiles(
-          generateTileMap(16, getIslandRarity(16), 'fishermans-village', 2),
+          generateTileMap(6, getIslandRarity(6), 'fishermans-village', 2),
           { expandedActiveStopId },
         );
         FISHERMANS_VILLAGE_ROD_TILE_INDICES.forEach((index) => {
@@ -970,16 +970,16 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     name: 'Every Fisherman’s Village rod landing equips the rod and immediately hooks a catch',
     run: () => {
       const first = collectFishermansVillageLanding({
-        ledger: {}, islandNumber: 16, cycleIndex: 0,
+        ledger: {}, islandNumber: 6, cycleIndex: 0,
         tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 10, randomValue: 0.7,
       });
       assertEqual(first.rodCollected, true, 'first rod landing equips the reusable rod');
       assertEqual(first.pendingCatch?.kind, 'medium', 'first rod landing also starts the fishing sequence');
-      const key = getIslandRunSignatureMissionKey(0, 16);
+      const key = getIslandRunSignatureMissionKey(0, 6);
       const firstProgress = resolveFishermansVillageFishingProgress({ ledger: first.ledger, cycleIndex: 0 });
       const second = collectFishermansVillageLanding({
         ledger: { ...first.ledger, [key]: { ...firstProgress, pendingCatch: null } },
-        islandNumber: 16, cycleIndex: 0,
+        islandNumber: 6, cycleIndex: 0,
         tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[1], nowMs: 12, randomValue: 0.7,
       });
       assertEqual(second.rodCollected, false, 'later rod landings reuse the equipped rod');
@@ -1022,19 +1022,19 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const session = makeSession();
       const base = readIslandRunGameStateRecord(session);
       const prepared = collectFishermansVillageLanding({
-        ledger: {}, islandNumber: 16, cycleIndex: 0,
+        ledger: {}, islandNumber: 6, cycleIndex: 0,
         tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 10, randomValue: 0.95,
       });
       await writeIslandRunGameStateRecord({
         session, client: null,
-        record: { ...base, currentIslandNumber: 16, signatureMissionProgressByIsland: prepared.ledger },
+        record: { ...base, currentIslandNumber: 6, signatureMissionProgressByIsland: prepared.ledger },
       });
       refreshIslandRunStateFromLocal(session);
       const result = await releaseFishermansVillageCatch({ session, client: null, reason: 'escaped' });
       assertEqual(result.status, 'ok', 'escape is committed through the mission action boundary');
       const progress = resolveFishermansVillageFishingProgress({
         ledger: readIslandRunGameStateRecord(session).signatureMissionProgressByIsland,
-        islandNumber: 16,
+        islandNumber: 6,
         cycleIndex: 0,
       });
       assertEqual(progress.pendingCatch, null, 'an escaped fish cannot reopen after reload');
@@ -1050,7 +1050,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       installWindowWithStorage(createMemoryStorage());
       const session = makeSession();
       const base = readIslandRunGameStateRecord(session);
-      const key = getIslandRunSignatureMissionKey(0, 16);
+      const key = getIslandRunSignatureMissionKey(0, 6);
       const prepared = collectFishermansVillageLanding({
         ledger: {
           [key]: {
@@ -1060,7 +1060,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
             repairCompletedAtMs: null, completedAtMs: null, updatedAtMs: 4,
           },
         },
-        islandNumber: 16, cycleIndex: 0,
+        islandNumber: 6, cycleIndex: 0,
         tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[1], nowMs: 5, randomValue: 0,
       });
       assertEqual(prepared.pendingCatch?.kind, 'colossal', 'fifth successful catch is the authored shock catch');
@@ -1068,7 +1068,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       assertEqual(prepared.pendingCatch?.pullsRequired, 10, 'the monster catch gets a full ten-pull tension sequence');
       await writeIslandRunGameStateRecord({
         session, client: null,
-        record: { ...base, currentIslandNumber: 16, signatureMissionProgressByIsland: prepared.ledger },
+        record: { ...base, currentIslandNumber: 6, signatureMissionProgressByIsland: prepared.ledger },
       });
       refreshIslandRunStateFromLocal(session);
       const result = await reelFishermansVillageCatch({ session, client: null });
@@ -1109,7 +1109,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
   {
     name: 'staged restoration routes are unique, collision-free, and correctly sized on every authored island',
     run: () => {
-      [4, 6, 7, 8, 9, 17, 18, 19, 20].forEach((islandNumber) => {
+      [4, 7, 8, 9, 16, 17, 18, 19, 20].forEach((islandNumber) => {
         const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
         assert(Boolean(descriptor), `Island ${islandNumber} has a staged mission descriptor`);
         if (!descriptor) return;

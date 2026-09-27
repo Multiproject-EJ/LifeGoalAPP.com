@@ -87,7 +87,7 @@ export const islandArtManifestTests: TestCase[] = [
         );
       }
       assertEqual(
-        getIslandBackgroundImageSrc(6),
+        getIslandBackgroundImageSrc(16),
         '/assets/islands/island-006/background/PLACEHOLDER__ambient-background.svg',
         'Expected islands without checked-in WebP assets to keep the existing text placeholder fallback',
       );

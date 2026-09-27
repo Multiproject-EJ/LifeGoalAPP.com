@@ -38,9 +38,9 @@ export const islandRunCompletionTests: TestCase[] = [
         12: { missionId: 'sunken-sands-first-treasure', rollsCompleted: 20, claimedAtMs: 1 },
         13: { missionId: 'cactus-canyon-spiral-rail', version: 2, segmentsExcavated: 16, dynamiteEarned: 16, dynamiteSpent: 16 },
         14: { missionId: 'great-honeyfall-coronation', activatedReservoirs: 4 },
-        16: { missionId: 'fishermans-village-fishing', fishCaughtKg: 100, rodCollectedAtMs: 1 },
+        6: { missionId: 'fishermans-village-fishing', fishCaughtKg: 100, rodCollectedAtMs: 1 },
       };
-      for (const island of [4, 6, 7, 8, 9, 17, 18, 19]) {
+      for (const island of [4, 7, 8, 9, 16, 17, 18, 19]) {
         const descriptor = getStagedRestorationMissionDescriptor(island)!;
         missions[island] = { missionId: descriptor.missionId, activatedStages: descriptor.stageCount,
           chargesEarned: descriptor.stageCount * descriptor.chargeCostPerStage, completedAtMs: 1 };

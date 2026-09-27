@@ -564,14 +564,14 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 016 rod landing equips the rod and persists a hooked catch in the same roll',
+    name: 'Island 006 rod landing equips the rod and persists a hooked catch in the same roll',
     run: async () => {
       resetEnvironment();
       seedState({
         runtimeVersion: 0,
         dicePool: 30,
         tokenIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0] - 2,
-        currentIslandNumber: 16,
+        currentIslandNumber: 6,
         cycleIndex: 0,
       });
       const rod = await withMockedRandom([0, 0, 0.7], () => executeIslandRunRollAction({

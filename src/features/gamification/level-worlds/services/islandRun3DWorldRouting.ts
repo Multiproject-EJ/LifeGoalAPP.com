@@ -22,7 +22,10 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   { runtimeIslandNumber: 3, worldSourceNumber: 3, role: 'ordinary' },
   { runtimeIslandNumber: 4, worldSourceNumber: 4, role: 'ordinary' },
   { runtimeIslandNumber: 5, worldSourceNumber: 5, role: 'arena' },
-  { runtimeIslandNumber: 6, worldSourceNumber: 6, role: 'ordinary' },
+  // Eivind moved Fisherman's Village (source 022) forward to runtime Island 006
+  // so it comes right before the underwater Island 007; Moonveil Nexus
+  // (source 006) moved to runtime Island 016. Both are Disc Arena cadence islands.
+  { runtimeIslandNumber: 6, worldSourceNumber: 22, role: 'ordinary' },
   { runtimeIslandNumber: 7, worldSourceNumber: 7, role: 'ordinary' },
   // The Living Compass is now the Island 008 revelation. Source numbers remain
   // stable authored-pack identities, while runtime numbers own progression.
@@ -38,10 +41,8 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   { runtimeIslandNumber: 14, worldSourceNumber: 14, role: 'ordinary' },
   { runtimeIslandNumber: 18, worldSourceNumber: 8, role: 'ordinary' },
   { runtimeIslandNumber: 19, worldSourceNumber: 19, role: 'ordinary' },
-  // Eivind explicitly promoted the completed Fisherman's Village pack into
-  // runtime Island 016. Source 022 remains an internal visual-pack identity;
-  // runtime progression, story, persistence and PWA copy all use Island 016.
-  { runtimeIslandNumber: 16, worldSourceNumber: 22, role: 'ordinary' },
+  // Moonveil Nexus now plays at runtime Island 016 (swapped with Fisherman's Village).
+  { runtimeIslandNumber: 16, worldSourceNumber: 6, role: 'ordinary' },
   // The supplied concept image contains a baked Island 043 label, but runtime
   // Island 020 owns this authored Lava Labyrinth world and its Arena cadence.
   { runtimeIslandNumber: 20, worldSourceNumber: 20, role: 'arena' },

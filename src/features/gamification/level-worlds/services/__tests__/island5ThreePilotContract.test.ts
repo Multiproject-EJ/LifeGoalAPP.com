@@ -242,7 +242,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
     run: () => {
       const missions = [
         { islandNumber: 4 as const, stageCount: 3 },
-        { islandNumber: 6 as const, stageCount: 5 },
+        { islandNumber: 16 as const, stageCount: 5 },
         { islandNumber: 7 as const, stageCount: 4 },
         { islandNumber: 9 as const, stageCount: 8 },
         { islandNumber: 18 as const, stageCount: 5 },

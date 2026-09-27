@@ -634,6 +634,7 @@ import {
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
   resolveStagedRestorationMissionProgress,
+  FISHERMANS_VILLAGE_ISLAND_NUMBER,
 } from '../services/islandRunSignatureMissions';
 import {
   type IslandMissionBriefingTrigger,
@@ -3744,7 +3745,7 @@ export function IslandRunBoardPrototype({
   const fishermansFishingProgress = useMemo(() => resolveFishermansVillageFishingProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
-    islandNumber: 16,
+    islandNumber: FISHERMANS_VILLAGE_ISLAND_NUMBER,
   }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
   const rootheartPowerworksProgress = useMemo(() => resolveRootheartPowerworksProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
@@ -6175,7 +6176,7 @@ export function IslandRunBoardPrototype({
           ? { ...entry, signatureMissionKind: undefined }
           : entry);
       }
-      if (islandNumber !== 16 || fishermansFishingProgress.completedAtMs === null) return applied;
+      if (islandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER || fishermansFishingProgress.completedAtMs === null) return applied;
       return applied.map((entry) => entry.signatureMissionKind === 'fishermans_rod'
         ? { ...entry, signatureMissionKind: undefined }
         : entry);
@@ -14267,7 +14268,7 @@ export function IslandRunBoardPrototype({
   }, [fishingCatchCelebration]);
   useEffect(() => {
     if (
-      islandNumber !== 16
+      islandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER
       || !fishermansFishingProgress.pendingCatch
       || showFishermansFishing
       || doesModalOwnAttention
@@ -14286,7 +14287,7 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timer);
   }, [doesModalOwnAttention, fishermansFishingProgress.pendingCatch, islandNumber, showFishermansFishing]);
   useEffect(() => {
-    if (islandNumber !== 16 || fishermansFishingProgress.dragonTriggeredAtMs === null) return undefined;
+    if (islandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER || fishermansFishingProgress.dragonTriggeredAtMs === null) return undefined;
     const startDragon = () => {
       setShowFishermansFishing(false);
       setFishingPhase('off');
@@ -16513,7 +16514,7 @@ export function IslandRunBoardPrototype({
             </div>
           </button>
 
-          {islandNumber === 16 && fishermansFishingProgress.fishCaughtKg > 0 ? (
+          {islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER && fishermansFishingProgress.fishCaughtKg > 0 ? (
             <div
               className={`fishermans-fishing-mini${fishingCatchCelebration ? ' fishermans-fishing-mini--catch' : ''}`}
               role="progressbar"
@@ -16912,10 +16913,10 @@ export function IslandRunBoardPrototype({
                 onAssemblyMeetingComplete={isIslandVisualPreview ? undefined : openAssemblyMandate}
                 onExplorePointChange={(id) => setExploreViewActive(id !== null)}
                 fishermansFishingPresentation={{
-                  fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === 16
+                  fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
                     ? FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG
                     : fishermansFishingProgress.fishCaughtKg,
-                  previewElapsedSeconds: isIslandVisualPreview && islandArtPreviewNumber === 16
+                  previewElapsedSeconds: isIslandVisualPreview && islandArtPreviewNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
                     ? 8.4
                     : dragonCinematicStartedAtMs === null
                       ? resolveFishermansDragonElapsedSeconds({
@@ -21596,7 +21597,7 @@ export function IslandRunBoardPrototype({
         );
       })()}
 
-      {islandNumber === 16 && fishingCatchCelebration && typeof document !== 'undefined' ? createPortal((
+      {islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER && fishingCatchCelebration && typeof document !== 'undefined' ? createPortal((
         <aside
           key={fishingCatchCelebration.catchId}
           className="fishermans-catch-celebration"

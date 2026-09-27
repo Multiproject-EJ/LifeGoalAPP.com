@@ -6,7 +6,7 @@ import type { Island3DQuality } from './island5ThreePilotContract';
 export interface IslandStagedRestorationPresentation {
   titanAwakening?: TitanAwakening;
   titanInspectionOpen?: boolean;
-  islandNumber: 4 | 6 | 7 | 8 | 9 | 17 | 18 | 19 | 20;
+  islandNumber: 4 | 7 | 8 | 9 | 16 | 17 | 18 | 19 | 20;
   activatedStages: number;
   stageCount: number;
   constructionSequence?: number;
@@ -22,9 +22,9 @@ export interface IslandStagedRestorationThreeRuntime {
 
 type Palette = { primary: number; secondary: number; glow: number; dark: number };
 
-const PALETTES: Record<4 | 6 | 7 | 8 | 9 | 18 | 19, Palette> = {
+const PALETTES: Record<4 | 7 | 8 | 9 | 16 | 18 | 19, Palette> = {
   4: { primary: 0xf5d083, secondary: 0xb88340, glow: 0xffe9a3, dark: 0x382716 },
-  6: { primary: 0xdad8ff, secondary: 0x7d70df, glow: 0xb9f4ff, dark: 0x171237 },
+  16: { primary: 0xdad8ff, secondary: 0x7d70df, glow: 0xb9f4ff, dark: 0x171237 },
   7: { primary: 0x8df4ff, secondary: 0x3aa8cc, glow: 0xd5ffff, dark: 0x082a3a },
   8: { primary: 0x6e8466, secondary: 0xb78b35, glow: 0x54f5a0, dark: 0x172c20 },
   9: { primary: 0xffa126, secondary: 0xb83d18, glow: 0xffee8a, dark: 0x341008 },
@@ -253,7 +253,7 @@ function createWonderCircuitStage(index: number, materials: Record<string, THREE
 }
 
 export function createIslandStagedRestorationThreePresentation(options: {
-  islandNumber: 4 | 6 | 7 | 8 | 9 | 18 | 19;
+  islandNumber: 4 | 7 | 8 | 9 | 16 | 18 | 19;
   stageCount: number;
   quality: Island3DQuality;
 }): IslandStagedRestorationThreeRuntime {
@@ -274,7 +274,7 @@ export function createIslandStagedRestorationThreePresentation(options: {
   const stageGroups = Array.from({ length: usesAuthoredWorldPresentation ? 0 : options.stageCount }, (_, index) => {
     const stage = options.islandNumber === 4
       ? createCausewayStage(index, materials)
-      : options.islandNumber === 6
+      : options.islandNumber === 16
         ? createMoonMirrorStage(index, materials)
         : options.islandNumber === 7
           ? createBreathlineStage(index, materials)
@@ -294,7 +294,7 @@ export function createIslandStagedRestorationThreePresentation(options: {
   const finale = new THREE.Group();
   finale.name = `ISLAND_${options.islandNumber}_MISSION_FINALE`;
   const finaleCore = new THREE.Mesh(new THREE.IcosahedronGeometry(options.islandNumber === 8 ? 0.8 : 0.62, 2), materials.glow);
-  finaleCore.position.y = options.islandNumber === 6 ? 2.4 : options.islandNumber === 18 ? 7.05 : 1.45;
+  finaleCore.position.y = options.islandNumber === 16 ? 2.4 : options.islandNumber === 18 ? 7.05 : 1.45;
   const finaleRing = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.075, 8, 28), materials.glow);
   finaleRing.position.copy(finaleCore.position);
   finaleRing.rotation.x = Math.PI / 2;
