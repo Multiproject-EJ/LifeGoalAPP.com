@@ -3,6 +3,7 @@ import { landmarkAttentionTests } from './landmarkAttention.test';
 import {islandRunFirstArrivalTests} from './islandRunFirstArrival.test';
 import { islandRunFastBuildTests } from './islandRunFastBuild.test';
 import { crystalMinersTests } from './crystalMiners.test';
+import { landmarkLabelPercentOnlyTests } from './landmarkLabelPercentOnly.test';
 import { island001ArrivalControllerTests } from './island001ArrivalController.test';
 import { assemblyTopbarBlastTests } from './assemblyTopbarBlast.test';
 import { fishingCastSkillTests } from './fishingCastSkill.test';
@@ -301,6 +302,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunFirstArrival', tests: islandRunFirstArrivalTests },
   { label: 'islandRunFastBuild', tests: islandRunFastBuildTests },
   { label: 'crystalMiners', tests: crystalMinersTests },
+  { label: 'landmarkLabelPercentOnly', tests: landmarkLabelPercentOnlyTests },
   { label: 'island001ArrivalController', tests: island001ArrivalControllerTests },
   { label: 'assemblyTopbarBlast', tests: assemblyTopbarBlastTests },
   { label: 'fishingCastSkill', tests: fishingCastSkillTests },
