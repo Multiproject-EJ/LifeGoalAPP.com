@@ -22,6 +22,11 @@ import { eventGamePackPlays, EVENT_GAME_PLAYS_PER_TICKET } from '../services/eve
 import { createCrystalMinersBridge } from '../services/islandRunCrystalMinersActions';
 import { IslandFrostwellMissionModal } from './IslandFrostwellMissionModal';
 import { useFrostwellMissionSequence } from '../hooks/useFrostwellMissionSequence';
+import {
+  FISHERMANS_DRAGON_CINEMATIC_SECONDS,
+  resolveFishermansDragonElapsedSeconds,
+  resolveFishingStall,
+} from '../services/fishermansFishingWatchdog';
 import { lockFullscreenPageScroll, lockPageScroll } from '../../../../utils/scrollLock';
 import { triggerImpactHaptic } from '../../../../utils/completionHaptics';
 /**
@@ -14163,6 +14168,7 @@ export function IslandRunBoardPrototype({
       || showFishermansFishing
       || doesModalOwnAttention
     ) return undefined;
+    const blockedForMs = fishingAutoReopenBlockedUntilRef.current - Date.now();
     const timer = window.setTimeout(() => {
       setFishingPullsRemaining(fishermansFishingProgress.pendingCatch?.pullsRequired ?? 1);
       setFishingSessionCatchKind(fishermansFishingProgress.pendingCatch?.kind ?? 'nothing');
@@ -14172,7 +14178,7 @@ export function IslandRunBoardPrototype({
       fishingEscapeInFlightRef.current = false;
       setFishingCatchMessage(null);
       setShowFishermansFishing(true);
-    }, 260);
+    }, Math.max(260, blockedForMs));
     return () => window.clearTimeout(timer);
   }, [doesModalOwnAttention, fishermansFishingProgress.pendingCatch, islandNumber, showFishermansFishing]);
   useEffect(() => {
@@ -14190,14 +14196,23 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timer);
   }, [fishermansFishingProgress.dragonTriggeredAtMs, fishingPhase, islandNumber]);
   useEffect(() => {
+    // Measured from the saved trigger time: the dragon plays once live and is
+    // settled on later visits, and the ticker stops once the cinematic ends.
     if (dragonCinematicStartedAtMs === null) return undefined;
-    const updateElapsed = () => setDragonCinematicElapsedSeconds(
-      Math.max(0, (Date.now() - dragonCinematicStartedAtMs) / 1_000),
-    );
-    updateElapsed();
-    const interval = window.setInterval(updateElapsed, 50);
+    const elapsedNow = () => resolveFishermansDragonElapsedSeconds({
+      fishCaughtKg: fishermansFishingProgress.fishCaughtKg,
+      dragonTriggeredAtMs: fishermansFishingProgress.dragonTriggeredAtMs ?? dragonCinematicStartedAtMs,
+      nowMs: Date.now(),
+    });
+    setDragonCinematicElapsedSeconds(elapsedNow());
+    if (elapsedNow() > FISHERMANS_DRAGON_CINEMATIC_SECONDS + 1) return undefined;
+    const interval = window.setInterval(() => {
+      const elapsed = elapsedNow();
+      setDragonCinematicElapsedSeconds(elapsed);
+      if (elapsed > FISHERMANS_DRAGON_CINEMATIC_SECONDS + 1) window.clearInterval(interval);
+    }, 50);
     return () => window.clearInterval(interval);
-  }, [dragonCinematicStartedAtMs]);
+  }, [dragonCinematicStartedAtMs, fishermansFishingProgress.dragonTriggeredAtMs, fishermansFishingProgress.fishCaughtKg]);
   useEffect(() => {
     if (!pendingMissionBriefing || doesModalOwnAttention || queuedSignatureMissionPresentation) return;
     if (isRolling || pendingHopSequence) return;
@@ -14419,6 +14434,20 @@ export function IslandRunBoardPrototype({
     return undefined;
   }, [fishingPhase, showFishermansFishing]);
 
+  // Countdown reads the latest catch/handlers through refs so a background state
+  // refresh can't keep restarting it (which left the board locked).
+  const fishingCountdownDepsRef = useRef({
+    pendingKind: fishermansFishingProgress.pendingCatch?.kind,
+    release: handleReleaseFishermansCatch,
+    playSound: playIslandRunSound,
+    haptic: triggerIslandRunHaptic,
+  });
+  fishingCountdownDepsRef.current = {
+    pendingKind: fishermansFishingProgress.pendingCatch?.kind,
+    release: handleReleaseFishermansCatch,
+    playSound: playIslandRunSound,
+    haptic: triggerIslandRunHaptic,
+  };
   useEffect(() => {
     if (!showFishermansFishing || fishingPhase !== 'countdown') return undefined;
     const startedAt = Date.now();
@@ -14430,21 +14459,22 @@ export function IslandRunBoardPrototype({
     const finish = window.setTimeout(() => {
       window.clearInterval(interval);
       setFishingCountdown(null);
-      if (fishermansFishingProgress.pendingCatch?.kind === 'nothing') {
-        void handleReleaseFishermansCatch('empty');
+      const deps = fishingCountdownDepsRef.current;
+      if (deps.pendingKind === 'nothing') {
+        void deps.release('empty');
       } else {
         setFishingPhase('bite');
         setFishingTension(0.62);
         fishingLastPullAtRef.current = Date.now();
-        playIslandRunSound('stop_land');
-        triggerIslandRunHaptic('stop_land');
+        deps.playSound('stop_land');
+        deps.haptic('stop_land');
       }
     }, 2_280);
     return () => {
       window.clearInterval(interval);
       window.clearTimeout(finish);
     };
-  }, [fishermansFishingProgress.pendingCatch?.kind, fishingPhase, handleReleaseFishermansCatch, playIslandRunSound, showFishermansFishing, triggerIslandRunHaptic]);
+  }, [fishingPhase, showFishermansFishing]);
 
   useEffect(() => {
     const pending = fishermansFishingProgress.pendingCatch;
@@ -14461,6 +14491,50 @@ export function IslandRunBoardPrototype({
     }, 70);
     return () => window.clearInterval(interval);
   }, [fishermansFishingProgress.pendingCatch, fishingPhase, handleReleaseFishermansCatch, showFishermansFishing]);
+
+  // Stall watchdog: the fishing session hides the controller and owns the
+  // camera, so no phase may sit unchanged forever (lost timer, failed
+  // release). Acts through the same canonical fishing actions; after repeated
+  // stalls it closes the session and holds off the auto-reopen for a while.
+  const fishingPhaseSinceRef = useRef({ phase: fishingPhase, at: Date.now(), stalls: 0 });
+  const fishingAutoReopenBlockedUntilRef = useRef(0);
+  if (fishingPhaseSinceRef.current.phase !== fishingPhase) {
+    fishingPhaseSinceRef.current = { phase: fishingPhase, at: Date.now(), stalls: 0 };
+  }
+  useEffect(() => {
+    if (!showFishermansFishing) return undefined;
+    const interval = window.setInterval(() => {
+      const since = fishingPhaseSinceRef.current;
+      const deps = fishingCountdownDepsRef.current;
+      const action = resolveFishingStall({
+        phase: since.phase,
+        stalledMs: Date.now() - since.at,
+        stallCount: since.stalls,
+        pendingKind: deps.pendingKind ?? null,
+        actionInFlight: fishingEscapeInFlightRef.current || fishingReelInFlightRef.current,
+      });
+      if (action === 'wait') return;
+      fishingPhaseSinceRef.current = { phase: since.phase, at: Date.now(), stalls: since.stalls + 1 };
+      console.warn('[island-run] Fisherman\'s Village fishing stalled; recovering', { phase: since.phase, action });
+      if (action === 'advance_to_bite') {
+        setFishingCountdown(null);
+        setFishingPhase('bite');
+        setFishingTension(0.62);
+        fishingLastPullAtRef.current = Date.now();
+      } else if (action === 'release_empty' || action === 'release_escaped') {
+        void deps.release(action === 'release_empty' ? 'empty' : 'escaped');
+      } else {
+        if (action === 'force_close') fishingAutoReopenBlockedUntilRef.current = Date.now() + 45_000;
+        fishingEscapeInFlightRef.current = false;
+        setIsReelingFishingCatch(false);
+        setShowFishermansFishing(false);
+        setFishingPhase('off');
+        setFishingCountdown(null);
+        setFishingCatchMessage(null);
+      }
+    }, 1_000);
+    return () => window.clearInterval(interval);
+  }, [showFishermansFishing]);
 
   // Safety net: the fishing session locks the board (controller, modals), so it
   // must never outlive its catch. If the pending catch is gone and no
@@ -16704,7 +16778,13 @@ export function IslandRunBoardPrototype({
                     : fishermansFishingProgress.fishCaughtKg,
                   previewElapsedSeconds: isIslandVisualPreview && islandArtPreviewNumber === 16
                     ? 8.4
-                    : dragonCinematicElapsedSeconds,
+                    : dragonCinematicStartedAtMs === null
+                      ? resolveFishermansDragonElapsedSeconds({
+                        fishCaughtKg: fishermansFishingProgress.fishCaughtKg,
+                        dragonTriggeredAtMs: fishermansFishingProgress.dragonTriggeredAtMs,
+                        nowMs: Date.now(),
+                      })
+                      : dragonCinematicElapsedSeconds,
                   impactRepairProgress: fishermansFishingProgress.repairCompletedAtMs === null ? 0 : 1,
                   fishingInteraction: {
                     active: showFishermansFishing && (Boolean(fishermansFishingProgress.pendingCatch) || fishingPhase === 'caught' || fishingPhase === 'escaped'),
