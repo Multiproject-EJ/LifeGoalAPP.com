@@ -28455,3 +28455,6 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 .island-run-prototype--input-locked :is(button, [role='button'], a) {
   cursor: default;
 }
+
+/* Unfinished landmarks show only their build %; the name appears at 100%. */
+.island-landmark-progress-label--percent-only { gap: 0; padding: 3px; border-radius: 999px; }

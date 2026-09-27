@@ -11586,7 +11586,7 @@ export default function Island5ThreePilot({
       {landmarkProgress ? <div className="island-landmark-progress-layer">
         {landmarkProgress.map(item => <button key={item.id} type="button"
           ref={element => { if (element) landmarkLabelRefs.current.set(item.id, element); else landmarkLabelRefs.current.delete(item.id); }}
-          className={`island-landmark-progress-label${item.attention === 'blue' ? ' island-landmark-progress-label--ready' : ''}`}
+          className={`island-landmark-progress-label${item.attention === 'blue' ? ' island-landmark-progress-label--ready' : ''}${item.percent < 100 ? ' island-landmark-progress-label--percent-only' : ''}`}
           style={{ display: 'none' }}
           disabled={isRolling || interactionPaused}
           aria-label={`${item.title}: ${item.percent}% built. ${item.status}`}
@@ -11594,7 +11594,8 @@ export default function Island5ThreePilot({
           <span className="island-landmark-progress-ring" style={{ background: `conic-gradient(#70e6ad ${item.percent}%, #ffffff26 0)` }}>
             <span>{item.percent}%</span>
           </span>
-          <span><strong>{item.title}</strong><small>{item.status}</small></span>
+          {/* The name is earned: until the building is 100% built only its % shows. */}
+          {item.percent >= 100 ? <span><strong>{item.title}</strong><small>{item.status}</small></span> : null}
         </button>)}
       </div> : null}
       {explorePoints.length > 0 ? <div className="island-explore-layer">
