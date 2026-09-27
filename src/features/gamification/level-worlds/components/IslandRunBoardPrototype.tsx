@@ -778,6 +778,7 @@ import {
 } from '../dev/island5ThreePilotContract';
 import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } from '../dev/Island5ThreePilot';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
+import { registerCrashContext } from '../../../../services/crashReports';
 import { MISSION_MESSAGE_BANNER_MS, MISSION_MESSAGE_NUDGE_INTERVAL_MS, playMissionMessageRing } from '../services/islandRunMissionMessage';
 import { ISLAND_DEPARTURE_FALLBACK_MS, shouldPlayIslandDepartureCinematic } from '../services/islandRunDepartureCinematic';
 
@@ -14219,6 +14220,13 @@ export function IslandRunBoardPrototype({
     const timer = window.setTimeout(() => setShowMissionMessageBanner(false), MISSION_MESSAGE_BANNER_MS);
     return () => window.clearTimeout(timer);
   }, [showMissionMessageBanner]);
+  // Crash reports carry where in the game the player was (no personal data).
+  useEffect(() => registerCrashContext('islandRun', () => ({
+    islandNumber,
+    cycleIndex,
+    tokenIndex: runtimeStateRef.current?.tokenIndex ?? null,
+    activeStopId: activeStopId ?? null,
+  })), [activeStopId, cycleIndex, islandNumber]);
   const openIncomingMissionBriefing = useCallback(() => {
     if (!incomingMissionBriefing) return false;
     setActiveMissionBriefing(incomingMissionBriefing);
