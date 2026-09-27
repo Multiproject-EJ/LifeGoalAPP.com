@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {createMultiplierHologram,PILL} from './multiplier-hologram.js';
 import {controllerFraming} from './framing.js';
 import {iconBacklight} from './icon-backlight.js';
+import {controllerShineLevel,controllerSunbeam} from './controller-sunlight.js';
 import {ARRIVAL_FLIGHT,createPersonalityClock,personalityPose} from './personality.js';
 // While flying in, the canvas draws beyond its box (the controller starts
 // off-frame) so the flight is never cut off by the canvas edge.
@@ -181,7 +182,8 @@ function drawButton(b,t){
 
  function placeHit(el,x,y,w,h){const item=buttons.find(b=>b.hit===el),outline=item&&buttonOutlines.get(item.id);el.hidden=camera.position.z<1;if(outline){const points=outline.map(p=>new THREE.Vector3(p.x,p.y,surface(p.x,p.y)+.08).applyMatrix4(body.matrixWorld).project(camera)).map(p=>[(p.x+1)*.5*view.cw-view.ox,(1-p.y)*.5*view.ch-view.oy]);const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;el.style.left=(left+width/2)+'px';el.style.top=(top+height/2)+'px';el.style.width=width+'px';el.style.height=height+'px';el.style.clipPath='polygon('+points.map(p=>`${(p[0]-left)/width*100}% ${(p[1]-top)/height*100}%`).join(',')+')';return;}const v=new THREE.Vector3(x,y,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera),a=new THREE.Vector3(x-w/2,y-h/2,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera),b=new THREE.Vector3(x+w/2,y+h/2,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera);el.style.left=(v.x+1)*.5*view.cw-view.ox+'px';el.style.top=(1-v.y)*.5*view.ch-view.oy+'px';el.style.width=Math.max(36,Math.abs(b.x-a.x)*.5*view.cw)+'px';el.style.height=Math.max(32,Math.abs(b.y-a.y)*.5*view.ch)+'px';}
 
- const paintUniforms={paintTime:{value:0},paintEnergy:{value:0},paintPower:{value:0},paintJackpot:{value:0}};
+ const paintUniforms={paintTime:{value:0},paintEnergy:{value:0},paintPower:{value:0},paintJackpot:{value:0},paintShine:{value:0},paintSunbeam:{value:-1}};
+ let sunKey=null,sunStartedAt=0;
 // Seasonal system is removable and separate from body geometry.
 const seasonal=new THREE.Group();seasonal.name='seasonal-attachments';scene.add(seasonal);for(let i=0;i<17;i++){const x=-2.15+i*.27,y=1.48;const m=new THREE.MeshBasicMaterial({color:'#ffdf93',toneMapped:false});const bulb=new THREE.Mesh(new THREE.SphereGeometry(.025,10,8),m);bulb.position.set(x,y,surface(x,y)+.05);seasonal.add(bulb);}seasonal.visible=false;
 for(const side of [-1,1]){
@@ -245,6 +247,11 @@ for(const side of [-1,1]){
  rollLight.intensity=reduced?0:clickGlow*2.5+(snapshot.rolling?.5:0);
  shell.position.x=group.position.x=jackpot&&!reduced?Math.sin(now*45)*.014:0;
  paintUniforms.paintTime.value=reduced?0:now;paintUniforms.paintPower.value=snapshot.dice>0?power:0;paintUniforms.paintEnergy.value=snapshot.dice>0?power*level:0;paintUniforms.paintJackpot.value=jackpot?1:0;
+ // Shine is a full-sun treat that fades after ~1 min; sunbeams sweep now and then.
+ const sunlight=snapshot.sunlight||'none',key=sunlight+':'+(snapshot.islandNumber??'');
+ if(key!==sunKey){sunKey=key;sunStartedAt=now;}
+ paintUniforms.paintShine.value=controllerShineLevel(sunlight,now-sunStartedAt);
+ paintUniforms.paintSunbeam.value=jackpot?-1:controllerSunbeam(sunlight,now-sunStartedAt,reduced);
  for(const [i,b] of buttons.entries()){
  const pressed=b.hit?.matches(':active')??false;b.hover=b.hit?.matches(':hover,:focus-visible')??false;
  // Every button flares its icon backlight on press; any touch wakes the strips.

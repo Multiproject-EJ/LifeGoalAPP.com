@@ -12,7 +12,7 @@ export function createPaintMaterial(THREE,palette,uniforms){
 uniform vec3 paintCenter,paintGrip,paintAccent,paintTrim;
 uniform sampler2D ornaments;
 uniform float finishKind;
-uniform float paintTime,paintEnergy,paintPower,paintJackpot;
+uniform float paintTime,paintEnergy,paintPower,paintJackpot,paintShine,paintSunbeam;
 float paintLine(float phase){float d=abs(fract(phase)-.5);float aa=max(fwidth(phase),.001);return 1.-smoothstep(.018,.018+aa,d);}
 `+shader.fragmentShader;
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
@@ -68,13 +68,21 @@ for(int i=0;i<3;i++){
  buriedLight+=exp(-dot(d,d)/.23)*.12;
 }
 // Normal power retains the former max sparkle; max adds more stars and a flowing field.
-float activity=paintPower*(1.85+supercharge*4.);
+// Everyday sparkle follows the sun (paintShine); the max-power supercharge stays.
+float activity=paintPower*(1.85*paintShine+supercharge*4.);
 float field=(.5+.5*sin(p.x*2.5-p.y*3.+energyTime*.9))*.14*supercharge;
 float energyInk=(buriedLight+trim*.10)*(1.-grip*.45);
 if(finishKind>1.5)energyInk*=.4;
 totalEmissiveRadiance+=mix(paintAccent,vec3(1.,.55,.06),paintJackpot)*activity*(energyInk+field);
 // Jackpot shimmer is independent of dice balance and selected multiplier.
 totalEmissiveRadiance+=vec3(1.,.78,.28)*buriedLight*paintJackpot*1.7;
+// Occasional soft sunbeam gliding diagonally across the controller.
+if(paintSunbeam>=0.){
+ float sweepAxis=p.x*.85+p.y*.5;
+ float beamPos=mix(-4.2,4.2,paintSunbeam);
+ float band=exp(-pow(sweepAxis-beamPos,2.)/.11);
+ totalEmissiveRadiance+=vec3(1.,.96,.86)*band*.42*sin(paintSunbeam*3.14159);
+}
 `);
   if(palette.ornament==='wood')shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
 roughnessFactor=clamp(.65+pores*.20-grain*.06,.58,.86);

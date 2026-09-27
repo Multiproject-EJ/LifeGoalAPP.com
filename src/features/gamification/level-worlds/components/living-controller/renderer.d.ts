@@ -12,5 +12,7 @@ export interface ControllerSnapshot {
  arrivalKey?:string; blocked?:boolean; activity?:number;
  onArrivalImpact?:()=>void;
  multiplierMaxJumping?:boolean;
+ /** Island sunlight profile: drives the enamel shine and sunbeam sweeps. */
+ sunlight?:"full_sun"|"fair"|"none"; islandNumber?:number;
 }
 export function mountLivingController(host:HTMLDivElement, controls:Record<string,HTMLButtonElement>, getSnapshot:()=>ControllerSnapshot,onReady:()=>void,onError:()=>void):()=>void;
