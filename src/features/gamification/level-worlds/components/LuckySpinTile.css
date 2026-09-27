@@ -1,0 +1,265 @@
+/* Lucky Spin badge riding a board tile. The 3D scene sets its transform every
+   frame (translate to the tile's screen point); we centre it above that point. */
+.island-run-lucky-spin-badge {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 18;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.island-run-lucky-spin-badge > span {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.island-run-lucky-spin-badge__beacon {
+  width: 3.4rem;
+  height: 5.2rem;
+  transform: translate(-50%, -78%);
+  border-radius: 50% 50% 40% 40%;
+  background: linear-gradient(0deg, rgba(250, 204, 21, 0.55), rgba(250, 204, 21, 0) 90%);
+  filter: blur(4px);
+  animation: lucky-spin-beacon 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.island-run-lucky-spin-badge__wheel {
+  width: 2.9rem;
+  height: 2.9rem;
+  transform: translate(-50%, -115%);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    url('/assets/spin-wheel/daily-momentum/rim/daily-momentum-wheel-rim-transparent.png') center / contain no-repeat,
+    conic-gradient(from -22.5deg, #293f91 0 12.5%, #6b2b87 0 25%, #116f88 0 37.5%, #9b4b35 0 50%, #293f91 0 62.5%, #6b2b87 0 75%, #116f88 0 87.5%, #9b4b35 0);
+  box-shadow: 0 0 0 2px rgba(255, 236, 170, 0.85), 0 0 18px rgba(250, 204, 21, 0.75), 0 8px 16px rgba(2, 6, 23, 0.5);
+  animation: lucky-spin-bob 1.8s ease-in-out infinite;
+}
+
+.island-run-lucky-spin-badge__star {
+  display: grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff7cc, #facc15 60%, #b45309);
+  color: #7c2d12;
+  font-size: 0.7rem;
+  animation: lucky-spin-turn 3.2s linear infinite;
+}
+
+.island-run-lucky-spin-badge__label {
+  transform: translate(-50%, -34%);
+  padding: 0.08rem 0.45rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fde047, #f59e0b);
+  color: #451a03;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  box-shadow: 0 2px 6px rgba(2, 6, 23, 0.45);
+  animation: lucky-spin-bob 1.8s ease-in-out infinite;
+}
+
+.island-run-lucky-spin-badge__count {
+  transform: translate(35%, -210%);
+  min-width: 1.05rem;
+  height: 1.05rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 900;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.island-run-lucky-spin-badge:focus-visible .island-run-lucky-spin-badge__wheel {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+@keyframes lucky-spin-bob {
+  0%,
+  100% {
+    margin-top: 0;
+  }
+  50% {
+    margin-top: -0.35rem;
+  }
+}
+
+@keyframes lucky-spin-beacon {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes lucky-spin-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Launch: the tile fires a pillar of light, confetti bursts, and the wheel
+   flies to the centre as the spin modal opens. ── */
+.island-run-lucky-spin-launch {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.island-run-lucky-spin-launch > * {
+  position: absolute;
+  left: var(--lsx);
+  top: var(--lsy);
+}
+
+.island-run-lucky-spin-launch__beam {
+  width: 4.6rem;
+  height: 120vh;
+  margin-left: -2.3rem;
+  transform-origin: 50% 100%;
+  transform: translateY(-100%) scaleY(0);
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.95), rgba(253, 224, 71, 0.8) 18%, rgba(250, 204, 21, 0.25) 60%, rgba(250, 204, 21, 0));
+  filter: blur(2px);
+  mix-blend-mode: screen;
+  animation: lucky-spin-beam 1.25s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+@keyframes lucky-spin-beam {
+  0% {
+    transform: translateY(-100%) scaleY(0) scaleX(0.3);
+    opacity: 1;
+  }
+  35% {
+    transform: translateY(-100%) scaleY(1) scaleX(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%) scaleY(1) scaleX(0.2);
+    opacity: 0;
+  }
+}
+
+.island-run-lucky-spin-launch__flash {
+  width: 14rem;
+  height: 14rem;
+  margin: -7rem 0 0 -7rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(253, 224, 71, 0.6) 35%, rgba(253, 224, 71, 0) 70%);
+  animation: lucky-spin-flash 700ms ease-out forwards;
+}
+
+@keyframes lucky-spin-flash {
+  0% {
+    transform: scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.island-run-lucky-spin-launch__ring {
+  width: 3rem;
+  height: 3rem;
+  margin: -1.5rem 0 0 -1.5rem;
+  border-radius: 50%;
+  border: 3px solid rgba(253, 224, 71, 0.95);
+  animation: lucky-spin-ring 800ms ease-out 80ms both;
+}
+
+@keyframes lucky-spin-ring {
+  from {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  to {
+    transform: scale(5);
+    opacity: 0;
+  }
+}
+
+.island-run-lucky-spin-launch__confetti {
+  width: 0.5rem;
+  height: 0.8rem;
+  margin: -0.4rem 0 0 -0.25rem;
+  border-radius: 2px;
+  opacity: 0;
+  animation: lucky-spin-confetti 1.3s cubic-bezier(0.15, 0.7, 0.35, 1) var(--delay) forwards;
+}
+
+@keyframes lucky-spin-confetti {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateX(0) rotate(0deg);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(var(--distance)) translateY(3.5rem) rotate(var(--spin));
+  }
+}
+
+.island-run-lucky-spin-launch__wheel {
+  width: 3rem;
+  height: 3rem;
+  margin: -1.5rem 0 0 -1.5rem;
+  border-radius: 50%;
+  background:
+    url('/assets/spin-wheel/daily-momentum/rim/daily-momentum-wheel-rim-transparent.png') center / contain no-repeat,
+    conic-gradient(from -22.5deg, #293f91 0 12.5%, #6b2b87 0 25%, #116f88 0 37.5%, #9b4b35 0 50%, #293f91 0 62.5%, #6b2b87 0 75%, #116f88 0 87.5%, #9b4b35 0);
+  box-shadow: 0 0 24px rgba(250, 204, 21, 0.9);
+  animation: lucky-spin-wheel-fly 1s cubic-bezier(0.5, 0, 0.2, 1) 120ms both;
+}
+
+@keyframes lucky-spin-wheel-fly {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(0, -7rem) scale(1.3) rotate(260deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(50vw - var(--lsx)), calc(45vh - var(--lsy))) scale(3.4) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-lucky-spin-badge__beacon,
+  .island-run-lucky-spin-badge__wheel,
+  .island-run-lucky-spin-badge__star,
+  .island-run-lucky-spin-badge__label {
+    animation: none;
+  }
+
+  .island-run-lucky-spin-launch__beam,
+  .island-run-lucky-spin-launch__confetti,
+  .island-run-lucky-spin-launch__wheel,
+  .island-run-lucky-spin-launch__ring {
+    display: none;
+  }
+}

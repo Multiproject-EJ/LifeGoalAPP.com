@@ -15,6 +15,14 @@ import { NotificationBadge } from '../../../../components/NotificationBadge';
 import {getConcordCollectedSlots, getConcordRewardedLines} from '../services/islandRunConcordProgress';
 import {shouldPlayIsland001FirstArrival} from '../services/islandRunFirstArrival';
 import './Island001Arrival.css';
+import './LuckySpinTile.css';
+import {
+  buildLuckySpinConfetti,
+  LUCKY_SPIN_LAUNCH_OPEN_MS,
+  LUCKY_SPIN_LAUNCH_TOTAL_MS,
+  resolveLuckySpinTileIndex,
+} from '../services/luckySpinTile';
+import { twoTracksDayKey } from '../services/twoTracksDaily';
 import { IslandAssemblyCraterModal } from './IslandAssemblyCraterModal';
 import { quoteIslandRunFastBuild, type FastBuildQuote } from '../services/islandRunFastBuild';
 import { applyIslandRunFastBuild } from '../services/islandRunFastBuildAction';
@@ -14143,6 +14151,49 @@ export function IslandRunBoardPrototype({
       setShowAudioMenu(false);
     }
   }, [missionOwnsController, stopAutoRoll]);
+
+  // Lucky Spin lives on the board: while today's spin is ready a badge rides a
+  // tile a few steps ahead. Tapping it (or landing there) launches the tile in
+  // a flash of light and confetti, then opens the existing daily wheel.
+  const [luckySpinBadgeElement, setLuckySpinBadgeElement] = useState<HTMLButtonElement | null>(null);
+  const [luckySpinTileIndex, setLuckySpinTileIndex] = useState<number | null>(null);
+  const [luckySpinLaunch, setLuckySpinLaunch] = useState<{ id: number; x: number; y: number } | null>(null);
+  // Dev visual preview can show the badge with ?luckySpin=1 (its save is a beginner island).
+  const luckySpinPreviewFlag = isIslandVisualPreview && typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('luckySpin') === '1';
+  const luckySpinBoardReady = Boolean(
+    onOpenDailySpinWheel && (featureAccess.dailyWheel || luckySpinPreviewFlag) && dailySpinAvailable
+    && shouldRenderIsland5Three && (!isIslandVisualPreview || luckySpinPreviewFlag),
+  );
+  const showLuckySpinBadge = luckySpinBoardReady && luckySpinTileIndex !== null && luckySpinLaunch === null
+    && !missionOwnsController && !doesModalOwnAttention;
+  useEffect(() => {
+    if (!luckySpinBoardReady) {
+      setLuckySpinTileIndex(null);
+      return;
+    }
+    setLuckySpinTileIndex((current) => current ?? resolveLuckySpinTileIndex({
+      tokenIndex, tileCount: activeTileAnchors.length, dayKey: twoTracksDayKey(),
+    }));
+  }, [activeTileAnchors.length, luckySpinBoardReady, tokenIndex]);
+  const launchLuckySpin = useCallback((origin?: { x: number; y: number }) => {
+    if (!onOpenDailySpinWheel || luckySpinLaunch) return;
+    const rect = luckySpinBadgeElement?.getBoundingClientRect();
+    const x = origin?.x ?? (rect ? rect.left + rect.width / 2 : window.innerWidth / 2);
+    const y = origin?.y ?? (rect ? rect.top + rect.height / 2 : window.innerHeight / 2);
+    stopAutoRoll();
+    playIslandRunSound('stop_land');
+    triggerIslandRunHaptic('stop_land');
+    const id = Date.now();
+    setLuckySpinLaunch({ id, x, y });
+    window.setTimeout(() => onOpenDailySpinWheel(), LUCKY_SPIN_LAUNCH_OPEN_MS);
+    window.setTimeout(() => setLuckySpinLaunch((current) => (current?.id === id ? null : current)), LUCKY_SPIN_LAUNCH_TOTAL_MS);
+  }, [luckySpinBadgeElement, luckySpinLaunch, onOpenDailySpinWheel, playIslandRunSound, stopAutoRoll, triggerIslandRunHaptic]);
+  const luckySpinLandRef = useRef<(tileIndex: number) => void>(() => {});
+  luckySpinLandRef.current = (tileIndex: number) => {
+    if (showLuckySpinBadge && tileIndex === luckySpinTileIndex) launchLuckySpin();
+  };
+  const luckySpinConfetti = useMemo(() => buildLuckySpinConfetti(), []);
   useEffect(() => {
     if (!pendingRootheartPowerworksAutoOpen || doesModalOwnAttention || isIslandVisualPreview) return undefined;
     const timer = window.setTimeout(() => {
@@ -16268,7 +16319,7 @@ export function IslandRunBoardPrototype({
                 🧩 {runtimeState.stickerProgress.fragments}/5
               </button>
             ) : null}
-            {onOpenDailySpinWheel && featureAccess.dailyWheel ? (
+            {onOpenDailySpinWheel && featureAccess.dailyWheel && !luckySpinBoardReady ? (
               <button
                 type="button"
                 className={`island-run-board__daily-momentum-btn${dailySpinAvailable ? ' island-run-board__daily-momentum-btn--ready' : ' island-run-board__daily-momentum-btn--used'}`}
@@ -16591,6 +16642,7 @@ export function IslandRunBoardPrototype({
             playIslandRunSound('stop_land');
             triggerIslandRunHaptic('stop_land');
             presentBoardMoneyCollection(tileIndex, origin);
+            luckySpinLandRef.current(tileIndex);
           }}
           isRolling={shouldRenderIsland5Three ? false : isRolling}
           diceFaces={rollingDiceFaces}
@@ -16663,6 +16715,9 @@ export function IslandRunBoardPrototype({
                 arenaBattlePresentation={arenaBattlePresentation}
                 arenaCelebrationSequence={arenaCelebrationSequence}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
+                tileBadgeAnchor={showLuckySpinBadge && luckySpinTileIndex !== null
+                  ? { tileIndex: luckySpinTileIndex, element: luckySpinBadgeElement }
+                  : null}
                 onTokenHop={(tileIndex) => {
                   playTokenMoveSound();
                   if (ordinaryBoardTilesActive && featureAccess.trafficLight && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
@@ -16676,6 +16731,7 @@ export function IslandRunBoardPrototype({
                   playIslandRunSound('stop_land');
                   triggerIslandRunHaptic('stop_land');
                   presentBoardMoneyCollection(tileIndex, origin);
+                  luckySpinLandRef.current(tileIndex);
                 }}
                 onLandmarkClick={isIslandVisualPreview ? undefined : (landmarkId) => {
                   if (showBuildPanel) return;
@@ -16998,6 +17054,52 @@ export function IslandRunBoardPrototype({
           {incomingMissionBriefing ? <b className="island-run-mission-phone__message-badge" aria-hidden="true">1</b> : null}
         </button>
       ) : null}
+
+      {showLuckySpinBadge ? (
+        <button
+          ref={setLuckySpinBadgeElement}
+          type="button"
+          className="island-run-lucky-spin-badge"
+          style={{ visibility: 'hidden' }}
+          aria-label={`Lucky Spin on the board: ${Math.max(1, Math.floor(dailySpinCount))} spin${Math.floor(dailySpinCount) === 1 ? '' : 's'} ready. Tap or land on it to spin.`}
+          onClick={() => launchLuckySpin()}
+        >
+          <span className="island-run-lucky-spin-badge__beacon" aria-hidden="true" />
+          <span className="island-run-lucky-spin-badge__wheel" aria-hidden="true">
+            <span className="island-run-lucky-spin-badge__star">✦</span>
+          </span>
+          <span className="island-run-lucky-spin-badge__label" aria-hidden="true">SPIN</span>
+          {Math.floor(dailySpinCount) > 1 ? (
+            <span className="island-run-lucky-spin-badge__count" aria-hidden="true">{Math.floor(dailySpinCount)}</span>
+          ) : null}
+        </button>
+      ) : null}
+      {luckySpinLaunch && typeof document !== 'undefined' ? createPortal((
+        <div
+          key={luckySpinLaunch.id}
+          className="island-run-lucky-spin-launch"
+          style={{ '--lsx': `${luckySpinLaunch.x}px`, '--lsy': `${luckySpinLaunch.y}px` } as CSSProperties}
+          aria-hidden="true"
+        >
+          <span className="island-run-lucky-spin-launch__beam" />
+          <span className="island-run-lucky-spin-launch__flash" />
+          <span className="island-run-lucky-spin-launch__ring" />
+          {luckySpinConfetti.map((piece, index) => (
+            <i
+              key={index}
+              className="island-run-lucky-spin-launch__confetti"
+              style={{
+                '--angle': `${piece.angle}deg`,
+                '--distance': `${piece.distance}px`,
+                '--delay': `${piece.delayMs}ms`,
+                '--spin': `${piece.spin}deg`,
+                background: piece.color,
+              } as CSSProperties}
+            />
+          ))}
+          <span className="island-run-lucky-spin-launch__wheel" />
+        </div>
+      ), document.body) : null}
 
       {islandDeparture ? null : (
         <button

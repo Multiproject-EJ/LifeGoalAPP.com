@@ -188,6 +188,7 @@ import { twoTracksControllerTests } from './twoTracksController.test';
 import { twoTracksDailyTests } from './twoTracksDaily.test';
 import { playerInsightsTests } from './playerInsights.test';
 import { fishermansFishingWatchdogTests } from './fishermansFishingWatchdog.test';
+import { luckySpinTileTests } from './luckySpinTile.test';
 import { islandRunMissionMessageTests } from './islandRunMissionMessage.test';
 import { islandRunDepartureCinematicTests } from './islandRunDepartureCinematic.test';
 import { islandCameraOcclusionTests } from './islandCameraOcclusion.test';
@@ -458,6 +459,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'twoTracksDaily', tests: twoTracksDailyTests },
   { label: 'playerInsights', tests: playerInsightsTests },
   { label: 'fishermansFishingWatchdog', tests: fishermansFishingWatchdogTests },
+  { label: 'luckySpinTile', tests: luckySpinTileTests },
   { label: 'islandRunMissionMessage', tests: islandRunMissionMessageTests },
   { label: 'islandRunDepartureCinematic', tests: islandRunDepartureCinematicTests },
   { label: 'islandCameraOcclusion', tests: islandCameraOcclusionTests },

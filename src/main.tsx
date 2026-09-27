@@ -357,7 +357,18 @@ function QuestVisualSystemPreviewRoute() {
 
 function IslandArtPreviewContent() {
   const session = useMemo(() => createDemoSession(), []);
-  return <LevelWorldsHub session={session} onClose={() => undefined} isAdmin />;
+  // ?luckySpin=1 previews the Lucky Spin board badge (the wheel itself is not opened).
+  const luckySpinPreview = new URLSearchParams(window.location.search).get('luckySpin') === '1';
+  return (
+    <LevelWorldsHub
+      session={session}
+      onClose={() => undefined}
+      isAdmin
+      onOpenDailySpinWheel={luckySpinPreview ? () => console.info('[preview] open daily spin wheel') : undefined}
+      dailySpinAvailable={luckySpinPreview}
+      dailySpinCount={luckySpinPreview ? 1 : 0}
+    />
+  );
 }
 
 function IslandArtPreviewRoute() {
