@@ -9,6 +9,7 @@ import { resolveIslandRunFeatureAccess } from '../services/islandRunFeatureAcces
 import {FIRST_ARRIVAL_WELCOME_TIME,advanceFirstArrivalTime} from '../services/islandRunFirstArrival';
 import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragmentVisuals';
 import {createIsland001FirstArrival} from './Island001FirstArrival';
+import { createIslandDepartureCinematic } from './IslandDepartureCinematic';
 import { buildIsland40PlaceholderLandmark, createIsland40PlaceholderWorld, ISLAND_40_PLACEHOLDER_LABEL } from './Island40PlaceholderThreeWorld';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import './Island19WonderRide.css';
@@ -406,6 +407,9 @@ interface Island5ThreePilotProps {
   celebrationOrbit?: boolean;
   /** Receives a JPEG snapshot of the island (overview shot) for the celebration backdrop. */
   onCelebrationSnapshot?: (dataUrl: string) => void;
+  /** Island departure (after the completion signal): ship folds, lifts off, streaks away. */
+  departureCinematicActive?: boolean;
+  onDepartureCinematicComplete?: () => void;
   firstArrivalSkip?: boolean;
   onFirstArrivalComplete?: () => void;
   onFirstArrivalBeat?: (beat: string) => void;
@@ -3592,6 +3596,8 @@ export default function Island5ThreePilot({
   firstArrivalPreviewTime, firstArrivalActive = false, firstArrivalSkip = false, onFirstArrivalComplete, onFirstArrivalBeat,
   celebrationOrbit = false,
   onCelebrationSnapshot,
+  departureCinematicActive = false,
+  onDepartureCinematicComplete,
   openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
@@ -3836,6 +3842,8 @@ export default function Island5ThreePilot({
   celebrationOrbitRef.current = celebrationOrbit;
   const onCelebrationSnapshotRef = useRef(onCelebrationSnapshot);
   onCelebrationSnapshotRef.current = onCelebrationSnapshot;
+  const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
+  departureCinematicRef.current = { active: departureCinematicActive, onComplete: onDepartureCinematicComplete };
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
   constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
@@ -9115,6 +9123,9 @@ export default function Island5ThreePilot({
     let firstArrivalCompleted = false;
     let firstArrivalBeat = '';
     let firstArrivalVersion = firstArrivalRestartRef.current;
+    let departureCinematic: ReturnType<typeof createIslandDepartureCinematic> | null = null;
+    let departureCinematicTime = 0;
+    let departureCinematicNotified = false;
     const openingCeremonyFx = isDriftwoodIsle ? createOpeningGamesCeremonyThree() : null;
     if (openingCeremonyFx) {
       openingCeremonyFx.bindPalace(scene.getObjectByName('OPENING_PALACE'),
@@ -10839,6 +10850,28 @@ export default function Island5ThreePilot({
           firstArrivalRef.current.onComplete?.();
         }
       }
+      if (departureCinematicRef.current.active) {
+        if (!departureCinematic) {
+          departureCinematic = createIslandDepartureCinematic(scene,
+            { position: camera.position.clone(), target: controls.target.clone(), fov: camera.fov });
+          departureCinematicTime = 0;
+          departureCinematicNotified = false;
+        }
+        departureCinematicTime += Math.min(0.1, actualFrameDeltaSeconds);
+        transition = null;
+        controls.enabled = false;
+        const done = departureCinematic.update(departureCinematicTime, camera, isReducedMotion);
+        canvas.dataset.departureShot = String(departureCinematic.root.userData.shot ?? '');
+        if (done && !departureCinematicNotified) {
+          departureCinematicNotified = true;
+          departureCinematicRef.current.onComplete?.();
+        }
+      } else if (departureCinematic) {
+        departureCinematic.dispose();
+        departureCinematic = null;
+        delete canvas.dataset.departureShot;
+        controls.enabled = true;
+      }
       publishCameraAuthoringPose(now);
 
       let restoreAssemblyCameraAfterRender = false;
@@ -11230,6 +11263,7 @@ export default function Island5ThreePilot({
       }
       window.cancelAnimationFrame(animationFrame);
       firstArrival?.dispose();
+      departureCinematic?.dispose();
       livingAmbience.root.userData.disposeAwakening?.();
       tileRewardObjects.disposeFragments();
       pawnTileTrail.dispose();

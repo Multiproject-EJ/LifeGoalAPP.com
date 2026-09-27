@@ -13,3 +13,5 @@
 .arrival-review .island-5-three-pilot > :not(canvas):not(.island-5-three-pilot__loading) {display:none!important;}
 .arrival-review-chapters {display:flex;gap:6px;margin-top:18px;flex-wrap:wrap;}
 .arrival-review-chapters button {font-size:10px;padding:7px 10px;background:#071d3666;}
+/* Island departure: a clean cinematic, no scene buttons over it. */
+.island-run-board__three-preview--departure button { visibility:hidden!important; }
