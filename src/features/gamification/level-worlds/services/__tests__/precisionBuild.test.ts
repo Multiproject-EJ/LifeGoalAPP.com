@@ -42,15 +42,15 @@ export const precisionBuildTests: TestCase[] = [
     },
   },
   {
-    name: 'precision build: a hit performs one ordinary build step; the style is optional and remembered',
+    name: 'precision build: a hit performs one ordinary build step; it is Island 019’s build style only',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       assert(board.includes('return await handleSpendEssenceOnBuild(stopIndex, 1);'), 'one canonical build step per hit');
-      assert(board.includes('onPrecisionBuild={buildPrecisionStepFromPlayer}'), 'the modal is wired to it');
+      assert(board.includes('onPrecisionBuild={islandNumber === SKILL_BUILD_ISLAND_NUMBER ? buildPrecisionStepFromPlayer : undefined}'), 'skill build only on Island 019');
       const modal = fsMod.readFileSync('src/features/gamification/level-worlds/components/BuildModalV2.tsx', 'utf8');
-      assert(modal.includes("chooseBuildStyle('hold')") && modal.includes('BUILD_STYLE_KEY'), 'hold build stays one tap away and the choice persists');
+      assert(modal.includes('const skillBuild = Boolean(onPrecisionBuild);'), 'every other island keeps hold to build');
       const ring = fsMod.readFileSync('src/features/gamification/level-worlds/components/PrecisionBuildRing.tsx', 'utf8');
       assert(/if \(judgement === 'miss'\) \{[\s\S]*?return;\s*\}/.test(ring) && ring.indexOf("if (judgement === 'miss')") < ring.indexOf('await onHit()'), 'a miss never builds or spends');
     },

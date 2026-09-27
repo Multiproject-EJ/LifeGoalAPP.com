@@ -1,9 +1,7 @@
-import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useEffect, useRef, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
 import { PrecisionBuildRing } from './PrecisionBuildRing';
-
-const BUILD_STYLE_KEY = 'lifegoal:build-style';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import type { FastBuildQuote } from '../services/islandRunFastBuild';
 import { ISLAND_RUN_FULL_RESTORATION_DICE_REWARD } from '../services/islandRunRestorationReward';
@@ -297,14 +295,7 @@ export function BuildModalV2({
   onStopBuildHold,
   onPrecisionBuild,
 }: BuildModalV2Props) {
-  const [buildStyle, setBuildStyle] = useState<'skill' | 'hold'>(() => {
-    try { return window.localStorage.getItem(BUILD_STYLE_KEY) === 'hold' ? 'hold' : 'skill'; } catch { return 'skill'; }
-  });
-  const chooseBuildStyle = (style: 'skill' | 'hold') => {
-    setBuildStyle(style);
-    try { window.localStorage.setItem(BUILD_STYLE_KEY, style); } catch { /* private mode */ }
-  };
-  const skillBuild = Boolean(onPrecisionBuild) && buildStyle === 'skill';
+  const skillBuild = Boolean(onPrecisionBuild);
   const active = viewModel.activeLandmark;
   const isComplete = viewModel.sequentialBuildView.isFullyBuilt || !active;
   const activePart = active?.activePart ?? 1;
@@ -379,7 +370,10 @@ export function BuildModalV2({
           {fastBuildMode ? <p className="bm2-fast-status">Your construction is saved. Enjoy the reveal…</p> : levelReview ? (
             <BuildModalV2LevelReviewState review={levelReview} onAdvance={onAdvanceLevelReview} />
           ) : isComplete ? (
-            <button type="button" className="bm2-level-review__advance" onClick={onClose}>Back to island</button>
+            <button type="button" className="bm2-back-to-island" onClick={onClose}>
+              <span className="bm2-back-to-island__icon" aria-hidden="true">🏝️</span>
+              <span>Back to island</span>
+            </button>
           ) : active ? (
             <>
               <div className="bm2-dock__summary" aria-live="polite">
@@ -411,12 +405,6 @@ export function BuildModalV2({
               </div>
 
               <p className="sr-only">{active.title} Level {active.targetLevel}: {active.completedParts} of 5 construction parts complete. Choose any unfinished milestone or hold for rapid build.</p>
-              {onPrecisionBuild ? (
-                <div className="bm2-build-style" role="group" aria-label="Build style">
-                  <button type="button" aria-pressed={buildStyle === 'skill'} onClick={() => chooseBuildStyle('skill')}>🎯 Skill build</button>
-                  <button type="button" aria-pressed={buildStyle === 'hold'} onClick={() => chooseBuildStyle('hold')}>⚒️ Hold build</button>
-                </div>
-              ) : null}
               {skillBuild ? (
                 <PrecisionBuildRing
                   disabled={isBuildInteractionLocked || !canBuildActive || isAutoBuildActive || isBuildHoldActive}
