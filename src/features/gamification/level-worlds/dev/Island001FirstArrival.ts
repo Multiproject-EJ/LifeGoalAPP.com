@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {createExpeditionShipThreeModel} from './ExpeditionShipThreeModel';
 import {createRobotFamilyModel, type RobotRole} from './RobotFamilyThreeModel';
+import {createIsland001ArrivalController} from './Island001ArrivalController';
 import {FIRST_ARRIVAL_DURATION, arrivalBeat} from '../services/islandRunFirstArrival';
 
 const ease = (t: number) => { const x = THREE.MathUtils.clamp(t, 0, 1); return x*x*(3-2*x); };
@@ -16,6 +17,8 @@ export function createIsland001FirstArrival(scene: THREE.Scene, player: THREE.Gr
   const root = new THREE.Group(); root.name = 'ISLAND_001_FIRST_ARRIVAL'; scene.add(root);
   const ship = createExpeditionShipThreeModel('low');
   const shipPivot = new THREE.Group(); shipPivot.add(ship.root); shipPivot.scale.setScalar(1.05); root.add(shipPivot);
+  // The real game controller flies the route, then suits up into the white ship.
+  const arrivalController = createIsland001ArrivalController(); shipPivot.add(arrivalController.root);
   const crew = createRobotFamilyModel({quality:'low',showAddonRack:false});
   crew.setExternalRootMotion(true); crew.setMotion('idle'); crew.setEmotion('delighted'); root.add(crew.root);
   for (const role of roles) crew.members[role].scale.setScalar(0.24);
@@ -60,6 +63,7 @@ export function createIsland001FirstArrival(scene: THREE.Scene, player: THREE.Gr
     shipPivot.rotation.set(Math.sin(flight*Math.PI)*.18, -.35*(1-flight), Math.sin(flight*Math.PI)*-.48);
     const expansion=segment(t,14,18.4);
     ship.update({timeSeconds:t,pose:'flight',poseProgress:1-expansion,thrust:t<11?.7:.12,hover:t<14?.5:.04,reducedMotion:true});
+    ship.root.visible=!arrivalController.update(t,reduced);
     // Parent carries the trajectory; the canonical model owns its transformation.
     thrusters.forEach(m=>{m.visible=t<13; m.scale.y=1+Math.sin(t*20)*.08;});
     stars.position.copy(shipPivot.position); stars.position.z+=(t*35)%4;
@@ -147,7 +151,7 @@ export function createIsland001FirstArrival(scene: THREE.Scene, player: THREE.Gr
     return t>=FIRST_ARRIVAL_DURATION;
   }
   return {root, update, handoffTarget:handoff.target, dispose(){
-    scene.background=originalBackground;scene.fog=originalFog;root.remove(shipPivot,crew.root);ship.dispose();crew.dispose();
+    scene.background=originalBackground;scene.fog=originalFog;root.remove(shipPivot,crew.root);arrivalController.dispose();ship.dispose();crew.dispose();
     root.traverse(o=>{if(o instanceof THREE.Mesh||o instanceof THREE.Line){o.geometry.dispose(); const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose());}});
     thrusters.forEach(m=>m.geometry.dispose());glowMat.dispose();scene.remove(root);
   }};
