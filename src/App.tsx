@@ -109,6 +109,7 @@ import { XPToast } from './components/XPToast';
 import { scheduleRapidFireworksPreload } from './components/CelebrationFireworks';
 import { CaseSubmissionModal } from './features/cases/CaseSubmissionModal';
 import { RecoverableErrorBoundary } from './components/RecoverableErrorBoundary';
+import { captureCrash } from './services/crashReports';
 import { PointsBadge } from './components/PointsBadge';
 import { OfflineSyncDevPanel } from './components/OfflineSyncDevPanel';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
@@ -5853,6 +5854,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       <RecoverableErrorBoundary
         fallback={null}
         onError={(error, errorInfo) => {
+          captureCrash({ error, surface: 'level_worlds', componentStack: errorInfo.componentStack });
           logIslandRunEntryDebug('level_worlds_entry_boundary_error', {
             message: error.message,
             stack: error.stack,

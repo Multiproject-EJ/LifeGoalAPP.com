@@ -10,6 +10,8 @@ import { Lobby } from './world/Lobby.tsx';
 import { TrustPage } from './world/TrustPage.tsx';
 import type { BeforeInstallPromptEvent } from './world/useInstallState.ts';
 import { SafeErrorBoundary } from './components/SafeErrorBoundary.tsx';
+import { CrashReportHost } from './components/crash-report/CrashReportHost';
+import { captureCrash, installGlobalCrashCapture, requestCrashReport } from './services/crashReports';
 import { initServiceHealthForBrowser } from './services/service-health/browserWiring.ts';
 import { registerOfflineSyncExecutors } from './services/offlineSyncExecutors.ts';
 import { ServiceStatusBanner } from './components/service-status/index.ts';
@@ -68,6 +70,7 @@ const MOMENTUM_MATRIX_PREVIEW_PATH = '/dev/momentum-matrix-preview';
 const SKYBOUND_EXPEDITION_PREVIEW_PATH = '/dev/skybound-expedition';
 const JOURNEY_DISC_ARENA_PREVIEW_PATH = '/dev/journey-disc-arena';
 const GAME_BOARD_OVERLAY_PREVIEW_PATH = '/dev/game-board-overlay-preview';
+const CRASH_REPORT_PREVIEW_PATH = '/dev/crash-report-preview';
 const ARENA_PUZZLE_PREVIEW_PATH = '/dev/arena-puzzle-preview';
 const HOLIDAY_MODAL_PREVIEW_PATH = '/dev/holiday-modal-preview';
 const HABIT_LANDMARK_PREVIEW_PATH = '/dev/habit-landmark-preview';
@@ -129,6 +132,22 @@ function SkyboundExpeditionPreviewRoute() {
   useEffect(() => {
     let isMounted = true;
     import('./features/gamification/games/skybound-expedition/SkyboundExpeditionPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function CrashReportPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./components/crash-report/CrashReportPreview').then((module) => {
       if (isMounted) setPreview(() => module.default);
     });
     return () => {
@@ -534,7 +553,24 @@ function RootCrashFallback() {
           Refresh once to retry. If this keeps happening, open the app with <code>?debug=1</code>
           and share the latest “React root render failed” entry from the debugger.
         </p>
+        <button
+          type="button"
+          onClick={requestCrashReport}
+          style={{
+            marginTop: '1rem',
+            border: 0,
+            borderRadius: '999px',
+            padding: '0.7rem 1.1rem',
+            fontWeight: 800,
+            background: 'linear-gradient(135deg, #1fb8ff, #5b6cff)',
+            color: '#fff',
+            cursor: 'pointer',
+          }}
+        >
+          🛠️ Send crash report · 🎲 thank-you
+        </button>
       </section>
+      <CrashReportHost />
     </main>
   );
 }
@@ -617,6 +653,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === SKYBOUND_EXPEDITION_PREVIEW_PATH;
+  const isCrashReportPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === CRASH_REPORT_PREVIEW_PATH;
   const isGameBoardOverlayPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -710,6 +750,10 @@ function Root() {
 
   if (isSkyboundExpeditionPreviewRoute) {
     return <SkyboundExpeditionPreviewRoute />;
+  }
+
+  if (isCrashReportPreviewRoute) {
+    return <CrashReportPreviewRoute />;
   }
 
   if (isGameBoardOverlayPreviewRoute) {
@@ -889,11 +933,14 @@ function LobbyRoute({ onEnterApp }: { onEnterApp: () => void }) {
   return <Lobby onEnterApp={onEnterApp} username={username} />;
 }
 
+installGlobalCrashCapture();
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <SafeErrorBoundary
       fallback={<RootCrashFallback />}
       onError={(error, info) => {
+        captureCrash({ error, surface: 'app_root', componentStack: info.componentStack });
         // Keep native debug builds observable from Xcode. The in-app debugger
         // remains the user-facing source, while this avoids losing the actual
         // React error when the boundary replaces the tree in Capacitor.
@@ -913,6 +960,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <Root />
       <AnimationLab />
       <ServiceStatusBanner />
+      <CrashReportHost />
     </SafeErrorBoundary>
   </React.StrictMode>
 );
