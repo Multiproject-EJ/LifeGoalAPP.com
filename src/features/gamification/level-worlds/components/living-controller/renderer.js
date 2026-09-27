@@ -3,7 +3,10 @@ import {drawAmbientSparkles} from './ambient-sparkles.js';
 import * as THREE from 'three';
 import {createMultiplierHologram,PILL} from './multiplier-hologram.js';
 import {controllerFraming} from './framing.js';
-import {createPersonalityClock,personalityPose} from './personality.js';
+import {ARRIVAL_FLIGHT,createPersonalityClock,personalityPose} from './personality.js';
+// While flying in, the canvas draws beyond its box (the controller starts
+// off-frame) so the flight is never cut off by the canvas edge.
+const OVERSCAN={l:.45,r:.45,t:1.2,b:.3},NO_OVERSCAN={l:0,r:0,t:0,b:0};
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {SVGLoader} from 'three/addons/loaders/SVGLoader.js';
 import {mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
@@ -169,7 +172,7 @@ function drawButton(b,t){
  c.shadowBlur=0;c.shadowOffsetY=0;b.tex.needsUpdate=true;
 }
 
- function placeHit(el,x,y,w,h){const item=buttons.find(b=>b.hit===el),outline=item&&buttonOutlines.get(item.id);el.hidden=camera.position.z<1;if(outline){const points=outline.map(p=>new THREE.Vector3(p.x,p.y,surface(p.x,p.y)+.08).applyMatrix4(body.matrixWorld).project(camera)).map(p=>[(p.x+1)*.5*host.clientWidth,(1-p.y)*.5*host.clientHeight]);const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;el.style.left=(left+width/2)+'px';el.style.top=(top+height/2)+'px';el.style.width=width+'px';el.style.height=height+'px';el.style.clipPath='polygon('+points.map(p=>`${(p[0]-left)/width*100}% ${(p[1]-top)/height*100}%`).join(',')+')';return;}const v=new THREE.Vector3(x,y,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera),a=new THREE.Vector3(x-w/2,y-h/2,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera),b=new THREE.Vector3(x+w/2,y+h/2,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera);el.style.left=(v.x+1)*.5*host.clientWidth+'px';el.style.top=(1-v.y)*.5*host.clientHeight+'px';el.style.width=Math.max(36,Math.abs(b.x-a.x)*.5*host.clientWidth)+'px';el.style.height=Math.max(32,Math.abs(b.y-a.y)*.5*host.clientHeight)+'px';}
+ function placeHit(el,x,y,w,h){const item=buttons.find(b=>b.hit===el),outline=item&&buttonOutlines.get(item.id);el.hidden=camera.position.z<1;if(outline){const points=outline.map(p=>new THREE.Vector3(p.x,p.y,surface(p.x,p.y)+.08).applyMatrix4(body.matrixWorld).project(camera)).map(p=>[(p.x+1)*.5*view.cw-view.ox,(1-p.y)*.5*view.ch-view.oy]);const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;el.style.left=(left+width/2)+'px';el.style.top=(top+height/2)+'px';el.style.width=width+'px';el.style.height=height+'px';el.style.clipPath='polygon('+points.map(p=>`${(p[0]-left)/width*100}% ${(p[1]-top)/height*100}%`).join(',')+')';return;}const v=new THREE.Vector3(x,y,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera),a=new THREE.Vector3(x-w/2,y-h/2,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera),b=new THREE.Vector3(x+w/2,y+h/2,surface(x,y)+.12).applyMatrix4(body.matrixWorld).project(camera);el.style.left=(v.x+1)*.5*view.cw-view.ox+'px';el.style.top=(1-v.y)*.5*view.ch-view.oy+'px';el.style.width=Math.max(36,Math.abs(b.x-a.x)*.5*view.cw)+'px';el.style.height=Math.max(32,Math.abs(b.y-a.y)*.5*view.ch)+'px';}
 
  const paintUniforms={paintTime:{value:0},paintEnergy:{value:0},paintPower:{value:0},paintJackpot:{value:0}};
 // Seasonal system is removable and separate from body geometry.
@@ -183,6 +186,18 @@ for(const side of [-1,1]){
  const body=new THREE.Group();body.name='controller-personality';scene.add(body);body.add(shell,group,seasonal,rollLight);
  const personality=createPersonalityClock();let pose=personalityPose({kind:'rest',age:0}),landed=false,showTime=0;
  const hat=new THREE.Group();hat.visible=false;body.add(hat);
+ // Rocket engines under the handles: they fire during the fly-in only.
+ const engines=new THREE.Group();engines.visible=false;body.add(engines);
+ const flameGeo=new THREE.ConeGeometry(.19,1,20,1,true);flameGeo.translate(0,.5,0);
+ const coreGeo=new THREE.ConeGeometry(.09,1,16,1,true);coreGeo.translate(0,.5,0);
+ const flameMat=new THREE.MeshBasicMaterial({color:'#ff7414',transparent:true,opacity:.82,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false,side:THREE.DoubleSide});
+ const coreMat=new THREE.MeshBasicMaterial({color:'#fff1a8',transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false,side:THREE.DoubleSide});
+ const plumeGeo=new THREE.ConeGeometry(.34,1,20,1,true);plumeGeo.translate(0,.5,0);
+ const plumeMat=new THREE.MeshBasicMaterial({color:'#ff3a0a',transparent:true,opacity:.32,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false,side:THREE.DoubleSide});
+ const nozzleGlowMat=new THREE.MeshBasicMaterial({color:'#ffb347',transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
+ for(const m of [flameMat,coreMat,plumeMat,nozzleGlowMat])m.userData.keepLit=true;
+ const nozzles=[-1.02,1.02].map(x=>{const g=new THREE.Group();g.position.set(x,-.74,-.16);const plume=new THREE.Mesh(plumeGeo,plumeMat),flame=new THREE.Mesh(flameGeo,flameMat),core=new THREE.Mesh(coreGeo,coreMat),glow=new THREE.Mesh(new THREE.SphereGeometry(.2,16,12),nozzleGlowMat);g.add(plume,flame,core,glow);engines.add(g);return {g,plume,flame,core,glow};});
+ const engineLight=new THREE.PointLight('#ff8a2a',0,7);engineLight.position.set(0,-1.2,.7);body.add(engineLight);
  const hatMaterial=new THREE.MeshStandardMaterial({color:'#d79742',roughness:.58,metalness:.2});
  const brim=new THREE.Mesh(new THREE.SphereGeometry(1,32,12),hatMaterial);brim.scale.set(.83,.06,.32);hat.add(brim);
  const crown=new THREE.Mesh(new THREE.CylinderGeometry(.30,.42,.30,32),hatMaterial);crown.position.y=.12;hat.add(crown);hat.position.set(0,1.98,.32);
@@ -191,8 +206,9 @@ for(const side of [-1,1]){
  for(let i=0;i<32;i++){const particle=new THREE.Mesh(new THREE.OctahedronGeometry(.018+i%3*.008),new THREE.MeshBasicMaterial({color:i%3?'#9eeaff':'#ffe7a2',transparent:true,opacity:0,toneMapped:false,depthWrite:false}));dust.add(particle);}
  let lastTheme='',lastJackpot=false,lastRolling=false,previous=0;
  function applyTheme(){chassis.setTheme(themes[theme]);shell.traverse(o=>{if(!o.isMesh)return;for(const m of (Array.isArray(o.material)?o.material:[o.material]))m.dispose();o.material=createPaintMaterial(THREE,themes[theme],paintUniforms);});}
- function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;const frame=controllerFraming(camera.aspect);camera.position.set(0,frame.y,frame.z);camera.lookAt(0,frame.y,0);camera.updateProjectionMatrix();}
- observer=new ResizeObserver(resize);observer.observe(host);resize();
+ let overscanOn=false,view={cw:1,ch:1,ox:0,oy:0};
+ function resize(over=overscanOn){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;const o=over?OVERSCAN:NO_OVERSCAN,cw=Math.round(w*(1+o.l+o.r)),ch=Math.round(h*(1+o.t+o.b)),el=renderer.domElement;renderer.setSize(cw,ch,false);el.style.position='absolute';el.style.left=-o.l*w+'px';el.style.top=-o.t*h+'px';el.style.width=cw+'px';el.style.height=ch+'px';camera.aspect=w/h;const frame=controllerFraming(camera.aspect);camera.position.set(0,frame.y,frame.z);camera.lookAt(0,frame.y,0);if(over)camera.setViewOffset(w,h,-o.l*w,-o.t*h,cw,ch);else camera.clearViewOffset();camera.updateProjectionMatrix();view={cw,ch,ox:o.l*w,oy:o.t*h};overscanOn=over;}
+ observer=new ResizeObserver(()=>resize());observer.observe(host);resize(false);
  function tick(ms){if(disposed)return;frame=requestAnimationFrame(tick);if(ms-previous<33)return;const dt=Math.min(.1,(ms-previous)/1000);previous=ms;snapshot=getSnapshot();if(document.hidden||snapshot.hidden){personality(showTime,{...snapshot,hidden:true});return;}
  now=ms/1000;theme=snapshot.theme;reduced=snapshot.reduced;
  // Performances run on a frame-capped clock: a slow first frame (shader
@@ -204,6 +220,10 @@ for(const side of [-1,1]){
  if(pose.burst>0&&!landed){landed=true;snapshot.onArrivalImpact?.();}
  if(performance.kind!=='arrival')landed=false;
  hat.visible=pose.cowboy;
+ const wantOverscan=performance.kind==='arrival'&&performance.age<ARRIVAL_FLIGHT+.15&&!reduced;
+ if(wantOverscan!==overscanOn)resize(wantOverscan);
+ const thrust=reduced?0:pose.thrust;engines.visible=thrust>.01;engineLight.intensity=thrust*3.2;
+ if(engines.visible){const angle=Math.atan2(-pose.flameX,pose.flameY);for(const [i,n] of nozzles.entries()){const flicker=.8+.14*Math.sin(now*63+i*2.1)+.08*Math.sin(now*101+i*.7);n.g.rotation.z=angle;n.plume.scale.set(1+.15*flicker,thrust*2.1*flicker,1+.15*flicker);n.flame.scale.set(1,thrust*1.6*flicker,1);n.core.scale.set(1,thrust*.85*flicker,1);n.glow.scale.setScalar(.55+thrust*.75*flicker);}}
  dust.visible=pose.burst>0;
  dust.children.forEach((p,i)=>{const a=i*2.39996,travel=1-pose.burst;p.position.set(Math.cos(a)*(1+travel*1.4),-.9+Math.sin(a)*travel*.5,.7+travel*.2);p.material.opacity=pose.burst*.8;p.scale.setScalar(.5+pose.burst);});
  state={dice:snapshot.dice,multiplier:snapshot.multiplier,playerMax:snapshot.maximum,phase:snapshot.jackpot?'jackpot':snapshot.rolling?'rolling':snapshot.dice===0?'empty':'ready'};
@@ -249,7 +269,7 @@ for(const side of [-1,1]){
  // chassis accents. Restore material state immediately after this frame.
  const dimmed=[],seenMaterials=new Set();
  if(pose.dark)body.traverse(o=>{for(const m of (Array.isArray(o.material)?o.material:o.material?[o.material]:[])){
-  if(m.isMeshBasicMaterial&&!m.map&&!seenMaterials.has(m)){seenMaterials.add(m);dimmed.push([m,m.color.clone()]);m.color.set('#10202c');}
+  if(m.isMeshBasicMaterial&&!m.map&&!m.userData.keepLit&&!seenMaterials.has(m)){seenMaterials.add(m);dimmed.push([m,m.color.clone()]);m.color.set('#10202c');}
  }});
  renderer.render(scene,camera);
  for(const [m,color] of dimmed)m.color.copy(color);
