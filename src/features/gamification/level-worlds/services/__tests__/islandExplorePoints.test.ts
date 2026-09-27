@@ -27,4 +27,17 @@ export const islandExplorePointsTests: TestCase[] = [
       assert(board.includes('islandDeparture !== null || exploreViewActive'), 'the controller steps aside while exploring');
     },
   },
+  {
+    name: 'the explore view always has a way back above the controller (Back, tap anywhere, Escape)',
+    run: async () => {
+      // @ts-ignore Node-only source contract check.
+      const fs = await import('fs');
+      const pilot = fs.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const css = fs.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      assert(pilot.includes('className="island-explore-exit-layer"') && pilot.includes('createPortal(layer, document.body)'), 'explore exit layer renders at the viewport, not under the footer');
+      assert(pilot.includes('onClick={exitExplore}'), 'a tap anywhere returns to the island');
+      assert(/if \(event\.key !== 'Escape'\) return;/.test(pilot), 'Escape returns to the island');
+      assert(/\.island-explore-exit-layer \{[^}]*position: fixed;[^}]*z-index: 9000;/.test(css), 'the layer is viewport-fixed above the controller');
+    },
+  },
 ];
