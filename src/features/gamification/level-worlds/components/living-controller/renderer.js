@@ -181,7 +181,7 @@ for(const side of [-1,1]){
 }
  const rollLight=new THREE.PointLight('#42bfff',0,4,2);rollLight.position.set(0,.9,1.4);scene.add(rollLight);
  const body=new THREE.Group();body.name='controller-personality';scene.add(body);body.add(shell,group,seasonal,rollLight);
- const personality=createPersonalityClock();let pose=personalityPose({kind:'rest',age:0}),landed=false;
+ const personality=createPersonalityClock();let pose=personalityPose({kind:'rest',age:0}),landed=false,showTime=0;
  const hat=new THREE.Group();hat.visible=false;body.add(hat);
  const hatMaterial=new THREE.MeshStandardMaterial({color:'#d79742',roughness:.58,metalness:.2});
  const brim=new THREE.Mesh(new THREE.SphereGeometry(1,32,12),hatMaterial);brim.scale.set(.83,.06,.32);hat.add(brim);
@@ -193,9 +193,12 @@ for(const side of [-1,1]){
  function applyTheme(){chassis.setTheme(themes[theme]);shell.traverse(o=>{if(!o.isMesh)return;for(const m of (Array.isArray(o.material)?o.material:[o.material]))m.dispose();o.material=createPaintMaterial(THREE,themes[theme],paintUniforms);});}
  function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;const frame=controllerFraming(camera.aspect);camera.position.set(0,frame.y,frame.z);camera.lookAt(0,frame.y,0);camera.updateProjectionMatrix();}
  observer=new ResizeObserver(resize);observer.observe(host);resize();
- function tick(ms){if(disposed)return;frame=requestAnimationFrame(tick);if(ms-previous<33)return;const dt=Math.min(.1,(ms-previous)/1000);previous=ms;snapshot=getSnapshot();if(document.hidden||snapshot.hidden){personality(ms/1000,{...snapshot,hidden:true});return;}
+ function tick(ms){if(disposed)return;frame=requestAnimationFrame(tick);if(ms-previous<33)return;const dt=Math.min(.1,(ms-previous)/1000);previous=ms;snapshot=getSnapshot();if(document.hidden||snapshot.hidden){personality(showTime,{...snapshot,hidden:true});return;}
  now=ms/1000;theme=snapshot.theme;reduced=snapshot.reduced;
- const performance=personality(now,snapshot);pose=personalityPose(performance);
+ // Performances run on a frame-capped clock: a slow first frame (shader
+ // compile) must not eat the arrival before anyone sees it.
+ showTime+=Math.min(.05,dt);
+ const performance=personality(showTime,snapshot);pose=personalityPose(performance);
  host.dataset.controllerMotion=performance.kind;
  body.position.set(pose.x,pose.y,0);body.rotation.set(pose.rx,pose.ry,pose.rz);body.scale.setScalar(pose.scale);body.updateMatrixWorld(true);
  if(pose.burst>0&&!landed){landed=true;snapshot.onArrivalImpact?.();}
