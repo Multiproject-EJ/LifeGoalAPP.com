@@ -821,3 +821,38 @@ body:has(.journey-disc-arena[data-phone-preview="true"]) { overflow: auto; }
   align-items: center;
   gap: 6px;
 }
+
+/* ---- Clean-up: one thing to look at per moment -------------------------
+   Fight: the ring, the score bar, captains and three ability buttons whose
+   fill shows their charge. Result: verdict, stars, points, one next step. */
+.journey-disc-arena:not([data-mode="prep"]) .journey-disc-arena__title-block { visibility: hidden; }
+.journey-disc-arena[data-mode="battle"] .journey-disc-arena__battle-hud > .journey-disc-arena__notice,
+.journey-disc-arena__freeze > span,
+.journey-disc-arena__gravity > span,
+.journey-disc-arena__surge > span,
+.journey-disc-arena__freeze > i,
+.journey-disc-arena__gravity > i,
+.journey-disc-arena__surge > i { display: none; }
+.journey-disc-arena__freeze strong,
+.journey-disc-arena__gravity strong,
+.journey-disc-arena__surge strong { margin-top: 0; }
+.journey-disc-arena__next-battle > p,
+.journey-disc-arena__prep-actions > small { display: none; }
+.journey-disc-arena__result-actions { grid-template-columns: 1fr; }
+.journey-disc-arena__result-links { display: flex; justify-content: center; gap: 18px; margin-top: 12px; }
+.journey-disc-arena__result-links .journey-disc-arena__secondary,
+.journey-disc-arena__result-links .journey-disc-arena__bank {
+  display: inline-block;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 4px;
+  border: 0;
+  color: #3d6f86;
+  background: none;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.journey-disc-arena__result-links .journey-disc-arena__bank { color: #c21f45; }
