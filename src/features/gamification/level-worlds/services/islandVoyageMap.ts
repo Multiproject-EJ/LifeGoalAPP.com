@@ -1,4 +1,5 @@
 import { getIslandDisplayName } from './islandNames';
+import voyagePortraits from './islandVoyagePortraits.json';
 
 /**
  * Voyage Map data: the island-by-island journey as a winding path, split
@@ -70,8 +71,20 @@ function biomeForIsland(islandNumber: number): Biome {
   return 'life';
 }
 
-/** Island medallion art: the island's own map art, else its biome waystation. */
+interface VoyagePortrait { path: string; worldSource: number; worldFingerprint: string; capturedAt: string }
+const PORTRAITS = (voyagePortraits as { portraits: Record<string, VoyagePortrait> }).portraits;
+
+export function getVoyageIslandPortrait(islandNumber: number): VoyagePortrait | null {
+  return PORTRAITS[String(islandNumber)] ?? null;
+}
+
+/**
+ * Island medallion art: a snapshot of the real 3D island when one has been
+ * captured (npm run island-portraits), else its map art or biome waystation.
+ */
 export function getVoyageIslandArt(islandNumber: number): string {
+  const portrait = getVoyageIslandPortrait(islandNumber);
+  if (portrait) return `${portrait.path}?v=${portrait.worldFingerprint.slice(0, 8)}`;
   const authored = AUTHORED[islandNumber];
   if (authored) return authored;
   const biome = biomeForIsland(islandNumber);

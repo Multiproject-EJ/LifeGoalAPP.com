@@ -1,4 +1,6 @@
+import { ISLAND_RUN_3D_WORLD_ROUTES } from '../islandRun3DWorldRouting';
 import {
+  getVoyageIslandPortrait,
   VOYAGE_ERAS,
   getVoyageEra,
   getVoyageIslandArt,
@@ -26,7 +28,7 @@ export const islandVoyageMapTests: TestCase[] = [
       assertEqual([status(2), status(4), status(5), status(9)].join(','), 'completed,current,next,locked', 'status ladder');
       assertEqual(getVoyageIslandLabel(7, 4), getVoyageIslandLabel(7, 4), 'labels are stable');
       assertEqual(getVoyageIslandLabel(20, 4), 'Uncharted island', 'far islands keep their names secret');
-      for (let n = 1; n <= 120; n += 1) assert(getVoyageIslandArt(n).startsWith('/assets/island-run/orbit-compass/'), `island ${n} has art`);
+      for (let n = 1; n <= 120; n += 1) assert(getVoyageIslandArt(n).startsWith('/assets/'), `island ${n} has art`);
     },
   },
   {
@@ -41,6 +43,37 @@ export const islandVoyageMapTests: TestCase[] = [
       assert(/\.voyage-map \{\s*position: fixed; inset: 0;/.test(css), 'viewport-anchored overlay');
       assert(map.includes('useEffect(() => lockPageScroll(), []);'), 'background scroll is locked');
       assert(map.includes('createPortal('), 'renders in a top-level portal');
+    },
+  },
+  {
+    name: 'voyage map portraits: every authored 3D island has an up-to-date snapshot (npm run island-portraits)',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const cryptoMod = await import('crypto');
+      const devDir = 'src/features/gamification/level-worlds/dev';
+      const devFiles: string[] = fsMod.readdirSync(devDir);
+      const fingerprint = (runtime: number, source: number) => {
+        const pattern = new RegExp(`^Island0*${source}(?![0-9])`);
+        const hash = cryptoMod.createHash('sha256');
+        hash.update(`route:${runtime}->${source}\n`);
+        for (const name of devFiles.filter((f) => pattern.test(f) && !/^Island5ThreePilot/.test(f)).sort()) {
+          hash.update(`${name}\n`).update(fsMod.readFileSync(`${devDir}/${name}`));
+        }
+        return hash.digest('hex').slice(0, 16);
+      };
+      const stale: string[] = [];
+      for (const route of ISLAND_RUN_3D_WORLD_ROUTES) {
+        if (route.presentationStatus === 'placeholder') continue;
+        const portrait = getVoyageIslandPortrait(route.runtimeIslandNumber);
+        if (!portrait) { stale.push(`${route.runtimeIslandNumber}: missing`); continue; }
+        if (!fsMod.existsSync(`public${portrait.path}`)) stale.push(`${route.runtimeIslandNumber}: file missing`);
+        if (portrait.worldFingerprint !== fingerprint(route.runtimeIslandNumber, route.worldSourceNumber)) {
+          stale.push(`${route.runtimeIslandNumber}: world changed since ${portrait.capturedAt}`);
+        }
+      }
+      assert(stale.length === 0, `re-run \`npm run island-portraits -- --islands <n>\` for: ${stale.join('; ')}`);
     },
   },
 ];
