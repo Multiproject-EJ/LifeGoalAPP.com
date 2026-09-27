@@ -146,7 +146,8 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [3, 'Frostmoon Haven', 'Open the Frostwell'],
         [4, 'Crown Citadel', 'Raise the Broken Causeway'],
         [5, 'Sunshore Arena', 'Defeat the Arena Guardian'],
-        [6, 'Moonveil Nexus', 'Rephase the Moon Mirrors'],
+        [6, "Fisherman's Village", 'The Hundred-Kilo Catch'],
+        [16, 'Moonveil Nexus', 'Rephase the Moon Mirrors'],
         [7, 'Abyssal Pearl Kingdom', 'Restore the Breathline'],
         [8, 'Jungle Expedition', 'Awaken the Living Compass'],
         [9, 'The Heartshaft Crucible', 'Restart the Ignition Chain'],
@@ -262,7 +263,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
     run: () => {
       const expectedStageLabels = new Map([
         [4, 'Causeway Spans'],
-        [6, 'Mirrors Aligned'],
+        [16, 'Mirrors Aligned'],
         [7, 'Districts Breathing'],
         [8, 'Compass Seals Awakened'],
         [9, 'Systems Ignited'],

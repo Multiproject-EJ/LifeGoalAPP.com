@@ -54,7 +54,7 @@ export const islandRunVaultCollectionTests: TestCase[] = [
       assertEqual(pickup.ledger, ledger, 'cannot overwrite the Re-Docking slot');
       assertEqual(JSON.stringify(ledger), before, 'source remains unchanged');
       assertEqual(getStagedRestorationMissionDescriptor(4)?.missionId, 'broken-causeway', 'legacy mission remains available');
-      assertEqual(getStagedRestorationMissionDescriptor(6, ledger)?.missionId, 'moon-mirrors', 'other staged missions unchanged');
+      assertEqual(getStagedRestorationMissionDescriptor(16, ledger)?.missionId, 'moon-mirrors', 'other staged missions unchanged');
     },
   },
   {
@@ -79,7 +79,7 @@ export const islandRunVaultCollectionTests: TestCase[] = [
         },
       }), false, 'partial Island 004 mission progress keeps the vault hidden');
       assertEqual(isVaultIslandCollectionUnlocked({
-        '0:6': {
+        '0:16': {
           missionId: 'moon-mirrors', version: 1, claimedPickupTileIndices: [2, 10, 18, 26, 35],
           chargesEarned: 5, chargesSpent: 5, activatedStages: 5, lastActivatedStage: 5,
           completedAtMs: 60, updatedAtMs: 60,

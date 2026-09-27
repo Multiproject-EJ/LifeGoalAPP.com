@@ -135,7 +135,7 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'The guardian remains the final canonical landmark objective.',
     caretakerSignal: 'Restore the shore, then meet our guardian in the arena.',
   },
-  6: {
+  16: {
     progressKind: 'staged_restoration',
     headline: 'Rephase the Moon Mirrors',
     missionStatement: 'Moonveil Nexus has lost the beam chain that stabilizes its central moon core. Rotate five great mirrors back into alignment and restore the lunar circuit.',
@@ -216,7 +216,7 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
     fieldProtocol: 'One nectar charge commissions one reservoir stage. Watch the pressure, then stand clear when the fourth wax seal breaks.',
     caretakerSignal: 'Fill it slowly. The final drop will wake every Honeyfall in the kingdom.',
   },
-  16: {
+  6: {
     progressKind: 'fishermans_fishing',
     headline: 'The Hundred-Kilo Catch',
     missionStatement: 'The Fisherman’s Village needs a full market catch from its central pond. Land at one of the rod stations around the shore and reel every catch in by hand—but watch the water carefully.',
@@ -278,7 +278,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   3: 'Frostmoon Haven',
   4: 'Crown Citadel',
   5: 'Sunshore Arena',
-  6: 'Moonveil Nexus',
+  6: "Fisherman's Village",
   7: 'Abyssal Pearl Kingdom',
   8: 'Jungle Expedition',
   9: 'The Heartshaft Crucible',
@@ -287,7 +287,7 @@ const AUTHORED_MISSION_NAMES: Readonly<Partial<Record<number, string>>> = Object
   12: 'Sunken Sands',
   13: 'Cactus Canyon',
   14: 'Honeycomb Kingdom',
-  16: "Fisherman's Village",
+  16: 'Moonveil Nexus',
   20: 'Lava Labyrinth',
   18: 'The Everblossom Kingdom',
   19: 'Coaster Carnival',

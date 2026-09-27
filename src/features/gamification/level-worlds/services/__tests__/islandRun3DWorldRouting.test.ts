@@ -18,7 +18,8 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(resolveIslandRun3DWorldRoute(4)?.worldSourceNumber, 4, 'Island 004 keeps Crown Citadel');
       assertEqual(resolveIslandRun3DWorldRoute(5)?.worldSourceNumber, 5, 'Island 005 keeps the tropical Sunwheel Arena');
       assertEqual(resolveIslandRun3DWorldRoute(5)?.role, 'arena', 'runtime Island 005 owns the arena role');
-      assertEqual(resolveIslandRun3DWorldRoute(6)?.worldSourceNumber, 6, 'Island 006 owns the Moonveil Nexus world');
+      assertEqual(resolveIslandRun3DWorldRoute(6)?.worldSourceNumber, 22, "Island 006 owns the Fisherman's Village world, right before the underwater Island 007");
+      assertEqual(resolveIslandRun3DWorldRoute(16)?.worldSourceNumber, 6, 'Island 016 owns the Moonveil Nexus world');
       assertEqual(resolveIslandRun3DWorldRoute(6)?.role, 'ordinary', 'Island 006 keeps the ordinary-island role');
       assertEqual(resolveIslandRun3DWorldRoute(7)?.worldSourceNumber, 7, 'Island 007 owns the Abyssal Pearl Kingdom world');
       assertEqual(resolveIslandRun3DWorldRoute(7)?.role, 'ordinary', 'Island 007 keeps the ordinary-island role');
@@ -45,15 +46,15 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       );
       assertEqual(resolveIslandRun3DWorldRoute(18)?.worldSourceNumber, 8, 'Island 018 owns the Everblossom Kingdom world');
       assertEqual(resolveIslandRun3DWorldRoute(18)?.role, 'ordinary', 'Island 018 keeps the ordinary-island role');
-      assertEqual(resolveIslandRun3DWorldRoute(16)?.worldSourceNumber, 22, 'runtime Island 016 owns the Fisherman\'s Village world');
-      assertEqual(resolveIslandRun3DWorldRoute(16)?.role, 'ordinary', 'Island 016 remains an ordinary mission island');
+      assertEqual(resolveIslandRun3DWorldRoute(6)?.worldSourceNumber, 22, 'runtime Island 006 owns the Fisherman\'s Village world');
+      assertEqual(resolveIslandRun3DWorldRoute(6)?.role, 'ordinary', 'Island 006 remains an ordinary mission island');
       assertEqual(resolveIslandRun3DWorldRoute(20)?.worldSourceNumber, 20, 'runtime Island 020 owns the Lava Labyrinth world');
       assertEqual(resolveIslandRun3DWorldRoute(20)?.role, 'arena', 'runtime Island 020 owns the arena role');
       assertEqual(resolveIslandRun3DWorldRoute(19)?.worldSourceNumber, 19, 'Island 019 owns the Coaster Carnival world');
       assertEqual(resolveIslandRun3DWorldRoute(19)?.role, 'ordinary', 'Island 019 remains an ordinary mission island');
       assertEqual(resolveIslandRun3DWorldRoute(17)?.worldSourceNumber, 17, 'runtime Island 017 owns the Titan\'s Rest death-island world');
       assertEqual(resolveIslandRun3DWorldRoute(17)?.role, 'ordinary', 'Island 017 remains ordinary even though its source card says Arena');
-      assertEqual(resolveIslandRun3DWorldRoute(22), null, 'runtime Island 022 stays free after the explicit reassignment to 016');
+      assertEqual(resolveIslandRun3DWorldRoute(22), null, 'runtime Island 022 stays free after the explicit reassignment to 006');
     },
   },
   {

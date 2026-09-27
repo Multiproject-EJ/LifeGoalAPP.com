@@ -114,7 +114,7 @@ export type StagedRestorationPickupKind =
   | 'titan_soul_bolt';
 
 export interface StagedRestorationMissionDescriptor {
-  islandNumber: 4 | 6 | 7 | 8 | 9 | 17 | 18 | 19 | 20;
+  islandNumber: 4 | 7 | 8 | 9 | 16 | 17 | 18 | 19 | 20;
   missionId: StagedRestorationMissionId;
   pickupKind: StagedRestorationPickupKind;
   pickupLabel: string;
@@ -138,8 +138,8 @@ export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorat
     stageCount: 3, chargeCostPerStage: 2,
     preferredPickupFractions: [1 / 36, 8 / 36, 11 / 36, 20 / 36, 26 / 36, 35 / 36],
   },
-  6: {
-    islandNumber: 6, missionId: 'moon-mirrors', pickupKind: 'moon_mirror_lens',
+  16: {
+    islandNumber: 16, missionId: 'moon-mirrors', pickupKind: 'moon_mirror_lens',
     pickupLabel: 'Moon Lens', actionLabel: 'Align Next Mirror', stageLabel: 'Mirrors Aligned',
     stageCount: 5, chargeCostPerStage: 1,
     preferredPickupFractions: [2 / 36, 10 / 36, 18 / 36, 26 / 36, 35 / 36],
@@ -222,7 +222,8 @@ export function getStagedRestorationPickupForTile(
   return { kind: descriptor.pickupKind, amount: 1 };
 }
 
-export const FISHERMANS_VILLAGE_ISLAND_NUMBER = 16;
+/** Runtime Island 006 since the Fisherman's Village ↔ Moonveil swap. */
+export const FISHERMANS_VILLAGE_ISLAND_NUMBER = 6;
 export const FISHERMANS_VILLAGE_FISH_TARGET_KG = 100;
 export const FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG = 78;
 export const FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG = 46;
