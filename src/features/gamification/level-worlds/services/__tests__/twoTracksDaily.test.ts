@@ -10,6 +10,7 @@ import {
 } from '../twoTracksDaily';
 import { deriveCombinedJourneyLevel, JOURNEY_XP_WEIGHTS } from '../combinedJourneyLevel';
 import { buildDualTrackOverlayViewModel, buildJourneyLevelInputFromOverlay } from '../dualTrackOverlayAdapter';
+import { buildTwoTracksRoad, TWO_TRACKS_ROW_COUNT, TWO_TRACKS_TODAY_ROW } from '../twoTracksRoad';
 
 const sig = (tokenIndex: number, spent = 0) => gameActivitySignature({
   currentIslandNumber: 4, cycleIndex: 0, tokenIndex, essenceLifetimeSpent: spent,
@@ -125,6 +126,8 @@ export const twoTracksDailyTests: TestCase[] = [
       const overlay = fsMod.readFileSync('src/components/GameBoardOverlay.tsx', 'utf8');
       const app = fsMod.readFileSync('src/App.tsx', 'utf8');
       assert(overlay.includes('<JourneyHub'), 'the centre hub renders');
+      assert(overlay.includes('<TwoTracksRoad'), 'the tracks render as the tilted road');
+      assert(!overlay.includes('game-board-overlay__rank-extension-hero'), 'the rank banner moved into the rank modal');
       assert(!overlay.includes('game-board-overlay__progress-spine-chest'), 'the chest moved off the thin spine');
       assert(overlay.includes('game-board-overlay__hub-daily'), 'daily both-tracks check is shown');
       assert(overlay.includes('onTwoTracksSparkSeen?.()'), 'spark is marked seen after it plays');
@@ -132,6 +135,50 @@ export const twoTracksDailyTests: TestCase[] = [
       assert(!/persistIslandRunRuntimeStatePatch|commitIslandRunState/.test(
         fsMod.readFileSync('src/features/gamification/level-worlds/hooks/useTwoTracksDaily.ts', 'utf8'),
       ), 'the daily check only reads gameplay state');
+    },
+  },
+  {
+    name: 'two tracks road: done below, today in the middle, the unknown above; islands wear their portraits',
+    run: () => {
+      const vm = buildDualTrackOverlayViewModel({
+        islandNumber: 9,
+        realLife: {
+          isAuthenticated: true,
+          goals: [
+            { id: 'g1', title: 'Run a half marathon', status: 'active' },
+            { id: 'g2', title: 'Read 12 books', status: 'active' },
+            { id: 'g3', title: 'Save a travel fund', status: 'completed' },
+          ],
+          habits: [{ id: 'a', title: 'Walk' }, { id: 'b', title: 'Read' }],
+          habitCheckInsToday: 1,
+        },
+      });
+      const road = buildTwoTracksRoad(vm, { lifeDone: true, gameDone: true, bothDone: true, sparkPending: false, streak: 2, sparkXpToday: 12 });
+      assert(road.inSync, 'both lanes moved: in sync');
+      for (const lane of ['life', 'game'] as const) {
+        const tiles = road.tiles.filter((tile) => tile.lane === lane);
+        assert(tiles.every((tile) => tile.row >= 0 && tile.row < TWO_TRACKS_ROW_COUNT), `${lane} tiles stay on the road`);
+        assertEqual(tiles.filter((tile) => tile.state === 'today').length, 1, `${lane} has one today tile`);
+        assert(tiles.find((tile) => tile.state === 'today')!.row === TWO_TRACKS_TODAY_ROW, `${lane} today sits on the today row`);
+        assert(tiles.filter((tile) => tile.row > TWO_TRACKS_TODAY_ROW).every((tile) => tile.state === 'next' || tile.state === 'fog'), `${lane} future is next/fog`);
+        assert(tiles.filter((tile) => tile.row < TWO_TRACKS_TODAY_ROW).every((tile) => tile.state === 'done'), `${lane} past is done`);
+      }
+      const lifeToday = road.tiles.find((tile) => tile.id === 'life-today')!;
+      assert(lifeToday.steps?.done === 1 && lifeToday.points === '+3 XP', 'today\'s habit steps and points');
+      assert(road.tiles.some((tile) => tile.lane === 'life' && tile.state === 'done' && tile.points === '+60 XP'), 'achieved goal shows its points');
+      assert(road.tiles.filter((tile) => tile.lane === 'life' && tile.state === 'fog').every((tile) => tile.title === '?'), 'the life future is open');
+      const gamePast = road.tiles.filter((tile) => tile.lane === 'game' && tile.state === 'done');
+      assertEqual(gamePast.length, 3, 'three explored islands below today');
+      assert(gamePast.every((tile) => Boolean(tile.imageSrc)), 'explored islands use their portraits');
+      assert(road.horizon.label === `Lv ${vm.journeyLevel.nextThresholdLevel} chest`, 'the next reward sits at the horizon');
+    },
+  },
+  {
+    name: 'two tracks road: island 1 has no past islands and a fresh player is not in sync',
+    run: () => {
+      const road = buildTwoTracksRoad(buildDualTrackOverlayViewModel({ islandNumber: 1 }), null);
+      assert(!road.inSync, 'no daily check yet');
+      assert(!road.tiles.some((tile) => tile.lane === 'game' && tile.state === 'done'), 'nothing explored before island 1');
     },
   },
 ];

@@ -3,13 +3,11 @@ import '../styles/game-board-overlay.css';
 import { getIslandBackgroundImageSrc } from '../features/gamification/level-worlds/services/islandBackgrounds';
 import {
   buildDualTrackOverlayViewModel,
-  type DualTrackMilestoneCard,
   type DualTrackRealLifeInput,
 } from '../features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import type { JourneyChestClaimViewModel } from '../features/gamification/level-worlds/services/combinedJourneyChestClaim';
 import type { IslandJourneyProgress } from '../features/gamification/level-worlds/services/islandJourneyMilestones';
 import {
-  RankBadge,
   RankJourneyModal,
   type RankDefinition,
   type RankProgressView,
@@ -21,6 +19,8 @@ import {
 import { LivingController } from '../features/gamification/level-worlds/components/living-controller/LivingController';
 import type { ControllerMenuFaces } from '../features/gamification/level-worlds/components/living-controller/renderer';
 import type { TwoTracksToday } from '../features/gamification/level-worlds/services/twoTracksDaily';
+import { buildTwoTracksRoad } from '../features/gamification/level-worlds/services/twoTracksRoad';
+import { TwoTracksRoad } from './two-tracks/TwoTracksRoad';
 
 /**
  * Presentational-only memory of the last island the dual-track ladder was shown for,
@@ -135,13 +135,6 @@ type GameBoardOverlayProps = {
   onTwoTracksSparkSeen?: () => void;
 };
 
-type DualTrackColumnProps = {
-  title: string;
-  subtitle: string;
-  tone: 'life' | 'game';
-  cards: DualTrackMilestoneCard[];
-};
-
 const noop = () => {};
 
 type ControllerHandleActionProps = {
@@ -204,76 +197,12 @@ function ControllerHandleAction({
   );
 }
 
-function DualTrackColumn({ title, subtitle, tone, cards }: DualTrackColumnProps) {
-  const headingId = `game-board-overlay-track-${tone}`;
-  return (
-    <section className={`game-board-overlay__track game-board-overlay__track--${tone}`} aria-labelledby={headingId}>
-      <div className="game-board-overlay__track-header">
-        <h3 id={headingId}>{title}</h3>
-        <p>{subtitle}</p>
-      </div>
-      <div className="game-board-overlay__track-ladder" role="list" aria-label={`${title} milestones`}>
-        {cards.map((card) => (
-          <div
-            key={card.id}
-            role="listitem"
-            className={`game-board-overlay__milestone game-board-overlay__milestone--${card.position}`}
-          >
-            {card.imageSrc ? (
-              <img
-                src={card.imageSrc}
-                alt=""
-                className="game-board-overlay__milestone-bg"
-                aria-hidden="true"
-                loading="lazy"
-                decoding="async"
-                onLoad={(event) => {
-                  event.currentTarget.parentElement?.classList.add('game-board-overlay__milestone--with-image');
-                }}
-                onError={(event) => {
-                  event.currentTarget.hidden = true;
-                  event.currentTarget.parentElement?.classList.remove('game-board-overlay__milestone--with-image');
-                }}
-              />
-            ) : null}
-            <span className="game-board-overlay__milestone-icon" aria-hidden="true">
-              {card.icon}
-              {typeof card.islandNumber === 'number' ? (
-                <span className="game-board-overlay__milestone-index">{card.islandNumber}</span>
-              ) : null}
-            </span>
-            <span className="game-board-overlay__milestone-copy">
-              <span className="game-board-overlay__milestone-kicker">{card.progressLabel}</span>
-              <strong>{card.title}</strong>
-              <span>{card.subtitle}</span>
-              {card.steps ? (
-                <span className="game-board-overlay__milestone-steps" aria-label={card.steps.label}>
-                  <span className="game-board-overlay__milestone-steps-pips" aria-hidden="true">
-                    {Array.from({ length: Math.min(card.steps.total, 8) }, (_, index) => (
-                      <i key={index} className={index < card.steps!.done ? 'is-done' : undefined} />
-                    ))}
-                  </span>
-                  <span className="game-board-overlay__milestone-steps-label" aria-hidden="true">{card.steps.label}</span>
-                </span>
-              ) : null}
-            </span>
-            <span className="game-board-overlay__milestone-reward">{card.rewardPreviewLabel}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 type JourneyHubProps = {
   level: number;
   progressPercent: number;
   nextThresholdLevel: number;
-  journeyChest?: JourneyChestClaimViewModel | null;
-  journeyChestPending: boolean;
-  journeyChestFeedback?: string | null;
-  onClaimJourneyChest?: (thresholdLevel: number) => void;
   onOpenRankJourney?: () => void;
+  promotionPending: boolean;
   today: TwoTracksToday | null;
   sparkPlaying: boolean;
 };
@@ -281,20 +210,16 @@ type JourneyHubProps = {
 const HUB_RING_RADIUS = 44;
 const HUB_RING_LENGTH = 2 * Math.PI * HUB_RING_RADIUS;
 
-/** Centre of the climb: level ring, the next chest, and today's both-tracks check. */
+/** Stands on today's row: the level ring (opens the rank journey) and today's both-tracks check. */
 function JourneyHub({
   level,
   progressPercent,
   nextThresholdLevel,
-  journeyChest,
-  journeyChestPending,
-  journeyChestFeedback,
-  onClaimJourneyChest,
   onOpenRankJourney,
+  promotionPending,
   today,
   sparkPlaying,
 }: JourneyHubProps) {
-  const claimable = journeyChest && journeyChest.claimableThreshold != null ? journeyChest : null;
   const dash = (Math.min(100, Math.max(0, progressPercent)) / 100) * HUB_RING_LENGTH;
   const ringLabel = `Combined Journey Level ${level}, ${progressPercent} percent to the level ${nextThresholdLevel} chest`;
   const ring = (
@@ -315,6 +240,37 @@ function JourneyHub({
       </span>
     </>
   );
+  return (
+    <div
+      className={`game-board-overlay__hub${sparkPlaying ? ' game-board-overlay__hub--spark' : ''}${
+        today?.bothDone ? ' game-board-overlay__hub--both' : ''
+      }${promotionPending ? ' game-board-overlay__hub--promotion' : ''}`}
+    >
+      {onOpenRankJourney ? (
+        <button
+          type="button"
+          className="game-board-overlay__hub-ring"
+          onClick={onOpenRankJourney}
+          aria-label={`${ringLabel}.${promotionPending ? ' New rank earned.' : ''} Open rank journey`}
+        >
+          {ring}
+        </button>
+      ) : (
+        <span className="game-board-overlay__hub-ring" role="img" aria-label={ringLabel}>{ring}</span>
+      )}
+      {sparkPlaying ? (
+        <>
+          <span className="game-board-overlay__spark game-board-overlay__spark--life" aria-hidden="true" />
+          <span className="game-board-overlay__spark game-board-overlay__spark--game" aria-hidden="true" />
+          <span className="game-board-overlay__spark-xp" aria-hidden="true">+{today?.sparkXpToday ?? 0} XP ✦</span>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+/** Today's both-tracks check: 🌱 life step + 🎲 game step. */
+function DailyCheck({ today }: { today: TwoTracksToday | null }) {
   const dailyLabel = !today
     ? 'Habit + roll today'
     : today.bothDone
@@ -326,40 +282,8 @@ function JourneyHub({
           : 'Habit + roll today';
 
   return (
-    <div
-      className={`game-board-overlay__hub${sparkPlaying ? ' game-board-overlay__hub--spark' : ''}${
-        today?.bothDone ? ' game-board-overlay__hub--both' : ''
-      }`}
-    >
-      {onOpenRankJourney ? (
-        <button type="button" className="game-board-overlay__hub-ring" onClick={onOpenRankJourney} aria-label={`${ringLabel}. Open rank journey`}>
-          {ring}
-        </button>
-      ) : (
-        <span className="game-board-overlay__hub-ring" role="img" aria-label={ringLabel}>{ring}</span>
-      )}
-      {claimable ? (
-        <button
-          type="button"
-          className="game-board-overlay__hub-chest game-board-overlay__hub-chest--ready"
-          onClick={() => onClaimJourneyChest?.(claimable.claimableThreshold as number)}
-          disabled={journeyChestPending}
-          aria-label={`${claimable.ctaLabel}: ${claimable.rewardPreviewLabel}`}
-        >
-          <span aria-hidden="true">🎁</span>
-          <span>{journeyChestPending ? 'Claiming…' : claimable.rewardPreviewLabel}</span>
-        </button>
-      ) : (
-        <span className="game-board-overlay__hub-chest" aria-label={`Next chest at level ${nextThresholdLevel}`}>
-          <span aria-hidden="true">🎁</span>
-          <span aria-hidden="true">Lv {nextThresholdLevel}</span>
-        </span>
-      )}
-      {journeyChestFeedback ? (
-        <span className="game-board-overlay__hub-feedback" role="status">{journeyChestFeedback}</span>
-      ) : null}
       <span
-        className="game-board-overlay__hub-daily"
+        className={`game-board-overlay__hub-daily${today?.bothDone ? ' game-board-overlay__hub-daily--both' : ''}`}
         role="status"
         aria-label={`Today: life track ${today?.lifeDone ? 'done' : 'not yet'}, game track ${today?.gameDone ? 'done' : 'not yet'}.`}
       >
@@ -370,12 +294,52 @@ function JourneyHub({
         </span>
         <span className="game-board-overlay__hub-daily-label" aria-hidden="true">{dailyLabel}</span>
       </span>
-      {sparkPlaying ? (
-        <>
-          <span className="game-board-overlay__spark game-board-overlay__spark--life" aria-hidden="true" />
-          <span className="game-board-overlay__spark game-board-overlay__spark--game" aria-hidden="true" />
-          <span className="game-board-overlay__spark-xp" aria-hidden="true">+{today?.sparkXpToday ?? 0} XP ✦</span>
-        </>
+  );
+}
+
+type HorizonChestProps = {
+  nextThresholdLevel: number;
+  progressPercent: number;
+  journeyChest?: JourneyChestClaimViewModel | null;
+  journeyChestPending: boolean;
+  journeyChestFeedback?: string | null;
+  onClaimJourneyChest?: (thresholdLevel: number) => void;
+};
+
+/** The next reward, floating at the horizon where the paths fade out. */
+function HorizonChest({
+  nextThresholdLevel,
+  progressPercent,
+  journeyChest,
+  journeyChestPending,
+  journeyChestFeedback,
+  onClaimJourneyChest,
+}: HorizonChestProps) {
+  const claimable = journeyChest && journeyChest.claimableThreshold != null ? journeyChest : null;
+  return (
+    <div className="game-board-overlay__horizon">
+      {claimable ? (
+        <button
+          type="button"
+          className="game-board-overlay__hub-chest game-board-overlay__hub-chest--ready"
+          onClick={() => onClaimJourneyChest?.(claimable.claimableThreshold as number)}
+          disabled={journeyChestPending}
+          aria-label={`${claimable.ctaLabel}: ${claimable.rewardPreviewLabel}`}
+        >
+          <span className="game-board-overlay__horizon-icon" aria-hidden="true">🎁</span>
+          <span>{journeyChestPending ? 'Claiming…' : `Claim · ${claimable.rewardPreviewLabel}`}</span>
+        </button>
+      ) : (
+        <span
+          className="game-board-overlay__hub-chest"
+          aria-label={`Next reward: level ${nextThresholdLevel} chest, ${100 - progressPercent} percent to go`}
+        >
+          <span className="game-board-overlay__horizon-icon" aria-hidden="true">🎁</span>
+          <span aria-hidden="true">Lv {nextThresholdLevel} chest · {100 - progressPercent}% to go</span>
+        </span>
+      )}
+      {journeyChestFeedback ? (
+        <span className="game-board-overlay__hub-feedback" role="status">{journeyChestFeedback}</span>
       ) : null}
     </div>
   );
@@ -509,14 +473,7 @@ export function GameBoardOverlay({
     earnedXpFloor,
     twoTracksSparkXp,
   });
-  const { collectedCount, totalCount } = dualTrackViewModel.gameProgress;
-  const gameTrackSubtitle = collectedCount > 0
-    ? `${collectedCount} of ${totalCount} islands explored`
-    : 'Begin your first island adventure.';
-  const { source: realLifeSource, goalCount, habitCount } = dualTrackViewModel.realLifeProgress;
-  const realLifeTrackSubtitle = realLifeSource === 'data'
-    ? `${goalCount} goal${goalCount === 1 ? '' : 's'} · ${habitCount} habit${habitCount === 1 ? '' : 's'}`
-    : 'Goals, habits, and growth milestones.';
+  const road = buildTwoTracksRoad(dualTrackViewModel, twoTracksToday);
   const rankExtensionBadge = RANK_EXTENSION_BADGES[rankExtensionTierForRank(currentRank)];
 
   // Same controller as the game; its four buttons mirror the Today footer
@@ -622,96 +579,45 @@ export function GameBoardOverlay({
 
         <div className="game-board-overlay__middle game-board-overlay__middle--minimal">
           <section className="game-board-overlay__quest-progress" aria-labelledby="game-board-overlay-title">
-            <header className="game-board-overlay__header game-board-overlay__header--rank-extension">
+            <header className="game-board-overlay__header game-board-overlay__header--road">
               <p className="game-board-overlay__eyebrow">Two tracks · one climb</p>
               <h2 id="game-board-overlay-title" className="game-board-overlay__title game-board-overlay__title--sr-only">
                 {dualTrackViewModel.title}
               </h2>
-              <div className="game-board-overlay__rank-extension-hero">
-                <img
-                  src={rankExtensionBadge.src}
-                  alt=""
-                  className="game-board-overlay__rank-extension-img"
-                  draggable="false"
-                  aria-hidden="true"
-                />
-                {currentRank ? (
-                  <button
-                    type="button"
-                    className={`game-board-overlay__rank-extension-center${
-                      rankHasPendingPromotion ? ' game-board-overlay__rank-extension-center--pulse' : ''
-                    }`}
-                    onClick={() => setIsRankJourneyOpen(true)}
-                    aria-label={`Level ${dualTrackViewModel.journeyLevel.level}. Rank: ${currentRank.title}.${
-                      rankHasPendingPromotion ? ' New rank earned.' : ''
-                    } Open rank journey`}
-                  >
-                    <span className="game-board-overlay__rank-extension-badge" aria-hidden="true">
-                      <RankBadge rank={currentRank} size={46} />
-                    </span>
-                  </button>
-                ) : (
-                  <span className="game-board-overlay__rank-extension-level" aria-hidden="true">
-                    <strong>✦</strong>
-                  </span>
-                )}
-              </div>
-              <span className="game-board-overlay__rank-extension-accessible">{rankExtensionBadge.label}</span>
             </header>
 
-            <div
-              className={`game-board-overlay__dual-track-stage${
-                isLadderClimbing ? ' game-board-overlay__dual-track-stage--climbing' : ''
-              }`}
-              role="group"
-              aria-label="My Quest and Game Progress tracks"
-            >
-              {isLadderClimbing && climbDelta > 0 ? (
-                <span className="game-board-overlay__climb-burst" aria-hidden="true">
-                  +{climbDelta} 🏝️
-                </span>
-              ) : null}
-              <DualTrackColumn
-                title="REAL LIFE JOURNEY"
-                subtitle={realLifeTrackSubtitle}
-                tone="life"
-                cards={dualTrackViewModel.realLifeTrack}
-              />
-              <div
-                className="game-board-overlay__progress-spine"
-                role="img"
-                aria-label={`Combined Journey Level ${dualTrackViewModel.journeyLevel.level}, ${dualTrackViewModel.journeyLevel.progressPercentToNextLevel} percent to ${dualTrackViewModel.journeyLevel.nextChestLabel}`}
-              >
-                <span className="game-board-overlay__progress-spine-rail" aria-hidden="true">
-                  <span
-                    className="game-board-overlay__progress-spine-fill"
-                    style={{ height: `${dualTrackViewModel.centerSpine.progressPercent}%` }}
-                  />
-                </span>
-              </div>
-              <JourneyHub
-                level={dualTrackViewModel.journeyLevel.level}
-                progressPercent={dualTrackViewModel.journeyLevel.progressPercentToNextLevel}
-                nextThresholdLevel={dualTrackViewModel.journeyLevel.nextThresholdLevel}
-                journeyChest={journeyChest}
-                journeyChestPending={journeyChestPending}
-                journeyChestFeedback={journeyChestFeedback}
-                onClaimJourneyChest={onClaimJourneyChest}
-                onOpenRankJourney={currentRank && rankProgress ? () => setIsRankJourneyOpen(true) : undefined}
-                today={twoTracksToday}
-                sparkPlaying={isSparkPlaying}
-              />
-              <DualTrackColumn
-                title="GAME JOURNEY"
-                subtitle={gameTrackSubtitle}
-                tone="game"
-                cards={dualTrackViewModel.gameTrack}
-              />
-            </div>
+            <TwoTracksRoad
+              road={road}
+              progressPercent={dualTrackViewModel.journeyLevel.progressPercentToNextLevel}
+              climbDelta={isLadderClimbing ? climbDelta : 0}
+              hub={(
+                <JourneyHub
+                  level={dualTrackViewModel.journeyLevel.level}
+                  progressPercent={dualTrackViewModel.journeyLevel.progressPercentToNextLevel}
+                  nextThresholdLevel={dualTrackViewModel.journeyLevel.nextThresholdLevel}
+                  onOpenRankJourney={currentRank && rankProgress ? () => setIsRankJourneyOpen(true) : undefined}
+                  promotionPending={rankHasPendingPromotion}
+                  today={twoTracksToday}
+                  sparkPlaying={isSparkPlaying}
+                />
+              )}
+              daily={<DailyCheck today={twoTracksToday} />}
+              horizon={(
+                <HorizonChest
+                  nextThresholdLevel={dualTrackViewModel.journeyLevel.nextThresholdLevel}
+                  progressPercent={dualTrackViewModel.journeyLevel.progressPercentToNextLevel}
+                  journeyChest={journeyChest}
+                  journeyChestPending={journeyChestPending}
+                  journeyChestFeedback={journeyChestFeedback}
+                  onClaimJourneyChest={onClaimJourneyChest}
+                />
+              )}
+            />
           </section>
 
           {isRankJourneyOpen && currentRank && rankProgress ? (
             <RankJourneyModal
+              extensionBadge={rankExtensionBadge}
               level={rankLevel ?? dualTrackViewModel.journeyLevel.level}
               progress={rankProgress}
               onClose={() => setIsRankJourneyOpen(false)}

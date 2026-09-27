@@ -2087,12 +2087,12 @@ span.game-board-overlay__hub-ring {
   background: rgba(148, 163, 184, 0.45);
 }
 
-.game-board-overlay__hub--both .game-board-overlay__hub-daily {
+.game-board-overlay__hub-daily--both {
   border-color: rgba(250, 204, 21, 0.75);
   box-shadow: 0 0 14px rgba(250, 204, 21, 0.4);
 }
 
-.game-board-overlay__hub--both .game-board-overlay__hub-daily-dots b {
+.game-board-overlay__hub-daily--both .game-board-overlay__hub-daily-dots b {
   background: linear-gradient(90deg, #bef264, #facc15, #38bdf8);
 }
 
@@ -2105,7 +2105,7 @@ span.game-board-overlay__hub-ring {
   white-space: nowrap;
 }
 
-.game-board-overlay__hub--both .game-board-overlay__hub-daily-label {
+.game-board-overlay__hub-daily--both .game-board-overlay__hub-daily-label {
   color: #fde68a;
 }
 

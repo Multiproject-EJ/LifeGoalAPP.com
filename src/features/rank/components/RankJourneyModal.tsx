@@ -18,6 +18,8 @@ export interface RankJourneyModalProps {
   /** Rank-band progress, for the hero's "X XP to next" line. */
   progress: RankProgressView;
   onClose: () => void;
+  /** Optional winged rank-extension banner shown above the hero (from the Two Tracks screen). */
+  extensionBadge?: { src: string; label: string };
 }
 
 function rankLevelRangeLabel(rank: RankDefinition): string {
@@ -32,7 +34,7 @@ function rankLevelRangeLabel(rank: RankDefinition): string {
     : levelLabel;
 }
 
-export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalProps) {
+export function RankJourneyModal({ level, progress, onClose, extensionBadge }: RankJourneyModalProps) {
   const current = progress.current;
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const selected = selectedId ? getRankById(selectedId) : null;
@@ -55,6 +57,16 @@ export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalP
         <button type="button" className="rank-journey__close" aria-label="Close rank journey" onClick={onClose}>
           ×
         </button>
+
+        {extensionBadge ? (
+          <div className="rank-journey__extension">
+            <img src={extensionBadge.src} alt={extensionBadge.label} className="rank-journey__extension-img" draggable="false" />
+            <span className="rank-journey__extension-level" aria-hidden="true">
+              <span>Lv</span>
+              <strong>{level}</strong>
+            </span>
+          </div>
+        ) : null}
 
         <header className="rank-journey__hero">
           <RankBadge rank={current} size={96} />
