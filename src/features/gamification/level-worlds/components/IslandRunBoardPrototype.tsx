@@ -2165,6 +2165,10 @@ export function IslandRunBoardPrototype({
   const [dragonCinematicElapsedSeconds, setDragonCinematicElapsedSeconds] = useState(0);
   const fishingLastPullAtRef = useRef(0);
   const fishingEscapeInFlightRef = useRef(false);
+  const fishingReelInFlightRef = useRef(false);
+  // The catch kind outlives the pending catch so the 3D caught / escaped shot
+  // still shows the right fish after the catch has settled.
+  const [fishingSessionCatchKind, setFishingSessionCatchKind] = useState<'nothing' | 'small' | 'medium' | 'large' | 'colossal'>('nothing');
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -14118,6 +14122,7 @@ export function IslandRunBoardPrototype({
     ) return undefined;
     const timer = window.setTimeout(() => {
       setFishingPullsRemaining(fishermansFishingProgress.pendingCatch?.pullsRequired ?? 1);
+      setFishingSessionCatchKind(fishermansFishingProgress.pendingCatch?.kind ?? 'nothing');
       setFishingPhase('approach');
       setFishingCountdown(null);
       setFishingTension(0);
@@ -14223,7 +14228,11 @@ export function IslandRunBoardPrototype({
     setIsReelingFishingCatch(true);
     try {
       const result = await releaseFishermansVillageCatch({ session, client, reason });
-      if (result.status !== 'ok') return;
+      if (result.status !== 'ok') {
+        fishingEscapeInFlightRef.current = false;
+        refreshFishermansVillageState(`release_fishermans_village_catch_settled_${reason}`);
+        return;
+      }
       refreshFishermansVillageState(`release_fishermans_village_catch_${reason}`);
       const message = reason === 'empty'
         ? 'Just bubbles this time. Cast again from another rod tile!'
@@ -14238,6 +14247,9 @@ export function IslandRunBoardPrototype({
         setShowFishermansFishing(false);
         setFishingPhase('off');
       }, 1_750);
+    } catch (error) {
+      console.error('[island-run] Releasing the Fisherman\'s Village catch failed', error);
+      fishingEscapeInFlightRef.current = false;
     } finally {
       setIsReelingFishingCatch(false);
     }
@@ -14260,9 +14272,15 @@ export function IslandRunBoardPrototype({
       return;
     }
     setIsReelingFishingCatch(true);
+    fishingReelInFlightRef.current = true;
     try {
       const result = await reelFishermansVillageCatch({ session, client });
-      if (result.status !== 'ok') return;
+      if (result.status !== 'ok') {
+        // The catch already settled elsewhere (escaped, synced): refresh so
+        // the fishing session closes instead of waiting on a catch that is gone.
+        refreshFishermansVillageState('reel_fishermans_village_catch_settled');
+        return;
+      }
       refreshFishermansVillageState('reel_fishermans_village_catch');
       const catchLabel = result.kilograms <= 0
         ? 'The hook came back empty.'
@@ -14289,7 +14307,11 @@ export function IslandRunBoardPrototype({
           setFishingPhase('off');
         }, 2_450);
       }
+    } catch (error) {
+      console.error('[island-run] Reeling the Fisherman\'s Village catch failed', error);
+      setLandingText('🎣 The line slipped. Pull again!');
     } finally {
+      fishingReelInFlightRef.current = false;
       setIsReelingFishingCatch(false);
     }
   }, [
@@ -14352,12 +14374,29 @@ export function IslandRunBoardPrototype({
     const interval = window.setInterval(() => {
       const elapsed = Date.now() - fishingLastPullAtRef.current;
       setFishingTension(Math.max(0, 1 - elapsed / graceMs));
-      if (elapsed > graceMs && !fishingEscapeInFlightRef.current) {
+      if (elapsed > graceMs && !fishingEscapeInFlightRef.current && !fishingReelInFlightRef.current) {
         void handleReleaseFishermansCatch('escaped');
       }
     }, 70);
     return () => window.clearInterval(interval);
   }, [fishermansFishingProgress.pendingCatch, fishingPhase, handleReleaseFishermansCatch, showFishermansFishing]);
+
+  // Safety net: the fishing session locks the board (controller, modals), so it
+  // must never outlive its catch. If the pending catch is gone and no
+  // caught/escaped close is running, close the session; caught/escaped get a
+  // generous backstop in case their own close timer was lost.
+  useEffect(() => {
+    if (!showFishermansFishing || fishermansFishingProgress.pendingCatch || isReelingFishingCatch) return undefined;
+    const settled = fishingPhase === 'caught' || fishingPhase === 'escaped';
+    if (settled && fishermansFishingProgress.dragonTriggeredAtMs !== null) return undefined;
+    const timer = window.setTimeout(() => {
+      setShowFishermansFishing(false);
+      setFishingPhase('off');
+      setFishingCountdown(null);
+      setFishingCatchMessage(null);
+    }, settled ? 4_000 : 450);
+    return () => window.clearTimeout(timer);
+  }, [fishermansFishingProgress.dragonTriggeredAtMs, fishermansFishingProgress.pendingCatch, fishingPhase, isReelingFishingCatch, showFishermansFishing]);
 
   const handleSpinFrostwell = useCallback(async () => {
     if (frostwellActionPendingRef.current || !['ready', 'complete'].includes(frostwellSequence.phase)) return;
@@ -16563,13 +16602,13 @@ export function IslandRunBoardPrototype({
                     : dragonCinematicElapsedSeconds,
                   impactRepairProgress: fishermansFishingProgress.repairCompletedAtMs === null ? 0 : 1,
                   fishingInteraction: {
-                    active: showFishermansFishing && Boolean(fishermansFishingProgress.pendingCatch),
+                    active: showFishermansFishing && (Boolean(fishermansFishingProgress.pendingCatch) || fishingPhase === 'caught' || fishingPhase === 'escaped'),
                     phase: fishingPhase,
-                    catchKind: fishermansFishingProgress.pendingCatch?.kind ?? 'nothing',
+                    catchKind: fishermansFishingProgress.pendingCatch?.kind ?? fishingSessionCatchKind,
                     countdown: fishingCountdown,
                     pullProgress: fishermansFishingProgress.pendingCatch
                       ? Math.max(0, Math.min(1, 1 - fishingPullsRemaining / fishermansFishingProgress.pendingCatch.pullsRequired))
-                      : 0,
+                      : fishingPhase === 'caught' ? 1 : 0,
                     tension: fishingTension,
                     reelPulse: fishingReelPulse,
                   },
@@ -21266,7 +21305,8 @@ export function IslandRunBoardPrototype({
         );
       })(), document.body) : null}
 
-      {showFishermansFishing && fishermansFishingProgress.pendingCatch && typeof document !== 'undefined' ? createPortal((
+      {showFishermansFishing && (fishermansFishingProgress.pendingCatch || fishingPhase === 'caught' || fishingPhase === 'escaped')
+        && typeof document !== 'undefined' ? createPortal((
         <div className="fishermans-fishing-hud__layer">
           <section
             className={`fishermans-fishing-hud fishermans-fishing-hud--${fishingPhase}`}
@@ -21288,10 +21328,6 @@ export function IslandRunBoardPrototype({
             {fishingCountdown !== null ? (
               <div className="fishermans-fishing-hud__countdown" aria-live="assertive">{fishingCountdown}</div>
             ) : null}
-            <div className="fishermans-fishing-hud__meter">
-              <div><strong>{fishermansFishingProgress.fishCaughtKg} kg</strong><span>/ {FISHERMANS_VILLAGE_FISH_TARGET_KG} kg</span><b>{(fishermansFishingProgress.fishCaughtKg * 2.2046226218).toFixed(1)} / 220.5 lb</b></div>
-              <div className="fishermans-fishing-hud__track"><span style={{ width: `${fishermansFishingProgress.fishCaughtKg}%` }} /></div>
-            </div>
             {fishingCatchMessage ? (
               <div className="fishermans-fishing-hud__result" role="status">{fishingCatchMessage}</div>
             ) : fishingPhase === 'bite' || fishingPhase === 'reeling' ? (
