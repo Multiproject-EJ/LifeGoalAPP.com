@@ -233,6 +233,7 @@ import { resolveFeatureAccess } from './services/featureAccess';
 import { loadGoalsOfflineFirst } from './data/goalsRepo';
 import { countHabitCheckInsV2, listHabitsV2, listTodayHabitLogsV2 } from './services/habitsV2';
 import { useTwoTracksDaily } from './features/gamification/level-worlds/hooks/useTwoTracksDaily';
+import { usePlayerActivityHeartbeat } from './features/gamification/level-worlds/hooks/usePlayerActivityHeartbeat';
 import type { DualTrackRealLifeInput } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import { ISLAND_RUN_LAUNCH_NEW_HABIT_EVENT } from './features/gamification/level-worlds/services/islandRunHabitLandmarkEvents';
 import './styles/workspace.css';
@@ -1241,6 +1242,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
     journeyState,
     overlayRealLifeInput ? overlayRealLifeInput.habitCheckInsToday ?? 0 : null,
   );
+
+  // Per-day play heartbeat for the admin player-insights dashboard (counts only).
+  usePlayerActivityHeartbeat(supabaseSession?.user?.id ?? null, journeyState);
 
   // Shared Combined Journey Level inputs (chest claim + player-menu rank header).
   const currentJourneyInput = buildJourneyLevelInputFromOverlay({
