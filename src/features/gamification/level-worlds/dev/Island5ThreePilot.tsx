@@ -15,6 +15,7 @@ import './Island19WonderRide.css';
 import './Island40Placeholder.css';
 import {createAssemblySeaGeometry} from './Island1V2Terrain';
 import { createWonderRideCameraFilter } from './island19WonderRideCamera';
+import { resolveUnoccludedCameraPosition } from './islandCameraOcclusion';
 import * as THREE from 'three';
 import { choosePawnCamera, shortestPawnAngle, pawnSightBlocked, completedPawnHops, type PawnObstacle, type PawnPoint } from './islandPawnPresentation';
 import { createIslandPawnTileTrail } from './islandPawnTileTrail';
@@ -4940,6 +4941,12 @@ export default function Island5ThreePilot({
     let cactusCanyonBlastCameraWasActive = false;
     let waterDragonCameraWasActive = false;
     let fishingCameraWasActive = false;
+    // The authored fishing shot is fixed; once landmarks (or the Boss hall)
+    // are built they can stand between it and the pond. Re-solve a clear
+    // line of sight whenever the authored pose changes (once per phase).
+    let fishingCameraSolvedFor = '';
+    const fishingCameraSolvedPosition = new THREE.Vector3();
+    const fishingCameraRaycaster = new THREE.Raycaster();
     let firstLightAssemblyPresentationKey = '';
     let honeyfallLastConstructionSequence = Math.max(
       0,
@@ -10711,7 +10718,18 @@ export default function Island5ThreePilot({
           fishingCameraWasActive = true;
           transition = null;
           controls.enabled = false;
-          camera.position.lerp(pose.position, 0.09);
+          const solveKey = `${pose.position.toArray().join(',')}|${pose.target.toArray().join(',')}`;
+          if (solveKey !== fishingCameraSolvedFor) {
+            fishingCameraSolvedFor = solveKey;
+            const marketHall = livingAmbience.root?.getObjectByName('ISLAND_22_FISH_MARKET_HALL');
+            fishingCameraSolvedPosition.copy(resolveUnoccludedCameraPosition({
+              desired: pose.position,
+              target: pose.target,
+              occluders: [...landmarkRootsById.values(), ...(marketHall ? [marketHall] : [])],
+              raycaster: fishingCameraRaycaster,
+            }));
+          }
+          camera.position.lerp(fishingCameraSolvedPosition, 0.09);
           controls.target.lerp(pose.target, 0.105);
           if (!isReducedMotion && pose.shake > 0) {
             camera.position.x += Math.sin(elapsed * 68) * pose.shake;
@@ -10721,6 +10739,7 @@ export default function Island5ThreePilot({
         }
       } else if (fishingCameraWasActive) {
         fishingCameraWasActive = false;
+        fishingCameraSolvedFor = '';
         controls.enabled = true;
         applyPreset('overview', 0.78);
       } else if (waterDragonCameraActive) {

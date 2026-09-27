@@ -81,7 +81,10 @@ const landmarkObjectNames: Record<string, string> = {
   event: 'ISLAND_22_EVENT_LANDMARK_ROOT',
   market: 'ISLAND_22_FISH_MARKET_HALL',
 };
-if (baselineView) {
+// `?landmarks=1` keeps every built landmark in the fishing sequence, so the
+// fishing camera can be checked against the real skyline (it must never sit
+// behind a landmark or the Boss building).
+if (baselineView || params.get('landmarks') === '1') {
   ISLAND_5_LANDMARKS.forEach((definition) => {
     world.root.add(buildIsland22FishermansVillageLandmark(definition, 3, 'medium', materials));
   });
