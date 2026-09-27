@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import {createMultiplierHologram,PILL} from './multiplier-hologram.js';
 import {controllerFraming} from './framing.js';
 import {iconBacklight} from './icon-backlight.js';
+import {diceTier,diceTierStyle,autoRollHover} from './dice-tiers.js';
 import {controllerShineLevel,controllerSunbeam} from './controller-sunlight.js';
 import {ARRIVAL_FLIGHT,createPersonalityClock,personalityPose} from './personality.js';
 // While flying in, the canvas draws beyond its box (the controller starts
@@ -48,7 +49,7 @@ function curvedFace(shape,offset){const source=new THREE.ShapeGeometry(shape).to
 function svgShape(d,transform=p=>new THREE.Vector2((p.x-300)/100,(175-p.y)/100)){const path=new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${d}"/></svg>`).paths[0];return new THREE.Shape(SVGLoader.createShapes(path)[0].getPoints(40).map(transform));}
 function conform(g,offset){const p=g.attributes.position;for(let i=0;i<p.count;i++)p.setZ(i,p.getZ(i)+surface(p.getX(i),p.getY(i))+offset);g.computeVertexNormals();}
 
- let snapshot=getSnapshot(),state,theme=snapshot.theme,reduced=snapshot.reduced,now=0,level=0,power=1,buildAffordable=false,buildCueStarted=-10,lastInteractionAt=0;
+ let snapshot=getSnapshot(),state,theme=snapshot.theme,reduced=snapshot.reduced,now=0,level=0,power=1,buildAffordable=false,buildCueStarted=-10,lastInteractionAt=0,tierLevel=0;
  const buttons=[],lights=[],buttonOutlines=new Map(),group=new THREE.Group();scene.add(group);
 const chassis=createChassisDetails(THREE,{surface,curvedFace,mergeVertices});group.add(chassis.root);
 const powerPill=createMultiplierHologram(THREE);group.add(powerPill.root);
@@ -81,6 +82,43 @@ for(const [name,cx,sign,deg] of [['creatures',.115,-1,4],['concord',.885,1,-4]])
 function icon(c,id,x,y,size,color){c.save();c.translate(x,y);c.scale(size/100,size/100);c.strokeStyle=color;c.fillStyle=color;c.lineWidth=6;c.lineCap='round';c.lineJoin='round';if(id==='dice'){rounded(c,-40,-40,80,80,16);c.stroke();for(const [a,b] of [[-18,-18],[18,-18],[0,0],[-18,18],[18,18]]){c.beginPath();c.arc(a,b,5,0,7);c.fill();}}else if(id==='creatures'){for(const [a,b] of [[-28,-25],[-9,-40],[12,-40],[30,-23]]){c.beginPath();c.ellipse(a,b,9,13,0,0,7);c.fill();}c.beginPath();c.ellipse(0,10,26,23,0,0,7);c.fill();}else if(id==='market'){rounded(c,-31,-17,62,58,8);c.stroke();c.beginPath();c.arc(0,-17,17,Math.PI,0);c.stroke();}else if(id==='build'){c.beginPath();c.moveTo(-25,35);c.lineTo(20,-15);c.moveTo(-12,-29);c.lineTo(32,9);c.lineTo(43,-4);c.lineTo(0,-43);c.closePath();c.stroke();}else{c.beginPath();c.arc(0,0,31,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(0,-24);c.lineTo(10,0);c.lineTo(0,24);c.lineTo(-10,0);c.closePath();c.fill();}c.restore();}
 function celebrationIcon(c,x,y,r,t){c.save();c.translate(x,y);c.rotate(reduced?0:Math.sin(t*2)*.12);c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}c.closePath();c.fill();c.restore();}
 function jackpotEmblem(c,b,t){drawJackpotButton(c,b.id,t,reduced);}
+// Dice-wealth energy on the Roll cap: rim rings, pulse, sparks and a sweeping band.
+function mixHex(a,b,k){const pa=parseInt(a.slice(1,7),16),pb=parseInt(b.slice(1,7),16);const ch=s=>Math.round(((pa>>s)&255)*(1-k)+((pb>>s)&255)*k);return 'rgb('+ch(16)+','+ch(8)+','+ch(0)+')';}
+function drawDiceTierEnergy(c,W,H,t){
+ const style=diceTierStyle(tierLevel);if(tierLevel<.05)return;
+ const base=(themes[theme].light||'#7fe6ff').startsWith('#')?themes[theme].light:'#7fe6ff';
+ const color=mixHex(base,'#ffd36b',style.warm);
+ const pulse=style.pulse&&!reduced?.78+.22*Math.sin(t*2.4):1;
+ c.save();
+ // Energise the whole cap: an inner glow that grows (and warms) with the tier.
+ c.globalCompositeOperation='lighter';
+ const inner=c.createRadialGradient(W/2,H*.52,20,W/2,H*.52,W*.55);
+ inner.addColorStop(0,color);inner.addColorStop(1,'rgba(0,0,0,0)');
+ c.globalAlpha=(.06+style.glow*.3)*pulse;c.fillStyle=inner;c.fillRect(0,0,W,H);
+ c.globalCompositeOperation='source-over';
+ // Rim rings inset to sit inside the tapered cap.
+ c.strokeStyle=color;c.shadowColor=color;
+ const ring=k=>({x:96+k*22,y:22+k*16});
+ for(let k=0;k<style.rings;k++){
+  const {x,y}=ring(k);c.globalAlpha=Math.min(1,(.75-k*.15)*Math.min(1,tierLevel))*pulse;c.lineWidth=8-k*2;c.shadowBlur=16+style.glow*30;
+  c.beginPath();c.roundRect(x,y,W-x*2,H-y*2,110-k*12);c.stroke();
+ }
+ if(style.sparks){
+  const {x:rx,y:ry}=ring(0),w=W-rx*2,h=H-ry*2,per=2*(w+h);
+  c.fillStyle='#ffffff';c.shadowBlur=20;
+  for(let i=0;i<style.sparks;i++){
+   const d=(((reduced?0:t*.12)+i/style.sparks)%1)*per;let x,y;
+   if(d<w){x=rx+d;y=ry;}else if(d<w+h){x=rx+w;y=ry+d-w;}else if(d<2*w+h){x=rx+w-(d-w-h);y=ry+h;}else{x=rx;y=ry+h-(d-2*w-h);}
+   c.globalAlpha=.9*pulse;c.beginPath();c.arc(x,y,7,0,Math.PI*2);c.fill();
+  }
+ }
+ if(style.band&&!reduced){
+  const pos=((t*.35)%1.6-.3)*W;const band=c.createLinearGradient(pos-140,0,pos+140,H);
+  band.addColorStop(0,'rgba(255,255,255,0)');band.addColorStop(.5,'rgba(255,240,190,.34)');band.addColorStop(1,'rgba(255,255,255,0)');
+  c.globalAlpha=1;c.shadowBlur=0;c.fillStyle=band;c.fillRect(0,0,W,H);
+ }
+ c.restore();
+}
 function drawButton(b,t){
  const c=b.ctx,W=b.canvas.width,H=b.canvas.height,jackpot=state.phase==='jackpot',ink=themes[theme].ink;
  c.clearRect(0,0,W,H);
@@ -147,6 +185,7 @@ function drawButton(b,t){
   const light=c.createRadialGradient(x,y,0,x,y,32);light.addColorStop(0,'rgba(220,250,255,'+strength+')');light.addColorStop(.2,'rgba(160,225,255,'+(strength*.35)+')');light.addColorStop(1,'rgba(120,215,255,0)');
   c.fillStyle=light;c.fillRect(x-32,y-32,64,64);
  }c.restore();
+ if(!jackpot&&!empty&&!snapshot.menuFaces)drawDiceTierEnergy(c,W,H,t);
  c.textAlign='center';c.textBaseline='middle';c.fillStyle=ink;c.shadowColor='#072a56';c.shadowBlur=8;c.shadowOffsetY=3;
  const menuRoll=snapshot.menuFaces&&snapshot.menuFaces.roll;
  if(menuRoll){
@@ -225,13 +264,15 @@ for(const side of [-1,1]){
  showTime+=Math.min(.05,dt);
  const performance=personality(showTime,snapshot);pose=personalityPose(performance);
  host.dataset.controllerMotion=performance.kind;
- body.position.set(pose.x,pose.y,0);body.rotation.set(pose.rx,pose.ry,pose.rz);body.scale.setScalar(pose.scale);body.updateMatrixWorld(true);
+ // Auto-roll lights the rocket fuel: a gentle, flying hover while it runs.
+ const hover=performance.kind==='arrival'?{thrust:0,bobY:0,swayZ:0}:autoRollHover(now,snapshot.autoRolling,reduced);
+ body.position.set(pose.x,pose.y+hover.bobY,0);body.rotation.set(pose.rx,pose.ry,pose.rz+hover.swayZ);body.scale.setScalar(pose.scale);body.updateMatrixWorld(true);
  if(pose.burst>0&&!landed){landed=true;snapshot.onArrivalImpact?.();}
  if(performance.kind!=='arrival')landed=false;
  hat.visible=pose.cowboy;
  const wantOverscan=performance.kind==='arrival'&&performance.age<ARRIVAL_FLIGHT+.15&&!reduced;
  if(wantOverscan!==overscanOn)resize(wantOverscan);
- const thrust=reduced?0:pose.thrust;engines.visible=thrust>.01;engineLight.intensity=thrust*3.2;
+ const thrust=reduced?0:Math.max(pose.thrust,hover.thrust);engines.visible=thrust>.01;engineLight.intensity=thrust*3.2;
  if(engines.visible){const angle=Math.atan2(-pose.flameX,pose.flameY);for(const [i,n] of nozzles.entries()){const flicker=.8+.14*Math.sin(now*63+i*2.1)+.08*Math.sin(now*101+i*.7);n.g.rotation.z=angle;n.plume.scale.set(1+.15*flicker,thrust*2.1*flicker,1+.15*flicker);n.flame.scale.set(1,thrust*1.6*flicker,1);n.core.scale.set(1,thrust*.85*flicker,1);n.glow.scale.setScalar(.55+thrust*.75*flicker);}}
  dust.visible=pose.burst>0;
  dust.children.forEach((p,i)=>{const a=i*2.39996,travel=1-pose.burst;p.position.set(Math.cos(a)*(1+travel*1.4),-.9+Math.sin(a)*travel*.5,.7+travel*.2);p.material.opacity=pose.burst*.8;p.scale.setScalar(.5+pose.burst);});
@@ -239,12 +280,13 @@ for(const side of [-1,1]){
  const jackpot=state.phase==='jackpot';
  if(lastTheme!==theme||lastJackpot!==jackpot){applyTheme();seasonal.visible=!!themes[theme].holiday;lastTheme=theme;lastJackpot=jackpot;}
  if(snapshot.buildReady&&!buildAffordable)buildCueStarted=now;buildAffordable=snapshot.buildReady;
- power=THREE.MathUtils.damp(power,snapshot.dice>0?1:0,4,dt);level=THREE.MathUtils.damp(level,snapshot.multiplier/Math.max(1,snapshot.maximum),3,dt);
+ power=THREE.MathUtils.damp(power,snapshot.dice>0?1:0,4,dt);
+ tierLevel=THREE.MathUtils.damp(tierLevel,snapshot.menuFaces?0:diceTier(snapshot.dice),2.2,dt);level=THREE.MathUtils.damp(level,snapshot.multiplier/Math.max(1,snapshot.maximum),3,dt);
  if(snapshot.rolling&&!lastRolling)buttons.find(b=>b.id==='roll').press=now;lastRolling=snapshot.rolling;
  if(snapshot.rolling||snapshot.autoRolling)lastInteractionAt=now;
  const rollAge=now-buttons.find(b=>b.id==='roll').press;
  const clickGlow=Math.max(0,1-rollAge/.7);
- rollLight.intensity=reduced?0:clickGlow*2.5+(snapshot.rolling?.5:0);
+ rollLight.intensity=reduced?0:clickGlow*2.5+(snapshot.rolling?.5:0)+diceTierStyle(tierLevel).glow*1.1;
  shell.position.x=group.position.x=jackpot&&!reduced?Math.sin(now*45)*.014:0;
  paintUniforms.paintTime.value=reduced?0:now;paintUniforms.paintPower.value=snapshot.dice>0?power:0;paintUniforms.paintEnergy.value=snapshot.dice>0?power*level:0;paintUniforms.paintJackpot.value=jackpot?1:0;
  // Shine is a full-sun treat that fades after ~1 min; sunbeams sweep now and then.
@@ -263,7 +305,7 @@ for(const side of [-1,1]){
  b.glow.color.set(tint).multiplyScalar(.35+charge*.7);b.haloMat.color.set(tint);b.haloMat.opacity=.08+charge*.16;
  if(theme==='dark'&&!jackpot){b.glow.color.set('#b0f1ff').multiplyScalar(.28+.95*charge);b.haloMat.color.set('#50d7ff');b.haloMat.opacity=.06+.32*charge;}
  if(jackpot)b.haloMat.opacity=reduced?.4:.35+.1*Math.sin(now*2.4-i*.4);
- if(b.id==='roll'&&!jackpot){const breath=reduced?.18:.18+.06*Math.sin(now*2);b.haloMat.opacity=Math.max(b.haloMat.opacity,power*breath+clickGlow*.5);}
+ if(b.id==='roll'&&!jackpot){const breath=reduced?.18:.18+.06*Math.sin(now*2);b.haloMat.opacity=Math.max(b.haloMat.opacity,power*breath+clickGlow*.5)+diceTierStyle(tierLevel).glow*.22;}
  if(b.id==='roll'&&(theme==='ice'||theme==='light')&&snapshot.dice===0&&!snapshot.rolling&&!jackpot){
    b.glow.color.set('#ffc18b');b.haloMat.color.set(themes[theme].depletedLight);
    b.haloMat.opacity=reduced?.2:.2+.045*Math.sin(now*1.6);rollLight.intensity=0;
