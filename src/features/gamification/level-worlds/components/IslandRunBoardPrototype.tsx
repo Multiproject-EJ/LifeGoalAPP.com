@@ -779,6 +779,7 @@ import {
 import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } from '../dev/Island5ThreePilot';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
 import { registerCrashContext } from '../../../../services/crashReports';
+import { IslandRunScoreboardModal } from './IslandRunScoreboardModal';
 import { MISSION_MESSAGE_BANNER_MS, MISSION_MESSAGE_NUDGE_INTERVAL_MS, playMissionMessageRing } from '../services/islandRunMissionMessage';
 import { ISLAND_DEPARTURE_FALLBACK_MS, shouldPlayIslandDepartureCinematic } from '../services/islandRunDepartureCinematic';
 
@@ -2592,6 +2593,8 @@ export function IslandRunBoardPrototype({
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   // An island explore-point view is open: the controller steps aside.
   const [exploreViewActive, setExploreViewActive] = useState(false);
+  // In-game Scoreboard (Adventure League, archetype quiz first).
+  const [showScoreboard, setShowScoreboard] = useState(false);
   // Island departure cinematic (Island Complete, part B): ship folds, lifts
   // off and streaks away before the travel overlay. Presentation only.
   const [islandDeparture, setIslandDeparture] = useState<{ fromIsland: number; toIsland: number } | null>(null);
@@ -14067,7 +14070,7 @@ export function IslandRunBoardPrototype({
   }, [islandProgressReadState, nowMs, playerLevelInfo?.currentLevel]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
-    showSolarMapOverlay || showDevDailySpinPreview ||
+    showSolarMapOverlay || showDevDailySpinPreview || showScoreboard ||
     firstArrivalActive ||
     showOpeningGamesCeremony || openingCeremonyPlayback !== null ||
     assemblyMandateOpen ||
@@ -15906,6 +15909,10 @@ export function IslandRunBoardPrototype({
                 aria-label={`Open Island Map, current island ${islandNumber} of ${ISLAND_RUN_MAX_ISLAND}`}
                 onClick={() => { stopAutoRoll(); setShowTopbarMenu(false); setShowSolarMapOverlay(true); }}>
                 Island Map · {islandNumber} / {ISLAND_RUN_MAX_ISLAND}
+              </button>
+              <button type="button" className="island-run-board__topbar-menu-item"
+                onClick={() => { stopAutoRoll(); setShowTopbarMenu(false); setShowScoreboard(true); }}>
+                🏆 Scoreboard
               </button>
               <button
                 ref={topbarMenuFirstItemRef}
@@ -20465,6 +20472,7 @@ export function IslandRunBoardPrototype({
         <button type="button" className="island-run-dev-skip-intro" onClick={handleSkipDevFreshArrivalIntro} aria-label="Skip intro">
           Skip <span aria-hidden="true">⏭</span>
         </button>, document.body) : null}
+      {showScoreboard ? <IslandRunScoreboardModal session={session} onClose={() => setShowScoreboard(false)} /> : null}
       {incomingMissionBriefing && showMissionMessageBanner && !doesModalOwnAttention ? createPortal(
         <button type="button" className="island-run-mission-message-banner" onClick={openIncomingMissionBriefing}>
           <span className="island-run-mission-message-banner__icon" aria-hidden="true"><MissionPhoneRailIcon /></span>

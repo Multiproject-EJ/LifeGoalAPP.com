@@ -71,6 +71,7 @@ const SKYBOUND_EXPEDITION_PREVIEW_PATH = '/dev/skybound-expedition';
 const JOURNEY_DISC_ARENA_PREVIEW_PATH = '/dev/journey-disc-arena';
 const GAME_BOARD_OVERLAY_PREVIEW_PATH = '/dev/game-board-overlay-preview';
 const CRASH_REPORT_PREVIEW_PATH = '/dev/crash-report-preview';
+const SCOREBOARD_PREVIEW_PATH = '/dev/scoreboard-preview';
 const ARENA_PUZZLE_PREVIEW_PATH = '/dev/arena-puzzle-preview';
 const HOLIDAY_MODAL_PREVIEW_PATH = '/dev/holiday-modal-preview';
 const HABIT_LANDMARK_PREVIEW_PATH = '/dev/habit-landmark-preview';
@@ -132,6 +133,22 @@ function SkyboundExpeditionPreviewRoute() {
   useEffect(() => {
     let isMounted = true;
     import('./features/gamification/games/skybound-expedition/SkyboundExpeditionPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function ScoreboardPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/components/IslandRunScoreboardPreview').then((module) => {
       if (isMounted) setPreview(() => module.default);
     });
     return () => {
@@ -653,6 +670,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === SKYBOUND_EXPEDITION_PREVIEW_PATH;
+  const isScoreboardPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === SCOREBOARD_PREVIEW_PATH;
   const isCrashReportPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -750,6 +771,10 @@ function Root() {
 
   if (isSkyboundExpeditionPreviewRoute) {
     return <SkyboundExpeditionPreviewRoute />;
+  }
+
+  if (isScoreboardPreviewRoute) {
+    return <ScoreboardPreviewRoute />;
   }
 
   if (isCrashReportPreviewRoute) {
