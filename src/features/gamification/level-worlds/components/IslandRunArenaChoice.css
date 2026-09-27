@@ -66,3 +66,11 @@
   .arena-choice__miniature { height: 62px; }
   .arena-choice__card p { font-size: 8.5px; }
 }
+
+.arena-choice__finished { display: grid; gap: 4px; margin-top: 8px; padding: 8px 10px; border: 1px solid rgba(134, 239, 172, .45); border-radius: 12px; background: linear-gradient(135deg, rgba(20, 83, 45, .55), rgba(15, 31, 52, .8)); color: #e8fff0; font-size: 11px; text-align: center; }
+.arena-choice__finished span { font-weight: 800; }
+.arena-choice__finished strong { margin-left: 4px; color: #86efac; }
+.arena-choice__finished small { color: rgba(232, 255, 240, .75); }
+.arena-choice__finished button,
+.arena-choice__dev-skip { justify-self: center; margin-top: 4px; padding: 4px 10px; border: 1px dashed rgba(251, 191, 36, .7); border-radius: 999px; background: rgba(15, 23, 42, .6); color: #fde68a; font-size: 10px; font-weight: 800; cursor: pointer; }
+.arena-choice__dev-skip { display: block; margin: 8px auto 0; }

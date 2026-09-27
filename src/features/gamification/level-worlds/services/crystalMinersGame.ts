@@ -150,6 +150,35 @@ export function getCrystalMinersCareer(checkpoints: Record<string, CrystalMiners
   return latest;
 }
 
+/** All forty caverns cleared and every journey prize collected. */
+export function isMinerCampaignComplete(progress: Pick<CrystalMinersProgress, 'eventTrack'>): boolean {
+  return progress.eventTrack.levelsCleared >= MINER_LEVEL_COUNT
+    && MINER_EVENT_MILESTONES.every(m => progress.eventTrack.claimedMilestones.includes(m.levels));
+}
+
+/** A fresh forty-cavern journey. Lifetime counters (digs, score, league, drop
+ * tickets) carry over so arena round receipts and paid tickets stay valid. */
+export function startMinerSeason(career: CrystalMinersProgress): CrystalMinersProgress {
+  const fresh = createCrystalMinersProgress();
+  return { ...fresh, revision: career.revision, updatedAtMs: career.updatedAtMs, dropTickets: career.dropTickets,
+    digs: career.digs, bought: career.bought, totalOre: career.totalOre, totalTreasures: career.totalTreasures,
+    totalScore: career.totalScore, bestScore: career.bestScore, giftsGenerated: Math.max(fresh.giftsGenerated, career.giftsGenerated) };
+}
+
+/** The career a given event plays. A finished journey stays finished for the
+ * event it was completed in; the next event opens a new season instead of a
+ * permanently locked mine. */
+export function resolveCrystalMinersProgressForEvent(checkpoints: Record<string, CrystalMinersProgress>, eventId: string): CrystalMinersProgress | null {
+  const career = getCrystalMinersCareer(checkpoints);
+  if (!career || !isMinerCampaignComplete(career)) return career;
+  if (checkpoints[eventId] === career) return career;
+  // Stable identity per saved career so React external-store reads stay pure.
+  let season = minerSeasonCache.get(career);
+  if (!season) { season = startMinerSeason(career); minerSeasonCache.set(career, season); }
+  return season;
+}
+const minerSeasonCache = new WeakMap<CrystalMinersProgress, CrystalMinersProgress>();
+
 /** Wrapped values hide the result; opening rolls once in the canonical action. */
 export function rollMinerGiftTier(buyTier: number, superGift: boolean, roll: number): number {
   const r = Math.max(0,Math.min(.999999,Number.isFinite(roll)?roll:0));

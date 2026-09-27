@@ -5,7 +5,7 @@ import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot, subscribeIslandRunState } from './islandRunStateStore';
 import { recordEventMinigameCompletion } from './islandRunEventEngine';
 import { ISLAND_RUN_ECONOMY_SOURCES, recordIslandRunDiceInflow } from './islandRunEconomyTelemetry';
-import { mergeMinerToolGroup, MINER_GROUP_MERGE_LEVEL, upgradeMinerForge, MINER_FORGE_UNLOCKS, discardMinerTool, openMinerGift, claimWaitingMinerGift, arrangeMinerTools, buyMinerTool, createCrystalMinersProgress, getCrystalMinersCareer, settleMinerDig, simulateMinerDig,
+import { mergeMinerToolGroup, MINER_GROUP_MERGE_LEVEL, upgradeMinerForge, MINER_FORGE_UNLOCKS, discardMinerTool, openMinerGift, claimWaitingMinerGift, arrangeMinerTools, buyMinerTool, createCrystalMinersProgress, getCrystalMinersCareer, resolveCrystalMinersProgressForEvent, settleMinerDig, simulateMinerDig,
   MINER_EVENT_MILESTONES, MINER_LEVEL_COUNT, sanitizeCrystalMinersProgressByEvent, resolveMinerMilestoneReward, type MinerEventTrack, type CrystalMinersProgress, type MinerCommand, type MinerSimulation } from './crystalMinersGame';
 
 const EMPTY_PROGRESS = createCrystalMinersProgress();
@@ -34,7 +34,7 @@ export function applyCrystalMinersAction(options: {
     const event = current.activeTimedEvent;
     const nowMs = options.nowMs ?? Date.now();
     if (!event || event.eventId !== options.eventId || event.expiresAtMs <= nowMs) return reject('event_expired');
-    const career = getCrystalMinersCareer(current.crystalMinersProgressByEvent) ?? EMPTY_PROGRESS;
+    const career = resolveCrystalMinersProgressForEvent(current.crystalMinersProgressByEvent, options.eventId) ?? EMPTY_PROGRESS;
     // The forty-cavern campaign and its once-only prizes follow the permanent career.
     const progress = sanitizeCrystalMinersProgressByEvent({ career }).career;
     if (!progress) return reject('invalid_save');
@@ -124,10 +124,10 @@ export function createCrystalMinersBridge(options: { session: Session; client: S
     observe: observer.observe,
     reportError: observer.failure,
     subscribe: listener => subscribeIslandRunState(options.session, listener),
-    getProgress: () => getCrystalMinersCareer(getIslandRunStateSnapshot(options.session).crystalMinersProgressByEvent) ?? EMPTY_PROGRESS,
+    getProgress: () => resolveCrystalMinersProgressForEvent(getIslandRunStateSnapshot(options.session).crystalMinersProgressByEvent, options.eventId) ?? EMPTY_PROGRESS,
     getDice: () => getIslandRunStateSnapshot(options.session).dicePool,
     getTickets: () => {const state=getIslandRunStateSnapshot(options.session);return eventGamePlaysAvailable('crystal_miners',state.minigameTicketsByEvent[options.eventId]??0,getCrystalMinersCareer(state.crystalMinersProgressByEvent)?.dropTickets??0);},
-    getEventTrack: () => (getCrystalMinersCareer(getIslandRunStateSnapshot(options.session).crystalMinersProgressByEvent) ?? EMPTY_PROGRESS).eventTrack,
+    getEventTrack: () => (resolveCrystalMinersProgressForEvent(getIslandRunStateSnapshot(options.session).crystalMinersProgressByEvent, options.eventId) ?? EMPTY_PROGRESS).eventTrack,
     getExpiresAt: () => {
       const event = getIslandRunStateSnapshot(options.session).activeTimedEvent;
       return event?.eventId === options.eventId ? event.expiresAtMs : 0;

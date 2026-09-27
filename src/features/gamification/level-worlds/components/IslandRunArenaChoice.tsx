@@ -1,5 +1,6 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import {
+  ARENA_GAME_CATALOG,
   loadRecentArenaGameIds,
   recordRecentArenaGame,
   selectArenaGamePair,
@@ -28,6 +29,13 @@ interface IslandRunArenaChoiceProps {
   nextRewardLabel: string;
   onLaunch: (gameId: ArenaGameId) => void;
   onTune?: () => void;
+  /** Games whose journey is already finished for this event: never offered, so a
+   * completed game can never trap the stadium. They return with the next event. */
+  finishedGameIds?: readonly ArenaGameId[];
+  /** Human countdown until the next event (and the finished games' new season). */
+  nextEventLabel?: string;
+  /** Verified-dev only: rotate to the next timed event now. */
+  onDevSkipEvent?: () => void;
 }
 
 function ArenaChoiceMiniature({ game }: { game: ArenaGameDefinition }) {
@@ -97,10 +105,11 @@ export function IslandRunArenaChoice(props: IslandRunArenaChoiceProps) {
     islandNumber: props.islandNumber,
     activeEventId: props.activeEventId,
     rankedGameIds: props.preferences.rankedEventIds,
-    disabledGameIds: props.preferences.disabledEventIds,
+    disabledGameIds: [...props.preferences.disabledEventIds, ...(props.finishedGameIds ?? [])],
     recentGameIds: recent,
     seed: `${props.activeEventRuntimeId ?? 'no-event'}:${props.islandNumber}:${recent.join(',')}`,
-  }), [props.allowedGameIds, props.activeEventId, props.activeEventRuntimeId, props.islandNumber, props.preferences, recent]);
+  }), [props.allowedGameIds, props.activeEventId, props.activeEventRuntimeId, props.islandNumber, props.preferences, props.finishedGameIds, recent]);
+  const finishedGames = (props.finishedGameIds ?? []).filter((id) => props.allowedGameIds.includes(id));
 
   const choose = (gameId: ArenaGameId) => {
     setRecent(recordRecentArenaGame(props.playerKey, gameId));
@@ -143,6 +152,19 @@ export function IslandRunArenaChoice(props: IslandRunArenaChoiceProps) {
         {pair.alternative && <><span className="arena-choice__or" aria-hidden="true">or</span>
           <ArenaChoiceCard game={pair.alternative} tickets={props.tickets} onChoose={() => choose(pair.alternative!.id)} /></>}
       </div>
+      {finishedGames.length > 0 && (
+        <div className="arena-choice__finished" role="status">
+          {finishedGames.map((id) => {
+            const game = ARENA_GAME_CATALOG.find((entry) => entry.id === id);
+            return game ? <span key={id}><b aria-hidden="true">{game.icon}</b> {game.displayName} <strong>Completed ✓</strong></span> : null;
+          })}
+          <small>{props.nextEventLabel ? `New season with the next event · ${props.nextEventLabel}` : 'New season with the next event'}</small>
+          {props.onDevSkipEvent && <button type="button" onClick={props.onDevSkipEvent}>Dev · skip to next event</button>}
+        </div>
+      )}
+      {!finishedGames.length && props.onDevSkipEvent && (
+        <button type="button" className="arena-choice__dev-skip" onClick={props.onDevSkipEvent}>Dev · skip to next event</button>
+      )}
       <p className="arena-choice__note">
         {props.tickets > 0
           ? `Complete a challenge: +${EVENT_MINIGAME_REWARD_BAR_PROGRESS} event progress.`
