@@ -40,9 +40,9 @@ export const fishermansFishingWatchdogTests: TestCase[] = [
     name: 'fishing watchdog: the dragon plays once from its trigger time and is settled on later visits',
     run: () => {
       const trigger = 1_000_000;
-      assertEqual(resolveFishermansDragonElapsedSeconds({ fishCaughtKg: 80, dragonTriggeredAtMs: trigger, nowMs: trigger + 5_000 }), 5, 'live: five seconds in');
-      assert(resolveFishermansDragonElapsedSeconds({ fishCaughtKg: 80, dragonTriggeredAtMs: trigger, nowMs: trigger + 86_400_000 }) > FISHERMANS_DRAGON_CINEMATIC_SECONDS, 'a later visit is past the cinematic');
-      assert(resolveFishermansDragonElapsedSeconds({ fishCaughtKg: 80, dragonTriggeredAtMs: null, nowMs: trigger }) > FISHERMANS_DRAGON_CINEMATIC_SECONDS, 'missing trigger time never locks the board');
+      assertEqual(resolveFishermansDragonElapsedSeconds({ fishCaughtKg: 100, dragonTriggeredAtMs: trigger, nowMs: trigger + 5_000 }), 5, 'live: five seconds in');
+      assert(resolveFishermansDragonElapsedSeconds({ fishCaughtKg: 100, dragonTriggeredAtMs: trigger, nowMs: trigger + 86_400_000 }) > FISHERMANS_DRAGON_CINEMATIC_SECONDS, 'a later visit is past the cinematic');
+      assert(resolveFishermansDragonElapsedSeconds({ fishCaughtKg: 100, dragonTriggeredAtMs: null, nowMs: trigger }) > FISHERMANS_DRAGON_CINEMATIC_SECONDS, 'missing trigger time never locks the board');
       assertEqual(resolveFishermansDragonElapsedSeconds({ fishCaughtKg: 20, dragonTriggeredAtMs: null, nowMs: trigger }), 0, 'before the dragon');
     },
   },

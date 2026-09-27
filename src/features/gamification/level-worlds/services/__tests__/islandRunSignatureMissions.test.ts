@@ -18,6 +18,7 @@ import {
   collectFirstLightAssemblyDynamiteForLanding,
   collectFirstLightAssemblyDynamiteForRoute,
   collectFishermansVillageLanding,
+  type IslandRunSignatureMissionProgressByIsland,
   collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
   collectStagedRestorationPickupForRoute,
@@ -1042,7 +1043,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
-    name: 'Fisherman’s Village colossal catch lands exactly on 78 kg and triggers the dragon once',
+    name: 'Fisherman’s Village third great catch lands exactly on 100 kg, wakes the dragon and completes the pond',
     run: async () => {
       resetIslandRunRuntimeCommitCoordinatorForTests();
       __resetIslandRunActionMutexesForTests();
@@ -1055,17 +1056,17 @@ export const islandRunSignatureMissionTests: TestCase[] = [
         ledger: {
           [key]: {
             missionId: 'fishermans-village-fishing', version: 1,
-            rodCollectedAtMs: 1, castsCompleted: 4, successfulCatches: 4,
-            fishCaughtKg: 46, pendingCatch: null, dragonTriggeredAtMs: null,
+            rodCollectedAtMs: 1, castsCompleted: 2, successfulCatches: 2,
+            fishCaughtKg: 52, pendingCatch: null, dragonTriggeredAtMs: null,
             repairCompletedAtMs: null, completedAtMs: null, updatedAtMs: 4,
           },
         },
         islandNumber: 6, cycleIndex: 0,
         tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[1], nowMs: 5, randomValue: 0,
       });
-      assertEqual(prepared.pendingCatch?.kind, 'colossal', 'fifth successful catch is the authored shock catch');
-      assertEqual(prepared.pendingCatch?.kilograms, 32, 'colossal catch fills 46 to 78 exactly');
-      assertEqual(prepared.pendingCatch?.pullsRequired, 10, 'the monster catch gets a full ten-pull tension sequence');
+      assertEqual(prepared.pendingCatch?.kind, 'colossal', 'the third great catch is the authored shock catch');
+      assertEqual(prepared.pendingCatch?.kilograms, 48, 'colossal catch fills 52 to 100 exactly');
+      assertEqual(prepared.pendingCatch?.pullsRequired, 8, 'the monster catch gets a long tension sequence');
       await writeIslandRunGameStateRecord({
         session, client: null,
         record: { ...base, currentIslandNumber: 6, signatureMissionProgressByIsland: prepared.ledger },
@@ -1074,14 +1075,55 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const result = await reelFishermansVillageCatch({ session, client: null });
       assertEqual(result.status, 'ok', 'reel action commits the hooked fish');
       if (result.status !== 'ok') return;
-      assertEqual(result.fishCaughtKg, 78, 'meter lands on the interruption threshold');
-      assertEqual(result.dragonTriggered, true, 'threshold starts the dragon cinematic');
+      assertEqual(result.fishCaughtKg, 100, 'meter lands on the full target');
+      assertEqual(result.dragonTriggered, true, 'the colossal catch starts the dragon cinematic');
       const progress = resolveFishermansVillageFishingProgress({
         ledger: readIslandRunGameStateRecord(session).signatureMissionProgressByIsland,
         cycleIndex: 0,
       });
       assert(progress.dragonTriggeredAtMs !== null, 'dragon edge persists canonically');
+      assert(progress.completedAtMs !== null, 'three great catches complete the pond: no post-dragon lock');
       assertEqual(progress.pendingCatch, null, 'catch cannot be reeled twice');
+    },
+  },
+  {
+    name: 'Fisherman’s Village: three catches, and a miss earns two guaranteed casts (mercy rhythm)',
+    run: async () => {
+      const land = (ledger: IslandRunSignatureMissionProgressByIsland, castsSoFar: number) => collectFishermansVillageLanding({
+        ledger, islandNumber: 6, cycleIndex: 0, tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 10 + castsSoFar, randomValue: 0.5,
+      });
+      const first = land({}, 0);
+      assertEqual(first.pendingCatch?.kind, 'medium', 'first great catch is a medium fish');
+      assert(!first.pendingCatch?.assisted, 'the first cast is a real skill cast');
+      // Simulate a missed cast (overswing) through the canonical action.
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      await writeIslandRunGameStateRecord({ session, client: null, record: { ...base, currentIslandNumber: 6, signatureMissionProgressByIsland: first.ledger } });
+      refreshIslandRunStateFromLocal(session);
+      const released = await releaseFishermansVillageCatch({ session, client: null, reason: 'overswing' });
+      assertEqual(released.status, 'ok', 'overswing clears the cast canonically');
+      const afterMiss = readIslandRunGameStateRecord(session).signatureMissionProgressByIsland;
+      assertEqual(resolveFishermansVillageFishingProgress({ ledger: afterMiss, cycleIndex: 0 }).assistedCastsRemaining, 2, 'a miss earns two sure casts');
+      const second = land(afterMiss, 1);
+      assert(second.pendingCatch?.assisted === true, 'next cast is assisted');
+      assertEqual(resolveFishermansVillageFishingProgress({ ledger: second.ledger, cycleIndex: 0 }).assistedCastsRemaining, 1, 'one sure cast left');
+    },
+  },
+  {
+    name: 'Fisherman’s Village legacy save stuck after the old 78 kg dragon can finish the pond',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 6);
+      const stuck = collectFishermansVillageLanding({
+        ledger: { [key]: { missionId: 'fishermans-village-fishing', version: 1, rodCollectedAtMs: 1, castsCompleted: 9, successfulCatches: 6,
+          fishCaughtKg: 78, pendingCatch: null, dragonTriggeredAtMs: 50, repairCompletedAtMs: null, completedAtMs: null, updatedAtMs: 50 } },
+        islandNumber: 6, cycleIndex: 0, tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[2], nowMs: 60, randomValue: 0.2,
+      });
+      assertEqual(stuck.pendingCatch?.kind, 'colossal', 'the rod works again after the dragon');
+      assertEqual(stuck.pendingCatch?.kilograms, 22, 'the last catch finishes the 100 kg target');
     },
   },
   {

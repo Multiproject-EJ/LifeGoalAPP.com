@@ -21,6 +21,7 @@ import {
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_ISLAND_NUMBER,
   FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG,
+  FISHERMANS_VILLAGE_ASSISTED_CASTS_AFTER_MISS,
   FISHERMANS_VILLAGE_FISH_TARGET_KG,
   FISHERMANS_VILLAGE_ISLAND_NUMBER,
   ROOTHEART_ISLAND_NUMBER,
@@ -301,7 +302,7 @@ export type ReleaseFishermansVillageCatchResult =
 export function releaseFishermansVillageCatch(options: {
   session: Session;
   client: SupabaseClient | null;
-  reason: 'empty' | 'escaped';
+  reason: 'empty' | 'escaped' | 'short' | 'overswing';
 }): Promise<ReleaseFishermansVillageCatchResult> {
   return withIslandRunActionLock(options.session.user.id, async () => {
     const state = getIslandRunStateSnapshot(options.session);
@@ -323,7 +324,16 @@ export function releaseFishermansVillageCatch(options: {
         runtimeVersion: state.runtimeVersion + 1,
         signatureMissionProgressByIsland: {
           ...state.signatureMissionProgressByIsland,
-          [key]: { ...progress, pendingCatch: null, updatedAtMs: nowMs },
+          [key]: {
+            ...progress,
+            pendingCatch: null,
+            // Mercy rhythm: a real miss earns guaranteed casts; a lost mercy
+            // cast (closed mid-cast) is refunded instead of wasted.
+            assistedCastsRemaining: pending.assisted
+              ? Math.min(FISHERMANS_VILLAGE_ASSISTED_CASTS_AFTER_MISS, (progress.assistedCastsRemaining ?? 0) + 1)
+              : FISHERMANS_VILLAGE_ASSISTED_CASTS_AFTER_MISS,
+            updatedAtMs: nowMs,
+          },
         },
       },
       triggerSource: `release_fishermans_village_catch_${options.reason}`,

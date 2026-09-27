@@ -484,6 +484,8 @@ import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { CompassBookIcon } from './CompassBookIcon';
+import { FishingCastMeter } from './FishingCastMeter';
+import { isFishingCastHit } from '../services/fishingCastSkill';
 import { compassIslandKey, hasUnseenCompassInsight, readSeenCompassIsland, writeSeenCompassIsland } from '../services/compassBookIconCue';
 import { isMinerCampaignComplete, resolveCrystalMinersProgressForEvent } from '../services/crystalMinersGame';
 import { ArenaJourneyControls } from './ArenaJourneyControls';
@@ -14423,7 +14425,7 @@ export function IslandRunBoardPrototype({
     setRuntimeStateWithTrace(trace, fresh);
   }, [session, setRuntimeStateWithTrace]);
 
-  const handleReleaseFishermansCatch = useCallback(async (reason: 'empty' | 'escaped') => {
+  const handleReleaseFishermansCatch = useCallback(async (reason: 'empty' | 'escaped' | 'short' | 'overswing') => {
     if (!fishermansFishingProgress.pendingCatch || fishingEscapeInFlightRef.current) return;
     fishingEscapeInFlightRef.current = true;
     setIsReelingFishingCatch(true);
@@ -14435,14 +14437,21 @@ export function IslandRunBoardPrototype({
         return;
       }
       refreshFishermansVillageState(`release_fishermans_village_catch_${reason}`);
+      const mercy = fishermansFishingProgress.pendingCatch.assisted ? '' : ' Your next two casts are sure things.';
       const message = reason === 'empty'
         ? 'Just bubbles this time. Cast again from another rod tile!'
-        : 'The fish snapped free! Keep tapping before the tension falls next time.';
+        : reason === 'short'
+          ? `Too short — the fish ignored it.${mercy}`
+          : reason === 'overswing'
+            ? `Overswing! The rod smacked the ground.${mercy}`
+            : `The fish snapped free! Keep tapping before the tension falls.${mercy}`;
       setFishingPhase('escaped');
       setFishingCatchMessage(message);
       setLandingText(reason === 'empty'
         ? '🎣 The hook came back empty. Find another fishing-rod tile.'
-        : '🎣 The fish escaped when the line lost tension.');
+        : reason === 'escaped'
+          ? '🎣 The fish escaped when the line lost tension.'
+          : '🎣 No bite this time. Land on another rod tile to cast again.');
       playIslandRunSound('stop_land');
       window.setTimeout(() => {
         setShowFishermansFishing(false);
@@ -14534,7 +14543,7 @@ export function IslandRunBoardPrototype({
       return () => window.clearTimeout(timer);
     };
     if (fishingPhase === 'approach') return advance('casting', 760);
-    if (fishingPhase === 'casting') return advance('waiting', 1_150);
+    // 'casting' waits for the player's throw (FishingCastMeter).
     if (fishingPhase === 'waiting') return advance('countdown', 1_550);
     return undefined;
   }, [fishingPhase, showFishermansFishing]);
@@ -14584,7 +14593,7 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     const pending = fishermansFishingProgress.pendingCatch;
     if (!showFishermansFishing || (fishingPhase !== 'bite' && fishingPhase !== 'reeling') || !pending) return undefined;
-    const canEscape = pending.kind === 'large' || pending.kind === 'colossal';
+    const canEscape = !pending.assisted && (pending.kind === 'large' || pending.kind === 'colossal');
     if (!canEscape) return undefined;
     const graceMs = pending.kind === 'colossal' ? 1_050 : 1_350;
     const interval = window.setInterval(() => {
@@ -21730,6 +21739,21 @@ export function IslandRunBoardPrototype({
             </header>
             {fishingCountdown !== null ? (
               <div className="fishermans-fishing-hud__countdown" aria-live="assertive">{fishingCountdown}</div>
+            ) : null}
+            {fishingPhase === 'casting' && fishermansFishingProgress.pendingCatch && !fishingCatchMessage ? (
+              <FishingCastMeter
+                key={fishermansFishingProgress.pendingCatch.catchId}
+                assisted={Boolean(fishermansFishingProgress.pendingCatch.assisted)}
+                onThrow={(judgement) => {
+                  if (isFishingCastHit(judgement)) {
+                    playIslandRunSound('stop_land');
+                    setFishingPhase('waiting');
+                  } else {
+                    triggerIslandRunHaptic('stop_land');
+                    void handleReleaseFishermansCatch(judgement === 'short' ? 'short' : 'overswing');
+                  }
+                }}
+              />
             ) : null}
             {fishingCatchMessage ? (
               <div className="fishermans-fishing-hud__result" role="status">{fishingCatchMessage}</div>
