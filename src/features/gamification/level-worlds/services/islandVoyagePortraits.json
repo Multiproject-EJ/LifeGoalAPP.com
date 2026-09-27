@@ -1,4 +1,125 @@
 {
   "version": 1,
-  "portraits": {}
+  "portraits": {
+    "1": {
+      "path": "/assets/islands/island-001/map/voyage-portrait.webp",
+      "worldSource": 1,
+      "worldFingerprint": "b562f3eb039df91d",
+      "capturedAt": "2026-09-27"
+    },
+    "2": {
+      "path": "/assets/islands/island-002/map/voyage-portrait.webp",
+      "worldSource": 2,
+      "worldFingerprint": "34171a3c0c1a3ba7",
+      "capturedAt": "2026-09-27"
+    },
+    "3": {
+      "path": "/assets/islands/island-003/map/voyage-portrait.webp",
+      "worldSource": 3,
+      "worldFingerprint": "da63c02155c80b62",
+      "capturedAt": "2026-09-27"
+    },
+    "4": {
+      "path": "/assets/islands/island-004/map/voyage-portrait.webp",
+      "worldSource": 4,
+      "worldFingerprint": "16986a8837a91bc5",
+      "capturedAt": "2026-09-27"
+    },
+    "5": {
+      "path": "/assets/islands/island-005/map/voyage-portrait.webp",
+      "worldSource": 5,
+      "worldFingerprint": "00b8bfdd9c84214e",
+      "capturedAt": "2026-09-27"
+    },
+    "6": {
+      "path": "/assets/islands/island-006/map/voyage-portrait.webp",
+      "worldSource": 6,
+      "worldFingerprint": "d796a34e9d0ea832",
+      "capturedAt": "2026-09-27"
+    },
+    "7": {
+      "path": "/assets/islands/island-007/map/voyage-portrait.webp",
+      "worldSource": 7,
+      "worldFingerprint": "f2f6af4bebf55e5e",
+      "capturedAt": "2026-09-27"
+    },
+    "8": {
+      "path": "/assets/islands/island-008/map/voyage-portrait.webp",
+      "worldSource": 18,
+      "worldFingerprint": "10020a4dad8c99d1",
+      "capturedAt": "2026-09-27"
+    },
+    "9": {
+      "path": "/assets/islands/island-009/map/voyage-portrait.webp",
+      "worldSource": 9,
+      "worldFingerprint": "b63b0ac7eca6a957",
+      "capturedAt": "2026-09-27"
+    },
+    "10": {
+      "path": "/assets/islands/island-010/map/voyage-portrait.webp",
+      "worldSource": 10,
+      "worldFingerprint": "74c0e29c589c9b84",
+      "capturedAt": "2026-09-27"
+    },
+    "11": {
+      "path": "/assets/islands/island-011/map/voyage-portrait.webp",
+      "worldSource": 11,
+      "worldFingerprint": "bceb0654717529db",
+      "capturedAt": "2026-09-27"
+    },
+    "12": {
+      "path": "/assets/islands/island-012/map/voyage-portrait.webp",
+      "worldSource": 12,
+      "worldFingerprint": "588737d35be5afe2",
+      "capturedAt": "2026-09-27"
+    },
+    "13": {
+      "path": "/assets/islands/island-013/map/voyage-portrait.webp",
+      "worldSource": 13,
+      "worldFingerprint": "1bbc950f20acef19",
+      "capturedAt": "2026-09-27"
+    },
+    "14": {
+      "path": "/assets/islands/island-014/map/voyage-portrait.webp",
+      "worldSource": 14,
+      "worldFingerprint": "849fe10ba6229d3c",
+      "capturedAt": "2026-09-27"
+    },
+    "15": {
+      "path": "/assets/islands/island-015/map/voyage-portrait.webp",
+      "worldSource": 15,
+      "worldFingerprint": "78bc5de4e08bb39c",
+      "capturedAt": "2026-09-27"
+    },
+    "16": {
+      "path": "/assets/islands/island-016/map/voyage-portrait.webp",
+      "worldSource": 22,
+      "worldFingerprint": "e45217d4d027120d",
+      "capturedAt": "2026-09-27"
+    },
+    "17": {
+      "path": "/assets/islands/island-017/map/voyage-portrait.webp",
+      "worldSource": 17,
+      "worldFingerprint": "2d7c09e2672f01f9",
+      "capturedAt": "2026-09-27"
+    },
+    "18": {
+      "path": "/assets/islands/island-018/map/voyage-portrait.webp",
+      "worldSource": 8,
+      "worldFingerprint": "db018ffd376b9507",
+      "capturedAt": "2026-09-27"
+    },
+    "19": {
+      "path": "/assets/islands/island-019/map/voyage-portrait.webp",
+      "worldSource": 19,
+      "worldFingerprint": "27a93fefbd1fcbea",
+      "capturedAt": "2026-09-27"
+    },
+    "20": {
+      "path": "/assets/islands/island-020/map/voyage-portrait.webp",
+      "worldSource": 20,
+      "worldFingerprint": "7c4796bdd85bc408",
+      "capturedAt": "2026-09-27"
+    }
+  }
 }
