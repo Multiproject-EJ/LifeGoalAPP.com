@@ -1,6 +1,9 @@
-import { lazy, Suspense, useEffect, useRef, type CSSProperties } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
+import { PrecisionBuildRing } from './PrecisionBuildRing';
+
+const BUILD_STYLE_KEY = 'lifegoal:build-style';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import type { FastBuildQuote } from '../services/islandRunFastBuild';
 import { ISLAND_RUN_FULL_RESTORATION_DICE_REWARD } from '../services/islandRunRestorationReward';
@@ -19,6 +22,8 @@ function BuildDiceFlight() {
 }
 
 export interface BuildModalV2Props {
+  /** One precision-timed build step (same cost as a hold step). Enables Skill build. */
+  onPrecisionBuild?: (stopIndex: number) => Promise<boolean>;
   isOpen: boolean;
   islandNumber: number;
   essenceAvailable: number;
@@ -290,7 +295,16 @@ export function BuildModalV2({
   onBuildPartChoice,
   onStartBuildHold,
   onStopBuildHold,
+  onPrecisionBuild,
 }: BuildModalV2Props) {
+  const [buildStyle, setBuildStyle] = useState<'skill' | 'hold'>(() => {
+    try { return window.localStorage.getItem(BUILD_STYLE_KEY) === 'hold' ? 'hold' : 'skill'; } catch { return 'skill'; }
+  });
+  const chooseBuildStyle = (style: 'skill' | 'hold') => {
+    setBuildStyle(style);
+    try { window.localStorage.setItem(BUILD_STYLE_KEY, style); } catch { /* private mode */ }
+  };
+  const skillBuild = Boolean(onPrecisionBuild) && buildStyle === 'skill';
   const active = viewModel.activeLandmark;
   const isComplete = viewModel.sequentialBuildView.isFullyBuilt || !active;
   const activePart = active?.activePart ?? 1;
@@ -397,6 +411,19 @@ export function BuildModalV2({
               </div>
 
               <p className="sr-only">{active.title} Level {active.targetLevel}: {active.completedParts} of 5 construction parts complete. Choose any unfinished milestone or hold for rapid build.</p>
+              {onPrecisionBuild ? (
+                <div className="bm2-build-style" role="group" aria-label="Build style">
+                  <button type="button" aria-pressed={buildStyle === 'skill'} onClick={() => chooseBuildStyle('skill')}>🎯 Skill build</button>
+                  <button type="button" aria-pressed={buildStyle === 'hold'} onClick={() => chooseBuildStyle('hold')}>⚒️ Hold build</button>
+                </div>
+              ) : null}
+              {skillBuild ? (
+                <PrecisionBuildRing
+                  disabled={isBuildInteractionLocked || !canBuildActive || isAutoBuildActive || isBuildHoldActive}
+                  costLabel={`${active.nextTapEssenceCost} 💰`}
+                  onHit={() => onPrecisionBuild!(active.stopIndex)}
+                />
+              ) : (
               <BuildModalV2HoldButton
                 activeTitle={active.title}
                 activeStopIndex={active.stopIndex}
@@ -407,6 +434,7 @@ export function BuildModalV2({
                 onStartBuildHold={onStartBuildHold}
                 onStopBuildHold={onStopBuildHold}
               />
+              )}
               <div className="bm2-fast-actions">
                 {isAutoBuildActive ? (
                   <button type="button" className="bm2-auto-build bm2-auto-build--running" onClick={onStopAutoBuild}>
