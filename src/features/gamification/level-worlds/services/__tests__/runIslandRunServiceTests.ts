@@ -191,6 +191,7 @@ import { fishermansFishingWatchdogTests } from './fishermansFishingWatchdog.test
 import { luckySpinTileTests } from './luckySpinTile.test';
 import { creatorStoryTests } from './creatorStory.test';
 import { precisionBuildTests } from './precisionBuild.test';
+import { island17SpineMissionTests } from './island17SpineMission.test';
 import { islandRunMissionMessageTests } from './islandRunMissionMessage.test';
 import { islandRunDepartureCinematicTests } from './islandRunDepartureCinematic.test';
 import { islandCameraOcclusionTests } from './islandCameraOcclusion.test';
@@ -464,6 +465,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'luckySpinTile', tests: luckySpinTileTests },
   { label: 'creatorStory', tests: creatorStoryTests },
   { label: 'precisionBuild', tests: precisionBuildTests },
+  { label: 'island17SpineMission', tests: island17SpineMissionTests },
   { label: 'islandRunMissionMessage', tests: islandRunMissionMessageTests },
   { label: 'islandRunDepartureCinematic', tests: islandRunDepartureCinematicTests },
   { label: 'islandCameraOcclusion', tests: islandCameraOcclusionTests },

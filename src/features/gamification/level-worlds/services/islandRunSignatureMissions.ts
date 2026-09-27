@@ -128,7 +128,7 @@ export interface StagedRestorationMissionDescriptor {
 export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorationMissionDescriptor>> = Object.freeze({
   17: {
     islandNumber: 17, missionId: 'rebuild-the-titans-spine', pickupKind: 'titan_soul_bolt',
-    pickupLabel: 'Soul-bolt', actionLabel: 'Restore Spine Section', stageLabel: 'Spine Sections Restored',
+    pickupLabel: 'Titan Bone', actionLabel: 'Restore Spine Section', stageLabel: 'Spine Sections Restored',
     stageCount: 8, chargeCostPerStage: 1,
     preferredPickupFractions: [0 / 36, 3 / 36, 8 / 36, 11 / 36, 18 / 36, 20 / 36, 26 / 36, 29 / 36],
   },

@@ -90,11 +90,14 @@ export const island17TitansRestThreeWorldContractTests: TestCase[] = [
       assertEqual(rig.animate(10, false).burst, 0, 'hydration does not replay celebration');
       rig.update({ islandNumber: 17, activatedStages: 5, stageCount: 8 });
       rig.animate(10.6, false);
+      assertEqual(sections().length, 4, 'while the soul orb is summoned, only the ghost marks the gap');
+      assert(model.children.some(node => node.userData.spineGhost), 'a ghost of the missing section appears');
+      rig.animate(11.6, false);
       assertEqual(sections().length, 5, 'only one new section appears');
       const fifth = model.children.find(node => node.userData.restorationStage === 5)!;
       assert(fifth.position.y < -0.1, 'new section rises from below its final position');
       assert(sections().slice(0, 4).every(node => node.position.y === 0), 'existing sections stay still');
-      rig.animate(11, true);
+      rig.animate(12, true);
       assertEqual(fifth.position.y, 0, 'reduced motion settles immediately');
       rig.animate(20, false);
       rig.update({ islandNumber: 17, activatedStages: 8, stageCount: 8, constructionSequence: 1 });

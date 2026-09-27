@@ -264,10 +264,10 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   17: {
     progressKind: 'staged_restoration',
     headline: "The Titan's Last Thought",
-    missionStatement: "Something beneath the island is answering. Restore the eight spine sections to power the empty well, decipher a summoning potion, then unlock the strange skull that rises from the abyss.",
-    primaryObjective: 'Restore the spine, summon the skull and release the spirit within.',
+    missionStatement: "The Titan's spine lies in pieces across the island. Collect the eight lost bones on the tiles — each one flies home and rebuilds its section — then brew the summoning potion and unlock the skull that rises from the abyss.",
+    primaryObjective: 'Collect the eight Titan bones to rebuild the spine, then summon the skull and release the spirit within.',
     supportingObjective: "Restore the five landmarks of Titan's Rest.",
-    fieldProtocol: 'Each soul-bolt repairs one section permanently. Then brew, pour and tinker: the skull opens one mechanism at a time. Puzzle attempts are free and your progress saves.',
+    fieldProtocol: 'Land on or pass a bone and its spine section rebuilds itself on the spot. Then brew, pour and tinker: the skull opens one mechanism at a time. Puzzle attempts are free and your progress saves.',
     caretakerSignal: 'Even what is broken can carry us again.',
   },
 });

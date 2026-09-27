@@ -14943,6 +14943,39 @@ export function IslandRunBoardPrototype({
     triggerIslandRunHaptic,
   ]);
 
+  // Dev visual preview: ?stagedMissionReplay=1 replays the mission finale every 12s.
+  const [stagedMissionPreviewReplayTick, setStagedMissionPreviewReplayTick] = useState(0);
+  useEffect(() => {
+    if (!isIslandVisualPreview || typeof window === 'undefined'
+      || new URLSearchParams(window.location.search).get('stagedMissionReplay') !== '1') return undefined;
+    setStagedMissionPreviewReplayTick(1);
+    const interval = window.setInterval(() => setStagedMissionPreviewReplayTick((value) => value + 1), 12_000);
+    return () => window.clearInterval(interval);
+  }, [isIslandVisualPreview]);
+
+  // Island 017: a collected Titan bone rebuilds its spine section by itself.
+  // It waits for the token to land and for any earlier spectacle to finish,
+  // then runs the same canonical stage action the phone used to offer.
+  const titanSpineAutoRestore = islandNumber === 17
+    && stagedRestorationDescriptor?.islandNumber === 17
+    && stagedRestorationProgress !== null
+    && stagedRestorationProgress.activatedStages < stagedRestorationDescriptor.stageCount
+    && stagedRestorationAvailableCharges > 0;
+  useEffect(() => {
+    if (
+      !titanSpineAutoRestore || isIslandVisualPreview || isActivatingStagedRestoration
+      || isRolling || pendingHopSequence !== null || doesModalOwnAttention || missionOwnsController
+    ) return undefined;
+    const timer = window.setTimeout(() => {
+      stopAutoRoll();
+      void handleActivateStagedRestoration();
+    }, 650);
+    return () => window.clearTimeout(timer);
+  }, [
+    doesModalOwnAttention, handleActivateStagedRestoration, isActivatingStagedRestoration, isIslandVisualPreview,
+    isRolling, missionOwnsController, pendingHopSequence, stopAutoRoll, titanSpineAutoRestore,
+  ]);
+
   const handleFundRootheartPowerworks = useCallback(async () => {
     if (isFundingRootheartPowerworks) return;
     setIsFundingRootheartPowerworks(true);
@@ -16836,10 +16869,7 @@ export function IslandRunBoardPrototype({
                     ? stagedRestorationPreviewStage ?? stagedRestorationVisualDescriptor.stageCount
                     : stagedRestorationProgress?.activatedStages ?? 0,
                   stageCount: stagedRestorationVisualDescriptor.stageCount,
-                  constructionSequence: stagedRestorationConstructionSequence + (
-                    isIslandVisualPreview && typeof window !== 'undefined'
-                    && new URLSearchParams(window.location.search).get('stagedMissionReplay') === '1' ? 1 : 0
-                  ),
+                  constructionSequence: stagedRestorationConstructionSequence + stagedMissionPreviewReplayTick,
                   titanAwakening: stagedRestorationProgress?.titanAwakening,
                   titanInspectionOpen: showTitanAwakening,
                   claimedPickupTileIndices: stagedRestorationProgress?.claimedPickupTileIndices ?? [],
@@ -21089,6 +21119,9 @@ export function IslandRunBoardPrototype({
           : showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
           ? () => { setShowMissionPhoneBriefing(false); openAssemblyMandate(); }
           : showMissionPhoneBriefing && stagedRestorationDescriptor
+            // Island 017's spine rebuilds from collected bones, never from the phone.
+            && !(stagedRestorationDescriptor.islandNumber === 17
+              && (stagedRestorationProgress?.activatedStages ?? 0) < stagedRestorationDescriptor.stageCount)
           ? () => void handleActivateStagedRestoration()
           : showMissionPhoneBriefing && islandNumber === 14
           ? () => void handleActivateGreatHoneyfall()

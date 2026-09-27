@@ -551,19 +551,29 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
     root.name = `ISLAND_RUN_STAGED_RESTORATION_${entry.signatureMissionKind?.toUpperCase()}`;
     const segments = qualitySegments(quality);
     if (entry.signatureMissionKind === 'titan_soul_bolt') {
-      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.085, 0.44, 8), materials.cyan);
-      const head = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.12, 6), materials.gold);
-      head.position.y = 0.23;
-      const seal = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), materials.cyan);
-      seal.position.y = 0.34;
-      root.add(shaft, head, seal);
-      for (let index = 0; index < 3; index += 1) {
-        const thread = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.022, 5, 10), materials.gold);
-        thread.rotation.x = Math.PI / 2;
-        thread.position.y = -0.14 + index * 0.1;
-        root.add(thread);
-      }
-      root.rotation.z = -0.28;
+      // A lost Titan vertebra: bone body, neural arch, spinous and side
+      // processes, with a faint soul-glow so it reads as the spine's own piece.
+      const bone = materials.parchment;
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.155, 0.15, segments), bone);
+      const arch = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.04, 6, Math.max(8, segments), Math.PI), bone);
+      arch.position.set(0, 0.02, -0.15);
+      arch.rotation.set(Math.PI / 2, 0, 0);
+      const spinous = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.3, 6), bone);
+      spinous.position.set(0, 0.06, -0.33);
+      spinous.rotation.x = -Math.PI / 2 - 0.35;
+      const leftProcess = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.26, 6), bone);
+      leftProcess.position.set(-0.2, 0.02, -0.16);
+      leftProcess.rotation.z = Math.PI / 2 - 0.25;
+      const rightProcess = leftProcess.clone();
+      rightProcess.position.x = 0.2;
+      rightProcess.rotation.z = -Math.PI / 2 + 0.25;
+      const soul = new THREE.Mesh(new THREE.OctahedronGeometry(0.06, 0), materials.cyan);
+      soul.position.set(0, 0.02, -0.15);
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.03, 6, segments * 2), materials.cyan);
+      halo.rotation.x = Math.PI / 2;
+      halo.position.y = -0.12;
+      root.add(body, arch, spinous, leftProcess, rightProcess, soul, halo);
+      root.rotation.x = 0.55;
       return root;
     }
     const material = entry.signatureMissionKind === 'breathline_pressure_pearl'
