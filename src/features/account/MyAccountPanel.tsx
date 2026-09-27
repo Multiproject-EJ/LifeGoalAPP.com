@@ -20,6 +20,7 @@ import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { SettingsFeatureCard } from '../../components/SettingsFeatureCard';
 import { PersonalizationModal } from '../../components/PersonalizationModal';
 import { CreatorNoteModal } from '../onboarding/FounderWelcome';
+import { CreatorStory } from '../onboarding/CreatorStory';
 import { ExperimentsModal } from '../../components/ExperimentsModal';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
@@ -148,6 +149,7 @@ export function MyAccountPanel({
   const [gameRewardsFolderOpen, setGameRewardsFolderOpen] = useState(false);
   const [cacheFolderOpen, setCacheFolderOpen] = useState(false);
   const [creatorNoteOpen, setCreatorNoteOpen] = useState(false);
+  const [creatorNoteAsText, setCreatorNoteAsText] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheAction, setCacheAction] = useState<'pwa' | 'storage' | 'queue' | 'hard-reset' | null>(null);
   const cacheClearing = cacheAction !== null;
@@ -1772,8 +1774,20 @@ export function MyAccountPanel({
         />
       </SettingsFolderPopup>
 
-      {creatorNoteOpen ? (
-        <CreatorNoteModal onClose={() => setCreatorNoteOpen(false)} closeLabel="Done" />
+      {creatorNoteOpen && !creatorNoteAsText ? (
+        <CreatorStory
+          onClose={() => setCreatorNoteOpen(false)}
+          onReadFullNote={() => setCreatorNoteAsText(true)}
+        />
+      ) : null}
+      {creatorNoteOpen && creatorNoteAsText ? (
+        <CreatorNoteModal
+          onClose={() => {
+            setCreatorNoteAsText(false);
+            setCreatorNoteOpen(false);
+          }}
+          closeLabel="Done"
+        />
       ) : null}
 
       <div className="account-panel__actions">

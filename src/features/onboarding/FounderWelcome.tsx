@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CreatorStory } from './CreatorStory';
 
 export type FounderWelcomeSlide = {
   id: string;
@@ -163,6 +164,7 @@ export function CreatorNoteModal({
 export function FounderWelcome({ onComplete, founderName = 'EJ' }: FounderWelcomeProps) {
   const [slideIndex, setSlideIndex] = useState(0);
   const [showFullNote, setShowFullNote] = useState(false);
+  const [showStory, setShowStory] = useState(false);
   const [introComplete, setIntroComplete] = useState(false);
 
   useEffect(() => {
@@ -257,9 +259,9 @@ export function FounderWelcome({ onComplete, founderName = 'EJ' }: FounderWelcom
               <button
                 type="button"
                 className="founder-welcome__text-action founder-welcome__text-action--quiet"
-                onClick={() => setShowFullNote(true)}
+                onClick={() => setShowStory(true)}
               >
-                Read the full creator note
+                Watch the creator note
               </button>
             ) : (
               <span />
@@ -268,6 +270,16 @@ export function FounderWelcome({ onComplete, founderName = 'EJ' }: FounderWelcom
         </section>
       )}
 
+      {showStory ? (
+        <CreatorStory
+          founderName={founderName}
+          onClose={() => setShowStory(false)}
+          onReadFullNote={() => {
+            setShowStory(false);
+            setShowFullNote(true);
+          }}
+        />
+      ) : null}
       {showFullNote ? (
         <CreatorNoteModal onClose={() => setShowFullNote(false)} founderName={founderName} />
       ) : null}
