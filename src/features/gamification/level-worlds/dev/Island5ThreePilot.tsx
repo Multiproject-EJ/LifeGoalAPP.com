@@ -439,6 +439,11 @@ interface Island5ThreePilotProps {
   onHopSequenceComplete?: () => void;
   onTokenHop?: (tileIndex: number) => void;
   onTokenLand?: (tileIndex: number, origin?: { viewportX: number; viewportY: number }) => void;
+  /**
+   * Keeps a fixed-position DOM element over a board tile (projected every
+   * frame, no React updates). Presentation only; used by the Lucky Spin badge.
+   */
+  tileBadgeAnchor?: { tileIndex: number; element: HTMLElement | null } | null;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
   signatureMissionPresentation?: FrostwellIceworksPresentation;
   moonwellThermalPresentation?: MoonwellThermalPresentation;
@@ -3623,6 +3628,7 @@ export default function Island5ThreePilot({
   onHopSequenceComplete,
   onTokenHop,
   onTokenLand,
+  tileBadgeAnchor,
   onLandmarkClick,
   signatureMissionPresentation = { metersDrilled: 0, built: false, constructionSequence: 0 },
   moonwellThermalPresentation = { heated: false, running: false, sequence: 0 },
@@ -3847,6 +3853,8 @@ export default function Island5ThreePilot({
   celebrationOrbitRef.current = celebrationOrbit;
   const onCelebrationSnapshotRef = useRef(onCelebrationSnapshot);
   onCelebrationSnapshotRef.current = onCelebrationSnapshot;
+  const tileBadgeAnchorRef = useRef(tileBadgeAnchor);
+  tileBadgeAnchorRef.current = tileBadgeAnchor;
   const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
   departureCinematicRef.current = { active: departureCinematicActive, onComplete: onDepartureCinematicComplete };
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
@@ -5507,6 +5515,7 @@ export default function Island5ThreePilot({
         ? [island19CircuitFWorld.train]
         : [];
 
+    const tileBadgeProjection = new THREE.Vector3();
     const sharedTileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileTransforms = isFishermansVillage
       ? sharedTileTransforms.map((transform) => ({
@@ -11101,6 +11110,19 @@ export default function Island5ThreePilot({
           label.style.transform = `translate(${x}px, ${bottom}px) translate(-50%, -100%)`;
           occupiedLabelRects.push({ left: x - width / 2, right: x + width / 2, top: bottom - height, bottom });
         }
+      }
+      const tileBadge = tileBadgeAnchorRef.current;
+      if (tileBadge?.element && tileTransforms.length > 0) {
+        const badgeTile = ((Math.floor(tileBadge.tileIndex) % tileTransforms.length) + tileTransforms.length) % tileTransforms.length;
+        const badgePosition = getIsland5TokenGroundPosition(tileTransforms, badgeTile);
+        tileBadgeProjection.set(badgePosition[0], badgePosition[1] + 0.9, badgePosition[2]).project(renderCamera);
+        const badgeRect = canvas.getBoundingClientRect();
+        const badgeOnScreen = tileBadgeProjection.z < 1
+          && Math.abs(tileBadgeProjection.x) < 1.05 && Math.abs(tileBadgeProjection.y) < 1.05;
+        tileBadge.element.style.transform = `translate3d(${
+          badgeRect.left + (tileBadgeProjection.x + 1) * 0.5 * badgeRect.width
+        }px, ${badgeRect.top + (1 - tileBadgeProjection.y) * 0.5 * badgeRect.height}px, 0)`;
+        tileBadge.element.style.visibility = badgeOnScreen ? 'visible' : 'hidden';
       }
       try { renderer.render(scene, renderCamera); }
       finally { scene.matrixWorldAutoUpdate = automaticWorldMatrices; }
