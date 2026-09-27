@@ -15,7 +15,8 @@ export type FishingCatchKind = 'nothing' | 'small' | 'medium' | 'large' | 'colos
 export const FISHING_PHASE_STALL_MS: Record<FishingPhase, number> = {
   off: 3_000,
   approach: 4_000,
-  casting: 4_000,
+  // The player's throw: generous, but a walked-away player still gets released.
+  casting: 30_000,
   waiting: 5_000,
   countdown: 6_000,
   // Waiting for the player's taps: generous, but a walked-away player must not lock the board.

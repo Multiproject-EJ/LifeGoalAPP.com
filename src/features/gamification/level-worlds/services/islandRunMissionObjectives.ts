@@ -15,6 +15,7 @@ import {
   CELESTIAL_REDOCKING_ROLL_TARGET,
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
   FROSTWELL_DEPTH_METERS,
+  FISHERMANS_VILLAGE_CATCHES_TO_COMPLETE,
   FISHERMANS_VILLAGE_FISH_TARGET_KG,
   GREAT_HONEYFALL_MAX_STAGE,
   ROOTHEART_POWER_COMPONENTS,
@@ -322,7 +323,7 @@ export function resolveIslandMissionObjectives(options: {
           FISHERMANS_VILLAGE_FISH_TARGET_KG,
           progress.rodCollectedAtMs === null
             ? 'Land on a 🎣 tile'
-            : `${progress.fishCaughtKg} kg / ${pounds.toFixed(1)} lb`,
+            : `${Math.min(FISHERMANS_VILLAGE_CATCHES_TO_COMPLETE, progress.successfulCatches)}/${FISHERMANS_VILLAGE_CATCHES_TO_COMPLETE} catches · ${progress.fishCaughtKg} kg / ${pounds.toFixed(1)} lb`,
         ),
         objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
       ];

@@ -225,8 +225,13 @@ export function getStagedRestorationPickupForTile(
 /** Runtime Island 006 since the Fisherman's Village ↔ Moonveil swap. */
 export const FISHERMANS_VILLAGE_ISLAND_NUMBER = 6;
 export const FISHERMANS_VILLAGE_FISH_TARGET_KG = 100;
-export const FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG = 78;
-export const FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG = 46;
+/** Three great catches finish the pond: the third is the colossal one. */
+export const FISHERMANS_VILLAGE_CATCHES_TO_COMPLETE = 3;
+/** The colossal third catch lands the full target and wakes the dragon. */
+export const FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG = FISHERMANS_VILLAGE_FISH_TARGET_KG;
+export const FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG = 60;
+/** After a missed cast, this many casts are guaranteed hits (mercy rhythm). */
+export const FISHERMANS_VILLAGE_ASSISTED_CASTS_AFTER_MISS = 2;
 /**
  * Six reusable fishing-rod stations spread around the pond route. Each index is
  * deliberately clear of the four expandable landmark-door clusters, so a rod
@@ -242,6 +247,8 @@ export interface FishermansVillagePendingCatch {
   kilograms: number;
   pullsRequired: number;
   tileIndex: number;
+  /** Mercy cast: the throw cannot overswing and the fish cannot escape. */
+  assisted?: boolean;
 }
 
 export interface FrostwellIceworksProgress {
@@ -329,6 +336,8 @@ export interface FishermansVillageFishingProgress {
   successfulCatches: number;
   fishCaughtKg: number;
   pendingCatch: FishermansVillagePendingCatch | null;
+  /** Guaranteed casts left after a miss (0..2). */
+  assistedCastsRemaining?: number;
   dragonTriggeredAtMs: number | null;
   repairCompletedAtMs: number | null;
   completedAtMs: number | null;
@@ -495,6 +504,7 @@ export function sanitizeIslandRunSignatureMissionProgress(
             kilograms: Math.max(0, finiteInteger(pendingRecord.kilograms)),
             pullsRequired: Math.max(1, finiteInteger(pendingRecord.pullsRequired ?? pendingRecord.pulls_required, 1)),
             tileIndex: Math.max(0, finiteInteger(pendingRecord.tileIndex ?? pendingRecord.tile_index)),
+            ...(pendingRecord.assisted === true ? { assisted: true } : {}),
           }
         : null;
       const timestamp = (camel: string, snake: string): number | null => {
@@ -513,6 +523,8 @@ export function sanitizeIslandRunSignatureMissionProgress(
         successfulCatches: Math.max(0, finiteInteger(record.successfulCatches ?? record.successful_catches)),
         fishCaughtKg,
         pendingCatch,
+        assistedCastsRemaining: Math.max(0, Math.min(FISHERMANS_VILLAGE_ASSISTED_CASTS_AFTER_MISS,
+          finiteInteger(record.assistedCastsRemaining ?? record.assisted_casts_remaining))),
         dragonTriggeredAtMs: timestamp('dragonTriggeredAtMs', 'dragon_triggered_at_ms')
           ?? (fishCaughtKg >= FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG ? 0 : null),
         repairCompletedAtMs: timestamp('repairCompletedAtMs', 'repair_completed_at_ms'),
@@ -918,6 +930,7 @@ export function resolveFishermansVillageFishingProgress(options: {
     successfulCatches: 0,
     fishCaughtKg: 0,
     pendingCatch: null,
+    assistedCastsRemaining: 0,
     dragonTriggeredAtMs: null,
     repairCompletedAtMs: null,
     completedAtMs: null,
@@ -1065,40 +1078,37 @@ export function isFishermansVillageRodTile(islandNumber: number, tileIndex: numb
     );
 }
 
+/**
+ * Three great catches: a medium fish, a large fish, then the colossal one that
+ * lands the full target. Misses come from the cast skill (short throws and
+ * overswings) and escapes, never from a hidden random blank.
+ */
 export function resolveFishermansVillageCatch(
   randomValue: number,
   progress: FishermansVillageFishingProgress,
   tileIndex: number,
 ): FishermansVillagePendingCatch {
   const catchId = progress.castsCompleted + 1;
+  const assisted = (progress.assistedCastsRemaining ?? 0) > 0 ? { assisted: true } : {};
+  const normalized = Number.isFinite(randomValue) ? Math.max(0, Math.min(0.999999, randomValue)) : 0;
   if (
-    progress.successfulCatches >= 4
+    progress.successfulCatches >= FISHERMANS_VILLAGE_CATCHES_TO_COMPLETE - 1
     || progress.fishCaughtKg >= FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG
   ) {
     return {
       catchId,
       kind: 'colossal',
-      kilograms: Math.max(1, FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG - progress.fishCaughtKg),
-      pullsRequired: 10,
+      kilograms: Math.max(1, FISHERMANS_VILLAGE_FISH_TARGET_KG - progress.fishCaughtKg),
+      pullsRequired: 8,
       tileIndex,
+      ...assisted,
     };
   }
-  const normalized = Number.isFinite(randomValue) ? Math.max(0, Math.min(0.999999, randomValue)) : 0;
-  let kind: FishermansVillageCatchKind;
-  let kilograms: number;
-  let pullsRequired: number;
-  if (normalized < 0.18) {
-    kind = 'nothing'; kilograms = 0; pullsRequired = 1;
-  } else if (normalized < 0.56) {
-    kind = 'small'; kilograms = 3 + Math.floor((normalized - 0.18) / 0.38 * 5); pullsRequired = 2;
-  } else if (normalized < 0.86) {
-    kind = 'medium'; kilograms = 8 + Math.floor((normalized - 0.56) / 0.3 * 6); pullsRequired = 3;
-  } else {
-    kind = 'large'; kilograms = 15 + Math.floor((normalized - 0.86) / 0.14 * 8); pullsRequired = 6;
-  }
-  kilograms = Math.min(kilograms, Math.max(0, FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG - progress.fishCaughtKg));
-  if (kilograms <= 0) kind = 'nothing';
-  return { catchId, kind, kilograms, pullsRequired, tileIndex };
+  const first = progress.successfulCatches === 0;
+  const kind: FishermansVillageCatchKind = first ? 'medium' : 'large';
+  const rolled = first ? 22 + Math.floor(normalized * 9) : 24 + Math.floor(normalized * 9);
+  const kilograms = Math.max(1, Math.min(rolled, FISHERMANS_VILLAGE_PRE_DRAGON_CATCH_KG - progress.fishCaughtKg));
+  return { catchId, kind, kilograms, pullsRequired: first ? 3 : 5, tileIndex, ...assisted };
 }
 
 export function collectFishermansVillageLanding(options: {
@@ -1121,7 +1131,6 @@ export function collectFishermansVillageLanding(options: {
   if (
     !isFishermansVillageRodTile(options.islandNumber, options.tileIndex)
     || current.pendingCatch !== null
-    || (current.dragonTriggeredAtMs !== null && current.repairCompletedAtMs === null)
     || current.completedAtMs !== null
   ) {
     return { ledger: options.ledger, rodCollected: false, pendingCatch: null };
@@ -1138,6 +1147,7 @@ export function collectFishermansVillageLanding(options: {
         rodCollectedAtMs: current.rodCollectedAtMs ?? options.nowMs,
         castsCompleted: current.castsCompleted + 1,
         pendingCatch,
+        assistedCastsRemaining: Math.max(0, (current.assistedCastsRemaining ?? 0) - (pendingCatch.assisted ? 1 : 0)),
         updatedAtMs: options.nowMs,
       },
     },
@@ -1702,6 +1712,7 @@ export function mergeIslandRunSignatureMissionProgress(
         successfulCatches: Math.max(a.successfulCatches, b.successfulCatches),
         fishCaughtKg,
         pendingCatch: latest.fishCaughtKg < fishCaughtKg ? null : latest.pendingCatch,
+        assistedCastsRemaining: latest.assistedCastsRemaining ?? 0,
         dragonTriggeredAtMs: earliest(a.dragonTriggeredAtMs, b.dragonTriggeredAtMs),
         repairCompletedAtMs: earliest(a.repairCompletedAtMs, b.repairCompletedAtMs),
         completedAtMs: earliest(a.completedAtMs, b.completedAtMs),
