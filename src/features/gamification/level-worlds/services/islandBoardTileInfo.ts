@@ -90,7 +90,7 @@ export function resolveIslandBoardTileInfo(options: ResolveIslandBoardTileInfoOp
     };
   }
   if (entry?.signatureMissionKind === 'titan_soul_bolt') {
-    return { title: 'Soul-bolt', description: "An ancient binding for the Titan's Spine. One soul-bolt restores one bridge section." };
+    return { title: 'Titan Bone', description: "A lost vertebra of the Titan's Spine. Land on it or pass it, and that section of the spine rebuilds itself." };
   }
   const restorationCopy = entry?.signatureMissionKind === 'causeway_masonry'
     ? ['Masonry Spark', 'Recover this charged masonry to raise the next Broken Causeway span.']

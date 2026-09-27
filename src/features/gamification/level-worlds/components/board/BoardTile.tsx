@@ -347,7 +347,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
             : signatureMissionKind === 'golden_ride_ticket'
               ? `Tile ${index + 1}. Golden Ride Ticket for the Wonder Circuit`
             : signatureMissionKind === 'titan_soul_bolt'
-              ? `Tile ${index + 1}. Soul-bolt for the Titan's Spine`
+              ? `Tile ${index + 1}. Titan Bone for the Titan's Spine`
             : isDormant
               ? `Tile ${index + 1}. Dormant`
               : isLivingTicketRegrowing
