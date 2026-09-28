@@ -1151,7 +1151,8 @@ export const islandRunSignatureMissionTests: TestCase[] = [
   {
     name: 'staged restoration routes are unique, collision-free, and correctly sized on every authored island',
     run: () => {
-      [4, 7, 8, 9, 16, 17, 18, 19, 20].forEach((islandNumber) => {
+      // Island 019 sells its coaster through the Director; see coasterDirector tests.
+      [4, 7, 8, 9, 16, 17, 18, 20].forEach((islandNumber) => {
         const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
         assert(Boolean(descriptor), `Island ${islandNumber} has a staged mission descriptor`);
         if (!descriptor) return;

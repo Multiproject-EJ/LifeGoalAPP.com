@@ -9,6 +9,7 @@ import {
   SUNKEN_SANDS_FIRST_TREASURE_ID,
   SUNKEN_SANDS_TREASURE_ROLL_TARGET,
   getIslandRunSignatureMissionKey,
+  getCoasterSectionPrice,
   createOpeningGamesCampaignLedger,
 } from '../islandRunSignatureMissions';
 import { createOpeningGamesCeremonyProgress, OPENING_GAMES_CEREMONY_KEY } from '../islandRunOpeningGames';
@@ -158,7 +159,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [14, 'Honeycomb Kingdom', 'Awaken the Great Honeyfall'],
         [20, 'Lava Labyrinth', 'Escape the Lava Labyrinth'],
         [18, 'The Everblossom Kingdom', 'The Great Pollination'],
-        [19, 'Coaster Carnival', 'Restart the Wonder Circuit'],
+        [19, 'Coaster Carnival', 'Gift the Wonder Coaster'],
       ] as const;
       expected.forEach(([islandNumber, islandName, headline]) => {
         const presentation = getIslandMissionBriefingPresentation(islandNumber);
@@ -269,7 +270,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         [9, 'Systems Ignited'],
         [20, 'Escape Mission Locked'],
         [18, 'Gardens Blooming'],
-        [19, 'Circuit Systems Online'],
+        [19, 'Gift the Coaster'],
       ]);
       expectedStageLabels.forEach((stageLabel, islandNumber) => {
         const tracker = resolveIslandMissionTrackerPresentation({
@@ -288,7 +289,7 @@ export const islandRunMissionTrackerTests: TestCase[] = [
     },
   },
   {
-    name: 'Coaster Carnival tracker distinguishes ready Golden Ride Tickets from committed circuit systems',
+    name: 'Coaster Carnival tracker shows a delivered section as actionable and the coaster fund otherwise',
     run: () => {
       const key = getIslandRunSignatureMissionKey(0, 19);
       const tracker = resolveIslandMissionTrackerPresentation({
@@ -307,9 +308,23 @@ export const islandRunMissionTrackerTests: TestCase[] = [
         }),
       });
       assertEqual(tracker.usesLiveSignatureProgress, true, 'Wonder Circuit phone reads canonical mission state');
-      assertEqual(tracker.objectives[0].label, 'Circuit Systems Online', 'the tracker names the durable world transformation');
-      assertEqual(tracker.objectives[0].value, 2, 'only committed systems advance the primary ring');
-      assertEqual(tracker.objectives[0].displayValue, '2 ready · 2 / 3', 'the final two tickets remain visibly actionable');
+      assertEqual(tracker.objectives[0].label, 'Gift the Coaster', 'the tracker names the Director commission');
+      assertEqual(tracker.objectives[0].value, 2, 'only installed sections advance the primary ring');
+      assertEqual(tracker.objectives[0].displayValue, 'Section 3 delivered · install it', 'a paid section remains visibly actionable');
+
+      const funding = resolveIslandMissionTrackerPresentation({
+        islandNumber: 19,
+        state: {
+          ...makeState({ currentIslandNumber: 19 }),
+          essence: 250,
+        },
+      });
+      const price = getCoasterSectionPrice(0, 0);
+      assertEqual(
+        funding.objectives[0].displayValue,
+        `Coaster fund ${Math.min(250, price)} / ${price} · 0 / 3`,
+        'with nothing ordered the tracker shows the Money fund toward the first section',
+      );
     },
   },
   {

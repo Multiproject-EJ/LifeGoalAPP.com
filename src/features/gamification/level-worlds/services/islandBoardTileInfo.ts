@@ -89,6 +89,12 @@ export function resolveIslandBoardTileInfo(options: ResolveIslandBoardTileInfoOp
       description: 'Land here to cast into the central pond, then reel in whatever takes the hook.',
     };
   }
+  if (entry?.signatureMissionKind === 'coaster_director') {
+    return {
+      title: 'Theme Park Director',
+      description: 'Land here to talk with the Director and order the next section of the Wonder Coaster with your Money.',
+    };
+  }
   if (entry?.signatureMissionKind === 'titan_soul_bolt') {
     return { title: 'Titan Bone', description: "A lost vertebra of the Titan's Spine. Land on it or pass it, and that section of the spine rebuilds itself." };
   }

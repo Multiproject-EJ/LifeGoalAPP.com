@@ -486,6 +486,7 @@ import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { CompassBookIcon } from './CompassBookIcon';
 import { resolveIslandBuildStyle } from '../services/buildStyles';
 import { CompassPairingTip } from './CompassPairingTip';
+import { CoasterDirectorOverlay, type CoasterDirectorFeedback } from './CoasterDirectorOverlay';
 import { resolvePairingUpgradeSuggestion, rollCompanionPairingPerk } from '../services/companionPairingSurprise';
 import { FishermansDragonPrelude } from './FishermansDragonPrelude';
 import { FishermansEggRumour } from './FishermansEggRumour';
@@ -595,6 +596,7 @@ import {
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
 import {
   activateStagedRestorationMissionStage,
+  orderCoasterSectionFromDirector,
   completeLavaLabyrinthEscapeMission,
   activateGreatHoneyfallReservoir,
   claimSunkenSandsFirstTreasure,
@@ -644,6 +646,8 @@ import {
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
   resolveStagedRestorationMissionProgress,
+  resolveCoasterOrderStatus,
+  WONDER_CIRCUIT_ISLAND_NUMBER,
   FISHERMANS_VILLAGE_ISLAND_NUMBER,
 } from '../services/islandRunSignatureMissions';
 import {
@@ -14953,7 +14957,9 @@ export function IslandRunBoardPrototype({
           setLandingText('Solve the complete Level-3 labyrinth before forging the Iron Skiff.');
         }
         if (result.status === 'no_charges') {
-          setLandingText(`Find ${stagedRestorationDescriptor.pickupLabel.toLowerCase()} objects on the route before activating the next stage.`);
+          setLandingText(stagedRestorationDescriptor.islandNumber === WONDER_CIRCUIT_ISLAND_NUMBER
+            ? 'Order the next coaster section from the Theme Park Director first.'
+            : `Find ${stagedRestorationDescriptor.pickupLabel.toLowerCase()} objects on the route before activating the next stage.`);
         }
         return;
       }
@@ -15055,6 +15061,68 @@ export function IslandRunBoardPrototype({
     doesModalOwnAttention, handleActivateStagedRestoration, isActivatingStagedRestoration, isIslandVisualPreview,
     isRolling, missionOwnsController, pendingHopSequence, stopAutoRoll, titanSpineAutoRestore,
   ]);
+
+  // Island 019: the Theme Park Director sells the coaster section by section.
+  const coasterOrder = useMemo(
+    () => islandNumber === WONDER_CIRCUIT_ISLAND_NUMBER
+      ? resolveCoasterOrderStatus(stagedRestorationProgress, __storeState.cycleIndex)
+      : null,
+    [__storeState.cycleIndex, islandNumber, stagedRestorationProgress],
+  );
+  const coasterOrderNeeded = coasterOrder !== null
+    && stagedRestorationProgress?.completedAtMs === null
+    && !coasterOrder.sectionReady;
+  const [showCoasterDirector, setShowCoasterDirector] = useState(false);
+  const [isOrderingCoasterSection, setIsOrderingCoasterSection] = useState(false);
+  const [coasterDirectorFeedback, setCoasterDirectorFeedback] = useState<CoasterDirectorFeedback>(null);
+  const openCoasterDirector = useCallback(() => {
+    setCoasterDirectorFeedback(null);
+    setShowCoasterDirector(true);
+  }, []);
+  const closeCoasterDirector = useCallback(() => setShowCoasterDirector(false), []);
+  useEffect(() => { setShowCoasterDirector(false); }, [islandNumber, __storeState.cycleIndex]);
+  const coasterDirectorLandingRef = useRef(tokenIndex);
+  useEffect(() => {
+    if (islandNumber !== WONDER_CIRCUIT_ISLAND_NUMBER || isIslandVisualPreview) {
+      coasterDirectorLandingRef.current = tokenIndex;
+      return undefined;
+    }
+    if (isRolling || pendingHopSequence !== null || coasterDirectorLandingRef.current === tokenIndex) return undefined;
+    coasterDirectorLandingRef.current = tokenIndex;
+    if (tileMap.find((entry) => entry.index === tokenIndex)?.signatureMissionKind !== 'coaster_director') return undefined;
+    const timer = window.setTimeout(() => {
+      stopAutoRoll();
+      openCoasterDirector();
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [isIslandVisualPreview, isRolling, islandNumber, openCoasterDirector, pendingHopSequence, stopAutoRoll, tileMap, tokenIndex]);
+
+  const handleOrderCoasterSection = useCallback(async () => {
+    if (isOrderingCoasterSection) return;
+    setIsOrderingCoasterSection(true);
+    try {
+      const result = await orderCoasterSectionFromDirector({ session, client });
+      if (result.status === 'ok') {
+        refreshIslandRunStateFromLocal(session);
+        const fresh = getIslandRunStateSnapshot(session);
+        runtimeStateRef.current = fresh;
+        setRuntimeStateWithTrace('order_coaster_section_from_director', fresh);
+        setCoasterDirectorFeedback({ tone: 'ok', text: `Deal! Section ${result.sectionsOrdered} is on its way.` });
+        playIslandRunSound('reward_bar_claim_burst');
+        triggerIslandRunHaptic('reward_claim');
+        return;
+      }
+      if (result.status === 'insufficient_money') {
+        setCoasterDirectorFeedback({ tone: 'warn', text: `You need ${(result.price - result.essence).toLocaleString()} more Money for this one.` });
+      }
+    } finally {
+      setIsOrderingCoasterSection(false);
+    }
+  }, [client, isOrderingCoasterSection, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
+  const handleInstallCoasterSection = useCallback(() => {
+    setShowCoasterDirector(false);
+    void handleActivateStagedRestoration();
+  }, [handleActivateStagedRestoration]);
 
   const handleFundRootheartPowerworks = useCallback(async () => {
     if (isFundingRootheartPowerworks) return;
@@ -17279,6 +17347,19 @@ export function IslandRunBoardPrototype({
           currentCompanionName={activeCompanion?.creature.name ?? null}
           suggestedCreatureId={pairingUpgradeSuggestion}
           onAccept={(creatureId) => sanctuaryHandlers.setActiveCompanion(creatureId)}
+        />
+      ) : null}
+      {showCoasterDirector && coasterOrder ? (
+        <CoasterDirectorOverlay
+          playerKey={session.user.id}
+          order={coasterOrder}
+          missionComplete={stagedRestorationProgress?.completedAtMs != null}
+          money={__storeState.essence}
+          busy={isOrderingCoasterSection || isActivatingStagedRestoration}
+          feedback={coasterDirectorFeedback}
+          onOrder={() => void handleOrderCoasterSection()}
+          onInstall={handleInstallCoasterSection}
+          onClose={closeCoasterDirector}
         />
       ) : null}
 
@@ -21165,7 +21246,9 @@ export function IslandRunBoardPrototype({
             ? `Replay ${currentMissionTracker.briefing.headline}`
             : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage
               ? `${stagedRestorationDescriptor.actionLabel} · ${stagedRestorationProgress.activatedStages + 1} of ${stagedRestorationDescriptor.stageCount}`
-              : `Find ${stagedRestorationDescriptor.pickupLabel}`
+              : coasterOrderNeeded
+                ? '🎩 Call the Theme Park Director'
+                : `Find ${stagedRestorationDescriptor.pickupLabel}`
           : showMissionPhoneBriefing && islandNumber === 14
           ? greatHoneyfallCompleted
             ? 'Replay the Great Honeyfall'
@@ -21188,7 +21271,9 @@ export function IslandRunBoardPrototype({
             ? 'Replay the completed 3D transformation and island-wide finale.'
             : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage
               ? 'The phone will fold so you can watch the next stage pop, flash and lock into the world.'
-              : `Collect glowing ${stagedRestorationDescriptor.pickupLabel.toLowerCase()} objects on the route. Passing one also secures it.`
+              : coasterOrderNeeded && coasterOrder?.nextPrice != null
+                ? `Next: ${coasterOrder.nextSectionName} for ${coasterOrder.nextPrice.toLocaleString()} Money. Order by phone or land on a 🎩 Director tile.`
+                : `Collect glowing ${stagedRestorationDescriptor.pickupLabel.toLowerCase()} objects on the route. Passing one also secures it.`
           : showMissionPhoneBriefing && islandNumber === 14
           ? greatHoneyfallCompleted
             ? 'Replay the wax-seal burst and royal cascade.'
@@ -21201,7 +21286,8 @@ export function IslandRunBoardPrototype({
           : showMissionPhoneBriefing && stagedRestorationDescriptor && stagedRestorationProgress
           ? !lavaLabyrinthEscapeMissionStarted
             || (stagedRestorationProgress.completedAtMs === null
-              && stagedRestorationAvailableCharges < stagedRestorationDescriptor.chargeCostPerStage)
+              && stagedRestorationAvailableCharges < stagedRestorationDescriptor.chargeCostPerStage
+              && !coasterOrderNeeded)
           : showMissionPhoneBriefing && islandNumber === 14
           ? !greatHoneyfallCompleted && greatHoneyfallAvailableNectar < 1
           : false}
@@ -21218,6 +21304,8 @@ export function IslandRunBoardPrototype({
           ? () => { setShowMissionPhoneBriefing(false); setShowOpeningGamesCeremony(true); }
           : showMissionPhoneBriefing && islandNumber === 1 && firstLightAssemblyCompleted
           ? () => { setShowMissionPhoneBriefing(false); openAssemblyMandate(); }
+          : showMissionPhoneBriefing && coasterOrderNeeded
+          ? () => { setShowMissionPhoneBriefing(false); openCoasterDirector(); }
           : showMissionPhoneBriefing && stagedRestorationDescriptor
             // Island 017's spine rebuilds from collected bones, never from the phone.
             && !(stagedRestorationDescriptor.islandNumber === 17

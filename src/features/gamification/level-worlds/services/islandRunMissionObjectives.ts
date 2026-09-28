@@ -36,6 +36,9 @@ import {
   resolveStagedRestorationMissionProgress,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
+  resolveCoasterOrderStatus,
+  COASTER_SECTION_COUNT,
+  WONDER_CIRCUIT_ISLAND_NUMBER,
 } from './islandRunSignatureMissions';
 
 export const ISLAND_MISSION_TRACKER_REGISTRY_VERSION = 1 as const;
@@ -65,7 +68,7 @@ type MissionTrackerState = Pick<
   | 'signatureMissionProgressByIsland'
   | 'stopStatesByIndex'
   | 'stopBuildStateByIndex'
-> & Partial<Pick<IslandRunGameStateRecord, 'bossTrialResolvedIslandNumber' | 'completedStopsByIsland' | 'technologyUnlocksById'>>;
+> & Partial<Pick<IslandRunGameStateRecord, 'bossTrialResolvedIslandNumber' | 'completedStopsByIsland' | 'technologyUnlocksById' | 'essence'>>;
 
 const completeLabel = 'Complete';
 
@@ -379,6 +382,26 @@ export function resolveIslandMissionObjectives(options: {
           objective("The Titan's Last Thought", Math.min(8, progress.activatedStages) + phase, 14,
             progress.activatedStages < 8 ? `${progress.activatedStages} / 8 spine sections`
               : awakening.legacyComplete ? 'Complete · new puzzles available' : TITAN_PHASES[awakening.phase]),
+          objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
+        ];
+        break;
+      }
+      if (descriptor.islandNumber === WONDER_CIRCUIT_ISLAND_NUMBER) {
+        const order = resolveCoasterOrderStatus(progress, state.cycleIndex);
+        const money = Math.max(0, Math.floor(state.essence ?? 0));
+        objectives = [
+          objective(
+            'Gift the Coaster',
+            order.sectionsInstalled,
+            COASTER_SECTION_COUNT,
+            progress.completedAtMs !== null
+              ? 'Complete'
+              : order.sectionReady
+                ? `Section ${order.sectionsInstalled + 1} delivered · install it`
+                : order.nextPrice !== null
+                  ? `Coaster fund ${Math.min(money, order.nextPrice)} / ${order.nextPrice} · ${order.sectionsInstalled} / ${COASTER_SECTION_COUNT}`
+                  : `${order.sectionsInstalled} / ${COASTER_SECTION_COUNT}`,
+          ),
           objective('Build Landmarks', landmarkProgress.buildsComplete, landmarkCount),
         ];
         break;

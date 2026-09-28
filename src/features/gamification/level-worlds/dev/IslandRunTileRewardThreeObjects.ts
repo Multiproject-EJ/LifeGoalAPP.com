@@ -74,6 +74,7 @@ export type IslandRunTileRewardObjectKind =
   | 'cactus_canyon_dynamite'
   | 'great_honeyfall_nectar'
   | 'fishermans_rod'
+  | 'coaster_director'
   | 'staged_restoration_pickup'
   | 'active_landmark_door';
 
@@ -87,6 +88,7 @@ export function resolveIslandRunTileRewardObjectKind(
   if (entry.signatureMissionKind === 'cactus_canyon_dynamite') return 'cactus_canyon_dynamite';
   if (entry.signatureMissionKind === 'great_honeyfall_nectar') return 'great_honeyfall_nectar';
   if (entry.signatureMissionKind === 'fishermans_rod') return 'fishermans_rod';
+  if (entry.signatureMissionKind === 'coaster_director') return 'coaster_director';
   if (entry.signatureMissionKind === 'causeway_masonry'
     || entry.signatureMissionKind === 'moon_mirror_lens'
     || entry.signatureMissionKind === 'breathline_pressure_pearl'
@@ -518,6 +520,25 @@ function createFishermansRod(materials: RewardMaterials, quality: Island3DQualit
   return root;
 }
 
+function createCoasterDirectorHat(materials: RewardMaterials, quality: Island3DQuality): THREE.Group {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_19_COASTER_DIRECTOR_KIOSK';
+  const segments = qualitySegments(quality);
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.04, segments), materials.midnight);
+  brim.position.y = -0.1;
+  const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.36, segments), materials.midnight);
+  crown.position.y = 0.1;
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.195, 0.195, 0.07, segments), materials.gold);
+  band.position.y = -0.03;
+  const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.07, 0), materials.amber);
+  star.position.set(0, 0.36, 0);
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.03, 6, segments * 2), materials.goldGlow);
+  halo.rotation.x = Math.PI / 2;
+  halo.position.y = -0.14;
+  root.add(brim, crown, band, star, halo);
+  return root;
+}
+
 function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMaterials, quality: Island3DQuality) {
   const kind = resolveIslandRunTileRewardObjectKind(entry);
   if (kind === 'first_light_dynamite') {
@@ -546,6 +567,7 @@ function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMateria
   }
   if (kind === 'great_honeyfall_nectar') return createGreatHoneyfallNectar(materials, quality);
   if (kind === 'fishermans_rod') return createFishermansRod(materials, quality);
+  if (kind === 'coaster_director') return createCoasterDirectorHat(materials, quality);
   if (kind === 'staged_restoration_pickup') {
     const root = new THREE.Group();
     root.name = `ISLAND_RUN_STAGED_RESTORATION_${entry.signatureMissionKind?.toUpperCase()}`;
@@ -675,6 +697,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
       : tileEntry.signatureMissionKind === 'great_honeyfall_nectar'
         ? 1.18
       : tileEntry.signatureMissionKind === 'fishermans_rod'
+        || tileEntry.signatureMissionKind === 'coaster_director'
         ? 1.24
       : tileEntry.signatureMissionKind === 'causeway_masonry'
         || tileEntry.signatureMissionKind === 'moon_mirror_lens'
