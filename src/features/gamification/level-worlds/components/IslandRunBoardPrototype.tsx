@@ -488,6 +488,8 @@ import { resolveIslandBuildStyle } from '../services/buildStyles';
 import { CompassPairingTip } from './CompassPairingTip';
 import { CoasterDirectorOverlay, type CoasterDirectorFeedback } from './CoasterDirectorOverlay';
 import { EggManiaPopup } from './EggManiaPopup';
+import { Island20SlideLabyrinth } from './Island20SlideLabyrinth';
+import { getLabyrinthProgressKey } from '../services/island20SlideLabyrinth';
 import {
   addMissionPhoneMessage,
   getMissionBriefingMessageId,
@@ -3075,6 +3077,8 @@ export function IslandRunBoardPrototype({
   const [buildDiscountExpiresAtMs, setBuildDiscountExpiresAtMs] = useState<number | null>(null);
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
   const [showEggManiaModal, setShowEggManiaModal] = useState(false);
+  // Island 020's own slide labyrinth (never part of the event mini-game rotation).
+  const [showSlideLabyrinth, setShowSlideLabyrinth] = useState(false);
   const [showHatcheryCompassModal, setShowHatcheryCompassModal] = useState(false);
   const [showCompassBookReceiptModal, setShowCompassBookReceiptModal] = useState(false);
   const [isCompassBookCeremonyPlaying, setIsCompassBookCeremonyPlaying] = useState(false);
@@ -17351,6 +17355,19 @@ export function IslandRunBoardPrototype({
         </button>
       ) : null}
 
+      {islandNumber === 20 && !islandDeparture && !isIslandVisualPreview ? (
+        <button
+          type="button"
+          className="island-run-board__labyrinth-floating"
+          aria-label="Play the Island 020 Lava Labyrinth"
+          title="Lava Labyrinth"
+          onClick={() => { stopAutoRoll(); setShowSlideLabyrinth(true); }}
+        >
+          <span aria-hidden="true">🌀</span>
+          <small aria-hidden="true">Maze</small>
+        </button>
+      ) : null}
+
       {showLuckySpinBadge ? (
         <button
           ref={setLuckySpinBadgeElement}
@@ -19161,6 +19178,13 @@ export function IslandRunBoardPrototype({
           </section>
         </div>
       )}
+
+      {showSlideLabyrinth && islandNumber === 20 ? (
+        <Island20SlideLabyrinth
+          progressKey={getLabyrinthProgressKey(session.user.id, cycleIndex)}
+          onClose={() => setShowSlideLabyrinth(false)}
+        />
+      ) : null}
 
       {showEggManiaModal && (
         <EggManiaPopup

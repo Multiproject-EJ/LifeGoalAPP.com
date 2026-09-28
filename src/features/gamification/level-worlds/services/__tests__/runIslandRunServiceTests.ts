@@ -8,6 +8,7 @@ import { coasterDeliveryTests } from './coasterDelivery.test';
 import { eggManiaPopupTests } from './eggManiaPopup.test';
 import { missionPhoneInboxTests } from './missionPhoneInbox.test';
 import { wonderExpressUnderworldTests } from './wonderExpressUnderworld.test';
+import { island20SlideLabyrinthTests } from './island20SlideLabyrinth.test';
 import { buildStylesTests } from './buildStyles.test';
 import { precisionBuildJuiceTests } from './precisionBuildJuice.test';
 import { companionPairingSurpriseTests } from './companionPairingSurprise.test';
@@ -320,6 +321,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'eggManiaPopup', tests: eggManiaPopupTests },
   { label: 'missionPhoneInbox', tests: missionPhoneInboxTests },
   { label: 'wonderExpressUnderworld', tests: wonderExpressUnderworldTests },
+  { label: 'island20SlideLabyrinth', tests: island20SlideLabyrinthTests },
   { label: 'buildStyles', tests: buildStylesTests },
   { label: 'precisionBuildJuice', tests: precisionBuildJuiceTests },
   { label: 'companionPairingSurprise', tests: companionPairingSurpriseTests },
