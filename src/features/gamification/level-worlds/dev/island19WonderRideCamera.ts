@@ -27,3 +27,12 @@ export function createWonderRideCameraFilter() {
     },
   };
 }
+
+/**
+ * Speed-driven lens: 68 degrees at cruising speed, widening smoothly up to
+ * 82 degrees near the super-speed drop's top speed (unscaled m/s).
+ */
+export function resolveWonderRideFov(unscaledSpeed: number): number {
+  const rush = THREE.MathUtils.smoothstep(unscaledSpeed, 3.2, 5.6);
+  return 68 + rush * 14;
+}

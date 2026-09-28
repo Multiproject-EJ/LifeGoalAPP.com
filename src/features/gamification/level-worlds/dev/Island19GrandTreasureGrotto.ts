@@ -102,13 +102,25 @@ export function createGrandTreasureGrotto(
   const crystal = new THREE.MeshPhysicalMaterial({color:0x80efff,metalness:.24,roughness:.12,clearcoat:1,emissive:0x20a4be,emissiveIntensity:.6});
   const crystals = new THREE.InstancedMesh(new THREE.OctahedronGeometry(1,0), crystal, 18);
   crystals.name = 'ISLAND_19_D019_COLOSSAL_CRYSTAL_CLUSTERS';
+  let crystalCount = 0;
   for(let i=0;i<18;i++){
     const angle=i/18*Math.PI*2;
     const radius=3.5 + .2*Math.sin(i);
-    matrix.compose(new THREE.Vector3(center.x+Math.cos(angle)*radius,config.floorY+1.2,Math.sin(angle)*radius*.8),
-      rotation.setFromEuler(new THREE.Euler(.16*Math.cos(i),angle,.16*Math.sin(i))),new THREE.Vector3(.32+i%3*.09,1.4+i%4*.32,.35));
-    crystals.setMatrixAt(i,matrix);
+    const crystalPosition = new THREE.Vector3(center.x+Math.cos(angle)*radius,config.floorY+1.2,Math.sin(angle)*radius*.8);
+    const crystalScale = new THREE.Vector3(.32+i%3*.09,1.4+i%4*.32,.35);
+    // Keep crystal tips out of the lowest double-spiral turn.
+    // Crystals under the lowest double-spiral turn are grown shorter so
+    // their tips stay well below the rider envelope.
+    const trackAbove = passageSamples
+      .filter(sample => Math.hypot(sample.x-crystalPosition.x, sample.z-crystalPosition.z) < 1.3)
+      .reduce((lowest, sample) => Math.min(lowest, sample.y), Infinity);
+    crystalScale.y = Math.min(crystalScale.y, trackAbove - 1.1 - crystalPosition.y);
+    if (crystalScale.y < 0.6) continue;
+    matrix.compose(crystalPosition,
+      rotation.setFromEuler(new THREE.Euler(.16*Math.cos(i),angle,.16*Math.sin(i))),crystalScale);
+    crystals.setMatrixAt(crystalCount++,matrix);
   }
+  crystals.count = crystalCount;
   root.add(crystals);
   // Hanging minerals, tiny lamps and balcony piers provide a readable size
   // hierarchy: wagon, bridge, enormous walls, then the distant treasure floor.
@@ -144,6 +156,8 @@ export function createGrandTreasureGrotto(
     for(const side of [-1,1]){
       const height=frame.position.y-.08-config.floorY;
       const p=frame.position.clone().addScaledVector(frame.side,side*.36);
+      // A pier under an upper spiral turn must not pierce a lower pass.
+      if(passageSamples.some(s=>s.y<frame.position.y-.6 && s.y>config.floorY && Math.hypot(s.x-p.x,s.z-p.z)<.95)) continue;
       p.y=config.floorY+height/2;
       matrix.compose(p,new THREE.Quaternion(),new THREE.Vector3(1,height,1));
       piers.setMatrixAt(pier++,matrix);
