@@ -18,6 +18,8 @@ import './Island19WonderRide.css';
 import './Island40Placeholder.css';
 import {createAssemblySeaGeometry} from './Island1V2Terrain';
 import { createWonderRideCameraFilter } from './island19WonderRideCamera';
+import { createIsland19CoasterHelicopter } from './Island19CoasterHelicopter';
+import { WonderRideOfferModal } from './WonderRideOfferModal';
 import { resolveUnoccludedCameraPosition } from './islandCameraOcclusion';
 import { getIslandExplorePoints, type IslandExplorePoint, type IslandExplorePointId } from '../services/islandExplorePoints';
 import * as THREE from 'three';
@@ -3821,6 +3823,7 @@ export default function Island5ThreePilot({
   const [trainRidePhase, setTrainRidePhase] = useState<Island13TrainRidePhase>('idle');
   const [trainRideSecondsRemaining, setTrainRideSecondsRemaining] = useState(15);
   const [wonderRidePhase, setWonderRidePhase] = useState<Island19WonderRidePhase>('idle');
+  const [wonderRideOfferOpen, setWonderRideOfferOpen] = useState(false);
   const [wonderRideWagon, setWonderRideWagon] = useState<Island19CircuitFWagon>('front');
   const [wonderRideSecondsRemaining, setWonderRideSecondsRemaining] = useState(0);
   const [wonderRideTelemetry, setWonderRideTelemetry] = useState({ progress: 0, pace: 'Boarding' });
@@ -5156,6 +5159,25 @@ export default function Island5ThreePilot({
         canvas.dataset.island19FallbackPreserved = 'circuit-e-source-locked-hybrid';
       }
     }
+    // Island 019 mission: the coaster is hidden on arrival and grows as the
+    // Director's sections are installed; a helicopter flies each order in.
+    const island19Helicopter = island19CircuitFWorld && isCircuitFPreviewEnabled
+      ? createIsland19CoasterHelicopter()
+      : null;
+    if (island19CircuitFWorld && island19Helicopter) island19CircuitFWorld.root.add(island19Helicopter.root);
+    const initialCoasterPresentation = stagedRestorationPresentationRef.current;
+    if (island19CircuitFWorld && initialCoasterPresentation?.islandNumber === 19) {
+      island19CircuitFWorld.setCoasterBuildStage(
+        initialCoasterPresentation.activatedStages,
+        initialCoasterPresentation.stageCount,
+        false,
+      );
+    }
+    let island19DeliverySequenceSeen = Math.max(0, Math.floor(initialCoasterPresentation?.coasterDeliverySequence ?? 0));
+    // Dev evidence: ?island19HelicopterPreview=1 loops the delivery flight.
+    const island19HelicopterPreview = import.meta.env.DEV && typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('island19HelicopterPreview') === '1';
+    let island19HelicopterPreviewNextAt = 1.5;
     const island19FullWorld: Island19SourceLoftWorldRuntime | null = isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled
       ? createIsland19CoasterCarnivalSourceLoftWorld({
           quality: qualityProfile.id,
@@ -8692,6 +8714,8 @@ export default function Island5ThreePilot({
       fixedProgress: number | null = null,
     ) => {
       if (!isCoasterCarnival || !island19CircuitFWorld || activeWonderRide) return;
+      // No ride until every Director section is installed.
+      if (island19CircuitFWorld.getCoasterBuildFraction() < 0.999) return;
       if (activeTrainRide) finishTrainRide(false);
       const normalizedFixedProgress = fixedProgress === null
         ? null
@@ -9319,6 +9343,14 @@ export default function Island5ThreePilot({
           stagedRestorationPresentationKey = nextKey;
           stagedRestorationRuntime.update(nextPresentation, isReducedMotion);
           tileRewardObjects.setStagedRestorationClaimedTiles(nextPresentation.claimedPickupTileIndices ?? []);
+          if (isCoasterCarnival && island19CircuitFWorld && nextPresentation.islandNumber === 19) {
+            island19CircuitFWorld.setCoasterBuildStage(
+              nextPresentation.activatedStages,
+              nextPresentation.stageCount,
+              !isReducedMotion,
+            );
+            canvas.dataset.island19CoasterSections = String(nextPresentation.activatedStages);
+          }
           const nextConstructionSequence = Math.max(0, Math.floor(nextPresentation.constructionSequence ?? 0));
           if (
             isCoasterCarnival
@@ -9331,6 +9363,19 @@ export default function Island5ThreePilot({
           }
         }
         stagedRestorationRuntime.animate(elapsed, isReducedMotion);
+        if (island19Helicopter && nextPresentation.islandNumber === 19) {
+          const deliverySequence = Math.max(0, Math.floor(nextPresentation.coasterDeliverySequence ?? 0));
+          if (deliverySequence > island19DeliverySequenceSeen) {
+            island19DeliverySequenceSeen = deliverySequence;
+            island19Helicopter.playDelivery(elapsed);
+          }
+          if (island19HelicopterPreview && elapsed >= island19HelicopterPreviewNextAt) {
+            island19HelicopterPreviewNextAt = elapsed + 9;
+            island19Helicopter.playDelivery(elapsed);
+          }
+          island19Helicopter.animate(elapsed, Boolean(nextPresentation.coasterSectionReady), isReducedMotion);
+          canvas.dataset.island19HelicopterFlying = String(island19Helicopter.isFlying());
+        }
         if (isJungleExpedition) {
           const requestedSequence = Math.max(0, Math.floor(nextPresentation.constructionSequence ?? 0));
           if (requestedSequence > jungleZenithLastConstructionSequence) {
@@ -9467,7 +9512,8 @@ export default function Island5ThreePilot({
         && !activeWonderRide
       ) {
         wonderRidePendingAfterConstruction = false;
-        startWonderRide(now, 'front');
+        // The finished coaster is offered in a modal instead of launching.
+        setWonderRideOfferOpen(true);
       }
       if (isHoneycombKingdom) {
         const honeyfallPresentation = greatHoneyfallPresentationRef.current;
@@ -11476,11 +11522,9 @@ export default function Island5ThreePilot({
         ? { eyebrow: 'LUXURY CARRIAGE', title: 'Canyon air through the open sash', next: 'Return to the island' }
         : null;
   const wonderRideUnlocked = isCoasterCarnival && (
-    isCircuitFPreviewEnabled
-    || Boolean(
-      stagedRestorationPresentation
-      && stagedRestorationPresentation.activatedStages >= stagedRestorationPresentation.stageCount,
-    )
+    stagedRestorationPresentation
+      ? stagedRestorationPresentation.activatedStages >= stagedRestorationPresentation.stageCount
+      : isCircuitFPreviewEnabled
   );
   const wonderRidePhaseCopy: Readonly<Record<Island19CircuitFRidePhase, { eyebrow: string; title: string }>> = {
     dispatch: { eyebrow: 'WONDER EXPRESS', title: 'Dispatch from Coaster Castle' },
@@ -11639,7 +11683,13 @@ export default function Island5ThreePilot({
           <span>🚂</span> Double-tap the train to ride
         </div>
       ) : null}
-      {wonderRideUnlocked && hasRenderedFrame && wonderRidePhase === 'idle' && !isEvidenceCapture ? (
+      {wonderRideOfferOpen && wonderRideUnlocked && wonderRidePhase === 'idle' && !isEvidenceCapture ? (
+        <WonderRideOfferModal
+          onRide={(wagon) => { setWonderRideOfferOpen(false); startWonderRideRef.current(wagon); }}
+          onLater={() => setWonderRideOfferOpen(false)}
+        />
+      ) : null}
+      {wonderRideUnlocked && !wonderRideOfferOpen && hasRenderedFrame && wonderRidePhase === 'idle' && !isEvidenceCapture ? (
         <section
           className="wonder-ride-card"
           aria-labelledby="island-19-wonder-express-choice-title"
