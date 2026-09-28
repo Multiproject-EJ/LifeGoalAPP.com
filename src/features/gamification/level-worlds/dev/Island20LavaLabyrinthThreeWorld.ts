@@ -343,6 +343,8 @@ function createIsland20AuthoredLavaMaterial(quality: Island3DQuality) {
       uThermalPulse: { value: 0.5 },
     },
     vertexShader: `
+      uniform float uElapsed;
+      uniform float uThermalPulse;
       varying vec3 vLocalPosition;
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
@@ -464,6 +466,53 @@ function keepIsland20AuthoredCityPart(name: string) {
   ].some((part) => name.includes(part));
 }
 
+/**
+ * The authored city GLB was modelled edge to edge, so at its runtime scale its
+ * districts, floors and canals sit on top of the canonical 36-tile ring and
+ * bury the board. Remove every triangle that touches or spans the route
+ * corridor so the tiles, pawn and pickups stay readable. Returns the number
+ * of triangles removed.
+ */
+export function carveIsland20AuthoredCityRouteCorridor(authoredRoot: THREE.Object3D): number {
+  authoredRoot.updateMatrixWorld(true);
+  const inner = ISLAND_20_ROUTE_CLEARANCE_INNER_RADIUS;
+  const outer = ISLAND_20_ROUTE_CLEARANCE_OUTER_RADIUS;
+  const vertex = new THREE.Vector3();
+  let removed = 0;
+  authoredRoot.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    const source = object.geometry as THREE.BufferGeometry;
+    const position = source.getAttribute('position');
+    if (!position) return;
+    const radii = new Float32Array(position.count);
+    for (let i = 0; i < position.count; i += 1) {
+      vertex.fromBufferAttribute(position, i).applyMatrix4(object.matrixWorld);
+      radii[i] = Math.hypot(vertex.x, vertex.z);
+    }
+    const index = source.getIndex();
+    const triangleCount = index ? index.count / 3 : position.count / 3;
+    const kept: number[] = [];
+    for (let t = 0; t < triangleCount; t += 1) {
+      const a = index ? index.getX(t * 3) : t * 3;
+      const b = index ? index.getX(t * 3 + 1) : t * 3 + 1;
+      const c = index ? index.getX(t * 3 + 2) : t * 3 + 2;
+      const minR = Math.min(radii[a], radii[b], radii[c]);
+      const maxR = Math.max(radii[a], radii[b], radii[c]);
+      if (maxR > inner && minR < outer) { removed += 1; continue; }
+      kept.push(a, b, c);
+    }
+    if (kept.length === triangleCount * 3) return;
+    const carved = source.clone();
+    carved.setIndex(kept);
+    carved.computeBoundingBox();
+    carved.computeBoundingSphere();
+    object.geometry = carved;
+    object.visible = object.visible && kept.length > 0;
+  });
+  authoredRoot.userData.routeCorridorTrianglesRemoved = removed;
+  return removed;
+}
+
 export async function loadIsland20AuthoredCity(
   materials: Island20LavaLabyrinthMaterials,
   quality: Island3DQuality = 'high',
@@ -485,6 +534,7 @@ export async function loadIsland20AuthoredCity(
     part.userData.assemblyRestY = part.position.y;
   });
   remapIsland20AuthoredCityMaterials(authoredRoot, materials, authoredLava);
+  carveIsland20AuthoredCityRouteCorridor(authoredRoot);
   return authoredRoot;
 }
 

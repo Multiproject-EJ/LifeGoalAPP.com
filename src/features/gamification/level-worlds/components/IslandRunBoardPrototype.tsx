@@ -3713,10 +3713,12 @@ export function IslandRunBoardPrototype({
   const missionPhoneObjectiveActions = useMemo<readonly MissionObjectiveAction[]>(() => (
     currentMissionTracker.objectives.map((objective, objectiveIndex) => {
       if (objective.label.toLowerCase().includes('build landmarks')) return 'launch';
-      if (objectiveIndex === 0 && ([1, 3, 10, 13].includes(islandNumber) || Boolean(stagedRestorationDescriptor))) return 'launch';
+      // Staged restorations are driven by the phone's own primary action, so
+      // their mission row explains instead of folding the phone away.
+      if (objectiveIndex === 0 && [1, 3, 10, 13].includes(islandNumber)) return 'launch';
       return 'details';
     })
-  ), [currentMissionTracker.objectives, islandNumber, stagedRestorationDescriptor]);
+  ), [currentMissionTracker.objectives, islandNumber]);
   const missionPhoneObjectiveDetails = useMemo(() => (
     currentMissionTracker.objectives.map((objective, objectiveIndex) => (
       objective.label.toLowerCase().includes('build landmarks')
@@ -3753,9 +3755,7 @@ export function IslandRunBoardPrototype({
     }
     if (islandNumber === 13) {
       openCactusCanyonSpiral();
-      return;
     }
-    if (stagedRestorationDescriptor) setShowMissionPhoneBriefing(true);
   }, [
     currentMissionTracker.objectives,
     islandNumber,
@@ -3764,7 +3764,6 @@ export function IslandRunBoardPrototype({
     openFirstLightAssemblyCrater,
     openFrostwellMission,
     openRootheartPowerworks,
-    stagedRestorationDescriptor,
   ]);
   const missionPhoneCompletionPercent = currentMissionTracker.overallProgressPercent;
   const cactusCanyonSpiralProgress = useMemo(() => resolveCactusCanyonSpiralProgress({
