@@ -97,3 +97,28 @@ export function precisionFeedbackLabel(judgement: PrecisionBuildJudgement, strea
   if (judgement === 'perfect') return streak >= 3 ? `PERFECT ×${streak}!` : 'PERFECT!';
   return streak >= 3 ? `Nice ×${streak}` : 'Nice!';
 }
+
+/** The success row: every tap is stored as a gem (perfect / good) or a crack (miss). */
+export const PRECISION_SUCCESS_ROW_MAX = 12;
+export type PrecisionRowEntry = { id: number; judgement: PrecisionBuildJudgement };
+
+export function appendPrecisionRow(row: readonly PrecisionRowEntry[], judgement: PrecisionBuildJudgement, id: number): PrecisionRowEntry[] {
+  return [...row, { id, judgement }].slice(-PRECISION_SUCCESS_ROW_MAX);
+}
+
+/** Combo heat from the streak: drives ring colour, sparks and banners. */
+export type PrecisionComboTier = 'cool' | 'warm' | 'hot' | 'blazing';
+export function precisionComboTier(streak: number): PrecisionComboTier {
+  if (streak >= 10) return 'blazing';
+  if (streak >= 5) return 'hot';
+  if (streak >= 3) return 'warm';
+  return 'cool';
+}
+
+/** Banner for streak milestones (shown once when reached). */
+export function precisionMilestoneBanner(streak: number): string | null {
+  if (streak === 5) return 'ON FIRE! ×5';
+  if (streak === 10) return 'UNSTOPPABLE! ×10';
+  if (streak > 10 && streak % 5 === 0) return `LEGENDARY ×${streak}`;
+  return null;
+}
