@@ -484,6 +484,8 @@ import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { CompassBookIcon } from './CompassBookIcon';
+import { CompassPairingTip } from './CompassPairingTip';
+import { resolvePairingUpgradeSuggestion, rollCompanionPairingPerk } from '../services/companionPairingSurprise';
 import { FishermansDragonPrelude } from './FishermansDragonPrelude';
 import { FishermansEggRumour } from './FishermansEggRumour';
 import { isDragonPreludeActive } from '../services/fishermansDragonPrelude';
@@ -9649,10 +9651,21 @@ export function IslandRunBoardPrototype({
   const activeCompanionMissingOrUnowned = Boolean(
     __storeState.activeCompanionId && !activeCompanionRegenModifier.isOwned,
   );
+  // Each island visit the companion brings a surprise gift (seeded per visit,
+  // so it is stable and still granted once through the visit marker below).
   const activeCompanionBonus = useMemo(
-    () => (activeCompanion ? getCompanionBonusForCreature(activeCompanion.creature, activeCompanion.bondLevel) : null),
-    [activeCompanion],
+    () => (activeCompanion ? rollCompanionPairingPerk({
+      creature: activeCompanion.creature,
+      bondLevel: activeCompanion.bondLevel,
+      seedKey: `${session.user.id}:${activeCompanion.creatureId}:${runtimeState.cycleIndex}:${islandNumber}`,
+    }) : null),
+    [activeCompanion, islandNumber, runtimeState.cycleIndex, session.user.id],
   );
+  const pairingUpgradeSuggestion = useMemo(() => resolvePairingUpgradeSuggestion({
+    activeCompanionId: runtimeState.activeCompanionId ?? null,
+    perfectCompanionIds: runtimeState.perfectCompanionIds ?? [],
+    ownedCreatureIds: runtimeState.creatureCollection.filter((entry) => entry.copies > 0).map((entry) => entry.creatureId),
+  }), [runtimeState.activeCompanionId, runtimeState.creatureCollection, runtimeState.perfectCompanionIds]);
   const selectedSanctuaryCreature = useMemo(
     () => collectedCreatures.find((creature) => creature.creatureId === selectedSanctuaryCreatureId) ?? null,
     [collectedCreatures, selectedSanctuaryCreatureId],
@@ -10119,7 +10132,9 @@ export function IslandRunBoardPrototype({
     }
 
     setLandingText(
-      `${activeCompanion.creature.name} supported this island: ${activeCompanionBonus.label}.`
+      (activeCompanionBonus.surprise === 'natural'
+        ? `${activeCompanion.creature.name} supported this island: ${activeCompanionBonus.label}.`
+        : `🎁 ${activeCompanion.creature.name} brought a surprise gift: ${activeCompanionBonus.label}.`)
       + (perfectCompanionStartupBonus > 0 ? ` Perfect Companion bonus +${perfectCompanionStartupBonus}.` : ''),
     );
   }, [
@@ -17254,6 +17269,16 @@ export function IslandRunBoardPrototype({
         >
           <CompassBookIcon islandNumber={islandNumber} hasInsight={hasCompassInsight} />
         </button>
+      ) : null}
+      {compassBookReceived && !isCompassBookCeremonyPlaying && pairingUpgradeSuggestion && !doesModalOwnAttention && !missionOwnsController ? (
+        <CompassPairingTip
+          key={`${pairingUpgradeSuggestion}:${runtimeState.cycleIndex}:${islandNumber}`}
+          playerKey={session.user.id}
+          visitKey={`${runtimeState.cycleIndex}:${islandNumber}`}
+          currentCompanionName={activeCompanion?.creature.name ?? null}
+          suggestedCreatureId={pairingUpgradeSuggestion}
+          onAccept={(creatureId) => sanctuaryHandlers.setActiveCompanion(creatureId)}
+        />
       ) : null}
 
       <div
