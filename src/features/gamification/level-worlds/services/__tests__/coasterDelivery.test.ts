@@ -98,7 +98,7 @@ export const coasterDeliveryTests: TestCase[] = [
       assert(pilot.includes('<WonderRideOfferModal'), 'the offer renders as a modal');
       assert(!/const wonderRideUnlocked = isCoasterCarnival && \(\s*isCircuitFPreviewEnabled\s*\|\|/.test(pilot), 'the live world no longer unlocks the ride on arrival');
       const modal = fs.readFileSync('src/features/gamification/level-worlds/dev/WonderRideOfferModal.tsx', 'utf8');
-      assert(modal.includes('createPortal') && modal.includes("body.style.overflow = 'hidden'"), 'modal is a scroll-locked portal');
+      assert(modal.includes('createPortal') && modal.includes('lockPageScroll()'), 'modal is a scroll-locked portal');
       const css = fs.readFileSync('src/features/gamification/level-worlds/dev/wonder-ride-offer-modal.css', 'utf8');
       assert(/\.wonder-ride-offer \{[^}]*position: fixed/.test(css), 'modal overlay is viewport-fixed');
     },

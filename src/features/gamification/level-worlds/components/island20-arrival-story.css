@@ -1,0 +1,157 @@
+/* Island 020 arrival story: the empty Obsidian Gate and the turret flyover. */
+.i20-arrival {
+  position: fixed;
+  inset: 0;
+  z-index: 1250;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.i20-arrival__backdrop {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 42% at 50% 34%, rgba(20, 6, 2, 0) 0%, rgba(20, 6, 2, 0.35) 70%, rgba(8, 2, 1, 0.78) 100%),
+    linear-gradient(180deg, rgba(8, 2, 1, 0.45) 0%, rgba(8, 2, 1, 0) 22%, rgba(8, 2, 1, 0) 62%, rgba(8, 2, 1, 0.82) 100%);
+  transition: background 600ms ease;
+}
+
+.i20-arrival--recap .i20-arrival__backdrop {
+  background: rgba(8, 2, 1, 0.72);
+}
+
+.i20-arrival__crew {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.i20-arrival__header {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  left: 16px;
+  right: 96px;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+.i20-arrival__header small {
+  color: #ffb070;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.i20-arrival__header h2 {
+  margin: 2px 0 0;
+  font-size: 1.3rem;
+}
+
+.i20-arrival__skip {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  right: 16px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 190, 130, 0.55);
+  background: rgba(30, 10, 4, 0.6);
+  color: #ffe6d0;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.i20-arrival__empty-gate {
+  position: fixed;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.i20-arrival__empty-gate span {
+  display: block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  color: rgba(255, 230, 210, 0.8);
+  font-size: 0.72rem;
+  font-style: italic;
+  letter-spacing: 0.12em;
+  border: 1px dashed rgba(255, 190, 130, 0.45);
+  animation: i20-arrival-wind 2.6s ease-in-out infinite;
+}
+
+@keyframes i20-arrival-wind {
+  0%, 100% { opacity: 0.35; transform: translateX(-6px); }
+  50% { opacity: 0.9; transform: translateX(6px); }
+}
+
+.i20-arrival__line {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+  width: min(420px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  padding: 14px 16px 12px;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(58, 24, 12, 0.94), rgba(28, 10, 6, 0.96));
+  border: 1px solid rgba(255, 160, 90, 0.45);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  animation: i20-arrival-line-in 320ms ease-out both;
+  pointer-events: none;
+}
+
+.i20-arrival__line small {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffb070;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.i20-arrival__line strong {
+  display: block;
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+
+.i20-arrival__line--order {
+  bottom: auto;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(180deg, rgba(10, 40, 56, 0.96), rgba(6, 22, 32, 0.98));
+  border-color: rgba(120, 220, 255, 0.55);
+  box-shadow: 0 0 30px rgba(60, 200, 255, 0.25), 0 16px 36px rgba(0, 0, 0, 0.5);
+  animation: i20-arrival-order-in 420ms ease-out both;
+}
+
+.i20-arrival__line--order small { color: #8fe6ff; }
+
+.i20-arrival__tap {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255, 225, 200, 0.6);
+  font-size: 0.7rem;
+  text-align: right;
+}
+
+@keyframes i20-arrival-line-in {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes i20-arrival-order-in {
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .i20-arrival *, .i20-arrival *::before { animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+}

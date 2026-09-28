@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { lockPageScroll } from '../../../../utils/scrollLock';
 import {
   applyLabyrinthMove,
   createLabyrinthRun,
@@ -52,12 +53,8 @@ export function Island20SlideLabyrinth({ progressKey, onClose }: Props) {
   }, []);
   useEffect(() => () => timers.current.forEach((timer) => window.clearTimeout(timer)), []);
 
-  useEffect(() => {
-    const { body } = document;
-    const previous = body.style.overflow;
-    body.style.overflow = 'hidden';
-    return () => { body.style.overflow = previous; };
-  }, []);
+  // Shared, ref-counted lock so stacked modals never unlock each other.
+  useEffect(() => lockPageScroll(), []);
 
   // Each floor arrives from above.
   useEffect(() => {

@@ -489,6 +489,13 @@ import { CompassPairingTip } from './CompassPairingTip';
 import { CoasterDirectorOverlay, type CoasterDirectorFeedback } from './CoasterDirectorOverlay';
 import { EggManiaPopup } from './EggManiaPopup';
 import { Island20SlideLabyrinth } from './Island20SlideLabyrinth';
+import { Island20ArrivalStory } from './Island20ArrivalStory';
+import {
+  getIsland20ArrivalSeenKey,
+  markIsland20ArrivalSeen,
+  readIsland20ArrivalSeen,
+  shouldPlayIsland20ArrivalStory,
+} from '../services/island20ArrivalStory';
 import { getLabyrinthProgressKey } from '../services/island20SlideLabyrinth';
 import {
   addMissionPhoneMessage,
@@ -3079,6 +3086,8 @@ export function IslandRunBoardPrototype({
   const [showEggManiaModal, setShowEggManiaModal] = useState(false);
   // Island 020's own slide labyrinth (never part of the event mini-game rotation).
   const [showSlideLabyrinth, setShowSlideLabyrinth] = useState(false);
+  // Island 020 arrival story: the empty gate and the turret flyover.
+  const [showIsland20Arrival, setShowIsland20Arrival] = useState(false);
   const [showHatcheryCompassModal, setShowHatcheryCompassModal] = useState(false);
   const [showCompassBookReceiptModal, setShowCompassBookReceiptModal] = useState(false);
   const [isCompassBookCeremonyPlaying, setIsCompassBookCeremonyPlaying] = useState(false);
@@ -14241,6 +14250,7 @@ export function IslandRunBoardPrototype({
       showFishermansFishing ||
       showJourneyDiscConcourseInvitation ||
       showTravelOverlay ||
+      showIsland20Arrival ||
       walletStoreModalKind !== null,
   );
   // Island 001 Assembly blast/build beat: everything stays visible but inert
@@ -14276,6 +14286,46 @@ export function IslandRunBoardPrototype({
     }, 1_200);
     return () => window.clearTimeout(timer);
   }, [eggManiaPopupSeenKey, eggManiaScreenBusy, featureAccess.eggs, isEggManiaActive, isEggManiaUnused, stopAutoRoll]);
+  // Island 020 arrival story: once per visit, on a fresh arrival only.
+  const island20ArrivalSeenKey = getIsland20ArrivalSeenKey(session.user.id, cycleIndex);
+  // Dev replay (?island20Arrival=1) plays once per page load.
+  const island20ArrivalForcedPlayedRef = useRef(false);
+  const island20ArrivalForced = import.meta.env.DEV && typeof window !== 'undefined'
+    && !island20ArrivalForcedPlayedRef.current
+    && new URLSearchParams(window.location.search).get('island20Arrival') === '1';
+  const island20AnyLandmarkBuilt = runtimeState.stopBuildStateByIndex
+    .some((buildState) => (buildState?.buildLevel ?? 0) > 0 || (buildState?.spentEssence ?? 0) > 0);
+  const island20ArrivalScreenBusy = doesModalOwnAttention || missionOwnsController || isRolling
+    || pendingHopSequence !== null || showEggManiaModal || showSlideLabyrinth || showChampionshipOpeningModal;
+  useEffect(() => {
+    if (showIsland20Arrival) return undefined;
+    if (!shouldPlayIsland20ArrivalStory({
+      islandNumber: isIslandVisualPreview ? 0 : islandNumber,
+      hydrated: hasHydratedRuntimeState,
+      alreadySeen: !island20ArrivalForced && readIsland20ArrivalSeen(island20ArrivalSeenKey),
+      anyLandmarkBuilt: !island20ArrivalForced && island20AnyLandmarkBuilt,
+      escapeStarted: !island20ArrivalForced && islandNumber === 20 && lavaLabyrinthEscapeMissionStarted,
+      screenBusy: island20ArrivalScreenBusy,
+    })) return undefined;
+    const timer = window.setTimeout(() => {
+      markIsland20ArrivalSeen(island20ArrivalSeenKey);
+      island20ArrivalForcedPlayedRef.current = true;
+      stopAutoRoll();
+      setShowIsland20Arrival(true);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [
+    hasHydratedRuntimeState,
+    isIslandVisualPreview,
+    island20AnyLandmarkBuilt,
+    island20ArrivalForced,
+    island20ArrivalScreenBusy,
+    island20ArrivalSeenKey,
+    islandNumber,
+    lavaLabyrinthEscapeMissionStarted,
+    showIsland20Arrival,
+    stopAutoRoll,
+  ]);
   const hideControllerForPresentation = shouldHideMissionController(missionOwnsController, doesModalOwnAttention,
     lavaSkiffNavigation.active || isShooterControllerActive);
   useEffect(() => {
@@ -19177,6 +19227,10 @@ export function IslandRunBoardPrototype({
           </section>
         </div>
       )}
+
+      {showIsland20Arrival && islandNumber === 20 ? (
+        <Island20ArrivalStory onDone={() => setShowIsland20Arrival(false)} />
+      ) : null}
 
       {showSlideLabyrinth && islandNumber === 20 ? (
         <Island20SlideLabyrinth
