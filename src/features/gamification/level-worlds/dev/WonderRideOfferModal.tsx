@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { lockPageScroll } from '../../../../utils/scrollLock';
 import './wonder-ride-offer-modal.css';
 
 type Props = {
@@ -13,12 +14,10 @@ type Props = {
  */
 export function WonderRideOfferModal({ onRide, onLater }: Props) {
   useEffect(() => {
-    const { body } = document;
-    const previous = body.style.overflow;
-    body.style.overflow = 'hidden';
+    const unlockScroll = lockPageScroll();
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onLater(); };
     window.addEventListener('keydown', onKey);
-    return () => { body.style.overflow = previous; window.removeEventListener('keydown', onKey); };
+    return () => { unlockScroll(); window.removeEventListener('keydown', onKey); };
   }, [onLater]);
 
   if (typeof document === 'undefined') return null;

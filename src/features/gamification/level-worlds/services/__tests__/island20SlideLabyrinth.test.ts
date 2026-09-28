@@ -152,7 +152,7 @@ export const island20SlideLabyrinthTests: TestCase[] = [
       const fs = await import('fs');
       const component = fs.readFileSync('src/features/gamification/level-worlds/components/Island20SlideLabyrinth.tsx', 'utf8');
       assert(component.includes('createPortal('), 'renders in a portal');
-      assert(component.includes("body.style.overflow = 'hidden'"), 'locks background scroll');
+      assert(component.includes('lockPageScroll()'), 'locks background scroll');
       assert(!component.includes('persistIslandRunRuntimeStatePatch'), 'no gameplay writes');
       const css = fs.readFileSync('src/features/gamification/level-worlds/components/island20-slide-labyrinth.css', 'utf8');
       assert(/\.lava-lab \{\s*position: fixed;\s*inset: 0;/.test(css), 'viewport-anchored overlay');

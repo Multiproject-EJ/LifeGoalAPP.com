@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { lockPageScroll } from '../../../../utils/scrollLock';
 import './egg-mania-popup.css';
 
 type Props = {
@@ -19,12 +20,10 @@ const EGG_TINTS = ['#fde68a', '#f9a8d4', '#a5f3fc'] as const;
  */
 export function EggManiaPopup({ islandNumber, unused, endsLabel, onGoToHatchery, onClose }: Props) {
   useEffect(() => {
-    const { body } = document;
-    const previous = body.style.overflow;
-    body.style.overflow = 'hidden';
+    const unlockScroll = lockPageScroll();
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
-    return () => { body.style.overflow = previous; window.removeEventListener('keydown', onKey); };
+    return () => { unlockScroll(); window.removeEventListener('keydown', onKey); };
   }, [onClose]);
 
   if (typeof document === 'undefined') return null;

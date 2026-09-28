@@ -271,7 +271,7 @@ export const twoTracksDailyTests: TestCase[] = [
       assert(road.includes('tt-tile--offstage'), 'history below the camera stays hidden until scrolled to');
       assert(road.includes('<button') && road.includes('onOpen(tile)'), 'steps are tappable');
       const sheet = fs.readFileSync('src/components/two-tracks/TwoTracksInsightSheet.tsx', 'utf8');
-      assert(sheet.includes('createPortal') && sheet.includes("body.style.overflow = 'hidden'"), 'insight sheet is a scroll-locked portal');
+      assert(sheet.includes('createPortal') && sheet.includes('lockPageScroll()'), 'insight sheet is a scroll-locked portal');
       const css = fs.readFileSync('src/components/two-tracks/two-tracks-road.css', 'utf8');
       assert(/\.tt-insight \{[^}]*position: fixed/.test(css), 'insight sheet is viewport-fixed');
       assert(css.includes('tt-spine-run') && css.includes('tt-lane-shimmer') && css.includes('tt-tile-stamp'), 'replay runner, idle shimmer and stamp exist');

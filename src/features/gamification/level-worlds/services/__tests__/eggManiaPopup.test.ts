@@ -45,7 +45,7 @@ export const eggManiaPopupTests: TestCase[] = [
       // @ts-ignore Node test runner provides fs.
       const fs = await import('fs');
       const component = fs.readFileSync('src/features/gamification/level-worlds/components/EggManiaPopup.tsx', 'utf8');
-      assert(component.includes('createPortal') && component.includes("body.style.overflow = 'hidden'"), 'portal with scroll lock');
+      assert(component.includes('createPortal') && component.includes('lockPageScroll()'), 'portal with scroll lock');
       const css = fs.readFileSync('src/features/gamification/level-worlds/components/egg-mania-popup.css', 'utf8');
       assert(/\.egg-mania-popup \{[^}]*position: fixed/.test(css), 'viewport-fixed overlay');
       const board = fs.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
