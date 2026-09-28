@@ -6292,6 +6292,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           twoTracksToday={twoTracksDaily.today}
           twoTracksSparkXp={twoTracksDaily.sparkXp}
           onTwoTracksSparkSeen={twoTracksDaily.markSparkSeen}
+          onTwoTracksNudgeDismiss={twoTracksDaily.dismissBalanceNudge}
           {...combinedJourneyChestProps}
           {...rankSpineProps}
         />
@@ -6644,6 +6645,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         twoTracksToday={twoTracksDaily.today}
         twoTracksSparkXp={twoTracksDaily.sparkXp}
         onTwoTracksSparkSeen={twoTracksDaily.markSparkSeen}
+        onTwoTracksNudgeDismiss={twoTracksDaily.dismissBalanceNudge}
         {...combinedJourneyChestProps}
         {...rankSpineProps}
       />

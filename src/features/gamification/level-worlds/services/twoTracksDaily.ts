@@ -43,6 +43,21 @@ export type TwoTracksDailyLedger = {
   sparkXp: number;
   /** Day whose spark animation has already been shown. */
   sparkSeenDay: string | null;
+  /** Last day each track moved (balance nudge). */
+  lastLifeDay?: string | null;
+  lastGameDay?: string | null;
+  /** Day the balance nudge was dismissed. */
+  nudgeDismissedDay?: string | null;
+};
+
+/** A track this many days (or more) behind the other gets a gentle nudge. */
+export const TWO_TRACKS_BALANCE_NUDGE_DAYS = 2;
+
+export type TwoTracksBalanceNudge = {
+  /** The track that has fallen behind. */
+  lane: 'life' | 'game';
+  /** Days since the lagging track last moved. */
+  daysBehind: number;
 };
 
 export type TwoTracksToday = {
@@ -55,7 +70,38 @@ export type TwoTracksToday = {
   streak: number;
   /** XP today's spark added (0 until both are done). */
   sparkXpToday: number;
+  /** Set when one track moved today but the other has been idle for days. */
+  balanceNudge: TwoTracksBalanceNudge | null;
 };
+
+/** Whole local days from `from` to `to` (both YYYY-MM-DD). */
+export function twoTracksDaysBetween(from: string, to: string): number {
+  const toMs = (key: string) => {
+    const [year, month, date] = key.split('-').map(Number);
+    return Date.UTC(year, month - 1, date);
+  };
+  return Math.round((toMs(to) - toMs(from)) / 86_400_000);
+}
+
+/**
+ * The balance nudge: when one track moved today and the other has been idle
+ * for at least TWO_TRACKS_BALANCE_NUDGE_DAYS, point the player at it. Never
+ * shown before a track has any history, on a both-tracks day, or once
+ * dismissed for the day.
+ */
+export function resolveTwoTracksBalanceNudge(
+  ledger: Pick<TwoTracksDailyLedger, 'lastLifeDay' | 'lastGameDay' | 'nudgeDismissedDay'>,
+  day: string,
+  lifeDone: boolean,
+  gameDone: boolean,
+): TwoTracksBalanceNudge | null {
+  if (lifeDone === gameDone || ledger.nudgeDismissedDay === day) return null;
+  const lane: 'life' | 'game' = lifeDone ? 'game' : 'life';
+  const lastDay = lane === 'game' ? ledger.lastGameDay : ledger.lastLifeDay;
+  if (!lastDay) return null;
+  const daysBehind = twoTracksDaysBetween(lastDay, day);
+  return daysBehind >= TWO_TRACKS_BALANCE_NUDGE_DAYS ? { lane, daysBehind } : null;
+}
 
 /** Local calendar day key, e.g. 2026-09-27. */
 export function twoTracksDayKey(ms: number = Date.now()): string {
@@ -114,6 +160,11 @@ export function advanceTwoTracksLedger(
   const lifeDone = observation.lifeStepsToday > 0;
   const gameDone = gameSig !== null && ledger.baselineSig !== null && gameSig !== ledger.baselineSig;
   const bothDone = lifeDone && gameDone;
+  // Remember when each track last moved before today's update, so the nudge
+  // measures the idle gap rather than today.
+  const balanceNudge = resolveTwoTracksBalanceNudge(ledger, day, lifeDone, gameDone);
+  if (lifeDone) ledger.lastLifeDay = day;
+  if (gameDone) ledger.lastGameDay = day;
 
   let sparkXpToday = 0;
   if (bothDone && ledger.lastBothDay !== day) {
@@ -136,8 +187,13 @@ export function advanceTwoTracksLedger(
       sparkPending: bothDone && ledger.sparkSeenDay !== day,
       streak: liveStreak,
       sparkXpToday,
+      balanceNudge,
     },
   };
+}
+
+export function dismissTwoTracksBalanceNudge(ledger: TwoTracksDailyLedger, day: string): TwoTracksDailyLedger {
+  return ledger.nudgeDismissedDay === day ? ledger : { ...ledger, nudgeDismissedDay: day };
 }
 
 export function markTwoTracksSparkSeen(ledger: TwoTracksDailyLedger, day: string): TwoTracksDailyLedger {
@@ -161,6 +217,9 @@ export function parseTwoTracksLedger(raw: string | null): TwoTracksDailyLedger |
       bothDays: count(value.bothDays),
       sparkXp: count(value.sparkXp),
       sparkSeenDay: str(value.sparkSeenDay),
+      lastLifeDay: str(value.lastLifeDay),
+      lastGameDay: str(value.lastGameDay),
+      nudgeDismissedDay: str(value.nudgeDismissedDay),
     };
   } catch {
     return null;

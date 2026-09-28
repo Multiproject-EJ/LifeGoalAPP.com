@@ -548,3 +548,19 @@
     transform: translate(0, 0) scale(2.4);
   }
 }
+
+/* Balance nudge: the lagging lane breathes a soft glow to invite a step. */
+.tt-road--lag-life .tt-road__lane--life,
+.tt-road--lag-game .tt-road__lane--game {
+  animation: tt-road-lag-glow 2.4s ease-in-out infinite;
+}
+.tt-road--lag-life .tt-road__lane--life { --tt-lag-glow: rgba(134, 239, 172, 0.55); }
+.tt-road--lag-game .tt-road__lane--game { --tt-lag-glow: rgba(125, 211, 252, 0.55); }
+@keyframes tt-road-lag-glow {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  50% { filter: drop-shadow(0 0 10px var(--tt-lag-glow)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tt-road--lag-life .tt-road__lane--life,
+  .tt-road--lag-game .tt-road__lane--game { animation: none; filter: drop-shadow(0 0 6px var(--tt-lag-glow)); }
+}

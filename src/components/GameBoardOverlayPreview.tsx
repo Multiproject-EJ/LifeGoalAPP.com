@@ -8,7 +8,7 @@ export default function GameBoardOverlayPreview() {
   const params = new URLSearchParams(window.location.search);
   const island = Number.parseInt(params.get('island') ?? '4', 10) || 4;
   const log = (what: string) => () => console.info(`[overlay preview] ${what}`);
-  // ?today=none|life|game|both &spark=1 &done=N (habits checked today) &chest=1
+  // ?today=none|life|game|both &spark=1 &done=N (habits checked today) &chest=1 &nudge=life|game
   const todayMode = params.get('today') ?? 'none';
   const habitsDone = Number.parseInt(params.get('done') ?? (todayMode === 'life' || todayMode === 'both' ? '2' : '0'), 10);
   const [sparkPending, setSparkPending] = useState(params.get('spark') === '1');
@@ -19,6 +19,9 @@ export default function GameBoardOverlayPreview() {
     sparkPending: todayMode === 'both' && sparkPending,
     streak: todayMode === 'both' ? 3 : 0,
     sparkXpToday: todayMode === 'both' ? 14 : 0,
+    balanceNudge: params.get('nudge') === 'life' || params.get('nudge') === 'game'
+      ? { lane: params.get('nudge') as 'life' | 'game', daysBehind: 3 }
+      : null,
   };
   return (
     <GameBoardOverlay
