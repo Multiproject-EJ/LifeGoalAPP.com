@@ -3,6 +3,7 @@ import { landmarkAttentionTests } from './landmarkAttention.test';
 import {islandRunFirstArrivalTests} from './islandRunFirstArrival.test';
 import { islandRunFastBuildTests } from './islandRunFastBuild.test';
 import { crystalMinersTests } from './crystalMiners.test';
+import { fishermansDragonPreludeTests } from './fishermansDragonPrelude.test';
 import { controllerDiceTiersTests } from './controllerDiceTiers.test';
 import { controllerSunlightTests } from './controllerSunlight.test';
 import { controllerIconBacklightTests } from './controllerIconBacklight.test';
@@ -305,6 +306,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunFirstArrival', tests: islandRunFirstArrivalTests },
   { label: 'islandRunFastBuild', tests: islandRunFastBuildTests },
   { label: 'crystalMiners', tests: crystalMinersTests },
+  { label: 'fishermansDragonPrelude', tests: fishermansDragonPreludeTests },
   { label: 'controllerDiceTiers', tests: controllerDiceTiersTests },
   { label: 'controllerSunlight', tests: controllerSunlightTests },
   { label: 'controllerIconBacklight', tests: controllerIconBacklightTests },
