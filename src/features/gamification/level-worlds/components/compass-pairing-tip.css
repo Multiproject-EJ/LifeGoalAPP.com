@@ -1,0 +1,43 @@
+/* Compass Book pairing tip: a small parchment card near the Compass Book. */
+.compass-pairing-tip {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 158px);
+  z-index: 60;
+  width: min(290px, calc(100vw - 24px));
+  padding: 10px 12px 12px;
+  border: 1px solid rgba(198, 170, 103, 0.9);
+  border-radius: 16px 16px 4px 16px;
+  background: linear-gradient(180deg, #fffaf0, #f8eac5);
+  color: #3f2a10;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3), 0 0 16px rgba(253, 224, 71, 0.35);
+  font-family: system-ui, sans-serif;
+  animation: compass-pairing-tip-in 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes compass-pairing-tip-in { from { opacity: 0; transform: translateY(14px) scale(0.9); transform-origin: 100% 100%; } }
+
+.compass-pairing-tip header { display: flex; align-items: center; gap: 6px; }
+.compass-pairing-tip__book { font-size: 18px; }
+.compass-pairing-tip header small { font-size: 10px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: #92400e; }
+
+.compass-pairing-tip__body { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.compass-pairing-tip__body img { flex: 0 0 48px; width: 48px; height: 48px; object-fit: contain; border-radius: 12px; box-shadow: 0 0 0 2px rgba(198, 170, 103, 0.7), 0 3px 8px rgba(0, 0, 0, 0.25); }
+.compass-pairing-tip__body p { margin: 0; font-size: 12.5px; line-height: 1.35; }
+.compass-pairing-tip__body em { font-style: normal; font-weight: 800; color: #b45309; }
+
+.compass-pairing-tip__question { margin: 8px 0 6px; font-size: 13px; font-weight: 800; }
+.compass-pairing-tip__actions { display: flex; gap: 8px; }
+.compass-pairing-tip button {
+  flex: 1;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.compass-pairing-tip__no { flex: 0 0 auto; background: rgba(120, 83, 30, 0.12); color: #78531e; }
+.compass-pairing-tip__yes { background: linear-gradient(180deg, #38bdf8, #0369a1); color: #fff; box-shadow: 0 5px 12px rgba(3, 105, 161, 0.4); }
+.compass-pairing-tip--accepted .compass-pairing-tip__yes { margin-top: 8px; width: 100%; }
+
+@media (prefers-reduced-motion: reduce) { .compass-pairing-tip { animation: none; } }
