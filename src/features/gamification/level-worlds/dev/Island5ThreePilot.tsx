@@ -17,7 +17,8 @@ import { createPortal } from 'react-dom';
 import './Island19WonderRide.css';
 import './Island40Placeholder.css';
 import {createAssemblySeaGeometry} from './Island1V2Terrain';
-import { createWonderRideCameraFilter } from './island19WonderRideCamera';
+import { createWonderRideCameraFilter, resolveWonderRideFov } from './island19WonderRideCamera';
+import { WONDER_RIDE_SPEED_SCALE } from './island19WonderRidePacing';
 import { createIsland19CoasterHelicopter } from './Island19CoasterHelicopter';
 import { WonderRideOfferModal } from './WonderRideOfferModal';
 import { resolveUnoccludedCameraPosition } from './islandCameraOcclusion';
@@ -10694,7 +10695,7 @@ export default function Island5ThreePilot({
             wonderRidePublishedSeconds = secondsRemaining;
             setWonderRideSecondsRemaining(secondsRemaining);
             const pace = island19CircuitFWorld.pacing.sampleAtTime(rideElapsedMs / 1000);
-            const labels = { dispatch: 'Leaving the station', 'chain-lift': 'Powered climb', 'gravity-run': 'Gravity run', 'scenic-cruise': 'Scenic cruise', 'station-brakes': 'Returning to station' };
+            const labels = { dispatch: 'Leaving the station', 'chain-lift': 'Powered climb', 'gravity-run': 'Gravity run', 'super-drop': 'SUPER-SPEED DROP!', 'scenic-cruise': 'Scenic cruise', 'station-brakes': 'Returning to station' };
             setWonderRideTelemetry({ progress: routeProgress, pace: activeWonderRide.fixedProgress === null ? labels[pace.mode] : 'Preview viewpoint' });
           }
           transition = null;
@@ -10729,11 +10730,18 @@ export default function Island5ThreePilot({
             controls.target.lerp(scenicFocus.point, 0.65 * scenicFocus.weight);
           }
           camera.up.copy(frame.up);
-          const nextFov = 68;
-          if (camera.fov !== nextFov) {
+          // Speed widens the view: the super-speed drop and double spiral
+          // punch out to a wider lens, then ease back (never in reduced motion).
+          const ridePace = island19CircuitFWorld.pacing.sampleAtTime(rideElapsedMs / 1000);
+          const targetFov = isReducedMotion || activeWonderRide.fixedProgress !== null
+            ? 68
+            : resolveWonderRideFov(ridePace.speed / WONDER_RIDE_SPEED_SCALE);
+          const nextFov = THREE.MathUtils.lerp(camera.fov, targetFov, 1 - Math.exp(-4 * actualFrameDeltaSeconds));
+          if (Math.abs(camera.fov - nextFov) > 0.01) {
             camera.fov = nextFov;
             camera.updateProjectionMatrix();
           }
+          canvas.dataset.island19WonderRideFov = camera.fov.toFixed(2);
           camera.lookAt(controls.target);
           camera.quaternion.copy(wonderRideCameraFilter.update(camera.quaternion,
             actualFrameDeltaSeconds, isReducedMotion || activeWonderRide.fixedProgress !== null));

@@ -2,12 +2,17 @@ import * as THREE from 'three';
 
 // Presentation-only: preserve the lift/drop/braking shape, shorten the lap.
 export const WONDER_RIDE_SPEED_SCALE = 1.9;
+/** Ordinary gravity-run cap and the super-speed drop's higher ceiling (m/s, unscaled). */
+export const WONDER_RIDE_GRAVITY_CAP = 5.8;
+export const WONDER_RIDE_SUPER_DROP_CAP = 9.4;
+/** Tangent slope below which a plunge counts as the super-speed drop. */
+export const WONDER_RIDE_SUPER_DROP_SLOPE = -0.42;
 
 export interface WonderRidePaceSample {
   progress: number;
   seconds: number;
   speed: number;
-  mode: 'dispatch' | 'chain-lift' | 'gravity-run' | 'scenic-cruise' | 'station-brakes';
+  mode: 'dispatch' | 'chain-lift' | 'gravity-run' | 'super-drop' | 'scenic-cruise' | 'station-brakes';
 }
 
 /** Distance-domain motion profile. Forward acceleration and backward braking
@@ -27,10 +32,13 @@ export function createWonderRidePacing(
     const before = path.getTangent(Math.max(0, progress - 0.001));
     const after = path.getTangent(Math.min(1, progress + 0.001));
     const curvature = before.angleTo(after) / Math.max(0.01, length * 0.002);
-    const cornerLimit = Math.sqrt(4.8 / Math.max(curvature, 0.001));
-    let speed = 5.8;
+    // Banked plunge track (drop and double spiral) carries more lateral load.
+    const lateralLimit = phase === 'plunge' ? 11 : 4.8;
+    const cornerLimit = Math.sqrt(lateralLimit / Math.max(curvature, 0.001));
+    let speed = WONDER_RIDE_GRAVITY_CAP;
     let mode: WonderRidePaceSample['mode'] = 'gravity-run';
     if (phase === 'dispatch') { speed = 1.15; mode = 'dispatch'; }
+    else if (phase === 'plunge' && tangent.y < WONDER_RIDE_SUPER_DROP_SLOPE) { speed = WONDER_RIDE_SUPER_DROP_CAP; mode = 'super-drop'; }
     else if (phase === 'source-crest' && tangent.y > -0.12) { speed = 0.82; mode = 'chain-lift'; }
     else if (['gold-vault', 'grand-vault', 'diamond-gallery', 'ocean-reveal'].includes(phase)) {
       speed = phase === 'grand-vault' ? 1.15 : phase === 'ocean-reveal' ? 1.35 : 1.0;
@@ -45,7 +53,10 @@ export function createWonderRidePacing(
   samples[steps].speed = 0.3;
   for (let i = 1; i <= steps; i += 1) {
     const slope = path.getTangent(samples[i].progress).y;
-    const acceleration = samples[i].mode === 'gravity-run' ? Math.max(0.75, 1.1 - slope * 3.2) : 0.65;
+    // Steep super-drops pull harder than ordinary gravity runs.
+    const acceleration = samples[i].mode === 'super-drop'
+      ? Math.max(1.2, 1.4 - slope * 4.6)
+      : samples[i].mode === 'gravity-run' ? Math.max(0.75, 1.1 - slope * 3.2) : 0.65;
     samples[i].speed = Math.min(samples[i].speed, Math.sqrt(samples[i-1].speed ** 2 + 2 * acceleration * ds));
   }
   for (let i = steps - 1; i >= 0; i -= 1) {

@@ -478,7 +478,9 @@ export const island19CoasterCarnivalRepresentativeSliceTests: TestCase[] = [
       assert(Math.max(...fast) > Math.max(...lift)*2, 'gravity drops run meaningfully faster than powered climb');
       for (let i=1;i<samples.length;i++) {
         const acceleration = (samples[i].speed-samples[i-1].speed)/(samples[i].seconds-samples[i-1].seconds);
-        assert(acceleration >= -1.151 * WONDER_RIDE_SPEED_SCALE**2 && acceleration < 4.31 * WONDER_RIDE_SPEED_SCALE**2, 'time-scaled acceleration and braking stay bounded');
+        // The super-speed drop pulls harder by design; every other mode keeps the original ceiling.
+        const ceiling = samples[i].mode === 'super-drop' ? 6.01 : 4.31;
+        assert(acceleration >= -1.151 * WONDER_RIDE_SPEED_SCALE**2 && acceleration < ceiling * WONDER_RIDE_SPEED_SCALE**2, 'time-scaled acceleration and braking stay bounded');
       }
       let previous=0;
       for(let seconds=0;seconds<durationSeconds;seconds+=.1){

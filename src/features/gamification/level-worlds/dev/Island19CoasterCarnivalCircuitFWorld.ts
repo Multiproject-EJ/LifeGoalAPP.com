@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import wonderRoute from './island19WonderRoute.json';
+import { createGoldForgeChamber, goldForgeNorm } from './Island19GoldForgeChamber';
+import { createIsland19ChaseLights, createIsland19Smoke } from './Island19RideEffects';
 import { createWonderRidePacing } from './island19WonderRidePacing';
 import { createIsland19SkyAmbience } from './Island19SkyAmbience';
 import { createIsland19ParkDetails } from './Island19ParkDetails';
@@ -1086,7 +1088,7 @@ function createCavernMacro(path: THREE.CurvePath<THREE.Vector3>, materials: Isla
   tunnelMaterial.side = THREE.DoubleSide;
   const tunnelShell = new THREE.Mesh(
     trimGrottoIntersection(new THREE.TubeGeometry(tunnelCurve, tunnelSampleCount * 6, wonderRoute.radius, quality === 'high' ? 24 : 18, false),
-      point => grandGrottoNorm(point) < 1.01),
+      point => grandGrottoNorm(point) < 1.01 || goldForgeNorm(point) < 1.01),
     tunnelMaterial,
   );
   tunnelShell.name = 'ISLAND_19_CIRCUIT_F_CAVERN_INTERIOR_SHELL';
@@ -1098,7 +1100,7 @@ function createCavernMacro(path: THREE.CurvePath<THREE.Vector3>, materials: Isla
     const end = routeAnchor(path, 'undersea-entry');
     const u = start + index / Math.max(1, ribCount - 1) * (end - start) * 0.93;
     const frame = frameAt(path, u);
-    if (grandGrottoNorm(frame.position) < 1.05) continue;
+    if (grandGrottoNorm(frame.position) < 1.05 || goldForgeNorm(frame.position) < 1.05) continue;
     const arch = new THREE.Mesh(new THREE.TorusGeometry(1.58, 0.05, 6, 32), materials.wetBasalt);
     arch.name = `ISLAND_19_CIRCUIT_F_CAVERN_RIB_${index + 1}`;
     arch.position.copy(frame.position);
@@ -1129,7 +1131,7 @@ function createCavernMacro(path: THREE.CurvePath<THREE.Vector3>, materials: Isla
     const frame = frameAt(path, u);
     const isDiamond = u > routeAnchor(path, 'diamond-gallery') + 0.02;
     const side = bank % 2 === 0 ? -1 : 1;
-    if (grandGrottoNorm(frame.position) < 1.05) continue;
+    if (grandGrottoNorm(frame.position) < 1.05 || goldForgeNorm(frame.position) < 1.05) continue;
     const treasure = new THREE.Mesh(
       isDiamond ? new THREE.OctahedronGeometry(0.19 + bank % 4 * 0.045, 0) : treasureGeometry,
       isDiamond ? materials.diamond : materials.gold,
@@ -1798,6 +1800,34 @@ export function createIsland19CoasterCarnivalCircuitFWorld(
   world.add(cavern);
   const grandGrotto = createGrandTreasureGrotto(path, materials, quality);
   world.add(grandGrotto);
+  // Underworld chamber one: the Gold Forge above the grand grotto.
+  const goldForge = createGoldForgeChamber(path, materials, quality);
+  world.add(goldForge);
+  // Ride-only spectacle: chase lights along the underground run and smoke at
+  // the foot of the super-speed drop and in the forge. Shown with the train.
+  const rideEffects = new THREE.Group();
+  rideEffects.name = 'ISLAND_19_WONDER_EXPRESS_RIDE_EFFECTS';
+  const chaseStart = routeAnchor(path, 'plunge-mouth');
+  const chaseEnd = routeAnchor(path, 'undersea-entry');
+  const chaseCount = quality === 'high' ? 170 : quality === 'medium' ? 130 : 90;
+  const chaseLights = createIsland19ChaseLights({
+    frames: Array.from({ length: chaseCount }, (_, index) => frameAt(path, chaseStart + (chaseEnd - chaseStart) * index / (chaseCount - 1))),
+  });
+  rideEffects.add(chaseLights.root);
+  // Steam rises up the middle of the double spiral from its lowest turn.
+  const spiralFootY = Math.min(...wonderRoute.knots
+    .filter((knot) => knot.id.startsWith('double-spiral-'))
+    .map((knot) => knot.position[1]));
+  const rideSmoke = createIsland19Smoke({
+    sources: [
+      { position: new THREE.Vector3(-1, spiralFootY - 1.2, 0), tint: 0xffd9a8, rise: 3.6 },
+      { position: new THREE.Vector3(goldForge.userData.center[0] + 1.4, goldForge.userData.floorY + 0.2, goldForge.userData.center[2] + 0.9), tint: 0xffb46b, rise: 2.4 },
+      { position: new THREE.Vector3(goldForge.userData.center[0] - 1.3, goldForge.userData.floorY + 0.2, goldForge.userData.center[2] - 1.0), tint: 0xffc98a, rise: 2.2 },
+    ],
+    puffsPerSource: quality === 'low' ? 4 : 6,
+  });
+  rideEffects.add(rideSmoke.root);
+  world.add(rideEffects);
   const underseaGlassTube = createUnderseaGlassTube(path, materials, quality);
   world.add(underseaGlassTube);
   const cavernShell = cavern.getObjectByName('ISLAND_19_CIRCUIT_F_CAVERN_INTERIOR_SHELL');
@@ -1982,6 +2012,7 @@ export function createIsland19CoasterCarnivalCircuitFWorld(
     rails.visible = coasterFraction > 0;
     train.visible = complete;
     underseaGlassTube.visible = complete;
+    rideEffects.visible = complete;
     root.userData.coasterBuildFraction = coasterFraction;
   };
   const setCoasterBuildStage = (installed: number, sectionCount: number, animateGrowth: boolean) => {
@@ -2008,6 +2039,10 @@ export function createIsland19CoasterCarnivalCircuitFWorld(
   const reducedMotion = options.reducedMotion ?? false;
   const animate = (elapsedSeconds: number) => {
     stepCoasterGrowth(elapsedSeconds);
+    if (rideEffects.visible) {
+      chaseLights.animate(elapsedSeconds, reducedMotion);
+      rideSmoke.animate(elapsedSeconds, reducedMotion);
+    }
     skyAmbience.animate(elapsedSeconds);
     lastAnimationSeconds = elapsedSeconds;
     if (!reducedMotion && !riderPovActive) {
