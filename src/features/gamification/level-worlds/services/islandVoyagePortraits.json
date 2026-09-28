@@ -34,7 +34,7 @@
     "6": {
       "path": "/assets/islands/island-006/map/voyage-portrait.webp",
       "worldSource": 22,
-      "worldFingerprint": "10f13e51df110cbc",
+      "worldFingerprint": "dfba8c5df1b35261",
       "capturedAt": "2026-09-28"
     },
     "7": {
@@ -118,8 +118,8 @@
     "20": {
       "path": "/assets/islands/island-020/map/voyage-portrait.webp",
       "worldSource": 20,
-      "worldFingerprint": "7c4796bdd85bc408",
-      "capturedAt": "2026-09-27"
+      "worldFingerprint": "993f46ab987661eb",
+      "capturedAt": "2026-09-28"
     }
   }
 }

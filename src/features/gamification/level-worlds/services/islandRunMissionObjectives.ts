@@ -371,7 +371,18 @@ export function resolveIslandMissionObjectives(options: {
                   ? `${progress.activatedStages} / ${descriptor.stageCount} systems`
                   : extracted ? 'Extracted' : 'Skiff ready',
           ),
-          objective('Solve Level-3 Labyrinth', landmarkProgress.fullyRestored, landmarkCount),
+          // Name what is still missing: a fully built labyrinth with open
+          // landmark activities used to read as a flat "0 / 5".
+          objective(
+            'Solve Level-3 Labyrinth',
+            landmarkProgress.fullyRestored,
+            landmarkCount,
+            landmarkProgress.fullyRestored >= landmarkCount
+              ? undefined
+              : landmarkProgress.buildsComplete < landmarkCount
+                ? `${landmarkProgress.buildsComplete} / ${landmarkCount} built`
+                : `${landmarkProgress.objectivesComplete} / ${landmarkCount} activities`,
+          ),
         ];
         break;
       }

@@ -59,6 +59,7 @@ type MissionPhonePhase = 'unfolding' | 'unlocking' | 'open' | 'folding';
 // into a full phone. Keep these in sync with the island-mission-phone-* keyframes.
 const MISSION_PHONE_UNFOLD_DURATION_MS = 1100;
 const MISSION_PHONE_FOLD_DURATION_MS = 460;
+const MISSION_PHONE_FOLD_RECOVERY_MS = 120;
 const MISSION_PHONE_UNFOLD_LATCH_MS = 470;
 const MISSION_PHONE_UNFOLD_DOCK_MS = 970;
 const MISSION_PHONE_FOLD_LATCH_MS = 240;
@@ -453,6 +454,8 @@ export function IslandMissionBriefingModal({
   const onAcknowledgeRef = React.useRef(onAcknowledge);
   const onObjectiveSelectRef = React.useRef(onObjectiveSelect);
   const phaseRef = React.useRef<MissionPhonePhase>('unfolding');
+  const isOpenRef = React.useRef(isOpen);
+  isOpenRef.current = isOpen;
   const closeTimerRef = React.useRef<number | null>(null);
   const deviceStatus = useMissionPhoneDeviceStatus(isOpen);
 
@@ -475,6 +478,12 @@ export function IslandMissionBriefingModal({
     closeTimerRef.current = window.setTimeout(() => {
       closeTimerRef.current = null;
       onFolded();
+      // A fold whose handler leaves the phone open must never strand it
+      // folded: every button stays disabled and the controller hidden.
+      closeTimerRef.current = window.setTimeout(() => {
+        closeTimerRef.current = null;
+        if (isOpenRef.current && phaseRef.current === 'folding') updatePhase('unfolding');
+      }, MISSION_PHONE_FOLD_RECOVERY_MS);
     }, MISSION_PHONE_FOLD_DURATION_MS);
   }, [updatePhase]);
 
