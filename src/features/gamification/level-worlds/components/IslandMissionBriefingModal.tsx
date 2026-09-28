@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
 import { triggerIslandRunHaptic } from '../services/islandRunAudio';
 import { buildMissionMessageSteps, type MissionMessageStepKind } from '../services/islandRunMissionMessage';
+import { formatMissionPhoneMessageTime, type MissionPhoneMessage } from '../services/missionPhoneInbox';
 import type { IslandMissionBriefingPresentation } from '../services/islandRunMissionBriefing';
 import type { IslandMissionStats, IslandMissionTrackerObjective } from '../services/islandRunMissionTracker';
 import type { resolveIslandRunCompletion } from '../services/islandRunCompletion';
@@ -34,8 +35,12 @@ export interface IslandMissionBriefingModalProps {
   objectiveActions?: readonly MissionObjectiveAction[];
   objectiveDetails?: readonly string[];
   acknowledgeLabel?: string;
-  /** Opened from the incoming mission message: lead with a picture explainer. */
-  pictureMessage?: boolean;
+  /** Filed Mission Phone messages, newest first. */
+  messages?: readonly MissionPhoneMessage[];
+  /** Opened from an incoming message: start in that message's own view. */
+  openMessageId?: string | null;
+  /** The player has read a message; it is filed as read in the inbox. */
+  onMessageRead?: (messageId: string) => void;
   onObjectiveSelect?: (objectiveIndex: number) => void;
   primaryActionLabel?: string;
   primaryActionHint?: string;
@@ -352,7 +357,7 @@ function MissionPictureMessage({ labels }: { labels: readonly string[] }): React
   const steps = buildMissionMessageSteps(labels);
   return (
     <section className="island-mission-tracker__picture-message" aria-label="What to do on this island">
-      <p className="island-mission-tracker__picture-message-kicker">📩 New mission · here&apos;s what to do</p>
+      <p className="island-mission-tracker__picture-message-kicker">Here&apos;s what to do</p>
       <ol>
         {steps.map((step, index) => (
           <li key={`${step.kind}-${index}`} data-kind={step.kind}>
@@ -410,7 +415,9 @@ export function IslandMissionBriefingModal({
   objectiveActions = [],
   objectiveDetails = [],
   acknowledgeLabel = 'Accept field order',
-  pictureMessage = false,
+  messages = [],
+  openMessageId = null,
+  onMessageRead,
   onObjectiveSelect,
   primaryActionLabel,
   primaryActionHint,
@@ -424,6 +431,22 @@ export function IslandMissionBriefingModal({
 }: IslandMissionBriefingModalProps): React.JSX.Element | null {
   const [phase, setPhase] = React.useState<MissionPhonePhase>('unfolding');
   const [selectedObjectiveIndex, setSelectedObjectiveIndex] = React.useState<number | null>(null);
+  // Mission screen, the inbox list, or one message's own view.
+  const [screen, setScreen] = React.useState<{ kind: 'mission' } | { kind: 'inbox' } | { kind: 'message'; id: string }>(
+    openMessageId ? { kind: 'message', id: openMessageId } : { kind: 'mission' },
+  );
+  const onMessageReadRef = React.useRef(onMessageRead);
+  onMessageReadRef.current = onMessageRead;
+  const screenRef = React.useRef(screen);
+  screenRef.current = screen;
+  const messagesRef = React.useRef(messages);
+  messagesRef.current = messages;
+  const fileOpenMessage = React.useCallback(() => {
+    const current = screenRef.current;
+    if (current.kind !== 'message') return;
+    const message = messagesRef.current.find((entry) => entry.id === current.id);
+    if (message && message.readAtMs === null) onMessageReadRef.current?.(message.id);
+  }, []);
   const titleId = React.useId();
   const acknowledgeRef = React.useRef<HTMLButtonElement | null>(null);
   const phoneRef = React.useRef<HTMLElement | null>(null);
@@ -456,8 +479,10 @@ export function IslandMissionBriefingModal({
   }, [updatePhase]);
 
   const requestClose = React.useCallback(() => {
+    // Closing the phone files an open message as read.
+    fileOpenMessage();
     requestFold(() => onAcknowledgeRef.current());
-  }, [requestFold]);
+  }, [fileOpenMessage, requestFold]);
 
   const handleObjectiveClick = React.useCallback((objectiveIndex: number) => {
     const action = objectiveActions[objectiveIndex] ?? 'details';
@@ -484,6 +509,7 @@ export function IslandMissionBriefingModal({
       updatePhase('unfolding');
       return undefined;
     }
+    setScreen(openMessageId ? { kind: 'message', id: openMessageId } : { kind: 'mission' });
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     updatePhase(reduceMotion ? 'open' : 'unfolding');
     const unlockScroll = lockPageScroll();
@@ -495,6 +521,8 @@ export function IslandMissionBriefingModal({
       document.removeEventListener('keydown', handleKeyDown);
       unlockScroll();
     };
+    // openMessageId only matters when the phone opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, requestClose, updatePhase]);
 
   React.useLayoutEffect(() => {
@@ -556,6 +584,11 @@ export function IslandMissionBriefingModal({
   const selectedObjective = selectedObjectiveIndex === null
     ? null
     : normalizedProgress[selectedObjectiveIndex] ?? null;
+  const unreadCount = messages.filter((entry) => entry.readAtMs === null).length;
+  const openMessage = screen.kind === 'message' ? messages.find((entry) => entry.id === screen.id) ?? null : null;
+  const nowMs = Date.now();
+  const showMessageView = screen.kind === 'message' && openMessage !== null;
+  const showInbox = screen.kind === 'inbox';
 
   return createPortal(
     <div className="island-mission-tracker" data-phase={phase} data-variant={variant} data-objective-count={normalizedProgress.length} role="presentation">
@@ -591,9 +624,19 @@ export function IslandMissionBriefingModal({
                 {stats ? <MissionPhoneStats stats={stats} /> : null}
                 <div className="island-mission-tracker__mission-caption">
                   <span>
-                    <small>Current mission</small>
-                    <h2 id={titleId}>{missionTitle}</h2>
+                    <small>{showMessageView ? 'Message' : showInbox ? 'Mission Phone' : 'Current mission'}</small>
+                    <h2 id={titleId}>{showMessageView ? openMessage?.title : showInbox ? 'Inbox' : missionTitle}</h2>
                   </span>
+                  <button
+                    type="button"
+                    className={`island-mission-tracker__inbox-button${unreadCount > 0 ? ' island-mission-tracker__inbox-button--unread' : ''}`}
+                    aria-label={unreadCount > 0 ? `Inbox, ${unreadCount} unread` : 'Inbox'}
+                    onClick={() => { fileOpenMessage(); setSelectedObjectiveIndex(null); setScreen({ kind: 'inbox' }); }}
+                    disabled={phase !== 'open'}
+                  >
+                    <span aria-hidden="true">✉</span>
+                    {unreadCount > 0 ? <b aria-hidden="true">{unreadCount}</b> : null}
+                  </button>
                   <button
                     ref={acknowledgeRef}
                     type="button"
@@ -608,7 +651,55 @@ export function IslandMissionBriefingModal({
                 </div>
               </header>
 
-              {selectedObjective ? (
+              {showMessageView && openMessage ? (
+                <section className="island-mission-tracker__message" aria-label={`Message from ${openMessage.sender}`}>
+                  <p className="island-mission-tracker__message-meta">
+                    <span aria-hidden="true">📡</span> {openMessage.sender} · Island {String(openMessage.islandNumber).padStart(3, '0')} · {formatMissionPhoneMessageTime(openMessage.receivedAtMs, nowMs)}
+                  </p>
+                  {openMessage.body ? <p className="island-mission-tracker__message-body">{openMessage.body}</p> : null}
+                  {openMessage.stepLabels.length > 0 ? <MissionPictureMessage labels={openMessage.stepLabels} /> : null}
+                  <div className="island-mission-tracker__message-actions">
+                    <button
+                      type="button"
+                      className="island-mission-tracker__message-file"
+                      onClick={() => { fileOpenMessage(); setScreen({ kind: 'mission' }); }}
+                    >
+                      {openMessage.readAtMs === null ? 'Got it · file to Inbox' : 'Back to mission'}
+                    </button>
+                    <button type="button" className="island-mission-tracker__message-inbox" onClick={() => { fileOpenMessage(); setScreen({ kind: 'inbox' }); }}>
+                      Inbox
+                    </button>
+                  </div>
+                </section>
+              ) : showInbox ? (
+                <section className="island-mission-tracker__inbox" aria-label="Inbox">
+                  <button type="button" className="island-mission-tracker__objective-back" onClick={() => setScreen({ kind: 'mission' })}>
+                    <span aria-hidden="true">‹</span> Mission
+                  </button>
+                  {messages.length === 0 ? (
+                    <p className="island-mission-tracker__inbox-empty">No messages yet. Central Command will ping you here.</p>
+                  ) : (
+                    <ul>
+                      {messages.map((entry) => (
+                        <li key={entry.id}>
+                          <button
+                            type="button"
+                            className={entry.readAtMs === null ? 'is-unread' : undefined}
+                            onClick={() => setScreen({ kind: 'message', id: entry.id })}
+                          >
+                            <span className="island-mission-tracker__inbox-dot" aria-hidden="true" />
+                            <span className="island-mission-tracker__inbox-copy">
+                              <strong>{entry.title}</strong>
+                              <small>{entry.sender} · Island {String(entry.islandNumber).padStart(3, '0')}</small>
+                            </span>
+                            <time>{formatMissionPhoneMessageTime(entry.receivedAtMs, nowMs)}</time>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ) : selectedObjective ? (
                 <section className="island-mission-tracker__objective-detail" aria-label={`${selectedObjective.label} mission information`}>
                   <button
                     type="button"
@@ -628,7 +719,6 @@ export function IslandMissionBriefingModal({
                 </section>
               ) : (
                 <>
-                {pictureMessage ? <MissionPictureMessage labels={normalizedProgress.map((item) => item.label)} /> : null}
                 <ol className="island-mission-tracker__checklist" aria-label="Mission objectives">
                   {normalizedProgress.map((item, objectiveIndex) => {
                     const objectiveLabel = `${item.label}: ${item.complete ? item.completeLabel : `${item.value} of ${item.target}`}`;
@@ -678,7 +768,7 @@ export function IslandMissionBriefingModal({
                 </>
               )}
 
-              {primaryActionLabel && onPrimaryAction ? (
+              {primaryActionLabel && onPrimaryAction && !showMessageView && !showInbox ? (
                 <div className="island-mission-tracker__mission-action">
                   {milestoneCount > 0 ? (
                     <span className="island-mission-tracker__milestones" aria-label={`${milestoneValue} of ${milestoneCount} mission stages complete`}>
@@ -699,6 +789,7 @@ export function IslandMissionBriefingModal({
                 </div>
               ) : null}
 
+              {!showMessageView && !showInbox ? (
               <footer className="island-mission-tracker__overall" aria-label="Mission progress">
                 <span>
                   <small>Mission progress</small>
@@ -715,6 +806,7 @@ export function IslandMissionBriefingModal({
                   <i style={{ width: `${overallPercent}%` }} />
                 </span>
               </footer>
+              ) : null}
               {islandCompletion ? (
                 <details style={{ fontSize: 11, lineHeight: 1.5, marginTop: 8, maxHeight: 135, overflowY: 'auto', flexShrink: 0 }}>
                   <summary aria-label={`Island completion ${islandCompletion.percent}%`} style={{ cursor: 'pointer' }}>

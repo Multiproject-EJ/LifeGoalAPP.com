@@ -489,6 +489,14 @@ import { CompassPairingTip } from './CompassPairingTip';
 import { CoasterDirectorOverlay, type CoasterDirectorFeedback } from './CoasterDirectorOverlay';
 import { EggManiaPopup } from './EggManiaPopup';
 import {
+  addMissionPhoneMessage,
+  getMissionBriefingMessageId,
+  markMissionPhoneMessageRead,
+  readMissionPhoneInbox,
+  writeMissionPhoneInbox,
+  type MissionPhoneMessage,
+} from '../services/missionPhoneInbox';
+import {
   getEggManiaPopupSeenKey,
   markEggManiaPopupSeen,
   readEggManiaPopupSeen,
@@ -662,6 +670,7 @@ import {
   FISHERMANS_VILLAGE_ISLAND_NUMBER,
 } from '../services/islandRunSignatureMissions';
 import {
+  getIslandMissionBriefingPresentation,
   type IslandMissionBriefingTrigger,
 } from '../services/islandRunMissionBriefing';
 import { resolveIslandMissionTrackerPresentation } from '../services/islandRunMissionTracker';
@@ -14420,13 +14429,52 @@ export function IslandRunBoardPrototype({
     tokenIndex: runtimeStateRef.current?.tokenIndex ?? null,
     activeStopId: activeStopId ?? null,
   })), [activeStopId, cycleIndex, islandNumber]);
+  // Mission Phone inbox: an arriving message is filed unread, read in its own
+  // phone view, then kept in the inbox (presentation only, per player).
+  const [missionInbox, setMissionInbox] = useState<MissionPhoneMessage[]>(() => readMissionPhoneInbox(session.user.id));
+  const [openMissionMessageId, setOpenMissionMessageId] = useState<string | null>(null);
+  const updateMissionInbox = useCallback((update: (inbox: MissionPhoneMessage[]) => MissionPhoneMessage[]) => {
+    setMissionInbox((current) => {
+      const next = update(current);
+      writeMissionPhoneInbox(session.user.id, next);
+      return next;
+    });
+  }, [session.user.id]);
+  const incomingMissionMessageId = incomingMissionBriefing
+    ? getMissionBriefingMessageId(incomingMissionBriefing.cycleIndex, incomingMissionBriefing.islandNumber, incomingMissionBriefing.beatId)
+    : null;
+  useEffect(() => {
+    if (!incomingMissionBriefing || !incomingMissionMessageId) return;
+    const briefing = getIslandMissionBriefingPresentation(
+      incomingMissionBriefing.islandNumber,
+      incomingMissionBriefing.cycleIndex,
+      __storeState.signatureMissionProgressByIsland,
+    );
+    updateMissionInbox((inbox) => addMissionPhoneMessage(inbox, {
+      id: incomingMissionMessageId,
+      islandNumber: incomingMissionBriefing.islandNumber,
+      cycleIndex: incomingMissionBriefing.cycleIndex,
+      sender: 'Central Command',
+      title: briefing.headline,
+      body: briefing.missionStatement,
+      stepLabels: currentMissionTracker.objectives.map((objective) => objective.label),
+      receivedAtMs: Date.now(),
+      readAtMs: null,
+    }));
+    // Filed once when the message lands; later tracker changes don't rewrite it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingMissionMessageId]);
+  const handleMissionMessageRead = useCallback((messageId: string) => {
+    updateMissionInbox((inbox) => markMissionPhoneMessageRead(inbox, messageId, Date.now()));
+  }, [updateMissionInbox]);
   const openIncomingMissionBriefing = useCallback(() => {
     if (!incomingMissionBriefing) return false;
+    setOpenMissionMessageId(incomingMissionMessageId);
     setActiveMissionBriefing(incomingMissionBriefing);
     setIncomingMissionBriefing(null);
     setShowMissionMessageBanner(false);
     return true;
-  }, [incomingMissionBriefing]);
+  }, [incomingMissionBriefing, incomingMissionMessageId]);
   useEffect(() => {
     setIncomingMissionBriefing((current) => (current && current.islandNumber !== islandNumber ? null : current));
   }, [islandNumber]);
@@ -21243,7 +21291,9 @@ export function IslandRunBoardPrototype({
         islandCompletion={displayedMissionTracker.islandCompletion}
         stats={displayedMissionTracker.stats}
         overallProgressPercent={displayedMissionTracker.overallProgressPercent}
-        pictureMessage={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing}
+        messages={missionInbox}
+        openMessageId={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing ? openMissionMessageId : null}
+        onMessageRead={handleMissionMessageRead}
         objectiveActions={showMissionPhoneBriefing ? missionPhoneObjectiveActions : undefined}
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
