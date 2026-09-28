@@ -6,7 +6,11 @@ import {
   precisionFeedbackLabel,
   precisionMarkerDeg,
   PRECISION_BUILD_PERFECT_SHARE,
+  appendPrecisionRow,
+  precisionComboTier,
+  precisionMilestoneBanner,
   type PrecisionBuildJudgement,
+  type PrecisionRowEntry,
 } from '../services/precisionBuild';
 import './precision-build.css';
 
@@ -37,6 +41,9 @@ export function PrecisionBuildRing({ disabled, costLabel, onHit }: Props) {
   const [state, setState] = useState(() => createPrecisionBuildState(readBest()));
   const [feedback, setFeedback] = useState<{ id: number; judgement: PrecisionBuildJudgement; label: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [row, setRow] = useState<PrecisionRowEntry[]>([]);
+  const [burst, setBurst] = useState<{ id: number; judgement: PrecisionBuildJudgement; angle: number } | null>(null);
+  const [banner, setBanner] = useState<{ id: number; text: string } | null>(null);
   const markerRef = useRef<SVGGElement>(null);
   const clockRef = useRef({ start: performance.now(), speed: state.speedDegPerSec });
 
@@ -63,6 +70,7 @@ export function PrecisionBuildRing({ disabled, costLabel, onHit }: Props) {
     const angle = precisionMarkerDeg(performance.now() - clockRef.current.start, clockRef.current.speed);
     const judgement = judgePrecisionTap(angle, state);
     const id = Date.now();
+    setBurst({ id, judgement, angle });
     if (judgement === 'miss') {
       setState(advancePrecisionBuild(state, 'miss'));
       setFeedback({ id, judgement, label: precisionFeedbackLabel('miss', 0) });
@@ -76,6 +84,10 @@ export function PrecisionBuildRing({ disabled, costLabel, onHit }: Props) {
       if (next.bestStreak > state.bestStreak) writeBest(next.bestStreak);
       setState(next);
       setFeedback({ id, judgement, label: precisionFeedbackLabel(judgement, next.streak) });
+      setRow((current) => appendPrecisionRow(current, judgement, id));
+      const milestone = precisionMilestoneBanner(next.streak);
+      if (milestone) setBanner({ id, text: milestone });
+      try { navigator.vibrate?.(judgement === 'perfect' ? [14, 30, 22] : 12); } catch { /* unsupported */ }
     } finally {
       setBusy(false);
     }
@@ -86,7 +98,8 @@ export function PrecisionBuildRing({ disabled, costLabel, onHit }: Props) {
   const perfectLength = (perfectDeg / 360) * CIRCUMFERENCE;
 
   return (
-    <div className={`precision-build${disabled ? ' precision-build--disabled' : ''}`}>
+    <div className={`precision-build precision-build--${precisionComboTier(state.streak)}${disabled ? ' precision-build--disabled' : ''}`}>
+      {banner ? <span key={banner.id} className="precision-build__banner" role="status">{banner.text}</span> : null}
       <div className="precision-build__stats" aria-live="polite">
         <span className={`precision-build__streak${state.streak >= 3 ? ' is-hot' : ''}`}>🔥 {state.streak}</span>
         <span className="precision-build__best">Best {state.bestStreak}</span>
@@ -131,6 +144,15 @@ export function PrecisionBuildRing({ disabled, costLabel, onHit }: Props) {
             <circle className="precision-build__marker" cx="50" cy={50 - RADIUS} r="4.2" />
           </g>
         </svg>
+        {burst ? (
+          <span key={burst.id} className={`precision-build__burst precision-build__burst--${burst.judgement}`} aria-hidden="true"
+            style={{ ['--burst-angle' as string]: `${burst.angle}deg` }}>
+            <i className="precision-build__shock" />
+            {burst.judgement !== 'miss' ? Array.from({ length: burst.judgement === 'perfect' ? 12 : 7 }, (_, index) => (
+              <b key={index} style={{ ['--spark' as string]: index, ['--sparks' as string]: burst.judgement === 'perfect' ? 12 : 7 }} />
+            )) : null}
+          </span>
+        ) : null}
         <span className="precision-build__core">
           <strong>{busy ? '⚒️' : 'BUILD'}</strong>
           <small>{costLabel}</small>
@@ -141,6 +163,14 @@ export function PrecisionBuildRing({ disabled, costLabel, onHit }: Props) {
           {feedback.label}
         </span>
       ) : null}
+      <div className="precision-build__row" aria-label={`${row.filter((entry) => entry.judgement !== 'miss').length} hits placed`}>
+        {row.map((entry) => (
+          <span key={entry.id} className={`precision-build__gem precision-build__gem--${entry.judgement}`} aria-hidden="true">
+            {entry.judgement === 'perfect' ? '★' : entry.judgement === 'good' ? '◆' : '·'}
+          </span>
+        ))}
+        {row.length === 0 ? <span className="precision-build__row-empty">Your hits land here</span> : null}
+      </div>
       <p className="precision-build__hint">Tap when the marker hits the gold · misses are free</p>
     </div>
   );
