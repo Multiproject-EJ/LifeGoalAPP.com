@@ -119,3 +119,33 @@
   .dragon-prelude::before, .dragon-prelude__siren i, .dragon-prelude__line, .dragon-prelude__reply p, .dragon-prelude__ask { animation: none; }
   .dragon-prelude::before { box-shadow: inset 0 0 60px 12px rgba(239, 68, 68, 0.3); }
 }
+
+/* After the dragon: the fisherman's egg rumour. */
+.dragon-rumour {
+  position: fixed;
+  left: 50%;
+  bottom: max(150px, calc(env(safe-area-inset-bottom) + 140px));
+  z-index: 9500;
+  translate: -50% 0;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  width: min(340px, calc(100% - 32px));
+  font-family: system-ui, sans-serif;
+}
+.dragon-rumour__line {
+  justify-self: start;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 16px 16px 16px 4px;
+  background: rgba(241, 245, 249, 0.96);
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+  animation: dragon-prelude-pop 360ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.dragon-rumour__line small { display: block; color: #0369a1; font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+.dragon-rumour .dragon-rumour__reply { position: static; }
+@media (prefers-reduced-motion: reduce) { .dragon-rumour__line { animation: none; } }

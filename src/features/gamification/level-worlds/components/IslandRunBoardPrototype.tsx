@@ -485,6 +485,7 @@ import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { CompassBookIcon } from './CompassBookIcon';
 import { FishermansDragonPrelude } from './FishermansDragonPrelude';
+import { FishermansEggRumour } from './FishermansEggRumour';
 import { isDragonPreludeActive } from '../services/fishermansDragonPrelude';
 import { AssemblyTopbarBlast } from './AssemblyTopbarBlast';
 import { ASSEMBLY_TOPBAR_BLAST_MS, shouldAssemblyBlastHitTopbar } from '../services/assemblyTopbarBlast';
@@ -21741,6 +21742,9 @@ export function IslandRunBoardPrototype({
 
       {islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER && dragonCinematicStartedAtMs !== null ? (
         <FishermansDragonPrelude key={dragonCinematicStartedAtMs} elapsed={dragonCinematicElapsedSeconds} />
+      ) : null}
+      {islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER && dragonCinematicStartedAtMs !== null ? (
+        <FishermansEggRumour key={`rumour-${dragonCinematicStartedAtMs}`} elapsed={dragonCinematicElapsedSeconds} />
       ) : null}
 
       {showFishermansFishing && !(dragonCinematicStartedAtMs !== null && isDragonPreludeActive(dragonCinematicElapsedSeconds))

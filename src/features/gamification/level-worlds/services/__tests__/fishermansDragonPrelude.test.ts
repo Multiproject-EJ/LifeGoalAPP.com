@@ -1,4 +1,7 @@
 import {
+  DRAGON_AFTERMATH_FROM_SECONDS,
+  DRAGON_EGG_RUMOUR,
+  shouldShowDragonEggRumour,
   DRAGON_PRELUDE_END_SECONDS,
   dragonPreludeBeat,
   dragonPreludeTalk,
@@ -32,6 +35,21 @@ export const fishermansDragonPreludeTests: TestCase[] = [
       const run = dragonPreludeTalk(6, 2, 5.2);
       assert(run.kind === 'reply' && /RUN!/.test(run.text), 'the follow-up gets RUN!');
       assertEqual(dragonPreludeTalk(7.3, 2, 5.2).kind, 'closed', 'conversation ends when the dragon is out');
+    },
+  },
+  {
+    name: 'after the dragon the fisherman plants the egg rumour — once, only after watching it live',
+    run: async () => {
+      assertEqual(DRAGON_EGG_RUMOUR[0]?.text, 'Phew… Damn, imagine having one of those!', 'imagine having one');
+      assertEqual(DRAGON_EGG_RUMOUR[0]?.reply, 'Yeah… no creature egg for me then, hehe?', 'the player asks about an egg');
+      assert(/buried in the water world/.test(DRAGON_EGG_RUMOUR[1]?.text ?? ''), 'rumour of an egg in the water world');
+      assert(shouldShowDragonEggRumour({ elapsed: DRAGON_AFTERMATH_FROM_SECONDS + 0.1, watchedLive: true }), 'after the live dive');
+      assert(!shouldShowDragonEggRumour({ elapsed: 12, watchedLive: true }), 'not mid-cinematic');
+      assert(!shouldShowDragonEggRumour({ elapsed: 90000, watchedLive: false }), 'not on later visits');
+      // @ts-ignore Node-only source contract check.
+      const fs = await import('fs');
+      const component = fs.readFileSync('src/features/gamification/level-worlds/components/FishermansEggRumour.tsx', 'utf8');
+      assert(component.includes('if (elapsed > 0.05 && elapsed < DRAGON_AFTERMATH_FROM_SECONDS) watchedLive.current = true;'), 'live only when in-progress time is seen');
     },
   },
 ];
