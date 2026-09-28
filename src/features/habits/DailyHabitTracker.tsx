@@ -182,6 +182,10 @@ import {
   runDailyOfferClaim,
 } from './dailyOfferClaim';
 import { FeedPetModal } from './FeedPetModal';
+import { TodayPet } from './todayPet/TodayPet';
+import { resolveTodayPetCompanion } from './todayPet/todayPetBehaviour';
+import { setActiveCompanionId } from '../gamification/level-worlds/services/islandRunStateActions';
+import { getSupabaseClient } from '../../lib/supabaseClient';
 import { resolveFeedPetCompanionPresentation } from './feedPetCompanionPresentation';
 import { EVENT_IDS, type EventId } from '../gamification/level-worlds/services/islandRunEventEngine';
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
@@ -13789,6 +13793,26 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       : zenTreeModal
     : null;
 
+  // The paired companion lives on the Today screen as a small pet; its Feed
+  // bubble is the same once-a-day +15 dice claim as the Feed Pet offer.
+  const todayPetCompanion = resolveTodayPetCompanion(islandRunState);
+  const todayPet = todayPetCompanion ? (
+    <TodayPet
+      companion={todayPetCompanion}
+      fedToday={hasClaimedFeedCreaturesToday}
+      feeding={isFeedCreaturesClaiming}
+      onFeed={() => {
+        if (isFeedCreaturesPreviewOnly) { onOpenFeaturePreview?.('today.feedCreatures', 'Feed Pet'); return; }
+        void handleClaimFeedCreatures();
+      }}
+      onPair={(creatureId) => {
+        let client: ReturnType<typeof getSupabaseClient> | null = null;
+        try { client = getSupabaseClient(); } catch { client = null; }
+        setActiveCompanionId({ session, client, activeCompanionId: creatureId, triggerSource: 'today_pet_make_my_pet' });
+      }}
+    />
+  ) : null;
+
   const feedCreaturesPortal = feedCreaturesModal
     ? modalRoot
       ? createPortal(feedCreaturesModal, modalRoot)
@@ -13833,6 +13857,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {yesterdaySundownTodoPortal}
         {zenTreePortal}
         {feedCreaturesPortal}
+      {todayPet}
+        {todayPet}
         {eggHatchMoviePortal}
         {weeklyHabitReviewModal}
         {visionRewardModal}
