@@ -1,0 +1,134 @@
+/* Egg Mania announcement pop-up. */
+.egg-mania-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 9250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  font-family: system-ui, sans-serif;
+}
+.egg-mania-popup__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: radial-gradient(circle at 50% 38%, rgba(249, 115, 22, 0.32), rgba(20, 8, 2, 0.78));
+  cursor: pointer;
+  animation: egg-mania-fade 260ms ease-out both;
+}
+.egg-mania-popup__card {
+  position: relative;
+  width: min(370px, 100%);
+  padding: 92px 20px 18px;
+  border-radius: 26px;
+  text-align: center;
+  color: #fff8ec;
+  background: linear-gradient(170deg, #7c2d12, #431407 72%);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(253, 186, 116, 0.7), 0 0 44px rgba(249, 115, 22, 0.45);
+  animation: egg-mania-pop 520ms cubic-bezier(0.2, 1.45, 0.4, 1) both;
+}
+.egg-mania-popup__eggs {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  width: 220px;
+  height: 120px;
+  margin-left: -110px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+}
+.egg-mania-popup__egg {
+  position: relative;
+  width: 58px;
+  height: 76px;
+  border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 35% 28%, #fffdf5 0 14%, var(--egg-tint) 52%, color-mix(in srgb, var(--egg-tint) 70%, #7c2d12) 100%);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35), inset -6px -8px 14px rgba(124, 45, 18, 0.25);
+  transform-origin: 50% 100%;
+  animation: egg-mania-egg-drop 560ms cubic-bezier(0.2, 1.5, 0.4, 1) both, egg-mania-egg-wobble 2.4s ease-in-out 1s infinite;
+}
+.egg-mania-popup__egg:nth-child(2) { width: 68px; height: 90px; }
+.egg-mania-popup__egg i {
+  position: absolute;
+  width: 9px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(124, 45, 18, 0.35);
+}
+.egg-mania-popup__egg i:nth-child(1) { top: 32%; left: 58%; }
+.egg-mania-popup__egg i:nth-child(2) { top: 55%; left: 28%; width: 7px; height: 5px; }
+.egg-mania-popup__egg i:nth-child(3) { top: 68%; left: 62%; width: 6px; height: 5px; }
+.egg-mania-popup__flame {
+  position: absolute;
+  bottom: 0;
+  font-size: 30px;
+  animation: egg-mania-flame 900ms ease-in-out infinite alternate;
+}
+.egg-mania-popup__flame--left { left: 0; }
+.egg-mania-popup__flame--right { right: 0; animation-delay: 0.4s; }
+.egg-mania-popup__kicker {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fdba74;
+}
+.egg-mania-popup__card h2 {
+  margin: 4px 0 6px;
+  font-size: 32px;
+  font-weight: 1000;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, #fef3c7, #fbbf24 55%, #f97316);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 3px 0 rgba(67, 20, 7, 0.8));
+}
+.egg-mania-popup__lead { margin: 0 0 12px; font-size: 15px; line-height: 1.4; }
+.egg-mania-popup__lead strong { color: #fde68a; }
+.egg-mania-popup__facts {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  list-style: none;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.25);
+  text-align: left;
+  font-size: 13px;
+}
+.egg-mania-popup__facts li { display: flex; justify-content: space-between; gap: 10px; }
+.egg-mania-popup__facts span { opacity: 0.75; }
+.egg-mania-popup__note { margin: 0 0 14px; font-size: 12px; line-height: 1.4; opacity: 0.8; }
+.egg-mania-popup__actions { display: flex; gap: 8px; }
+.egg-mania-popup__actions button {
+  flex: 1;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.egg-mania-popup__primary {
+  color: #431407;
+  background: linear-gradient(180deg, #fde68a, #f59e0b);
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.egg-mania-popup__secondary { flex: 0 0 auto !important; color: #fff; background: rgba(255, 255, 255, 0.14); }
+.egg-mania-popup__card--used .egg-mania-popup__egg { filter: saturate(0.6); }
+
+@keyframes egg-mania-fade { from { opacity: 0; } }
+@keyframes egg-mania-pop { from { opacity: 0; transform: translateY(26px) scale(0.86); } }
+@keyframes egg-mania-egg-drop { from { opacity: 0; transform: translateY(-60px) scale(0.6); } }
+@keyframes egg-mania-egg-wobble { 0%, 70%, 100% { rotate: 0deg; } 78% { rotate: -7deg; } 86% { rotate: 6deg; } 93% { rotate: -3deg; } }
+@keyframes egg-mania-flame { from { transform: translateY(0) scale(1); } to { transform: translateY(-5px) scale(1.12); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .egg-mania-popup *, .egg-mania-popup__backdrop { animation: none !important; }
+}

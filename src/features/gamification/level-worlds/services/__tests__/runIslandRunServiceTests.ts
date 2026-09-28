@@ -5,6 +5,7 @@ import { islandRunFastBuildTests } from './islandRunFastBuild.test';
 import { crystalMinersTests } from './crystalMiners.test';
 import { coasterDirectorTests } from './coasterDirector.test';
 import { coasterDeliveryTests } from './coasterDelivery.test';
+import { eggManiaPopupTests } from './eggManiaPopup.test';
 import { buildStylesTests } from './buildStyles.test';
 import { precisionBuildJuiceTests } from './precisionBuildJuice.test';
 import { companionPairingSurpriseTests } from './companionPairingSurprise.test';
@@ -314,6 +315,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'crystalMiners', tests: crystalMinersTests },
   { label: 'coasterDirector', tests: coasterDirectorTests },
   { label: 'coasterDelivery', tests: coasterDeliveryTests },
+  { label: 'eggManiaPopup', tests: eggManiaPopupTests },
   { label: 'buildStyles', tests: buildStylesTests },
   { label: 'precisionBuildJuice', tests: precisionBuildJuiceTests },
   { label: 'companionPairingSurprise', tests: companionPairingSurpriseTests },
