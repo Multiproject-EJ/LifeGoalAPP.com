@@ -133,6 +133,8 @@ type GameBoardOverlayProps = {
   twoTracksSparkXp?: number;
   /** Called once today's spark animation has played. */
   onTwoTracksSparkSeen?: () => void;
+  /** Hides today's balance nudge. */
+  onTwoTracksNudgeDismiss?: () => void;
 };
 
 const noop = () => {};
@@ -297,6 +299,38 @@ function DailyCheck({ today }: { today: TwoTracksToday | null }) {
   );
 }
 
+/** Gentle prompt when one track has been idle for days while the other moves. */
+function BalanceNudge({
+  today,
+  onPlay,
+  onCheckIn,
+  onDismiss,
+}: {
+  today: TwoTracksToday | null;
+  onPlay: () => void;
+  onCheckIn: () => void;
+  onDismiss?: () => void;
+}) {
+  const nudge = today?.balanceNudge;
+  if (!nudge) return null;
+  const isGame = nudge.lane === 'game';
+  return (
+    <div className={`game-board-overlay__balance-nudge game-board-overlay__balance-nudge--${nudge.lane}`} role="status">
+      <span className="game-board-overlay__balance-nudge-icon" aria-hidden="true">{isGame ? '🎲' : '🌱'}</span>
+      <span className="game-board-overlay__balance-nudge-copy">
+        <strong>{isGame ? 'Game track is waiting' : 'Life track is waiting'}</strong>
+        <small>{isGame ? `No rolls for ${nudge.daysBehind} days` : `No check-ins for ${nudge.daysBehind} days`}</small>
+      </span>
+      <button type="button" className="game-board-overlay__balance-nudge-go" onClick={isGame ? onPlay : onCheckIn}>
+        {isGame ? 'Roll' : 'Check in'}
+      </button>
+      {onDismiss ? (
+        <button type="button" className="game-board-overlay__balance-nudge-close" aria-label="Hide for today" onClick={onDismiss}>×</button>
+      ) : null}
+    </div>
+  );
+}
+
 type HorizonChestProps = {
   nextThresholdLevel: number;
   progressPercent: number;
@@ -377,6 +411,7 @@ export function GameBoardOverlay({
   twoTracksToday = null,
   twoTracksSparkXp,
   onTwoTracksSparkSeen,
+  onTwoTracksNudgeDismiss,
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -601,7 +636,18 @@ export function GameBoardOverlay({
                   sparkPlaying={isSparkPlaying}
                 />
               )}
-              daily={<DailyCheck today={twoTracksToday} />}
+              laggingLane={twoTracksToday?.balanceNudge?.lane ?? null}
+              daily={(
+                <>
+                  <DailyCheck today={twoTracksToday} />
+                  <BalanceNudge
+                    today={twoTracksToday}
+                    onPlay={onPlayClick ?? onClose}
+                    onCheckIn={onClose}
+                    onDismiss={onTwoTracksNudgeDismiss}
+                  />
+                </>
+              )}
               horizon={(
                 <HorizonChest
                   nextThresholdLevel={dualTrackViewModel.journeyLevel.nextThresholdLevel}

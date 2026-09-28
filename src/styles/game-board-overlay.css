@@ -2220,3 +2220,52 @@ span.game-board-overlay__hub-ring {
     transform: translate(-50%, -0.6rem);
   }
 }
+
+/* Two Tracks balance nudge: one track moved today, the other has been idle. */
+.game-board-overlay__balance-nudge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: min(330px, calc(100vw - 40px));
+  margin: 6px auto 0;
+  padding: 6px 7px 6px 10px;
+  border-radius: 14px;
+  background: rgba(10, 22, 40, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 6px 16px rgba(0, 0, 0, 0.28);
+  color: #f4f8ff;
+  pointer-events: auto;
+  animation: game-board-overlay-nudge-in 420ms cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.game-board-overlay__balance-nudge--life { box-shadow: inset 0 0 0 1px rgba(134, 239, 172, 0.55), 0 6px 16px rgba(0, 0, 0, 0.28); }
+.game-board-overlay__balance-nudge--game { box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.55), 0 6px 16px rgba(0, 0, 0, 0.28); }
+.game-board-overlay__balance-nudge-icon { font-size: 20px; }
+.game-board-overlay__balance-nudge-copy { display: grid; flex: 1; min-width: 0; line-height: 1.25; }
+.game-board-overlay__balance-nudge-copy strong { font-size: 12.5px; }
+.game-board-overlay__balance-nudge-copy small { font-size: 11px; opacity: 0.82; }
+.game-board-overlay__balance-nudge-go {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 12px;
+  color: #06231a;
+  background: linear-gradient(180deg, #86efac, #22c55e);
+  cursor: pointer;
+}
+.game-board-overlay__balance-nudge--game .game-board-overlay__balance-nudge-go { color: #062038; background: linear-gradient(180deg, #7dd3fc, #0ea5e9); }
+.game-board-overlay__balance-nudge-close {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+@keyframes game-board-overlay-nudge-in { from { opacity: 0; transform: translateY(6px) scale(0.96); } }
+@media (prefers-reduced-motion: reduce) { .game-board-overlay__balance-nudge { animation: none; } }

@@ -14,6 +14,8 @@ type TwoTracksRoadProps = {
   daily: ReactNode;
   /** Replays the glide-up when the island advanced since the last visit. */
   climbDelta?: number;
+  /** A track that has fallen behind glows softly to invite a step. */
+  laggingLane?: 'life' | 'game' | null;
 };
 
 function RoadTile({ tile }: { tile: TwoTracksTile }) {
@@ -48,7 +50,7 @@ function RoadTile({ tile }: { tile: TwoTracksTile }) {
  * near, today in the middle, the unknown ahead. Opens with a glide up the
  * road that settles on today.
  */
-export function TwoTracksRoad({ road, progressPercent, hub, horizon, daily, climbDelta = 0 }: TwoTracksRoadProps) {
+export function TwoTracksRoad({ road, progressPercent, hub, horizon, daily, climbDelta = 0, laggingLane = null }: TwoTracksRoadProps) {
   const life = road.tiles.filter((tile) => tile.lane === 'life');
   const game = road.tiles.filter((tile) => tile.lane === 'game');
   const style = {
@@ -59,7 +61,7 @@ export function TwoTracksRoad({ road, progressPercent, hub, horizon, daily, clim
   } as CSSProperties;
 
   return (
-    <div className={`tt-road${road.inSync ? ' tt-road--sync' : ''}`} style={style}>
+    <div className={`tt-road${road.inSync ? ' tt-road--sync' : ''}${laggingLane ? ` tt-road--lag-${laggingLane}` : ''}`} style={style}>
       <div className="tt-road__lane-labels" aria-hidden="true">
         <span className="tt-road__lane-label tt-road__lane-label--life">Real life</span>
         <span className="tt-road__lane-label tt-road__lane-label--game">Game</span>

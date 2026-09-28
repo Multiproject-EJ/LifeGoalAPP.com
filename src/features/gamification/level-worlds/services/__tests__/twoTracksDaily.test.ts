@@ -1,10 +1,13 @@
 import { assert, assertEqual, type TestCase } from './testHarness';
 import {
   advanceTwoTracksLedger,
+  dismissTwoTracksBalanceNudge,
   gameActivitySignature,
   parseTwoTracksLedger,
   previousTwoTracksDayKey,
+  resolveTwoTracksBalanceNudge,
   sparkXpForStreak,
+  twoTracksDaysBetween,
   TWO_TRACKS_SPARK_XP,
   type TwoTracksDailyLedger,
 } from '../twoTracksDaily';
@@ -153,7 +156,7 @@ export const twoTracksDailyTests: TestCase[] = [
           habitCheckInsToday: 1,
         },
       });
-      const road = buildTwoTracksRoad(vm, { lifeDone: true, gameDone: true, bothDone: true, sparkPending: false, streak: 2, sparkXpToday: 12 });
+      const road = buildTwoTracksRoad(vm, { lifeDone: true, gameDone: true, bothDone: true, sparkPending: false, streak: 2, sparkXpToday: 12, balanceNudge: null });
       assert(road.inSync, 'both lanes moved: in sync');
       for (const lane of ['life', 'game'] as const) {
         const tiles = road.tiles.filter((tile) => tile.lane === lane);
@@ -179,6 +182,43 @@ export const twoTracksDailyTests: TestCase[] = [
       const road = buildTwoTracksRoad(buildDualTrackOverlayViewModel({ islandNumber: 1 }), null);
       assert(!road.inSync, 'no daily check yet');
       assert(!road.tiles.some((tile) => tile.lane === 'game' && tile.state === 'done'), 'nothing explored before island 1');
+    },
+  },
+  {
+    name: 'balance nudge: a track idle for 2+ days gets pointed out when the other moves',
+    run: () => {
+      // Day 1: both tracks move.
+      let { ledger } = playDay(null, '2026-09-20', [{ game: sig(0), life: 0 }, { game: sig(3), life: 1 }]);
+      // Days 2-4: only habits.
+      let today;
+      ({ ledger, today } = playDay(ledger, '2026-09-21', [{ game: sig(3), life: 1 }]));
+      assertEqual(today!.balanceNudge, null, 'one day behind is not a nudge yet');
+      ({ ledger, today } = playDay(ledger, '2026-09-22', [{ game: sig(3), life: 2 }]));
+      assertEqual(today!.balanceNudge?.lane, 'game', 'the game track is nudged after two idle days');
+      assertEqual(today!.balanceNudge?.daysBehind, 2, 'counts idle days since the last roll');
+      ({ ledger, today } = playDay(ledger, '2026-09-23', [{ game: sig(3), life: 1 }, { game: sig(7), life: 1 }]));
+      assertEqual(today!.balanceNudge, null, 'rolling clears the nudge (both tracks level)');
+      // Days 5-7: only rolls.
+      ({ ledger, today } = playDay(ledger, '2026-09-25', [{ game: sig(7), life: 0 }, { game: sig(9), life: 0 }]));
+      assertEqual(today!.balanceNudge?.lane, 'life', 'the life track is nudged when habits stall');
+    },
+  },
+  {
+    name: 'balance nudge: silent without history, on idle days, and once dismissed',
+    run: () => {
+      assertEqual(resolveTwoTracksBalanceNudge({}, '2026-09-22', true, false), null, 'no history: no nudge');
+      assertEqual(resolveTwoTracksBalanceNudge({ lastGameDay: '2026-09-01' }, '2026-09-22', false, false), null, 'nothing done today: no nudge');
+      assertEqual(resolveTwoTracksBalanceNudge({ lastGameDay: '2026-09-01' }, '2026-09-22', true, true), null, 'both done: no nudge');
+      const nudge = resolveTwoTracksBalanceNudge({ lastGameDay: '2026-09-19' }, '2026-09-22', true, false);
+      assertEqual(nudge?.daysBehind, 3, 'three idle days');
+      const base = advanceTwoTracksLedger(null, { day: '2026-09-22', gameSig: sig(1), lifeStepsToday: 0 }).ledger;
+      const dismissed = dismissTwoTracksBalanceNudge({ ...base, lastGameDay: '2026-09-19' }, '2026-09-22');
+      assertEqual(resolveTwoTracksBalanceNudge(dismissed, '2026-09-22', true, false), null, 'dismissed for today');
+      assert(resolveTwoTracksBalanceNudge(dismissed, '2026-09-23', true, false) !== null, 'returns the next day');
+      const parsed = parseTwoTracksLedger(JSON.stringify(dismissed));
+      assertEqual(parsed?.lastGameDay, '2026-09-19', 'last game day survives reloads');
+      assertEqual(parsed?.nudgeDismissedDay, '2026-09-22', 'dismissal survives reloads');
+      assertEqual(twoTracksDaysBetween('2026-09-30', '2026-10-02'), 2, 'day gaps cross month ends');
     },
   },
 ];

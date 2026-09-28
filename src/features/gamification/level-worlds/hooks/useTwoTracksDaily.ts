@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   advanceTwoTracksLedger,
+  dismissTwoTracksBalanceNudge,
   gameActivitySignature,
   markTwoTracksSparkSeen,
   parseTwoTracksLedger,
@@ -28,6 +29,8 @@ export type TwoTracksDailyBinding = {
   sparkXp: number;
   /** Call once today's spark animation has played. */
   markSparkSeen: () => void;
+  /** Hide today's balance nudge. */
+  dismissBalanceNudge: () => void;
 };
 
 /**
@@ -64,6 +67,16 @@ export function useTwoTracksDaily(
       ? { owner: userId, ledger: next, today: { ...prev.today, sparkPending: false } } : prev));
   }, [userId]);
 
+  const dismissBalanceNudge = useCallback(() => {
+    if (!userId) return;
+    const current = readLedger(userId);
+    if (!current) return;
+    const next = dismissTwoTracksBalanceNudge(current, twoTracksDayKey());
+    writeLedger(userId, next);
+    setState((prev) => (prev && prev.owner === userId
+      ? { owner: userId, ledger: next, today: { ...prev.today, balanceNudge: null } } : prev));
+  }, [userId]);
+
   return useMemo(() => {
     const owned = state && state.owner === userId ? state : null;
     return {
@@ -71,6 +84,7 @@ export function useTwoTracksDaily(
       today: owned && lifeStepsToday !== null ? owned.today : null,
       sparkXp: owned?.ledger.sparkXp ?? 0,
       markSparkSeen,
+      dismissBalanceNudge,
     };
-  }, [state, userId, lifeStepsToday, markSparkSeen]);
+  }, [state, userId, lifeStepsToday, markSparkSeen, dismissBalanceNudge]);
 }
