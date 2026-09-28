@@ -637,6 +637,7 @@ export function GameBoardOverlay({
                 />
               )}
               laggingLane={twoTracksToday?.balanceNudge?.lane ?? null}
+              today={twoTracksToday}
               daily={(
                 <>
                   <DailyCheck today={twoTracksToday} />
