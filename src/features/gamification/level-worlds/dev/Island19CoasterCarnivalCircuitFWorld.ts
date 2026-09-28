@@ -146,6 +146,13 @@ export interface Island19CircuitFWorldRuntime {
   animate: (elapsedSeconds: number) => void;
   setCutaway: (enabled: boolean) => void;
   setClay: (enabled: boolean) => void;
+  /**
+   * Island 019 mission presentation: the coaster is built in sections. 0
+   * hides the whole ride system, N of `sectionCount` reveals that share of
+   * the route, and a complete build shows the train. Presentation only.
+   */
+  setCoasterBuildStage: (installed: number, sectionCount: number, animate: boolean) => void;
+  getCoasterBuildFraction: () => number;
 }
 
 interface TerrainRing {
@@ -450,6 +457,7 @@ function createTrackSupports(path: THREE.CurvePath<THREE.Vector3>, material: THR
   supports.name = 'ISLAND_19_CIRCUIT_F_LOAD_PATH_SUPPORTS';
   const matrix = new THREE.Matrix4();
   let instance = 0;
+  const instanceU: number[] = [];
   for (let index = 0; index < count; index += 1) {
     const u = (index + 0.5) / count;
     const frame = frameAt(path, u);
@@ -477,10 +485,12 @@ function createTrackSupports(path: THREE.CurvePath<THREE.Vector3>, material: THR
       position.y = baseY + height / 2;
       matrix.compose(position, new THREE.Quaternion(), new THREE.Vector3(1, height, 1));
       supports.setMatrixAt(instance, matrix);
+      instanceU.push(u);
       instance += 1;
     }
   }
   supports.count = instance;
+  supports.userData.instanceU = instanceU;
   supports.instanceMatrix.needsUpdate = true;
   return supports;
 }
@@ -1904,7 +1914,7 @@ export function createIsland19CoasterCarnivalCircuitFWorld(
     parkDetails.visible = !hideSurface && atlasReady;
     atlasExterior.root.visible = !hideSurface;
     oceanVista.visible = !hideSurface;
-    underseaGlassTube.visible = true;
+    underseaGlassTube.visible = coasterFraction >= 0.999;
     if (railSupports) {
       railSupports.visible = true;
     }
@@ -1933,10 +1943,71 @@ export function createIsland19CoasterCarnivalCircuitFWorld(
     applyWorldVisibility();
   };
   const setClay = (enabled: boolean) => applyMaterialMode(world, enabled, materials.clay);
+  // --- Island 019 mission: the coaster is built section by section. ---
+  const railTubes = rails.children.filter((child): child is THREE.Mesh => child instanceof THREE.Mesh
+    && !(child instanceof THREE.InstancedMesh));
+  const tubeTotals = railTubes.map((tube) => tube.geometry.index?.count ?? 0);
+  const tiesMesh = rails.getObjectByName('ISLAND_19_CIRCUIT_F_TRACK_TIES') as THREE.InstancedMesh | undefined;
+  const fastenersMesh = rails.getObjectByName('ISLAND_19_CIRCUIT_F_INSTANCED_RAIL_FASTENERS') as THREE.InstancedMesh | undefined;
+  const supportsMesh = railSupports as THREE.InstancedMesh | undefined;
+  const supportU = (supportsMesh?.userData.instanceU as number[] | undefined) ?? [];
+  const tiesTotal = tiesMesh?.count ?? 0;
+  const fastenersTotal = fastenersMesh?.count ?? 0;
+  const lattice = rails.getObjectByName('ISLAND_19_CIRCUIT_I_SOURCE_CREST_SUPPORT_LATTICE');
+  const sectionEnds = [routeAnchor(path, 'plunge-mouth'), routeAnchor(path, 'undersea-entry'), 1];
+  const fractionForStage = (installed: number, sectionCount: number) => {
+    if (installed <= 0) return 0;
+    if (installed >= sectionCount) return 1;
+    return sectionEnds[Math.min(sectionEnds.length - 1, installed - 1)] ?? installed / sectionCount;
+  };
+  let coasterFraction = 1;
+  let coasterTarget = 1;
+  let coasterTweenFrom = 1;
+  let coasterTweenStartSeconds: number | null = null;
+  const COASTER_GROW_SECONDS = 2.8;
+  const applyCoasterFraction = (fraction: number) => {
+    coasterFraction = THREE.MathUtils.clamp(fraction, 0, 1);
+    const complete = coasterFraction >= 0.999;
+    railTubes.forEach((tube, index) => {
+      const total = tubeTotals[index];
+      // Tube indices run along the path, so a draw range reveals a prefix.
+      const perRing = total / Math.max(1, (tube.geometry as THREE.TubeGeometry).parameters?.tubularSegments ?? 1);
+      tube.geometry.setDrawRange(0, complete ? Infinity : Math.floor(coasterFraction * total / perRing) * perRing);
+      tube.visible = coasterFraction > 0;
+    });
+    if (tiesMesh) tiesMesh.count = complete ? tiesTotal : Math.floor(coasterFraction * tiesTotal);
+    if (fastenersMesh) fastenersMesh.count = complete ? fastenersTotal : Math.floor(coasterFraction * tiesTotal) * 2;
+    if (supportsMesh) supportsMesh.count = complete ? supportU.length : supportU.filter((u) => u <= coasterFraction).length;
+    if (lattice) lattice.visible = coasterFraction > 0;
+    rails.visible = coasterFraction > 0;
+    train.visible = complete;
+    underseaGlassTube.visible = complete;
+    root.userData.coasterBuildFraction = coasterFraction;
+  };
+  const setCoasterBuildStage = (installed: number, sectionCount: number, animateGrowth: boolean) => {
+    const target = fractionForStage(Math.floor(installed), Math.max(1, Math.floor(sectionCount)));
+    coasterTarget = target;
+    if (!animateGrowth || target <= coasterFraction) {
+      coasterTweenStartSeconds = null;
+      applyCoasterFraction(target);
+      return;
+    }
+    coasterTweenFrom = coasterFraction;
+    coasterTweenStartSeconds = -1;
+  };
+  const stepCoasterGrowth = (elapsedSeconds: number) => {
+    if (coasterTweenStartSeconds === null) return;
+    if (coasterTweenStartSeconds < 0) coasterTweenStartSeconds = elapsedSeconds;
+    const t = THREE.MathUtils.clamp((elapsedSeconds - coasterTweenStartSeconds) / COASTER_GROW_SECONDS, 0, 1);
+    const eased = t * t * (3 - 2 * t);
+    applyCoasterFraction(coasterTweenFrom + (coasterTarget - coasterTweenFrom) * eased);
+    if (t >= 1) coasterTweenStartSeconds = null;
+  };
   setCutaway(cutawayEnabled);
   setClay(options.clay ?? false);
   const reducedMotion = options.reducedMotion ?? false;
   const animate = (elapsedSeconds: number) => {
+    stepCoasterGrowth(elapsedSeconds);
     skyAmbience.animate(elapsedSeconds);
     lastAnimationSeconds = elapsedSeconds;
     if (!reducedMotion && !riderPovActive) {
@@ -1985,5 +2056,5 @@ export function createIsland19CoasterCarnivalCircuitFWorld(
     representativePartIds: ISLAND_19_CIRCUIT_F_REPRESENTATIVE_PART_IDS,
     atlasExterior,
   });
-  return { root, world, train, cavern, board, materials, path, pacing, diagnostics, dataset, getRideFrame, getRidePhaseStops, getScenicFocus, getRiderCameraPosition, setRiderPovActive, setTrainProgress, setRidePhaseVisibility, animate, setCutaway, setClay };
+  return { root, world, train, cavern, board, materials, path, pacing, diagnostics, dataset, getRideFrame, getRidePhaseStops, getScenicFocus, getRiderCameraPosition, setRiderPovActive, setTrainProgress, setRidePhaseVisibility, animate, setCutaway, setClay, setCoasterBuildStage, getCoasterBuildFraction: () => coasterFraction };
 }

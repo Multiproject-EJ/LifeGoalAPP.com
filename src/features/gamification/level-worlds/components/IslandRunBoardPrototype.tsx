@@ -487,6 +487,10 @@ import { CompassBookIcon } from './CompassBookIcon';
 import { resolveIslandBuildStyle } from '../services/buildStyles';
 import { CompassPairingTip } from './CompassPairingTip';
 import { CoasterDirectorOverlay, type CoasterDirectorFeedback } from './CoasterDirectorOverlay';
+import { ISLAND_19_HELICOPTER_DELIVERY_SECONDS } from '../dev/Island19CoasterHelicopter';
+
+/** Reopen the Director just after the helicopter has set the crate down. */
+const ISLAND_19_COASTER_DELIVERY_REOPEN_MS = Math.round((ISLAND_19_HELICOPTER_DELIVERY_SECONDS - 1.6) * 1000);
 import { resolvePairingUpgradeSuggestion, rollCompanionPairingPerk } from '../services/companionPairingSurprise';
 import { FishermansDragonPrelude } from './FishermansDragonPrelude';
 import { FishermansEggRumour } from './FishermansEggRumour';
@@ -15075,6 +15079,12 @@ export function IslandRunBoardPrototype({
   const [showCoasterDirector, setShowCoasterDirector] = useState(false);
   const [isOrderingCoasterSection, setIsOrderingCoasterSection] = useState(false);
   const [coasterDirectorFeedback, setCoasterDirectorFeedback] = useState<CoasterDirectorFeedback>(null);
+  // Presentation-only counter: each successful order sends the helicopter.
+  const [coasterDeliverySequence, setCoasterDeliverySequence] = useState(0);
+  const coasterDeliveryTimerRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (coasterDeliveryTimerRef.current !== null) window.clearTimeout(coasterDeliveryTimerRef.current);
+  }, []);
   const openCoasterDirector = useCallback(() => {
     setCoasterDirectorFeedback(null);
     setShowCoasterDirector(true);
@@ -15107,9 +15117,19 @@ export function IslandRunBoardPrototype({
         const fresh = getIslandRunStateSnapshot(session);
         runtimeStateRef.current = fresh;
         setRuntimeStateWithTrace('order_coaster_section_from_director', fresh);
-        setCoasterDirectorFeedback({ tone: 'ok', text: `Deal! Section ${result.sectionsOrdered} is on its way.` });
         playIslandRunSound('reward_bar_claim_burst');
         triggerIslandRunHaptic('reward_claim');
+        // Fold the Director away so the helicopter delivery is visible, then
+        // bring him back with the install prompt once the crate has landed.
+        setShowCoasterDirector(false);
+        setCoasterDeliverySequence((value) => value + 1);
+        setLandingText(`🚁 Deal! The helicopter is flying in coaster section ${result.sectionsOrdered}…`);
+        if (coasterDeliveryTimerRef.current !== null) window.clearTimeout(coasterDeliveryTimerRef.current);
+        coasterDeliveryTimerRef.current = window.setTimeout(() => {
+          coasterDeliveryTimerRef.current = null;
+          setCoasterDirectorFeedback({ tone: 'ok', text: `Special delivery! Section ${result.sectionsOrdered} has landed at the station.` });
+          setShowCoasterDirector(true);
+        }, ISLAND_19_COASTER_DELIVERY_REOPEN_MS);
         return;
       }
       if (result.status === 'insufficient_money') {
@@ -17023,6 +17043,8 @@ export function IslandRunBoardPrototype({
                   titanAwakening: stagedRestorationProgress?.titanAwakening,
                   titanInspectionOpen: showTitanAwakening,
                   claimedPickupTileIndices: stagedRestorationProgress?.claimedPickupTileIndices ?? [],
+                  coasterDeliverySequence,
+                  coasterSectionReady: Boolean(coasterOrder?.sectionReady),
                 } : undefined}
                 island20SkiffNavigation={lavaSkiffNavigation}
                 onIsland20SkiffRunComplete={handleLavaSkiffRunComplete}
