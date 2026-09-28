@@ -1,0 +1,167 @@
+/* Today-screen pet: a small, uniform-size companion living along the bottom. */
+.today-pet-yard {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+  height: 0;
+  z-index: 40;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.today-pet {
+  --pet-size: 60px;
+  position: absolute;
+  bottom: 0;
+  width: var(--pet-size);
+  height: var(--pet-size);
+  margin-left: calc(var(--pet-size) / -2);
+  transition-property: left;
+  transition-timing-function: linear;
+}
+
+.today-pet__body {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.today-pet__body img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 4px rgba(15, 23, 42, 0.35));
+  transform-origin: 50% 100%;
+}
+
+.today-pet__shadow {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: -3px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0));
+}
+
+/* Motion per mood, on the image wrapper so facing (scaleX) stays intact. */
+.today-pet--walk .today-pet__body, .today-pet--chase .today-pet__body { animation: today-pet-trot 0.42s ease-in-out infinite; }
+.today-pet--chase .today-pet__body { animation-duration: 0.26s; }
+.today-pet--idle .today-pet__body { animation: today-pet-breathe 2.6s ease-in-out infinite; }
+.today-pet--play .today-pet__body { animation: today-pet-play 1.7s cubic-bezier(0.3, 1.4, 0.5, 1) both; }
+.today-pet--happy .today-pet__body { animation: today-pet-hop 0.45s ease-out 2; }
+.today-pet--eat .today-pet__body { animation: today-pet-eat 0.3s ease-in-out 6; }
+.today-pet--sleep .today-pet__body { animation: today-pet-sleep 3.2s ease-in-out infinite; }
+.today-pet--away { visibility: hidden; }
+
+@keyframes today-pet-trot { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+@keyframes today-pet-breathe { 0%, 100% { scale: 1 1; } 50% { scale: 1.03 0.97; } }
+@keyframes today-pet-play {
+  0% { translate: 0 0; rotate: 0deg; }
+  30% { translate: 0 -26px; rotate: -180deg; }
+  55% { translate: 0 -30px; rotate: -360deg; }
+  75% { translate: 0 0; rotate: -360deg; scale: 1.1 0.9; }
+  100% { translate: 0 0; rotate: -360deg; scale: 1 1; }
+}
+@keyframes today-pet-hop { 0%, 100% { translate: 0 0; } 45% { translate: 0 -16px; scale: 0.95 1.06; } }
+@keyframes today-pet-eat { 0%, 100% { rotate: 0deg; } 50% { rotate: 8deg; translate: 0 3px; } }
+@keyframes today-pet-sleep { 0%, 100% { scale: 1.04 0.86; } 50% { scale: 1.06 0.82; } }
+
+.today-pet__zzz {
+  position: absolute;
+  right: -10px;
+  top: -14px;
+  z-index: 2;
+  color: #64748b;
+  font-weight: 900;
+  font-size: 12px;
+  animation: today-pet-zzz 2.4s ease-in-out infinite;
+}
+.today-pet__zzz i { font-style: normal; font-size: 14px; margin-left: 1px; }
+.today-pet__zzz b { font-size: 17px; margin-left: 1px; }
+@keyframes today-pet-zzz { 0% { opacity: 0; translate: 0 6px; } 30%, 70% { opacity: 0.85; } 100% { opacity: 0; translate: 6px -10px; } }
+
+.today-pet__bubbles {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  translate: -50% 0;
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.today-pet__bubble {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  min-width: 58px;
+  padding: 6px 8px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff, #e0f2fe);
+  color: #0f172a;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+  font: inherit;
+  cursor: pointer;
+  animation: today-pet-bubble-in 280ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+.today-pet__bubble:nth-child(2) { animation-delay: 50ms; translate: 0 -8px; }
+.today-pet__bubble:nth-child(3) { animation-delay: 100ms; }
+.today-pet__bubble span { font-size: 20px; line-height: 1; }
+.today-pet__bubble small { font-size: 9.5px; font-weight: 800; white-space: nowrap; }
+.today-pet__bubble--feed { background: linear-gradient(180deg, #fff7ed, #fed7aa); }
+.today-pet__bubble--pair { background: linear-gradient(180deg, #fefce8, #fde68a); }
+.today-pet__bubble:disabled { opacity: 0.6; }
+@keyframes today-pet-bubble-in { from { opacity: 0; scale: 0.4; } }
+
+.today-pet__fx {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  translate: -50% 0;
+  z-index: 3;
+  white-space: nowrap;
+  font-weight: 900;
+  font-size: 14px;
+  color: #b45309;
+  text-shadow: 0 1px 0 #fff, 0 0 8px rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  animation: today-pet-fx 1.6s ease-out forwards;
+}
+.today-pet__fx--hearts { color: #e11d48; font-size: 16px; }
+.today-pet__fx--pair { color: #a16207; }
+@keyframes today-pet-fx { 0% { opacity: 0; transform: translateY(8px) scale(0.6); } 20% { opacity: 1; transform: translateY(0) scale(1.1); } 100% { opacity: 0; transform: translateY(-34px) scale(1); } }
+
+.today-pet__ball {
+  position: absolute;
+  bottom: 2px;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fef08a, #84cc16 60%, #3f6212);
+  box-shadow: 0 2px 3px rgba(15, 23, 42, 0.3);
+  animation: today-pet-ball 0.55s cubic-bezier(0.3, 0.7, 0.5, 1) both;
+}
+@keyframes today-pet-ball { 0% { transform: translateY(-80px); opacity: 0; } 60% { transform: translateY(0); opacity: 1; } 80% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .today-pet { transition: none !important; }
+  .today-pet__body, .today-pet__zzz, .today-pet__bubble, .today-pet__fx, .today-pet__ball { animation: none !important; }
+}
+.today-pet__emoji { position: relative; z-index: 1; display: grid; place-items: center; width: 100%; height: 100%; font-size: calc(var(--pet-size) * 0.7); }
+/* Keep the bubbles on screen when the pet stands near an edge. */
+.today-pet__bubbles--from-left { left: 0; translate: 0 0; }
+.today-pet__bubbles--from-right { left: auto; right: 0; translate: 0 0; }
