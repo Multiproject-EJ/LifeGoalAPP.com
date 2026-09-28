@@ -484,6 +484,7 @@ import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { CompassBookIcon } from './CompassBookIcon';
+import { resolveIslandBuildStyle } from '../services/buildStyles';
 import { CompassPairingTip } from './CompassPairingTip';
 import { resolvePairingUpgradeSuggestion, rollCompanionPairingPerk } from '../services/companionPairingSurprise';
 import { FishermansDragonPrelude } from './FishermansDragonPrelude';
@@ -19595,6 +19596,8 @@ export function IslandRunBoardPrototype({
           onStopBuildHold={stopBuildHold}
           // Skill build is Island 019's coaster build style; every other island holds to build.
           onPrecisionBuild={islandNumber === SKILL_BUILD_ISLAND_NUMBER ? buildPrecisionStepFromPlayer : undefined}
+          buildStyle={resolveIslandBuildStyle(islandNumber)}
+          onStyledBuildStep={buildPrecisionStepFromPlayer}
         />
       )}
       {showBuildPanel && devBuildAllQuote && typeof document !== 'undefined' ? createPortal(

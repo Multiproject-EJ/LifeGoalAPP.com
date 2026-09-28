@@ -2,6 +2,8 @@ import { lazy, Suspense, useEffect, useRef, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
 import { PrecisionBuildRing } from './PrecisionBuildRing';
+import { BrickBuildPad, RhythmBuildPad, StackBuildPad } from './BuildStylePads';
+import type { IslandBuildStyle } from '../services/buildStyles';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import type { FastBuildQuote } from '../services/islandRunFastBuild';
 import { ISLAND_RUN_FULL_RESTORATION_DICE_REWARD } from '../services/islandRunRestorationReward';
@@ -22,6 +24,10 @@ function BuildDiceFlight() {
 export interface BuildModalV2Props {
   /** One precision-timed build step (same cost as a hold step). Enables Skill build. */
   onPrecisionBuild?: (stopIndex: number) => Promise<boolean>;
+  /** This island's build style (Hold by default; Bricks, Stack and Rhythm rotate). */
+  buildStyle?: IslandBuildStyle;
+  /** One canonical build step used by the Bricks, Stack and Rhythm styles. */
+  onStyledBuildStep?: (stopIndex: number) => Promise<boolean>;
   isOpen: boolean;
   islandNumber: number;
   essenceAvailable: number;
@@ -294,8 +300,11 @@ export function BuildModalV2({
   onStartBuildHold,
   onStopBuildHold,
   onPrecisionBuild,
+  buildStyle = 'hold',
+  onStyledBuildStep,
 }: BuildModalV2Props) {
   const skillBuild = Boolean(onPrecisionBuild);
+  const padStyle = !skillBuild && onStyledBuildStep && (buildStyle === 'bricks' || buildStyle === 'stack' || buildStyle === 'rhythm') ? buildStyle : null;
   const active = viewModel.activeLandmark;
   const isComplete = viewModel.sequentialBuildView.isFullyBuilt || !active;
   const activePart = active?.activePart ?? 1;
@@ -411,7 +420,16 @@ export function BuildModalV2({
                   costLabel={`${active.nextTapEssenceCost} 💰`}
                   onHit={() => onPrecisionBuild!(active.stopIndex)}
                 />
-              ) : (
+              ) : padStyle ? (() => {
+                const padProps = {
+                  disabled: isBuildInteractionLocked || !canBuildActive || isAutoBuildActive || isBuildHoldActive,
+                  costLabel: `${active.nextTapEssenceCost} 💰`,
+                  onBuild: () => onStyledBuildStep!(active.stopIndex),
+                };
+                return padStyle === 'bricks' ? <BrickBuildPad {...padProps} />
+                  : padStyle === 'stack' ? <StackBuildPad {...padProps} />
+                    : <RhythmBuildPad {...padProps} />;
+              })() : (
               <BuildModalV2HoldButton
                 activeTitle={active.title}
                 activeStopIndex={active.stopIndex}
