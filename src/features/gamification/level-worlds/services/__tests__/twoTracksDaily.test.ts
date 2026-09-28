@@ -13,7 +13,7 @@ import {
 } from '../twoTracksDaily';
 import { deriveCombinedJourneyLevel, JOURNEY_XP_WEIGHTS } from '../combinedJourneyLevel';
 import { buildDualTrackOverlayViewModel, buildJourneyLevelInputFromOverlay } from '../dualTrackOverlayAdapter';
-import { buildTwoTracksRoad, TWO_TRACKS_ROW_COUNT, TWO_TRACKS_TODAY_ROW } from '../twoTracksRoad';
+import { buildTwoTracksRoad, resolveTwoTracksTileInsight, TWO_TRACKS_HISTORY_ROWS, TWO_TRACKS_PAST_ROWS, TWO_TRACKS_ROW_COUNT, TWO_TRACKS_TODAY_ROW } from '../twoTracksRoad';
 
 const sig = (tokenIndex: number, spent = 0) => gameActivitySignature({
   currentIslandNumber: 4, cycleIndex: 0, tokenIndex, essenceLifetimeSpent: spent,
@@ -160,18 +160,19 @@ export const twoTracksDailyTests: TestCase[] = [
       assert(road.inSync, 'both lanes moved: in sync');
       for (const lane of ['life', 'game'] as const) {
         const tiles = road.tiles.filter((tile) => tile.lane === lane);
-        assert(tiles.every((tile) => tile.row >= 0 && tile.row < TWO_TRACKS_ROW_COUNT), `${lane} tiles stay on the road`);
+        assert(tiles.every((tile) => tile.row >= 0 && tile.row < road.rows), `${lane} tiles stay on the road`);
         assertEqual(tiles.filter((tile) => tile.state === 'today').length, 1, `${lane} has one today tile`);
-        assert(tiles.find((tile) => tile.state === 'today')!.row === TWO_TRACKS_TODAY_ROW, `${lane} today sits on the today row`);
-        assert(tiles.filter((tile) => tile.row > TWO_TRACKS_TODAY_ROW).every((tile) => tile.state === 'next' || tile.state === 'fog'), `${lane} future is next/fog`);
-        assert(tiles.filter((tile) => tile.row < TWO_TRACKS_TODAY_ROW).every((tile) => tile.state === 'done'), `${lane} past is done`);
+        assert(tiles.find((tile) => tile.state === 'today')!.row === road.todayRow, `${lane} today sits on the today row`);
+        assert(tiles.filter((tile) => tile.row > road.todayRow).every((tile) => tile.state === 'next' || tile.state === 'fog'), `${lane} future is next/fog`);
+        assert(tiles.filter((tile) => tile.row < road.todayRow).every((tile) => tile.state === 'done'), `${lane} past is done`);
       }
       const lifeToday = road.tiles.find((tile) => tile.id === 'life-today')!;
       assert(lifeToday.steps?.done === 1 && lifeToday.points === '+3 XP', 'today\'s habit steps and points');
       assert(road.tiles.some((tile) => tile.lane === 'life' && tile.state === 'done' && tile.points === '+60 XP'), 'achieved goal shows its points');
       assert(road.tiles.filter((tile) => tile.lane === 'life' && tile.state === 'fog').every((tile) => tile.title === '?'), 'the life future is open');
       const gamePast = road.tiles.filter((tile) => tile.lane === 'game' && tile.state === 'done');
-      assertEqual(gamePast.length, 3, 'three explored islands below today');
+      assertEqual(gamePast.length, 8, 'all eight explored islands are on the road to scroll back through');
+      assertEqual(road.rows, road.todayRow + 1 + TWO_TRACKS_ROW_COUNT - TWO_TRACKS_TODAY_ROW - 1, 'four rows of future above today');
       assert(gamePast.every((tile) => Boolean(tile.imageSrc)), 'explored islands use their portraits');
       assert(road.horizon.label === `Lv ${vm.journeyLevel.nextThresholdLevel} chest`, 'the next reward sits at the horizon');
     },
@@ -219,6 +220,62 @@ export const twoTracksDailyTests: TestCase[] = [
       assertEqual(parsed?.lastGameDay, '2026-09-19', 'last game day survives reloads');
       assertEqual(parsed?.nudgeDismissedDay, '2026-09-22', 'dismissal survives reloads');
       assertEqual(twoTracksDaysBetween('2026-09-30', '2026-10-02'), 2, 'day gaps cross month ends');
+    },
+  },
+  {
+    name: 'two tracks road: keeps scrollable history (capped) with today above it',
+    run: () => {
+      const road = buildTwoTracksRoad(buildDualTrackOverlayViewModel({ islandNumber: 12 }), null);
+      assertEqual(road.pastRows, TWO_TRACKS_HISTORY_ROWS, 'eleven explored islands fill the ten-row history');
+      assertEqual(road.todayRow, road.pastRows, 'today sits right above the history');
+      assert(road.tiles.every((tile) => tile.row >= 0 && tile.row < road.rows), 'every tile is on the road');
+      const gamePast = road.tiles.filter((tile) => tile.lane === 'game' && tile.state === 'done');
+      assertEqual(gamePast.length, TWO_TRACKS_HISTORY_ROWS, 'ten past islands can be scrolled back to');
+      assertEqual(Math.min(...gamePast.map((tile) => tile.islandNumber ?? 0)), 2, 'history reaches back to island 2');
+      const short = buildTwoTracksRoad(buildDualTrackOverlayViewModel({ islandNumber: 2 }), null);
+      assertEqual(short.pastRows, TWO_TRACKS_PAST_ROWS, 'short histories keep the resting layout');
+      const far = buildTwoTracksRoad(buildDualTrackOverlayViewModel({ islandNumber: 40 }), null);
+      assertEqual(far.pastRows, TWO_TRACKS_HISTORY_ROWS, 'long voyages stay capped');
+    },
+  },
+  {
+    name: 'two tracks road: every step opens an honest insight card',
+    run: () => {
+      const today = { lifeDone: true, gameDone: false, bothDone: false, sparkPending: false, streak: 0, sparkXpToday: 0, balanceNudge: null };
+      const road = buildTwoTracksRoad(buildDualTrackOverlayViewModel({ islandNumber: 6 }), today);
+      for (const tile of road.tiles) {
+        const insight = resolveTwoTracksTileInsight(tile, today);
+        assert(insight.kicker.length > 0 && insight.title.length > 0 && insight.lines.length > 0, `${tile.id} has an insight`);
+        assertEqual(insight.tone, tile.lane, `${tile.id} keeps its lane colour`);
+      }
+      const doneIsland = road.tiles.find((tile) => tile.lane === 'game' && tile.state === 'done')!;
+      const doneInsight = resolveTwoTracksTileInsight(doneIsland, today);
+      assert(doneInsight.kicker.startsWith('Explored'), 'past islands read as explored');
+      assert(doneInsight.lines.some((line) => line.startsWith('Mission:')), 'past islands recall their mission');
+      const gameToday = resolveTwoTracksTileInsight(road.tiles.find((tile) => tile.lane === 'game' && tile.state === 'today')!, today);
+      assert(gameToday.lines.some((line) => line.includes('One roll or one build')), 'today says what moves the game track');
+      const fog = road.tiles.find((tile) => tile.lane === 'game' && tile.state === 'fog')!;
+      const fogInsight = resolveTwoTracksTileInsight(fog, today);
+      assertEqual(fogInsight.title, 'Uncharted waters', 'fog stays a mystery');
+      assert(!fogInsight.imageSrc, 'no spoiler art for fogged islands');
+    },
+  },
+  {
+    name: 'two tracks road: scrollable, tappable, and the insight sheet is a scroll-locked portal',
+    run: async () => {
+      // @ts-ignore Node test runner provides fs.
+      const fs = await import('fs');
+      const road = fs.readFileSync('src/components/two-tracks/TwoTracksRoad.tsx', 'utf8');
+      assert(road.includes('onPointerMove') && road.includes('onWheel'), 'the road can be dragged and wheeled');
+      assert(road.includes('tt-road__today-button'), 'a Today button returns to the present');
+      assert(road.includes('tt-tile--offstage'), 'history below the camera stays hidden until scrolled to');
+      assert(road.includes('<button') && road.includes('onOpen(tile)'), 'steps are tappable');
+      const sheet = fs.readFileSync('src/components/two-tracks/TwoTracksInsightSheet.tsx', 'utf8');
+      assert(sheet.includes('createPortal') && sheet.includes("body.style.overflow = 'hidden'"), 'insight sheet is a scroll-locked portal');
+      const css = fs.readFileSync('src/components/two-tracks/two-tracks-road.css', 'utf8');
+      assert(/\.tt-insight \{[^}]*position: fixed/.test(css), 'insight sheet is viewport-fixed');
+      assert(css.includes('tt-spine-run') && css.includes('tt-lane-shimmer') && css.includes('tt-tile-stamp'), 'replay runner, idle shimmer and stamp exist');
+      assert(/prefers-reduced-motion[\s\S]*tt-road__spine-sparks/.test(css), 'idle motion stops under reduced motion');
     },
   },
 ];

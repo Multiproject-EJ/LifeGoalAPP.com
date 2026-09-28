@@ -564,3 +564,231 @@
   .tt-road--lag-life .tt-road__lane--life,
   .tt-road--lag-game .tt-road__lane--game { animation: none; filter: drop-shadow(0 0 6px var(--tt-lag-glow)); }
 }
+
+/* ── Scrollable road: drag back through history or up into the fog ── */
+.tt-road__viewport {
+  touch-action: none;
+  cursor: grab;
+}
+.tt-road--dragging .tt-road__viewport { cursor: grabbing; }
+
+.tt-road__scroller {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  /* Extra history sits below the resting view; --scroll moves the camera. */
+  transform: translate3d(0, calc((var(--extra-history) + var(--scroll)) * var(--row-h)), 0);
+  transition: transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tt-road--dragging .tt-road__scroller { transition: none; }
+
+/* Rows rise relative to today, so long histories don't delay the view. */
+.tt-tile {
+  animation-delay: calc(420ms + (var(--row) - var(--extra-history)) * 90ms);
+}
+
+/* Tiles are buttons now: tap a step for its story. */
+button.tt-tile {
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button.tt-tile:focus-visible {
+  outline: 2px solid #fde68a;
+  outline-offset: 2px;
+}
+button.tt-tile:active { filter: brightness(1.15); }
+
+.tt-road__today-button {
+  position: absolute;
+  z-index: 4;
+  top: 1.7rem;
+  right: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgba(253, 230, 138, 0.6);
+  border-radius: 999px;
+  color: #fde68a;
+  background: rgba(4, 12, 28, 0.82);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  animation: tt-hud-pop 260ms ease-out both;
+}
+@keyframes tt-hud-pop { from { opacity: 0; transform: scale(0.8); } }
+
+/* ── Progress replay: newly reached islands stamp in after the glide ── */
+.tt-road--replay .tt-tile--new {
+  animation-name: tt-tile-rise, tt-tile-stamp;
+  animation-duration: 520ms, 820ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1), cubic-bezier(0.2, 1.5, 0.4, 1);
+  animation-delay: calc(420ms + (var(--row) - var(--extra-history)) * 90ms), 1950ms;
+  animation-fill-mode: both, both;
+}
+.tt-road--replay .tt-tile--new::before {
+  content: 'NEW';
+  position: absolute;
+  z-index: 2;
+  top: 0.2rem;
+  right: 0.3rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #0b1a2e;
+  background: #fde68a;
+  animation: tt-hud-pop 320ms ease-out 2300ms both;
+}
+@keyframes tt-tile-stamp {
+  0% { box-shadow: 0 10px 22px rgba(2, 6, 23, 0.45); }
+  35% { box-shadow: 0 0 0 3px rgba(253, 230, 138, 0.9), 0 0 26px rgba(250, 204, 21, 0.75); transform: scale(1.06); }
+  100% { box-shadow: 0 10px 22px rgba(2, 6, 23, 0.45); transform: none; }
+}
+
+/* A light runs up the spine to today after the glide. */
+.tt-road__spine-runner {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--extra-history) * var(--row-h));
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-left: -0.475rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 30%, #fde68a 55%, rgba(250, 204, 21, 0) 72%);
+  box-shadow: 0 0 16px rgba(250, 204, 21, 0.9);
+  opacity: 0;
+  animation: tt-spine-run 1300ms cubic-bezier(0.5, 0, 0.3, 1) 1450ms both;
+  pointer-events: none;
+}
+@keyframes tt-spine-run {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; bottom: calc(var(--today) * var(--row-h) + var(--row-h) / 2); }
+}
+
+/* ── Alive while idle: sparks drift up the spine, lanes shimmer toward the horizon ── */
+.tt-road__spine-sparks {
+  position: absolute;
+  left: -0.6rem;
+  right: -0.6rem;
+  bottom: calc(var(--today) * var(--row-h) + var(--row-h) / 2);
+  top: calc(var(--row-h) * 0.35);
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(253, 230, 138, 0.95) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px);
+  background-size: 1.1rem 3.1rem, 1.4rem 4.3rem;
+  background-position: 0 0, 0.5rem 1rem;
+  opacity: 0.7;
+  animation: tt-spine-sparks 3.6s linear infinite;
+}
+@keyframes tt-spine-sparks {
+  to { background-position: 0 -3.1rem, 0.5rem -3.3rem; }
+}
+.tt-road__lane::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 1rem;
+  background: linear-gradient(0deg, transparent 0 42%, rgba(255, 255, 255, 0.07) 50%, transparent 58% 100%);
+  background-size: 100% 320%;
+  animation: tt-lane-shimmer 6s linear infinite;
+}
+.tt-road__lane--game::before { animation-delay: -3s; }
+@keyframes tt-lane-shimmer {
+  from { background-position: 0 100%; }
+  to { background-position: 0 -220%; }
+}
+
+/* ── Tap-a-step insight sheet ── */
+.tt-insight {
+  position: fixed;
+  inset: 0;
+  z-index: 10060;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px 16px max(18px, env(safe-area-inset-bottom));
+  font-family: inherit;
+}
+@media (min-height: 620px) { .tt-insight { align-items: center; } }
+.tt-insight__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(2, 8, 20, 0.62);
+  cursor: pointer;
+  animation: tt-insight-fade 220ms ease-out both;
+}
+.tt-insight__card {
+  position: relative;
+  width: min(360px, 100%);
+  overflow: hidden;
+  padding: 14px 16px 14px;
+  border-radius: 20px;
+  color: #f1f5f9;
+  background: linear-gradient(165deg, #0f2744, #081528);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1.5px var(--tt-insight-accent, #7dd3fc);
+  animation: tt-insight-in 360ms cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.tt-insight__card--life { --tt-insight-accent: rgba(190, 242, 100, 0.75); }
+.tt-insight__card--game { --tt-insight-accent: rgba(125, 211, 252, 0.75); }
+.tt-insight__art {
+  display: block;
+  width: calc(100% + 32px);
+  height: 132px;
+  margin: -14px -16px 10px;
+  object-fit: cover;
+}
+.tt-insight__kicker {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tt-insight-accent);
+}
+.tt-insight__card h3 { margin: 4px 0 8px; font-size: 1.15rem; line-height: 1.2; }
+.tt-insight__card ul { display: grid; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; font-size: 0.86rem; line-height: 1.4; }
+.tt-insight__card li { padding-left: 1.1rem; position: relative; }
+.tt-insight__card li::before { content: '✦'; position: absolute; left: 0; color: var(--tt-insight-accent); font-size: 0.7rem; top: 0.15rem; }
+.tt-insight__close {
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 900;
+  color: #0b1a2e;
+  background: linear-gradient(180deg, #fde68a, #f59e0b);
+  cursor: pointer;
+}
+@keyframes tt-insight-fade { from { opacity: 0; } }
+@keyframes tt-insight-in { from { opacity: 0; transform: translateY(24px) scale(0.94); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-road__scroller { transition: none; }
+  .tt-road__spine-runner,
+  .tt-road__spine-sparks,
+  .tt-road__lane::before,
+  .tt-road--replay .tt-tile--new,
+  .tt-road--replay .tt-tile--new::before,
+  .tt-insight__card,
+  .tt-insight__backdrop { animation: none; }
+  .tt-road__spine-runner { display: none; }
+}
+
+/* History below the camera fades out until scrolled back into view. */
+.tt-tile--offstage {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+button.tt-tile { transition: opacity 360ms ease; }
+.tt-insight__card h3 { color: #ffffff; }

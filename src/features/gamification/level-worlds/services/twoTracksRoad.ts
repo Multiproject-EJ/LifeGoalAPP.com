@@ -9,12 +9,16 @@
 import { JOURNEY_XP_WEIGHTS } from './combinedJourneyLevel';
 import type { DualTrackOverlayViewModel, DualTrackMilestoneCard } from './dualTrackOverlayAdapter';
 import { getIslandDisplayName } from './islandNames';
+import { getIslandMissionBriefingPresentation } from './islandRunMissionBriefing';
 import { getVoyageIslandArt, isVoyageIslandRevealed } from './islandVoyageMap';
 import type { TwoTracksToday } from './twoTracksDaily';
 
+/** Done rows visible below today in the resting view. */
 export const TWO_TRACKS_PAST_ROWS = 3;
+/** Done rows kept on the road so the player can scroll back through them. */
+export const TWO_TRACKS_HISTORY_ROWS = 10;
 export const TWO_TRACKS_FUTURE_ROWS = 4;
-/** Row index of "today" (rows count upward from the oldest done step). */
+/** Row index of "today" when there is no extra history (resting layout). */
 export const TWO_TRACKS_TODAY_ROW = TWO_TRACKS_PAST_ROWS;
 export const TWO_TRACKS_ROW_COUNT = TWO_TRACKS_PAST_ROWS + 1 + TWO_TRACKS_FUTURE_ROWS;
 
@@ -33,6 +37,10 @@ export type TwoTracksTile = {
   points?: string;
   imageSrc?: string;
   steps?: { done: number; total: number };
+  /** Game tiles: the island this row stands for. */
+  islandNumber?: number;
+  /** Life tiles: where the step came from. */
+  source?: 'goal' | 'habit' | 'other';
 };
 
 export type TwoTracksRoad = {
@@ -42,11 +50,13 @@ export type TwoTracksRoad = {
   /** True when both lanes moved today: the bridge lights and the sync bonus pays. */
   inSync: boolean;
   horizon: { label: string; detail: string };
+  /** Done rows below today on the full road (>= TWO_TRACKS_PAST_ROWS). */
+  pastRows: number;
 };
 
 const MAX_FOG_ISLAND = 120;
 
-function lifeTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null): TwoTracksTile[] {
+function lifeTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null, todayRow: number): TwoTracksTile[] {
   const tiles: TwoTracksTile[] = [];
   const byPosition = (position: DualTrackMilestoneCard['position']) =>
     vm.realLifeTrack.filter((card) => card.position === position);
@@ -62,6 +72,7 @@ function lifeTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null):
     title: card.title,
     caption: card.subtitle,
     icon: card.source === 'goal' ? '🏅' : card.source === 'habit' ? '🌿' : '✓',
+    source: card.source === 'goal' || card.source === 'habit' ? card.source : 'other',
     points: card.source === 'goal'
       ? `+${JOURNEY_XP_WEIGHTS.perCompletedGoal} XP`
       : card.source === 'habit' ? `+${JOURNEY_XP_WEIGHTS.perHabitCheckIn} XP each` : undefined,
@@ -74,12 +85,13 @@ function lifeTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null):
       title: 'Habits in motion',
       caption: `${vm.realLifeProgress.habitCount} habit${vm.realLifeProgress.habitCount === 1 ? '' : 's'} on your path`,
       icon: '🌿',
+      source: 'habit',
       points: `+${JOURNEY_XP_WEIGHTS.perHabitCheckIn} XP each`,
     });
   }
-  const recentDone = done.slice(-TWO_TRACKS_PAST_ROWS);
+  const recentDone = done.slice(-TWO_TRACKS_HISTORY_ROWS);
   recentDone.forEach((tile, index) => {
-    tiles.push({ ...tile, row: TWO_TRACKS_TODAY_ROW - recentDone.length + index });
+    tiles.push({ ...tile, row: todayRow - recentDone.length + index });
   });
 
   // Today: the current focus, with today's small steps.
@@ -87,7 +99,7 @@ function lifeTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null):
   tiles.push({
     id: 'life-today',
     lane: 'life',
-    row: TWO_TRACKS_TODAY_ROW,
+    row: todayRow,
     state: 'today',
     title: current?.title ?? 'Today’s step',
     caption: steps
@@ -104,26 +116,28 @@ function lifeTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null):
     tiles.push({
       id: `life-future-${offset}`,
       lane: 'life',
-      row: TWO_TRACKS_TODAY_ROW + offset,
+      row: todayRow + offset,
       state: offset === 1 ? 'next' : 'fog',
       title: known ? next.title : '?',
       caption: known ? 'Up next on your path' : offset === 1 ? 'Your next life step fills this' : '',
       icon: known ? '🎯' : '?',
+      source: known ? 'goal' : undefined,
     });
   }
   return tiles;
 }
 
-function gameTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null): TwoTracksTile[] {
+function gameTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null, todayRow: number): TwoTracksTile[] {
   const current = vm.gameProgress.currentIsland;
   const tiles: TwoTracksTile[] = [];
-  for (let back = TWO_TRACKS_PAST_ROWS; back >= 1; back -= 1) {
+  for (let back = TWO_TRACKS_HISTORY_ROWS; back >= 1; back -= 1) {
     const island = current - back;
     if (island < 1) continue;
     tiles.push({
       id: `game-island-${island}`,
       lane: 'game',
-      row: TWO_TRACKS_TODAY_ROW - back,
+      row: todayRow - back,
+      islandNumber: island,
       state: 'done',
       title: getIslandDisplayName(island),
       caption: `Island ${island} explored`,
@@ -136,7 +150,8 @@ function gameTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null):
   tiles.push({
     id: `game-island-${current}`,
     lane: 'game',
-    row: TWO_TRACKS_TODAY_ROW,
+    row: todayRow,
+    islandNumber: current,
     state: 'today',
     title: getIslandDisplayName(current),
     caption: today?.gameDone ? 'Game step taken today' : currentCard?.progressLabel ?? `Island ${current}`,
@@ -150,7 +165,8 @@ function gameTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null):
     tiles.push({
       id: `game-island-${island}`,
       lane: 'game',
-      row: TWO_TRACKS_TODAY_ROW + offset,
+      row: todayRow + offset,
+      islandNumber: island,
       state: offset === 1 ? 'next' : 'fog',
       title: revealed ? getIslandDisplayName(island) : '?',
       caption: offset === 1 ? `Island ${island}` : '',
@@ -161,15 +177,114 @@ function gameTiles(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null):
   return tiles;
 }
 
+/** Done life steps shown on the road (achieved cards, plus the habits row). */
+function countLifeHistory(vm: DualTrackOverlayViewModel): number {
+  const achieved = vm.realLifeTrack.filter((card) => card.position === 'achieved');
+  const extraHabits = vm.realLifeProgress.source === 'data' && vm.realLifeProgress.habitCount > 0
+    && !achieved.some((card) => card.source === 'habit') ? 1 : 0;
+  return achieved.length + extraHabits;
+}
+
 export function buildTwoTracksRoad(vm: DualTrackOverlayViewModel, today: TwoTracksToday | null): TwoTracksRoad {
+  const history = Math.max(countLifeHistory(vm), vm.gameProgress.currentIsland - 1);
+  const pastRows = Math.max(TWO_TRACKS_PAST_ROWS, Math.min(TWO_TRACKS_HISTORY_ROWS, history));
   return {
-    rows: TWO_TRACKS_ROW_COUNT,
-    todayRow: TWO_TRACKS_TODAY_ROW,
-    tiles: [...lifeTiles(vm, today), ...gameTiles(vm, today)],
+    rows: pastRows + 1 + TWO_TRACKS_FUTURE_ROWS,
+    todayRow: pastRows,
+    pastRows,
+    tiles: [...lifeTiles(vm, today, pastRows), ...gameTiles(vm, today, pastRows)],
     inSync: Boolean(today?.bothDone),
     horizon: {
       label: `Lv ${vm.journeyLevel.nextThresholdLevel} chest`,
       detail: `${100 - vm.journeyLevel.progressPercentToNextLevel}% to go`,
     },
+  };
+}
+
+export type TwoTracksTileInsight = {
+  kicker: string;
+  title: string;
+  lines: string[];
+  imageSrc?: string;
+  tone: TwoTracksLane;
+};
+
+/**
+ * "Tap a step" insight: a few honest lines built only from what the road
+ * already knows (titles, captions, points, today's steps, island names and
+ * briefings). Never invents history the app does not store.
+ */
+export function resolveTwoTracksTileInsight(tile: TwoTracksTile, today: TwoTracksToday | null): TwoTracksTileInsight {
+  const tone = tile.lane;
+  if (tile.lane === 'game') {
+    const island = tile.islandNumber ?? 0;
+    const islandLabel = `Island ${String(island).padStart(3, '0')}`;
+    if (tile.state === 'done') {
+      return {
+        tone, kicker: `Explored · ${islandLabel}`, title: tile.title, imageSrc: tile.imageSrc,
+        lines: [
+          `Mission: ${getIslandMissionBriefingPresentation(island).headline}.`,
+          `${tile.points ?? ''} added to your Journey Level when you cleared it.`.trim(),
+        ],
+      };
+    }
+    if (tile.state === 'today') {
+      return {
+        tone, kicker: `You are here · ${islandLabel}`, title: tile.title, imageSrc: tile.imageSrc,
+        lines: [
+          `Mission: ${getIslandMissionBriefingPresentation(island).headline}.`,
+          tile.caption,
+          today?.gameDone ? 'Your game step for today is done. 🎲' : 'One roll or one build moves this track today.',
+        ],
+      };
+    }
+    if (tile.state === 'next' && tile.title !== '?') {
+      return {
+        tone, kicker: `Next stop · ${islandLabel}`, title: tile.title, imageSrc: tile.imageSrc,
+        lines: [
+          `Waiting for you: ${getIslandMissionBriefingPresentation(island).headline}.`,
+          'Clear your current island to set sail.',
+        ],
+      };
+    }
+    return {
+      tone, kicker: island ? `Beyond the fog · ${islandLabel}` : 'Beyond the fog', title: 'Uncharted waters',
+      lines: ['This island stays hidden until you sail closer.', 'Every island you clear pushes the fog back.'],
+    };
+  }
+  if (tile.state === 'done') {
+    return {
+      tone,
+      kicker: tile.source === 'goal' ? 'Goal achieved' : tile.source === 'habit' ? 'Habits on your path' : 'Life step',
+      title: tile.title,
+      lines: [
+        tile.caption,
+        tile.points ? `${tile.points} toward your Journey Level.` : '',
+      ].filter(Boolean),
+    };
+  }
+  if (tile.state === 'today') {
+    const steps = tile.steps;
+    return {
+      tone, kicker: 'Today on your life track', title: tile.title,
+      lines: [
+        steps ? `${steps.done} of ${steps.total} habits checked in today.` : tile.caption,
+        today?.lifeDone ? 'Your life step for today is done. 🌱' : 'One habit check-in moves this track today.',
+        `Each check-in adds +${JOURNEY_XP_WEIGHTS.perHabitCheckIn} XP.`,
+      ],
+    };
+  }
+  if (tile.state === 'next' && tile.title !== '?') {
+    return {
+      tone, kicker: 'Up next on your path', title: tile.title,
+      lines: [
+        'Mark this goal complete to climb here.',
+        `A completed goal adds +${JOURNEY_XP_WEIGHTS.perCompletedGoal} XP.`,
+      ],
+    };
+  }
+  return {
+    tone, kicker: 'Ahead in the fog', title: 'Your next chapter',
+    lines: ['Every goal you finish and habit you keep builds this road.', 'Set a new goal to see what comes next.'],
   };
 }
