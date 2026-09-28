@@ -487,6 +487,13 @@ import { CompassBookIcon } from './CompassBookIcon';
 import { resolveIslandBuildStyle } from '../services/buildStyles';
 import { CompassPairingTip } from './CompassPairingTip';
 import { CoasterDirectorOverlay, type CoasterDirectorFeedback } from './CoasterDirectorOverlay';
+import { EggManiaPopup } from './EggManiaPopup';
+import {
+  getEggManiaPopupSeenKey,
+  markEggManiaPopupSeen,
+  readEggManiaPopupSeen,
+  shouldAutoShowEggManiaPopup,
+} from '../services/eggManiaPopup';
 import { ISLAND_19_HELICOPTER_DELIVERY_SECONDS } from '../dev/Island19CoasterHelicopter';
 
 /** Reopen the Director just after the helicopter has set the crate down. */
@@ -14238,6 +14245,25 @@ export function IslandRunBoardPrototype({
     || openingCeremonyPlayback !== null || isCompassBookCeremonyPlaying
     || moonwellThawActive || frostwellSequence.phase === 'drilling'
     || frostwellSequence.phase === 'commissioning' || isBuildSequenceActive;
+  // Egg Mania announces itself once per island visit while its triple set is unused.
+  const eggManiaPopupSeenKey = getEggManiaPopupSeenKey(session.user.id, cycleIndex, islandNumber);
+  const eggManiaScreenBusy = doesModalOwnAttention || missionOwnsController || isRolling
+    || pendingHopSequence !== null || showEggManiaModal || isIslandVisualPreview;
+  useEffect(() => {
+    if (!shouldAutoShowEggManiaPopup({
+      eggFeatureUnlocked: featureAccess.eggs,
+      eggManiaActive: isEggManiaActive,
+      eggManiaConsumed: !isEggManiaUnused,
+      alreadySeen: readEggManiaPopupSeen(eggManiaPopupSeenKey),
+      screenBusy: eggManiaScreenBusy,
+    })) return undefined;
+    const timer = window.setTimeout(() => {
+      markEggManiaPopupSeen(eggManiaPopupSeenKey);
+      stopAutoRoll();
+      setShowEggManiaModal(true);
+    }, 1_200);
+    return () => window.clearTimeout(timer);
+  }, [eggManiaPopupSeenKey, eggManiaScreenBusy, featureAccess.eggs, isEggManiaActive, isEggManiaUnused, stopAutoRoll]);
   const hideControllerForPresentation = shouldHideMissionController(missionOwnsController, doesModalOwnAttention,
     lavaSkiffNavigation.active || isShooterControllerActive);
   useEffect(() => {
@@ -19089,45 +19115,18 @@ export function IslandRunBoardPrototype({
       )}
 
       {showEggManiaModal && (
-        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Egg Mania details">
-            <h3 className="island-stop-modal__title">🔥🥚 Egg Mania</h3>
-            <p className="island-stop-modal__copy">
-              Egg Mania is active on <strong>Island {islandNumber}</strong>. This island's Hatchery can set <strong>3 eggs at once</strong> instead of 1.
-            </p>
-            <p className="island-stop-modal__copy">
-              Status: <strong>{isEggManiaUnused ? 'Unused — set your triple batch now!' : 'Triple-set used on this island.'}</strong>
-            </p>
-            <p className="island-stop-modal__copy">
-              Ends: <strong>{timeLeftSec > 0 ? formatHatchCountdown(timeLeftSec * 1000) : 'when you leave this island'}</strong>
-              {timeLeftSec > 0 ? ' or when you travel to another island.' : ''}
-            </p>
-            <p className="island-stop-modal__copy" style={{ opacity: 0.82 }}>
-              Each Egg Mania egg hatches independently. You can collect creatures or sell eggs one-by-one once they are ready.
-            </p>
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              {activeStopId !== 'hatchery' && isEggManiaUnused ? (
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                  onClick={() => {
-                    setShowEggManiaModal(false);
-                    requestActiveStopTransition('hatchery', 'egg_mania_icon');
-                  }}
-                >
-                  Go to Hatchery
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => setShowEggManiaModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </section>
-        </div>
+        <EggManiaPopup
+          islandNumber={islandNumber}
+          unused={isEggManiaUnused}
+          endsLabel={timeLeftSec > 0
+            ? `${formatHatchCountdown(timeLeftSec * 1000)} or when you travel on`
+            : 'when you leave this island'}
+          onGoToHatchery={activeStopId !== 'hatchery' && isEggManiaUnused ? () => {
+            setShowEggManiaModal(false);
+            requestActiveStopTransition('hatchery', 'egg_mania_icon');
+          } : undefined}
+          onClose={() => setShowEggManiaModal(false)}
+        />
       )}
 
       {showRewardDetailsModal && featureAccess.eventLauncher && (
