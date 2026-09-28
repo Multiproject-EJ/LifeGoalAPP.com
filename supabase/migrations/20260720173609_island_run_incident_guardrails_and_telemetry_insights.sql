@@ -414,18 +414,12 @@ BEGIN
 END;
 $$;
 
-
--- Remove the obsolete UUID overload. The action-log column and browser client
--- both use text idempotency keys; leaving both overloads also makes PostgREST
--- function resolution ambiguous.
-DROP FUNCTION IF EXISTS public.island_run_commit_action(TEXT, BIGINT, TEXT, JSONB, UUID);
-
 CREATE OR REPLACE FUNCTION public.island_run_commit_action(
   p_device_session_id TEXT,
   p_expected_runtime_version BIGINT,
   p_action_type TEXT,
   p_action_payload JSONB,
-  p_client_action_id TEXT DEFAULT NULL
+  p_client_action_id UUID DEFAULT NULL
 )
 RETURNS TABLE (
   status TEXT,
@@ -579,9 +573,9 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.island_run_commit_action(TEXT, BIGINT, TEXT, JSONB, TEXT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.island_run_commit_action(TEXT, BIGINT, TEXT, JSONB, TEXT) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.island_run_commit_action(TEXT, BIGINT, TEXT, JSONB, TEXT) TO service_role;
+REVOKE ALL ON FUNCTION public.island_run_commit_action(TEXT, BIGINT, TEXT, JSONB, UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.island_run_commit_action(TEXT, BIGINT, TEXT, JSONB, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.island_run_commit_action(TEXT, BIGINT, TEXT, JSONB, UUID) TO service_role;
 
 CREATE TABLE IF NOT EXISTS public.telemetry_user_activity_daily (
   day DATE NOT NULL,

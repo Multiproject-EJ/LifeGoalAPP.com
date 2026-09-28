@@ -1,8 +1,3 @@
--- Provision one Personal Quest season per authenticated user/week without
--- emitting a unique-violation error when two devices start concurrently.
-
-begin;
-
 create or replace function public.ensure_personal_quest_season(
   p_theme_name text,
   p_starts_on date,
@@ -66,5 +61,3 @@ grant execute on function public.ensure_personal_quest_season(text, date, date)
 
 comment on function public.ensure_personal_quest_season(text, date, date) is
   'Atomically returns the authenticated user personal-quest season for a seven-day week.';
-
-commit;

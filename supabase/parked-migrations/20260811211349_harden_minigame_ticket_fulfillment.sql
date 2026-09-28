@@ -1,3 +1,7 @@
+-- PARKED: commerce is intentionally OFF. Do not move this file into
+-- supabase/migrations unless commerce is explicitly approved and its Stripe
+-- fulfillment path has passed a fresh security and idempotency review.
+
 -- Production-readiness repair: the webhook already expects this RPC, but the
 -- live project did not have it on 2026-08-11. This migration is intentionally
 -- idempotent and is not applied by the repair automation.

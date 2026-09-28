@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const migrationPath =
-  'supabase/migrations/20260729171553_restrict_unnecessary_security_definer_client_access.sql';
+  'supabase/migrations/20260729181156_restrict_unnecessary_security_definer_client_access.sql';
 const sql = readFileSync(migrationPath, 'utf8').toLowerCase();
 const databaseTest = readFileSync(
   'supabase/tests/database/security_definer_client_access.test.sql',

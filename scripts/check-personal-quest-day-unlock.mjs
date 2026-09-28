@@ -22,7 +22,7 @@ const servicePath = resolve(repoRoot, 'src/services/treatCalendarService.ts');
 const edgePath = resolve(repoRoot, 'supabase/functions/treat-calendar/index.ts');
 const atomicSeasonMigrationPath = resolve(
   repoRoot,
-  'supabase/migrations/20260803173000_ensure_personal_quest_season_atomic.sql',
+  'supabase/migrations/20260805221913_ensure_personal_quest_season_atomic.sql',
 );
 
 const service = readFileSync(servicePath, 'utf8');

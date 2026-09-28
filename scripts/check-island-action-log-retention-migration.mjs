@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const migrationPath =
-  'supabase/migrations/20260812212402_scale_island_action_log_retention.sql';
+  'supabase/migrations/20260812213119_scale_island_action_log_retention.sql';
 const sql = readFileSync(migrationPath, 'utf8').toLowerCase();
 
 assert.match(

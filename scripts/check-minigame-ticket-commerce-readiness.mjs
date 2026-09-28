@@ -47,7 +47,7 @@ const [flags, store, board, migration] = await Promise.all([
   read('src/config/islandRunFeatureFlags.ts'),
   read('src/services/minigameTicketStore.ts'),
   read('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx'),
-  read('supabase/migrations/20260811211349_harden_minigame_ticket_fulfillment.sql'),
+  read('supabase/parked-migrations/20260811211349_harden_minigame_ticket_fulfillment.sql'),
 ]);
 
 assert.match(flags, /minigameTicketPurchasesReady:\s*false/);

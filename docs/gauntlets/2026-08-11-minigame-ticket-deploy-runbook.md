@@ -13,7 +13,7 @@ Eivind must explicitly approve the production migration/function deploy and prov
 
 ## Staged rollout
 
-1. Confirm `supabase migration list` and isolate the reviewed migration `20260811211349_harden_minigame_ticket_fulfillment.sql`; do not blindly apply unrelated pending migrations.
+1. Confirm `supabase migration list` and keep the reviewed file `supabase/parked-migrations/20260811211349_harden_minigame_ticket_fulfillment.sql` outside the active chain until commerce is explicitly approved; do not blindly apply unrelated pending migrations.
 2. Run local database tests, including `supabase/tests/database/minigame_ticket_fulfillment.test.sql`, and Security Advisor. Verify only `service_role` can execute the RPC.
 3. Create the five approved Stripe test-mode products/prices and set their exact IDs in the named `STRIPE_PRICE_*` function secrets. Configure success/cancel URLs. Never commit IDs or secrets.
 4. Deploy `create-checkout-session-minigame-ticket` with JWT verification enabled. Verify an authenticated user, a missing token, invalid SKU/event pairs, missing environment values, and a demo session.

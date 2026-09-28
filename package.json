@@ -38,6 +38,8 @@
     "test:gamification-data-routing": "node scripts/check-gamification-data-routing.mjs",
     "test:demo-cloud-routing": "node scripts/check-demo-cloud-routing.mjs",
     "test:telemetry-security-migration": "node scripts/check-telemetry-security-migration.mjs",
+    "test:telemetry-dedupe-no-406": "node scripts/check-telemetry-dedupe-no-406.mjs",
+    "test:daily-spin-bonus-active-habit-logs": "node scripts/check-daily-spin-bonus-active-habit-logs.mjs",
     "test:island-action-log-retention-migration": "node scripts/check-island-action-log-retention-migration.mjs",
     "test:security-definer-client-access": "node scripts/check-security-definer-client-access.mjs",
     "test:sanitized-campaign-sharing": "node scripts/check-sanitized-campaign-sharing.mjs",

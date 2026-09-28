@@ -300,15 +300,26 @@ export async function recordTelemetryEvent(options: {
         metadata: options.metadata ?? {},
         dedupe_key: dedupe.databaseKey,
       };
-    const query = dedupe.databaseKey
-      ? supabase
-          .from('telemetry_events')
-          .upsert(payload, {
-            onConflict: 'user_id,event_type,dedupe_key',
-            ignoreDuplicates: true,
-          })
-      : supabase.from('telemetry_events').insert(payload);
-    const { data, error } = await query.select().maybeSingle<TelemetryEventRow>();
+    if (dedupe.databaseKey) {
+      // `ignoreDuplicates` intentionally returns no row when the same event was
+      // already recorded. Asking PostgREST for a single representation turns
+      // that healthy no-op into a 406 response, so keep deduplicated writes
+      // minimal and return no row to the caller.
+      const { error } = await supabase
+        .from('telemetry_events')
+        .upsert(payload, {
+          onConflict: 'user_id,event_type,dedupe_key',
+          ignoreDuplicates: true,
+        });
+      if (error) throw error;
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from('telemetry_events')
+      .insert(payload)
+      .select()
+      .maybeSingle<TelemetryEventRow>();
     if (error) throw error;
     return data;
   });
