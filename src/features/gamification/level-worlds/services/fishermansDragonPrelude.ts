@@ -60,3 +60,23 @@ export function dragonPreludeTalk(elapsed: number, asked: number, askedAt: numbe
   if (askedAt < DRAGON_PRELUDE_NOT_A_DRILL_SECONDS) return { kind: 'reply', text: 'That catch you landed… it was bait. Something wants it back.' };
   return { kind: 'reply', text: 'Step away, and prepare to run!', followUp: 'Prepare to run??' };
 }
+
+/**
+ * Aftermath: once the dragon has dived and the spray settles, the fisherman
+ * plants the next hook — a creature egg is rumoured to be buried in the water
+ * world (the underwater Island 007, right after this island). Shown once, only
+ * when the player actually watched the dragon live.
+ */
+export const DRAGON_AFTERMATH_FROM_SECONDS = 23.5;
+
+export type EggRumourStep = { speaker: 'Fisherman' | 'You'; text: string; reply: string | null };
+
+export const DRAGON_EGG_RUMOUR: readonly EggRumourStep[] = [
+  { speaker: 'Fisherman', text: 'Phew… Damn, imagine having one of those!', reply: 'Yeah… no creature egg for me then, hehe?' },
+  { speaker: 'Fisherman', text: 'No, I\'m afraid not… but rumour has it there\'s one buried in the water world.', reply: 'The water world…?' },
+  { speaker: 'Fisherman', text: 'Deep under the next tide. Keep your eyes open down there.', reply: null },
+];
+
+export function shouldShowDragonEggRumour(options: { elapsed: number; watchedLive: boolean }): boolean {
+  return options.watchedLive && options.elapsed >= DRAGON_AFTERMATH_FROM_SECONDS;
+}
