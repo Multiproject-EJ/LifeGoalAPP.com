@@ -484,6 +484,8 @@ import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { CompassBookIcon } from './CompassBookIcon';
+import { FishermansDragonPrelude } from './FishermansDragonPrelude';
+import { isDragonPreludeActive } from '../services/fishermansDragonPrelude';
 import { AssemblyTopbarBlast } from './AssemblyTopbarBlast';
 import { ASSEMBLY_TOPBAR_BLAST_MS, shouldAssemblyBlastHitTopbar } from '../services/assemblyTopbarBlast';
 import { FishingCastMeter } from './FishingCastMeter';
@@ -21737,7 +21739,12 @@ export function IslandRunBoardPrototype({
         );
       })(), document.body) : null}
 
-      {showFishermansFishing && (fishermansFishingProgress.pendingCatch || fishingPhase === 'caught' || fishingPhase === 'escaped')
+      {islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER && dragonCinematicStartedAtMs !== null ? (
+        <FishermansDragonPrelude key={dragonCinematicStartedAtMs} elapsed={dragonCinematicElapsedSeconds} />
+      ) : null}
+
+      {showFishermansFishing && !(dragonCinematicStartedAtMs !== null && isDragonPreludeActive(dragonCinematicElapsedSeconds))
+        && (fishermansFishingProgress.pendingCatch || fishingPhase === 'caught' || fishingPhase === 'escaped')
         && typeof document !== 'undefined' ? createPortal((
         <div className="fishermans-fishing-hud__layer">
           <section
