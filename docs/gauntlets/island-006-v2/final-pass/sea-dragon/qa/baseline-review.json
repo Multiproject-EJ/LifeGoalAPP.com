@@ -1,0 +1,126 @@
+{
+  "schema": "island006.visual-review.v1",
+  "subject": "Sea dragon legacy baseline and cinematic presentation",
+  "reviewer": "independent visual_review",
+  "action": "retire-family",
+  "scope": "Legacy anatomy baseline only; current replacement anatomy is not graded or approved here.",
+  "reference": {
+    "path": "../goals/target-v001.png",
+    "authority": "secondary-inferred"
+  },
+  "evidence": {
+    "inspected": "All 24 original baseline-sequence-v001 frames; all 18 baseline-studio-v001 frames; corrected baseline-studio-v002 pose-21.5 and flight-clay-45.",
+    "baselineSequence": "baseline-sequence-v001",
+    "studio": "baseline-studio-v002 supersedes v001 at postcontact",
+    "validity": "Studio v001 pose-21.5 retained world-water clipping after root normalization. Its sliced lower jaw/belly/wing is a harness artifact, excluded from anatomy scoring. Corrected v002 restores full anatomy. Baseline source hashes are recorded by capture packets."
+  },
+  "threshold": 0.85,
+  "scores": {
+    "silhouette_volume": 0.55,
+    "head_neck_identity": 0.58,
+    "wing_articulation": 0.42,
+    "folded_wing_coherence": 0.38,
+    "membrane_cross_view_readability": 0.4,
+    "tail_fluke_volume": 0.55,
+    "eruption_pose_readability": 0.52
+  },
+  "findings": [
+    {
+      "views": [
+        "flight-orbit-45",
+        "flight-orbit-90",
+        "flight-top"
+      ],
+      "issue": "Round helmet-like skull and separate oval muzzle sit on a near-uniform tubular body. White angular throat plate and teal pectoral lobes read as stacked pieces, rather than the target's integrated skull-neck-shoulder mass."
+    },
+    {
+      "views": [
+        "flight-orbit-90",
+        "flight-orbit-135",
+        "flight-top"
+      ],
+      "issue": "Wings read as radial triangular fans starting directly on the torso. A load-bearing bent upper arm, elbow and wrist hierarchy is not legible."
+    },
+    {
+      "views": [
+        "flight-clay-45",
+        "flight-clay-225"
+      ],
+      "issue": "Large membrane regions disappear in clay45 while spars remain. Beauty retains more membrane. This suggests side/winding or clay-override dependence; do not claim a literal beauty hole without diagnosis. New macro must pass both sides with consistent visible surfaces."
+    },
+    {
+      "views": [
+        "pose-19.8",
+        "pose-20.8",
+        "pose-21.5"
+      ],
+      "issue": "Precontact folded wings are overlapping triangular sheets with exposed spars laid against the body, rather than a coherent folded limb. This persists independently of the corrected clipping artifact."
+    },
+    {
+      "views": [
+        "pose-8.8",
+        "pose-10.5"
+      ],
+      "issue": "Eruption is a nearly straight pointed pillar with weak folded-appendage bulk. Pose10.5 also crops the tail in the study; enlarge study framing before relying on whole-body containment."
+    },
+    {
+      "views": [
+        "flight-clay-225",
+        "flight-top"
+      ],
+      "issue": "Thin triangular fluke and straight needle horns do not preserve the inferred reference's curved volumetric forms."
+    }
+  ],
+  "counterPolicy": "Retire the inherited legacy representation; this baseline is not a review or failure of the separately authorized new-anatomy family1. Keep the new build-contract family/review counters intact.",
+  "requiredMacroGates": [
+    "Whole coupled creature: continuous shaped torso/tapering tail, integrated neck/skull/jaw and owned shoulder sockets. No collar slot, throat cone, ball-skull assembly or disconnected shoulder lobes.",
+    "Legible upper arm/elbow/wrist/finger hierarchy and a continuous curved scalloped membrane; opposite views and clay must not lose required surfaces.",
+    "Folded, unfurl, glide, bank and dive poses preserve appendage identity and believable length. No overlapping shredded panels, plane collapse, spikes or inflation used as deployment.",
+    "Tail fluke and horns retain curved volume in profile, top and opposite views.",
+    "Inspect fixed nine-angle flight orbit, both clay opposites and seven timed poses with water clipping and VFX disabled only in isolated studio; keep full creature in frame.",
+    "Every critical category and required view >=0.85. One bounded correction per family must improve weakest category >=0.10 with no regression >0.05. Hard veto or score <0.50 retires family; maximum two families/four reviews per contract."
+  ],
+  "legacyPresentation": {
+    "action": "hold",
+    "scores": {
+      "pond_aperture": 0.2,
+      "camera_story_readability": 0.45,
+      "eruption_weight": 0.5,
+      "dive_surface_contact": 0.45,
+      "splash_fluid_readability": 0.45,
+      "damage_payoff": 0.6
+    },
+    "findings": [
+      "At3s dark shaft overlays foreground buildings/route; at7.4s masks emerging dragon. This is a separate rendering veto, not an anatomy defect.",
+      "Close shaft at6.5/7.15 cuts abruptly to remote island at7.4; further framing changes at10.2 and13.4. Flight13.4/15/16.5 leaves the subject around one-quarter frame width in mostly empty sky.",
+      "Sky-dome edge is visibly clipped at top-left16.5.",
+      "21.5/21.8/22.2 body progressively disappears, but baseline splash/clipping elevation is inconsistent with actual ocean. Authoritative surface contact must be recaptured after root correction.",
+      "21.8/22.2 solid concentric torus bands and tall straight cones read as graphic rings and spikes, with no convincing curved crown and falling droplets.",
+      "22.6 damage close-up is obscured by broad translucent wash geometry;23.5 exposes a roofless house but airborne rectangular debris does not prove settling."
+    ],
+    "requiredEvidence": [
+      "Continuous deterministic full23.5s clip and portrait counterpart; exact frames alone cannot approve speed, easing or continuity.",
+      "Dense paired frames around7.18,10.2,13.4,19.2,21.45 and22.5 to verify no camera or pose jump; preserve gameplay phase boundaries.",
+      "Water-contact frames21.35,21.45,21.6,21.9,22.2,22.5,22.6,22.68 at actual shared-ocean elevation, showing head then torso then tail submerge.",
+      "Visible curved impact crown, broken foam arcs and descending drops, then a receding wave reaching the correctly bound damaged house; rubble fall/settle through aftermath.",
+      "Reduced-motion and low-tier capture must retain story readability."
+    ]
+  },
+  "followupPresentationOnly": {
+    "packet": "macro-sequence-v001",
+    "inspected": [
+      "sequence-3",
+      "sequence-6.5",
+      "sequence-7.4",
+      "sequence-10.2",
+      "sequence-13.4",
+      "sequence-16.5",
+      "sequence-21.5",
+      "sequence-21.8",
+      "sequence-22.2"
+    ],
+    "resolved": "Stencil-enabled shaft is confined to pond at3s and7.4s. The foreground-cylinder veto is resolved in these study pixels.",
+    "unchanged": "Distant flight framing, visible sky-dome edge16.5 and rigid torus/cone impact remain visible. No current anatomy approval is implied.",
+    "productionLimit": "Root reports matching production stencil enablement; this review directly verifies study pixels only."
+  }
+}

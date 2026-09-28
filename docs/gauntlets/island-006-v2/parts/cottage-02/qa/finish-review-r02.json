@@ -1,0 +1,64 @@
+{
+  "part": "cottage-02",
+  "stage": "finish",
+  "review": 2,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/finish-v002",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "approvedMacro": "qa/blockout-v003",
+  "method": "All 11 original studio images, all six actual village frames and updated phone overview inspected. Scores are subjective visual judgments; runtime checks did not determine acceptance.",
+  "action": "approve",
+  "threshold": 0.85,
+  "categoryScores": {
+    "macroSilhouetteRetention": 0.90,
+    "roofEnclosureAndTrim": 0.90,
+    "slateCoverageAndRelief": 0.88,
+    "materialHierarchy": 0.87,
+    "terraceMasonryContinuity": 0.90,
+    "netMenderIdentity": 0.88,
+    "doorWindowAndHardwareAttachments": 0.89,
+    "entryRearDoorClearance": 0.90,
+    "otherFinishContacts": 0.88
+  },
+  "viewScores": {"front-right": 0.89, "front-left": 0.88, "rear-left": 0.88, "rear-right": 0.89, "front": 0.89, "rear": 0.88, "left": 0.88, "right": 0.88, "top": 0.88, "clay-front": 0.90, "clay-rear": 0.89},
+  "familyLedger": [
+    {
+      "family": "terrace masonry surface separation",
+      "introducedReview": 1,
+      "boundedCorrectionCount": 1,
+      "acceptedReview": 2,
+      "beforeScore": 0.74,
+      "afterScore": 0.90,
+      "improvement": 0.16,
+      "finding": "Both terrace sides now retain full rectangular stone courses in four obliques and clay. The previous triangular fragments and vanishing faces are gone. Offset remains shallow without visibly enlarging the terrace mass."
+    },
+    {
+      "family": "hanging fishing-net identity",
+      "introducedReview": 1,
+      "boundedCorrectionCount": 1,
+      "acceptedReview": 2,
+      "beforeScore": 0.77,
+      "afterScore": 0.88,
+      "improvement": 0.11,
+      "finding": "The rack now carries thin diagonal diamond mesh with shallow sag and readable ties/tethered floats. Left, front-left, rear-left and clay-rear read as fishing equipment rather than rigid orthogonal lattice. Rack stays clear of the adjacent window."
+    }
+  ],
+  "regressionCheck": "No critical score regresses by more than 0.05. Swept upper roof, solid soffit, trim, porch, chimney, door/window placement and hardware retain the accepted appearance. No new finish protrusion or entry obstruction found.",
+  "assembly": {
+    "evidence": "qa/world-context-v002",
+    "action": "approve",
+    "categoryScores": {"frontEntryClearance": 0.89, "foliageClearance": 0.89, "rearThresholdClearance": 0.88, "terraceGroundSupport": 0.86, "cottage01AnnexClearance": 0.86, "cottage03Clearance": 0.88, "finishWithinPlot": 0.87},
+    "viewScores": {"mender-world-azimuth-0": 0.88, "mender-world-azimuth-180": 0.86, "mender-world-azimuth-45": 0.87, "mender-world-azimuth-135": 0.87, "mender-world-azimuth-90": null, "mender-world-azimuth-270": null},
+    "findings": "Corrected masonry/net preserve clear front step, rear sill and foliage exclusion. Existing coastline shelf supports the terrace. Complementary front/rear/elevated views show no new collision with cottage01 annex or cottage03. Scene barrel stays outside the central entry.",
+    "limitations": "Cardinal 90/270 remain heavily occluded by frozen neighbors; they are not independent clearance proof. The net itself is largely hidden within the tight village interface, so its detailed attachment is established in studio views, with context establishing no outward collision."
+  },
+  "phoneScale": {
+    "evidence": "qa/island-fit-v002/overview.png",
+    "action": "approve",
+    "score": 0.86,
+    "finding": "Compact swept blue roof, light front and round loft remain legible in the northern village. Silhouette remains distinct from the taller warm-roof cottage01. Net knots and other fine details are too small to assess at this scale; no phone-scale readability regression."
+  },
+  "remainingTargetGap": "The result uses simpler, cleaner stone courses and roof/timber surfaces than the weathered inferred concept. Net is a shallow game-scale approximation of draped equipment. Neither limitation is a remaining gate failure; exact reference identity and whole-island V2 completion are not claimed.",
+  "release": "Cottage02 finish and assembly accepted. Preserve accepted module and neighboring geometry."
+}

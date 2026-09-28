@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "partId": "hero-fisher",
+  "referenceClass": "secondary-inferred",
+  "status": "generated-design-goal",
+  "generator": "built-in image_gen",
+  "inputImages": [],
+  "failedModelUsedAsReference": false,
+  "prompt": "prompts/target-v001.txt",
+  "output": "goals/target-v001.png",
+  "originalOutput": "/Users/ejmac/.codex/generated_images/01a0e966-6285-7ea0-8a2e-7c7ab6970293/exec-9afd39ad-082e-4c01-90e5-8ffd8873bbbf.png",
+  "sha256": "3a9f0706348464cc989e95c93a4895a5f7e8bf696bfdb1648a216a7d7d00432a",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "transparentPixels": 1572864,
+  "fullyTransparentPixels": 925101,
+  "provenance": "Text-only secondary-inferred goal for user-authorized island006 V2 continuation. Baseline inspected only for defects, never used as image input or identity authority. Written anatomy and animation contract controls coherent reconstruction; not exact approved pixels.",
+  "visualInspection": "Coherent yellow coat, cuff-hand continuity, broad soft hat, integrated gray beard, boots, navy trousers, red scarf and brass reel. Large-view rod tip cropped; smaller views show full rod. Fine realistic cloth/beard texture is aspirational rather than required geometry. Baseline viewed only for defects; not passed as image input.",
+  "defectInspectionOnly": "../baseline-details-v001/fisherman.png"
+}

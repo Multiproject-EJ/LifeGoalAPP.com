@@ -1,0 +1,33 @@
+{
+  "authorization": "User Good continue after cottage01; established element-by-element workflow.",
+  "unit": "Single-storey cottage02 with porch and net-mending frame",
+  "parts": [
+    "terrace and entrance steps",
+    "closed plaster/timber shell and gables",
+    "curved slate roof and chimney",
+    "supported porch canopy",
+    "all doors and windows",
+    "finish surfaces and small fishing props"
+  ],
+  "placement": [
+    -1.35,
+    0.65,
+    -7.35
+  ],
+  "yaw": -0.06,
+  "scale": 0.88,
+  "budget": {
+    "triangles": 9500,
+    "batches": 32
+  },
+  "frozen": "Seven prior approved building modules, other cottage geometry/transforms, gameplay.",
+  "gates": {
+    "macro": 0.85,
+    "finish": 0.85,
+    "rule": "One bounded correction per family with +.10 weakest/no>.05 regression, max2families/4reviews."
+  },
+  "baseline": "baseline/v001",
+  "camera": "targetY.95,halfHeight1.9,floor-.34;11views including2clay",
+  "representation": "Procedural Three.js; static merged macro and finish groups",
+  "owner": "Root integration; one serialized module builder; independent reviewer"
+}

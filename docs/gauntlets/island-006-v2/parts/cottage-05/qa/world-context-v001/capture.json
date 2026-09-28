@@ -1,0 +1,83 @@
+{
+  "captures": [
+    {
+      "name": "cottage-world-azimuth-0",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=cottage-05&context=1&azimuth=0&weatherTime=4"
+    },
+    {
+      "name": "cottage-world-azimuth-90",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=cottage-05&context=1&azimuth=90&weatherTime=4"
+    },
+    {
+      "name": "cottage-world-azimuth-180",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=cottage-05&context=1&azimuth=180&weatherTime=4"
+    },
+    {
+      "name": "cottage-world-azimuth-270",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=cottage-05&context=1&azimuth=270&weatherTime=4"
+    },
+    {
+      "name": "cottage-world-azimuth-45",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=cottage-05&context=1&azimuth=45&weatherTime=4&contextTop=1"
+    },
+    {
+      "name": "cottage-world-azimuth-135",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=cottage-05&context=1&azimuth=135&weatherTime=4&contextTop=1"
+    }
+  ],
+  "errors": [],
+  "sourceStart": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22CooperCottageV2.ts": "19f533458c4af3cf20fd3c9d7bb1cbaad4777b3bc4a02b2ee5e9f183af854126",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22FishMarketV2.ts": "20d3f3076e6feba45114f2a12877de2af6da3e167df7245d6cfc9fd57c1f6cd7",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "b45f858208b0b5ac1692f475bc6afdff39aad55cff9464119ed2c2b6709e1a85",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "3fa2bf8f4e581e8d845438bba88167de8bc073dec25a7551f6c8104d082e07f5",
+    "Island22HarborCookCottageV2.ts": "3a6c4c0dabae54932022b156b1a5b1e32a8dc9af9a2a78535a556ea9b909cbd6",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22NetMenderCottageV2.ts": "f444abfba89193a2a01dcf45caafd7379e0847831b9b21917d44748243db4fb8",
+    "Island22NorthCottageV2.ts": "b33721f450e808e5904bb79bce8ad0d8f7c73eeac1d9744951043ffedc95088d",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "99f00d41cbacc5380006cf1974956422f767736a37991a7811a5a48832a6a418",
+    "Island22RopeMakerCottageV2.ts": "3d8637753571b938437b6e208c0cffec1b26f7079707ff82960c0fc648304c55",
+    "Island22SailmakerCottageV2.ts": "3a71718b13bf339e5448f0639fd1843a303517f68c0c98c54f6acc89998cb7d9",
+    "Island22SecondaryCottagesV2.ts": "1a43ecb8d8a3153e22ea340b7a2cbfed365c01ff6b8135bccbbd335c5f216eb8",
+    "Island22SmokehouseCottageV2.ts": "e0e04306df5a467f7de5931e273dbd6a5155fde688adb3ce59eaa6e62745edb3",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "4fbe3beb7ba0b3bd2062e97efc67b592f1b2c87b3e5e5852d88a878aaa6e1eb6",
+    "Island6MoonveilThreeWorld.ts": "260350d7c8b1d8f510de79e49383b587e335bd55a2a21f1a69b639ba67467f58"
+  },
+  "sourceEnd": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22CooperCottageV2.ts": "19f533458c4af3cf20fd3c9d7bb1cbaad4777b3bc4a02b2ee5e9f183af854126",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22FishMarketV2.ts": "20d3f3076e6feba45114f2a12877de2af6da3e167df7245d6cfc9fd57c1f6cd7",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "b45f858208b0b5ac1692f475bc6afdff39aad55cff9464119ed2c2b6709e1a85",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "3fa2bf8f4e581e8d845438bba88167de8bc073dec25a7551f6c8104d082e07f5",
+    "Island22HarborCookCottageV2.ts": "3a6c4c0dabae54932022b156b1a5b1e32a8dc9af9a2a78535a556ea9b909cbd6",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22NetMenderCottageV2.ts": "f444abfba89193a2a01dcf45caafd7379e0847831b9b21917d44748243db4fb8",
+    "Island22NorthCottageV2.ts": "b33721f450e808e5904bb79bce8ad0d8f7c73eeac1d9744951043ffedc95088d",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "99f00d41cbacc5380006cf1974956422f767736a37991a7811a5a48832a6a418",
+    "Island22RopeMakerCottageV2.ts": "3d8637753571b938437b6e208c0cffec1b26f7079707ff82960c0fc648304c55",
+    "Island22SailmakerCottageV2.ts": "3a71718b13bf339e5448f0639fd1843a303517f68c0c98c54f6acc89998cb7d9",
+    "Island22SecondaryCottagesV2.ts": "1a43ecb8d8a3153e22ea340b7a2cbfed365c01ff6b8135bccbbd335c5f216eb8",
+    "Island22SmokehouseCottageV2.ts": "e0e04306df5a467f7de5931e273dbd6a5155fde688adb3ce59eaa6e62745edb3",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "4fbe3beb7ba0b3bd2062e97efc67b592f1b2c87b3e5e5852d88a878aaa6e1eb6",
+    "Island6MoonveilThreeWorld.ts": "260350d7c8b1d8f510de79e49383b587e335bd55a2a21f1a69b639ba67467f58"
+  },
+  "changedDuringCapture": false,
+  "scope": "Actual world factory and mission in evidence lab; no gameplay board in lab. 900x900, DPR1, medium tier, locked weather/mission phase."
+}

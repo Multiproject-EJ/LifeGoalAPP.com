@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "asset": "island-006 sea-dragon",
+  "stage": "finish-studio",
+  "review": 1,
+  "reviewer": "independent reference_curator",
+  "verdict": "approve-finish-studio",
+  "approved": true,
+  "threshold": 0.85,
+  "evidence": {
+    "directory": "qa/finish-studio-v001",
+    "originalImagesInspected": 18,
+    "frozenMacro": "qa/macro-studio-v003",
+    "macroApproval": "qa/macro-review-r03.json",
+    "target": "goals/target-v001.png (secondary-inferred)",
+    "inspection": "Actual original renderer pixels, all orbit/clay/pose frames; no metric or builder narrative substituted for observation."
+  },
+  "categories": {
+    "silhouettePreservation": 0.86,
+    "identity": 0.86,
+    "attachmentPreservation": 0.85,
+    "crossViewCoherence": 0.85,
+    "assembly": 0.85,
+    "intendedStudioScaleReadability": 0.85,
+    "skinScaleFinish": 0.85,
+    "creamUndersideSegmentation": 0.87,
+    "wingMembraneFinish": 0.86,
+    "faceEyesWhiskersTeeth": 0.85,
+    "posedSurfaceConformity": 0.85
+  },
+  "views": [
+    {
+      "view": "flight-orbit-0.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.86,
+      "notes": "Fine whiskers stay modest; gold eyes and cream underside remain clear."
+    },
+    {
+      "view": "flight-orbit-45.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Scales follow body length; shoulder silhouette matches frozen macro."
+    },
+    {
+      "view": "flight-orbit-90.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.87,
+      "attachmentPreservation": 0.86,
+      "notes": "Belly segmentation and scale rows follow curved profile; wing ribs restrained."
+    },
+    {
+      "view": "flight-orbit-135.png",
+      "surfaceFinish": 0.87,
+      "identity": 0.87,
+      "attachmentPreservation": 0.86,
+      "notes": "Broad wing panels remain clean; material contrast separates skin and membrane."
+    },
+    {
+      "view": "flight-orbit-180.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.86,
+      "notes": "Opposite-facing belly stripes follow curl; fin/tail volumes retained."
+    },
+    {
+      "view": "flight-orbit-225.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Opposite flank scale pattern continuous; elongated shoulder retained."
+    },
+    {
+      "view": "flight-orbit-270.png",
+      "surfaceFinish": 0.85,
+      "identity": 0.86,
+      "attachmentPreservation": 0.86,
+      "notes": "Scale rows are regular and visibly procedural but coherent, without swimming implied by these stills."
+    },
+    {
+      "view": "flight-orbit-315.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.86,
+      "notes": "Whiskers remain subordinate to muzzle; cream throat and fin roots clear."
+    },
+    {
+      "view": "flight-top.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.86,
+      "notes": "Scale field bends along spine; wings keep pale area and three-ray hierarchy."
+    },
+    {
+      "view": "flight-clay-45.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Macro silhouette preserved; finish adds only modest facial strands."
+    },
+    {
+      "view": "flight-clay-225.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Opposite naked geometry remains consistent with approved macro."
+    },
+    {
+      "view": "pose-8.8.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Underside plate pattern conforms to raised body and neck."
+    },
+    {
+      "view": "pose-10.5.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Underside rings follow narrowing throat; whiskers remain delicate."
+    },
+    {
+      "view": "pose-12.png",
+      "surfaceFinish": 0.86,
+      "identity": 0.87,
+      "attachmentPreservation": 0.86,
+      "notes": "Curved pose preserves surface alignment and broad membrane readability."
+    },
+    {
+      "view": "pose-17.png",
+      "surfaceFinish": 0.85,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Scales expand on stretched torso but remain ordered and attached; charge streaks distinguished from whiskers."
+    },
+    {
+      "view": "pose-19.8.png",
+      "surfaceFinish": 0.85,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Folded panels retain subdued ribs and contrast; no visible macro regression."
+    },
+    {
+      "view": "pose-20.8.png",
+      "surfaceFinish": 0.85,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Visible mouth interior/teeth remain modest; stream obscures much of the mouth, limiting fine assessment."
+    },
+    {
+      "view": "pose-21.5.png",
+      "surfaceFinish": 0.85,
+      "identity": 0.86,
+      "attachmentPreservation": 0.85,
+      "notes": "Folded wings and belly finish remain legible; regular scale pattern does not overwhelm face."
+    }
+  ],
+  "findings": {
+    "scales": "Fine repeating scales are visibly rendered on the teal skin, oriented along the posed body. They stretch somewhat over broad torso bends and remain a regular procedural pattern, but do not break the silhouette or obscure the face at this studio framing.",
+    "underside": "Cream belly segmentation follows the continuous throat and torso rather than floating independently. Narrow neck rings remain orderly through raised and folded poses.",
+    "wings": "Subdued membrane striations add finish without replacing or overpowering the articulated fingers and scalloped outline. Opposite views retain light membrane/teal bone contrast.",
+    "face": "Fine swept whiskers preserve the friendly head silhouette. Tiny visible teeth do not restore the earlier exaggerated shark-mouth appearance. Attack stream obscures part of the open mouth, so occluded dental anatomy is not independently certified.",
+    "macro": "Clay opposites and all silhouettes show no apparent regression from approved macro-v003: continuous neck, elongated shoulder roots, swept dorsal/cheek fins and closed tail lobes remain."
+  },
+  "hardVetoes": [],
+  "requiredCorrections": [],
+  "regression": {
+    "apparentMacroRegression": false,
+    "maximumObservedCriticalRegression": 0
+  },
+  "limits": [
+    "Posed stills show surface conformity at sampled times; they cannot certify absence of temporal texture swimming or animation pops.",
+    "Actual world cinematic, camera/contact revisions and phone framing are outside this finish gate.",
+    "This is stylized game-scale finish approval, not a claim of exact target pixels or offline-render material fidelity.",
+    "Main sequence reviewer retains authority over temporal/phone/contact evidence.",
+    "Reviewer changed no production code, materials, cameras or thresholds."
+  ]
+}

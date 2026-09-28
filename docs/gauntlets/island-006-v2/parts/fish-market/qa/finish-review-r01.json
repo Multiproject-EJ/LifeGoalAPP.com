@@ -1,0 +1,66 @@
+{
+  "part": "fish-market",
+  "stage": "finish",
+  "review": 1,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/finish-v001",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "approvedMacro": "qa/blockout-v002",
+  "method": "Inspected the original target and all 11 finished frames before any source or metrics. Scores are subjective visual judgments for the compact procedural game asset, not exact target parity.",
+  "action": "approve",
+  "threshold": 0.85,
+  "categoryScores": {
+    "preservedSilhouetteVolume": 0.89,
+    "architecturalMarketIdentity": 0.89,
+    "surfaceCoverage": 0.89,
+    "materialReadability": 0.86,
+    "roofCoverageAndContacts": 0.90,
+    "canopyHemAndPostContacts": 0.89,
+    "fishTrayContainment": 0.87,
+    "signSupportAndWindowClearance": 0.89,
+    "rearDoorClearance": 0.91,
+    "centralLaneAndFrontApproach": 0.90,
+    "pierAndPropContacts": 0.88,
+    "shadowContinuity": 0.90,
+    "crossViewCoherence": 0.88
+  },
+  "viewScores": {
+    "front-right": 0.89,
+    "front-left": 0.88,
+    "rear-left": 0.88,
+    "rear-right": 0.88,
+    "front": 0.89,
+    "rear": 0.88,
+    "left": 0.86,
+    "right": 0.86,
+    "top": 0.88,
+    "clay-front": 0.89,
+    "clay-rear": 0.88
+  },
+  "findings": [
+    "The four corrected timber tie penetrations have not returned. Roof courses stay inside the curved barge/eave envelope, and the roof casts a continuous shadow.",
+    "Fish read as stock held in raised trays; no conspicuous stock spilling through the counter walls. The repeated fish arrangement remains simplified.",
+    "Canopy scallops form a coherent front hem; post ties and supports remain attached. The two counters preserve the center doorway approach.",
+    "Side sign has two visible hangers supported by its arm, and the true side view confirms clearance from the window.",
+    "Rear door and its narrow deck approach remain unobstructed. Containers occupy the crane-side strip without cutting through the cottage or pier supports."
+  ],
+  "assembly": {
+    "evidence": "qa/world-context-v001",
+    "action": "approve",
+    "categoryScores": {"lighthouseClearance": 0.89, "boatPierClearance": 0.90, "frontRightBridgeLanding": 0.89, "functionalAccess": 0.88, "supportContinuity": 0.89},
+    "views": {
+      "market-world-azimuth-0": {"score": 0.89, "finding": "Bridge joins open front-right deck; sign, canopy and counter do not obstruct the landing. Market stays separated from lighthouse quay."},
+      "market-world-azimuth-90": {"score": null, "finding": "Market is largely occluded by neighboring buildings. This view is not clearance proof; the other three angles cover the relevant contacts."},
+      "market-world-azimuth-180": {"score": 0.88, "finding": "Rear deck/door and side containers clear the lighthouse and adjacent berth; pier and boat separation remains visible."},
+      "market-world-azimuth-270": {"score": 0.90, "finding": "Clear central front lane, connected berth, and both boats outside the pier supports. No new visible neighbor intersections."}
+    }
+  },
+  "boundedCorrectionCounter": {"macroReviews": 2, "finishReviews": 1, "finishCorrectionsUsed": 0},
+  "remainingTargetGaps": [
+    "Slate color variation forms regular bands and tiles remain more gridlike than the inferred target.",
+    "Timber grain repeats uniformly; stone, canvas and wood have little weathering or local wear.",
+    "Fish stock and hanging emblem are simple low-detail forms compared with the target."
+  ],
+  "scope": "Accept the finished fish-market part and evidenced assembly placement for this iteration. This is not exact inferred-target identity or whole-island V2 approval. Runtime and geometry budgets are validated separately by root."
+}

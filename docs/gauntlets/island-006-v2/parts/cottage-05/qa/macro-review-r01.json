@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-05-cooper",
+  "stage": "macro",
+  "review": "r01",
+  "referenceAuthority": "secondary-inferred",
+  "reviewer": "independent-visual-review",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "evidence": {
+    "studio": "blockout-v001",
+    "studioViewsInspected": 11,
+    "assembly": "world-blockout-v001",
+    "assemblyViewsInspected": 6,
+    "target": "../goals/target-v001.png",
+    "baseline": "../baseline/v001/front-right.png"
+  },
+  "macro": {
+    "action": "one-bounded-correction",
+    "finishMayProceed": false,
+    "criticalScores": {
+      "twoStoreyRightAnnexSilhouette": 0.9,
+      "sweptRoofShape": 0.9,
+      "closedRoofShellAndNormals": 0.9,
+      "annexWallTermination": 0.9,
+      "chimneyRoofContact": 0.89,
+      "sideWindowRoofClearance": 0.79,
+      "mainAndWorkroomDoorClearance": 0.88,
+      "foundationAndStepContacts": 0.87,
+      "rearAndSideCompleteness": 0.89
+    },
+    "viewScores": {
+      "front": 0.88,
+      "front-right": 0.79,
+      "right": 0.79,
+      "rear-right": 0.8,
+      "rear": 0.89,
+      "rear-left": 0.89,
+      "left": 0.88,
+      "front-left": 0.88,
+      "top": 0.89,
+      "clay-front": 0.79,
+      "clay-rear": 0.89
+    },
+    "observations": [
+      "Main two-storey slate house, right lower annex and left chimney read as a single coherent compact cottage.",
+      "Main and annex roofs are closed with connected trim and a clean shared wall termination; no previous smokehouse-style protruding inner wedge.",
+      "The upper side window above the annex is visibly pinched between the main eave and the annex roof; in the right view its header/top disappears behind the fascia.",
+      "Front/rear doors and annex doorway remain clear; restrained structural timber does not cross their openings."
+    ],
+    "correction": {
+      "family": "side-opening-roof-clearance",
+      "affectedViews": [
+        "right.png",
+        "front-right.png",
+        "rear-right.png",
+        "clay-front.png"
+      ],
+      "pixelDiagnosis": "Main-eave overlaps the upper side window's header/top; sill has almost no gap from lower annex roof.",
+      "sourceDiagnosisAfterPixels": "Opening authored at y1.69,h.24 before reflected bake: header reaches ~1.9685; main fascia bottom ~1.932 at overlapping x extent. Sill bottom ~1.6575 versus annex roof near1.64 gives only ~.016 clearance.",
+      "request": "Reduce/reposition this one window to show clear upper and lower gaps, or omit it consistently with the inferred goal. Preserve both roof silhouettes and all accepted structural proportions; reserve room for finish tile relief.",
+      "requiredAfter": 0.89,
+      "maxOtherRegression": 0.05
+    },
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0
+    }
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "criticalScores": {
+      "coastalSupport": 0.88,
+      "neighborClearance": 0.87,
+      "routePreservation": 0.89,
+      "foliageAndFrontApproachClearance": 0.77
+    },
+    "viewAssessments": {
+      "0": {
+        "score": null,
+        "note": "Tavern foreground heavily occludes subject."
+      },
+      "45": {
+        "score": 0.87,
+        "note": "Roof/shoulder layout and tavern/guild separation visible."
+      },
+      "90": {
+        "score": 0.88,
+        "note": "Rear wall and supported shoulder visible; guild separation reads clear."
+      },
+      "135": {
+        "score": 0.77,
+        "note": "Elevated angle confirms large conifer tight to front façade; no neighbor collision observed."
+      },
+      "180": {
+        "score": null,
+        "note": "Guild foreground heavily occludes subject."
+      },
+      "270": {
+        "score": 0.77,
+        "note": "Conifer crowds left-front terrace and covers front lower/upper windows."
+      }
+    },
+    "correction": {
+      "family": "local-foliage-footprint-clearance",
+      "owner": "root integration",
+      "request": "Exclude only trees within the new cooper terrace and entrance approach, preserving neighboring buildings/transforms and coastal shoulder.",
+      "requiredAfter": 0.87,
+      "maxOtherRegression": 0.05
+    }
+  },
+  "overallAction": "one-bounded-correction",
+  "limitations": [
+    "Finish intentionally absent; cooper trade cue and material detail not graded yet.",
+    "No physical-device or final phone gate from this macro packet.",
+    "Occluded world0/180 do not prove clearance."
+  ]
+}

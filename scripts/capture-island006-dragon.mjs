@@ -1,0 +1,13 @@
+import {createRequire} from 'node:module';
+import {mkdirSync,existsSync,writeFileSync,readFileSync,readdirSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import path from 'node:path';
+const {chromium}=createRequire(import.meta.url)('/Users/ejmac/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const out=path.resolve(process.argv[2]);if(existsSync(out))throw Error('Immutable evidence exists');mkdirSync(out,{recursive:true});
+const fp=()=>Object.fromEntries(readdirSync('src/features/gamification/level-worlds/dev').filter(n=>/^Island22/.test(n)).sort().map(n=>[n,createHash('sha256').update(readFileSync('src/features/gamification/level-worlds/dev/'+n)).digest('hex')]));const sourceStart=fp();
+const browser=await chromium.launch({headless:true,executablePath:'/Users/ejmac/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'});
+const errors=[],captures=[],phone=process.argv.includes('--phone'),studio=process.argv.includes('--studio');
+const page=await browser.newPage({viewport:phone?{width:430,height:932}:{width:1100,height:850},deviceScaleFactor:1});page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+try{const entries=studio?[...Array.from({length:8},(_,i)=>({name:'flight-orbit-'+i*45,time:15,mode:'studio',azimuth:i*45})),{name:'flight-top',time:15,mode:'studio',azimuth:45,elevation:75},...[45,225].map(a=>({name:'flight-clay-'+a,time:15,mode:'studio',azimuth:a,clay:1})),...[8.8,10.5,12,17,19.8,20.8,21.5].map(t=>({name:'pose-'+t,time:t,mode:'studio',azimuth:45}))]:(process.argv.includes('--contact')?[21.35,21.45,21.6,21.9,22.2,22.4,22.5,22.55,22.6,22.68]:[0,3,6.5,7.15,7.4,7.8,8.4,9.2,10.2,11,12,13.4,15,16.5,18.3,19.2,20,20.8,21.3,21.5,21.8,22.2,22.6,23.5]).map(t=>({name:'sequence-'+t,time:t}));
+for(const {name,...params} of entries){const url='http://127.0.0.1:5186/island-006-dragon-study.html?'+new URLSearchParams({...params,capture:1,...(process.argv.includes('--low')?{quality:'low'}:{}),...(process.argv.includes('--reduced-motion')?{reducedMotion:1}:{})});await page.goto(url,{waitUntil:'networkidle',timeout:120000});await page.waitForFunction(()=>window.dragonStudy);const state=await page.evaluate(t=>window.dragonStudy.setTime(t),params.time);await page.screenshot({path:path.join(out,name+'.png')});captures.push({name,url,state});}
+}finally{await browser.close();const sourceEnd=fp();writeFileSync(path.join(out,'capture.json'),JSON.stringify({captures,errors,sourceStart,sourceEnd,changedDuringCapture:JSON.stringify(sourceStart)!==JSON.stringify(sourceEnd)},null,2));console.log(JSON.stringify({captures:captures.length,errors}));}

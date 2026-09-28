@@ -1,0 +1,625 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-09-28T14:03:26.329Z",
+  "status": "captured-unreviewed",
+  "scope": "Actual Island 006 browser runtime at desktop-hosted phone viewport; not physical-device evidence.",
+  "finalVisualAcceptance": false,
+  "physicalDeviceAcceptance": false,
+  "browserViewport": {
+    "width": 1440,
+    "height": 1080
+  },
+  "dpr": 2,
+  "quality": "high",
+  "reducedMotion": false,
+  "sourceStart": {
+    "branch": "codex/island-006-v2-20260928",
+    "head": "cac04bb9203afa75c2d9238eee4275f2a15daeaa",
+    "sources": {
+      "scripts/capture-island006-v2-local.mjs": "35510904b7bc6665bd534bbe4d92fa9b23c67a2b056ecf1008c262566df8ec0f",
+      "src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx": "1bedad27922967bd7155dd9ca3d814ff9b70d71f52813c4cc191a77bf5f1eee0",
+      "src/features/gamification/level-worlds/dev/CrownCitadelThreeModel.ts": "7f24c8743cd61f1eec9ddab7d7147ef3e7987e5738a10a06cb6c1766e97c3a26",
+      "src/features/gamification/level-worlds/dev/Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+      "src/features/gamification/level-worlds/dev/Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+      "src/features/gamification/level-worlds/dev/Island22FishermansVillageThreeWorld.ts": "b114593d69c5e5bc2a3bd1586abcf21467d036c90736576566011d04c767613c",
+      "src/features/gamification/level-worlds/dev/Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+      "src/features/gamification/level-worlds/dev/Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+      "src/features/gamification/level-worlds/dev/Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+      "src/features/gamification/level-worlds/dev/Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+      "src/features/gamification/level-worlds/dev/Island22PremiumLandmarkFamilies.ts": "6edfdd926ecea312c5647e75901abb16dbc4ffb6fee8bd0b011de2ea01cadd6b",
+      "src/features/gamification/level-worlds/dev/Island22WaterDragonMission.ts": "4fbe3beb7ba0b3bd2062e97efc67b592f1b2c87b3e5e5852d88a878aaa6e1eb6",
+      "src/features/gamification/level-worlds/dev/Island2ThreeWorld.ts": "7cf7377a5537347490b45f0b9b5e6d4f648c29141033ff82697cf2d8ff246fed",
+      "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "4004fa4e1824a9a1ab880e43231f738e440e524b2c52c1582d93a2712cb4e6e6",
+      "src/features/gamification/level-worlds/dev/Island6MoonveilThreeWorld.ts": "260350d7c8b1d8f510de79e49383b587e335bd55a2a21f1a69b639ba67467f58",
+      "src/features/gamification/level-worlds/dev/IslandStagedRestorationThreePresentation.ts": "72db53e71c39a88211752caa29438cd8ae650c193ea10f7b994d4442b942a51e",
+      "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx": "73bb0dad1f606aea884e8571ddce247727def738d4808e91aaf750845181c052",
+      "src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts": "93a42077bb178211334abf8452d45c44f8c85613580a9b2f9b5d0af4c766b282",
+      "src/features/gamification/level-worlds/services/islandRunMissionBriefing.ts": "01657e5a7dfd40c2cabd6203d469bf3076048391dd4a42144cf04c0c7eebb0d9",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissionAction.ts": "df936280b5f93225c97a89ed5c72d18d87ddb6ec38309cb4f94c20080fbd3e75",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissions.ts": "20d481e32b3aea03deba9c21cf2a5c1467c33345307ec4b1658b4fc52e4ec7c0"
+    },
+    "sourceSetSha256": "475e45e5989e2c20aee62d816501c7fa9b9f6eb2652baea4e52da5a0092ed41d"
+  },
+  "captures": [
+    {
+      "name": "overview",
+      "control": "Overview",
+      "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1",
+      "file": "overview.png",
+      "sha256": "71f5d7e00cea142c914e90242bc813b7819eebcbb172b40c641a4ff9b8e9d6ad",
+      "metrics": "52 FPS\n1055 calls\n225k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionRendererGeneration": "3192.4000000003725",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "90",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "0",
+        "evidenceDistanceScale": "1",
+        "assemblyBlastCameraShake": "0.000",
+        "explorePoint": ""
+      }
+    },
+    {
+      "name": "hatchery",
+      "control": "hatchery",
+      "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1",
+      "file": "hatchery.png",
+      "sha256": "957f0c5fbf4c30459bf596581f9635db16cd1bf0f5b726d07e5d2741b54b0b30",
+      "metrics": "60 FPS\n237 calls\n176k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionRendererGeneration": "3192.4000000003725",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "90",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "0",
+        "evidenceDistanceScale": "1",
+        "assemblyBlastCameraShake": "0.000",
+        "explorePoint": ""
+      }
+    },
+    {
+      "name": "habit",
+      "control": "habit",
+      "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1",
+      "file": "habit.png",
+      "sha256": "ba3f0cd9d6e752dcdf306d7b85758fb7e5118d699e7add9272f293c5e1529e29",
+      "metrics": "60 FPS\n237 calls\n173k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionRendererGeneration": "3192.4000000003725",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "90",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "0",
+        "evidenceDistanceScale": "1",
+        "assemblyBlastCameraShake": "0.000",
+        "explorePoint": ""
+      }
+    },
+    {
+      "name": "wisdom",
+      "control": "wisdom",
+      "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1",
+      "file": "wisdom.png",
+      "sha256": "8941d592ee3fc77b8bfdeee31cd79b7650bfaea5795c60c3bb3bed1035ecbbe9",
+      "metrics": "60 FPS\n158 calls\n113k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionRendererGeneration": "3192.4000000003725",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "90",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "0",
+        "evidenceDistanceScale": "1",
+        "assemblyBlastCameraShake": "0.000",
+        "explorePoint": ""
+      }
+    },
+    {
+      "name": "event",
+      "control": "event",
+      "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1",
+      "file": "event.png",
+      "sha256": "5c30297ab07080bc31b435298b129e85f368fa2462e0dd1ac4d9d96dbdd5e32b",
+      "metrics": "60 FPS\n279 calls\n171k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionRendererGeneration": "3192.4000000003725",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "90",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "0",
+        "evidenceDistanceScale": "1",
+        "assemblyBlastCameraShake": "0.000",
+        "explorePoint": ""
+      }
+    },
+    {
+      "name": "rear",
+      "control": "180",
+      "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1&island3dEvidenceAzimuth=180",
+      "file": "rear.png",
+      "sha256": "42872b657d4d6d1dd0d0233ce4ff1a94a3e9017e33353a2c44fef4a76a14ab04",
+      "metrics": "60 FPS\n845 calls\n218k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionRendererGeneration": "2229.39999999851",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "90",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "180",
+        "evidenceDistanceScale": "1",
+        "assemblyBlastCameraShake": "0.000",
+        "explorePoint": ""
+      }
+    },
+    {
+      "name": "left",
+      "control": "90",
+      "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1&island3dEvidenceAzimuth=90",
+      "file": "left.png",
+      "sha256": "aa59e52a77441fd8e036ff100fb02f257aa2d3b144b55d017b88c09091434863",
+      "metrics": "51 FPS\n874 calls\n218k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionRendererGeneration": "2657.2000000011176",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "90",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "90",
+        "evidenceDistanceScale": "1",
+        "assemblyBlastCameraShake": "0.000",
+        "explorePoint": ""
+      }
+    },
+    {
+      "name": "right",
+      "control": "270",
+      "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1&island3dEvidenceAzimuth=270",
+      "file": "right.png",
+      "sha256": "003ac70462c7a67d5d2f44052a42939357cf4309e3f93d4511a117e2bb3910a5",
+      "metrics": "44 FPS\n1038 calls\n223k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionRendererGeneration": "5131.200000001118",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "90",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "270",
+        "evidenceDistanceScale": "1",
+        "assemblyBlastCameraShake": "0.000",
+        "explorePoint": ""
+      }
+    },
+    {
+      "name": "clay",
+      "control": "clay",
+      "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1&island3dEvidenceAzimuth=0&island3dMapStripped=1",
+      "file": "clay.png",
+      "sha256": "3b3ad043860d53f10357d8687a0fda5731461eef17201e8dbeb8f5042d1a8f2f",
+      "metrics": "59 FPS\n1112 calls\n259k tris\n780×1688 px",
+      "dataset": {
+        "engine": "three.js r185",
+        "constructionRendererGeneration": "4878",
+        "constructionCrewAllocatedTriangles": "43782",
+        "constructionCrewAllocatedDrawCalls": "90",
+        "constructionCrewTriangles": "0",
+        "constructionCrewDrawCalls": "0",
+        "constructionCrewRuntime": "parked",
+        "constructionCrewActive": "false",
+        "constructionCrewTarget": "",
+        "constructionCrewPhase": "arrive",
+        "constructionCrewMode": "resting",
+        "constructionCommissioning": "idle",
+        "constructionChoreography": "",
+        "centralLandmarkOcclusion": "opaque",
+        "cameraAuthoring": "false",
+        "evidenceAzimuth": "0",
+        "evidenceDistanceScale": "1",
+        "assemblyBlastCameraShake": "0.000",
+        "explorePoint": ""
+      }
+    }
+  ],
+  "console": [
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5186/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5186/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1&island3dEvidenceAzimuth=180",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5186/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1&island3dEvidenceAzimuth=90",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5186/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1&island3dEvidenceAzimuth=270",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "THREE.sigmaRadians, 0.08, is too large and will clip, as it requested 39 samples when the maximum is set to 20",
+      "location": {
+        "url": "http://127.0.0.1:5186/.vite-cache/deps/chunk-PUNKC4FG.js?v=54b0316d",
+        "line": 296,
+        "column": 14,
+        "lineNumber": 296,
+        "columnNumber": 14
+      }
+    },
+    {
+      "type": "warning",
+      "text": "The resource http://127.0.0.1:5186/landing-page-assets/landingpage_top.webp was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.",
+      "location": {
+        "url": "http://127.0.0.1:5186/dev/island-template-kit?island=6&mode=3d&level=3&island3dQuality=high&island3dEvidence=1&island3dEvidencePreset=overview&island3dEvidenceDistanceScale=1&island3dEvidenceAzimuth=0&island3dMapStripped=1",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "errors": [],
+  "browser": {
+    "engine": "Chromium",
+    "version": "149.0.7827.55",
+    "headless": true
+  },
+  "canvasViewport": {
+    "width": 390,
+    "height": 844,
+    "pixelWidth": 780,
+    "pixelHeight": 1688
+  },
+  "sourceEnd": {
+    "branch": "codex/island-006-v2-20260928",
+    "head": "cac04bb9203afa75c2d9238eee4275f2a15daeaa",
+    "sources": {
+      "scripts/capture-island006-v2-local.mjs": "35510904b7bc6665bd534bbe4d92fa9b23c67a2b056ecf1008c262566df8ec0f",
+      "src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx": "1bedad27922967bd7155dd9ca3d814ff9b70d71f52813c4cc191a77bf5f1eee0",
+      "src/features/gamification/level-worlds/dev/CrownCitadelThreeModel.ts": "7f24c8743cd61f1eec9ddab7d7147ef3e7987e5738a10a06cb6c1766e97c3a26",
+      "src/features/gamification/level-worlds/dev/Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+      "src/features/gamification/level-worlds/dev/Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+      "src/features/gamification/level-worlds/dev/Island22FishermansVillageThreeWorld.ts": "b114593d69c5e5bc2a3bd1586abcf21467d036c90736576566011d04c767613c",
+      "src/features/gamification/level-worlds/dev/Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+      "src/features/gamification/level-worlds/dev/Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+      "src/features/gamification/level-worlds/dev/Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+      "src/features/gamification/level-worlds/dev/Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+      "src/features/gamification/level-worlds/dev/Island22PremiumLandmarkFamilies.ts": "6edfdd926ecea312c5647e75901abb16dbc4ffb6fee8bd0b011de2ea01cadd6b",
+      "src/features/gamification/level-worlds/dev/Island22WaterDragonMission.ts": "4fbe3beb7ba0b3bd2062e97efc67b592f1b2c87b3e5e5852d88a878aaa6e1eb6",
+      "src/features/gamification/level-worlds/dev/Island2ThreeWorld.ts": "7cf7377a5537347490b45f0b9b5e6d4f648c29141033ff82697cf2d8ff246fed",
+      "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx": "4004fa4e1824a9a1ab880e43231f738e440e524b2c52c1582d93a2712cb4e6e6",
+      "src/features/gamification/level-worlds/dev/Island6MoonveilThreeWorld.ts": "260350d7c8b1d8f510de79e49383b587e335bd55a2a21f1a69b639ba67467f58",
+      "src/features/gamification/level-worlds/dev/IslandStagedRestorationThreePresentation.ts": "72db53e71c39a88211752caa29438cd8ae650c193ea10f7b994d4442b942a51e",
+      "src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx": "73bb0dad1f606aea884e8571ddce247727def738d4808e91aaf750845181c052",
+      "src/features/gamification/level-worlds/dev/island5ThreePilotContract.ts": "93a42077bb178211334abf8452d45c44f8c85613580a9b2f9b5d0af4c766b282",
+      "src/features/gamification/level-worlds/services/islandRunMissionBriefing.ts": "01657e5a7dfd40c2cabd6203d469bf3076048391dd4a42144cf04c0c7eebb0d9",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissionAction.ts": "df936280b5f93225c97a89ed5c72d18d87ddb6ec38309cb4f94c20080fbd3e75",
+      "src/features/gamification/level-worlds/services/islandRunSignatureMissions.ts": "20d481e32b3aea03deba9c21cf2a5c1467c33345307ec4b1658b4fc52e4ec7c0"
+    },
+    "sourceSetSha256": "475e45e5989e2c20aee62d816501c7fa9b9f6eb2652baea4e52da5a0092ed41d"
+  },
+  "changedDuringCapture": false,
+  "finishedAt": "2026-09-28T14:04:23.299Z"
+}

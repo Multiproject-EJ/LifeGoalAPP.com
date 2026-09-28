@@ -822,6 +822,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
           const index=Number(child.name.slice(-1));
           const lit = index < Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, Math.max(0, Math.floor(trafficCharge)));
           const material=child.material as THREE.MeshPhysicalMaterial;
+          if (!material.color || !(child.userData.baseColor instanceof THREE.Color)) return;
           material.emissiveIntensity=lit?2:.02;
           material.color.copy(child.userData.baseColor as THREE.Color).multiplyScalar(lit?1:.28);
         });

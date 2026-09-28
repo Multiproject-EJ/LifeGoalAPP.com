@@ -1,0 +1,27 @@
+{
+  "gate": "macro",
+  "maximumFamilies": 2,
+  "maximumReviews": 4,
+  "families": [
+    {
+      "id": 1,
+      "representation": "Single-sided top roof sheets over closed profiled wall",
+      "reviews": [
+        1,
+        2
+      ],
+      "result": "Profile correction succeeded but revealed/regressed overhang underside enclosure; retired thin-sheet representation",
+      "approvedInvariant": "Shared swept upper roof profile, ridge and eave endpoints"
+    },
+    {
+      "id": 2,
+      "representation": "Closed thin roof solids with downward-facing soffits and capped boundary edges",
+      "reviews": [
+        3
+      ],
+      "result": "Approved r03: enclosure .80\u2192.91, sweep .90; all studio categories/views\u2265.88",
+      "remainingCorrectionAllowance": 1
+    }
+  ],
+  "finish": "released after independent macro-r03 approval"
+}

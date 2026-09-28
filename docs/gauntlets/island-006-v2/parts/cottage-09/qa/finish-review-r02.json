@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-09-chartmaker",
+  "stage": "finish",
+  "review": "r02",
+  "reviewer": "independent-reference-curator",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "referenceAuthority": "secondary-inferred",
+  "evidence": {
+    "studio": "finish-v001",
+    "studioViews": 11,
+    "world": "world-context-v002",
+    "worldViews": 6,
+    "previous": "finish-review-r01.json",
+    "studioReinspection": "Prior unchanged studio finish approval carried forward; all six new world originals inspected."
+  },
+  "finish": {
+    "action": "approve",
+    "criticalScores": {
+      "silhouetteAndVolume": 0.9,
+      "tradeIdentity": 0.86,
+      "roofSurfaceReadability": 0.88,
+      "roofAndAnnexAttachments": 0.9,
+      "masonrySurfaceContinuity": 0.9,
+      "doorWindowHardware": 0.89,
+      "detailAttachments": 0.87,
+      "crossViewCoherence": 0.9
+    },
+    "viewScores": {
+      "front": 0.88,
+      "front-right": 0.88,
+      "right": 0.89,
+      "rear-right": 0.9,
+      "rear": 0.89,
+      "rear-left": 0.9,
+      "left": 0.89,
+      "front-left": 0.88,
+      "top": 0.88,
+      "clay-front": 0.88,
+      "clay-rear": 0.9
+    },
+    "observations": [
+      "Slate rows are staggered with restrained colors; lower lips register in clay. No roof overshoot, checkerboard or missing slab appears.",
+      "Masonry courses remain separated from continuous plinth without triangular coplanar patches. Timber, shutters, hinges, lantern and ridge/chimney caps are attached.",
+      "Chart/scroll/divider cue is small and close to the annex right jamb, but leaves portal center clear; trade identity is restrained rather than target-exact.",
+      "Approved macro silhouette and wall-clipped annex junction are preserved."
+    ],
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0,
+      "accepted": true
+    }
+  },
+  "assembly": {
+    "action": "correction-incomplete",
+    "acceptedCorrection": {
+      "family": "local-plot-and-entry-clearance",
+      "reviewWithinFamily": 2,
+      "boundedCorrectionsUsed": 1,
+      "criticalScores": {
+        "frontEntryPropClearance": 0.9,
+        "foliageToWallAndPortalClearance": 0.9
+      },
+      "deltas": [
+        {
+          "criterion": "frontEntryPropClearance",
+          "before": 0.73,
+          "after": 0.9,
+          "gain": 0.17
+        },
+        {
+          "criterion": "foliageToWallAndPortalClearance",
+          "before": 0.76,
+          "after": 0.9,
+          "gain": 0.14
+        }
+      ],
+      "observations": [
+        "World180/135 show barrel/crate moved off main and annex portals; foliage no longer emerges through facade or annex door.",
+        "Rear coastal rock remains outside the rear terrace cap; no new rear obstruction established."
+      ]
+    },
+    "criticalScores": {
+      "neighborBodySeparation": 0.87,
+      "roofSeparation": 0.88,
+      "routeTileVisibility": 0.89,
+      "rearTerraceContact": 0.86,
+      "frontTerrainToMasonryContact": 0.78
+    },
+    "remainingIssue": {
+      "family": "newly-exposed-front-accent-stone-contact",
+      "evidence": [
+        "world180: tan accent cluster still crosses terrace face/cap at approximately x491\u2013558,y753\u2013828.",
+        "world135: crossing visible from elevated front view."
+      ],
+      "hypothesis": "Cargo removal exposes existing accent rocks inside the new terrace edge; their height/footprint needs local fitting.",
+      "request": "Current bound-lowering attempt did not remove the visible intrusion. Identify exact rendered rock object/instances and actual creation order; preserve rejected evidence and use corrected fitting mechanism or new construction family per gate policy. Threshold remains .88.",
+      "before": 0.78,
+      "requiredAfter": 0.88,
+      "minimumGain": 0.1,
+      "maxOtherRegression": 0.05,
+      "after": 0.78,
+      "gain": 0,
+      "passed": false
+    },
+    "counterNote": "Prior cargo/foliage correction accepted and consumed. This terrain contact was obscured by cargo in r01; the earlier broad terrain score .85 is superseded for the newly visible front edge, not represented as an implementation regression. Keep this bounded terrain review distinct and do not reset the completed plot correction.",
+    "viewAssessments": {
+      "0": {
+        "score": 0.86,
+        "scope": "Rear facade/base and close coastal rock: no cap penetration established."
+      },
+      "45": {
+        "score": 0.87,
+        "scope": "Roof/neighbor separation and placement readable."
+      },
+      "90": {
+        "score": 0.87,
+        "scope": "Side/entry approach now free of cargo and plot vegetation."
+      },
+      "135": {
+        "score": 0.78,
+        "scope": "Elevated view confirms cleared cargo lane and remaining stone/cap contact."
+      },
+      "180": {
+        "score": 0.78,
+        "scope": "Entrances cleared, but tan stones intersect front masonry edge."
+      },
+      "270": {
+        "score": null,
+        "scope": "Boatwright and neighboring roof occlude lower subject; no independent positive contact evidence."
+      }
+    }
+  },
+  "phone": {
+    "action": "pending",
+    "reason": "No production phone-camera packet included in this part gate."
+  },
+  "overallAction": "assembly-correction-required",
+  "notes": "No visual improvement on required terrain contact criterion. Do not accept intended lowering over screenshot evidence. Studio finish remains approved; unrelated house updates do not resolve this defect."
+}

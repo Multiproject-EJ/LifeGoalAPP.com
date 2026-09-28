@@ -1,0 +1,35 @@
+{
+  "part": "round-lantern-tavern",
+  "authority": "secondary-inferred",
+  "tool": "built-in ImageGen",
+  "target": {
+    "path": "goals/target-v001.png",
+    "sha256": "2c3f236b25761ada8feed77b1b5aa9a29cfcbca67db44652b9a3471d7614f9b5",
+    "mode": "RGBA",
+    "dimensions": [
+      1312,
+      1199
+    ],
+    "alphaRange": [
+      0,
+      255
+    ]
+  },
+  "prompt": {
+    "path": "prompts/target-v001.txt",
+    "sha256": "fc1e3b92ffbeba9245a9036b1fb4545ab029dc81fe48041fd7b3aed18f0dc0d2"
+  },
+  "interpretations": [
+    "Generated views infer rear arrangement.",
+    "Runtime roof perimeter rounded between eight hips to eliminate vertical silhouette facets.",
+    "No failed model used as image-generation identity."
+  ],
+  "frozen": [
+    "boatwright",
+    "hatchery",
+    "other landmarks",
+    "gameplay"
+  ],
+  "baseline": "baseline/v001/capture.json",
+  "userApproval": "good, continue after hatchery review"
+}

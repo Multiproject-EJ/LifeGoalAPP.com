@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-11-keeper",
+  "stage": "macro",
+  "review": "r02",
+  "reviewer": "independent-visual-review",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "referenceAuthority": "secondary-inferred",
+  "evidence": {
+    "studio": "blockout-v002",
+    "studioViews": 11,
+    "previous": "macro-review-r01.json"
+  },
+  "macro": {
+    "action": "approve",
+    "finishMayProceed": true,
+    "criticalScores": {
+      "ridgeXSweptRoofSilhouette": 0.9,
+      "twoStoreyLeftAnnexProportion": 0.9,
+      "closedGableAndRoofEnclosure": 0.9,
+      "annexWallBoundary": 0.89,
+      "openingClearance": 0.89,
+      "timberFrameJunctionContinuity": 0.91,
+      "terraceAndStep": 0.88,
+      "crossViewCoherence": 0.9
+    },
+    "viewScores": {
+      "front": 0.89,
+      "front-right": 0.9,
+      "right": 0.91,
+      "rear-right": 0.9,
+      "rear": 0.89,
+      "rear-left": 0.91,
+      "left": 0.91,
+      "front-left": 0.9,
+      "top": 0.9,
+      "clay-front": 0.9,
+      "clay-rear": 0.91
+    },
+    "correctionDelta": {
+      "criterion": "timberFrameJunctionContinuity",
+      "before": 0.8,
+      "after": 0.91,
+      "gain": 0.11,
+      "maxOtherRegression": 0
+    },
+    "observations": [
+      "Side-gable ties now visibly meet extended corner posts; detached light gaps are gone in left/right and clay obliques.",
+      "No new timber tip rises through slate skin. Roof silhouette, continuous plaster enclosure and annex boundary remain intact.",
+      "Openings and terrace unaffected."
+    ],
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 2,
+      "boundedCorrectionsUsed": 1,
+      "accepted": true
+    }
+  },
+  "assembly": {
+    "action": "pending",
+    "priorAction": "retire-family",
+    "priorEvidence": "world-blockout-v001",
+    "priorReview": "macro-review-r01.json",
+    "placementFamily1Retired": true,
+    "reason": "Studio-only gate; original boatwright/annex overlap and rear rock veto not superseded. New placement family2 evidence required."
+  },
+  "overallAction": "approve-studio-only"
+}

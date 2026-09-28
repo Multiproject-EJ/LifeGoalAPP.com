@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "partId": "cottage-11",
+  "referenceClass": "secondary-inferred",
+  "status": "generated-design-goal",
+  "generator": "built-in image_gen",
+  "inputImages": [],
+  "failedModelUsedAsReference": false,
+  "prompt": "prompts/target-v001.txt",
+  "output": "goals/target-v001.png",
+  "originalOutput": "/Users/ejmac/.codex/generated_images/01a0e966-6285-7ea0-8a2e-7c7ab6970293/exec-49174c75-5fd8-43e0-9e2a-7683488d0fd9.png",
+  "sha256": "e611ad4eb3e5ab126b1113587bbc6f4b03716a165c44f1c653b68b123cc4f89b",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "transparentPixels": 1572864,
+  "fullyTransparentPixels": 602717,
+  "provenance": "Text-only inferred goal for user-authorized island006 V2 continuation; not exact approved pixel identity. Geometry contract controls footprint, access, attachment and cross-view consistency.",
+  "visualInspection": "Two-storey blue slate keeper cottage with LEFT annex, bell and lantern. Clear doors, coherent low annex; keep attached trim from penetrating upper front facade in construction."
+}

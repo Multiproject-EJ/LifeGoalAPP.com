@@ -1,0 +1,3 @@
+# Finish after macro approval only
+
+Staggered low-contrast physical slate mainroof and clay lean-to tiles, subtle woodgrain/joinery, irregular restrained stone courses on terrace and footings, shutters, ironwork, modest lantern, small fish-curing rack with three recognizable fish beside workroom door. Clear both front doors and rear service sill. Fish rail and flue are functional identity cues, not oversized signage. No large rigid lattices or checkerboard roof colors. Put masonry slightly proud of macro surfaces to prevent coplanar z-fighting. Keep roof/soffit/trim contacts and neighbor clearance unchanged; spend finish geometry within12k/36 budget.

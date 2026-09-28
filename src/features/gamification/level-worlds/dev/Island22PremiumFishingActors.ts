@@ -98,8 +98,8 @@ export function createIsland22PremiumFishingMaterials(): Island22PremiumFishingM
     clearcoatRoughness: 0.16,
   });
   return {
-    coat: new THREE.MeshStandardMaterial({ color: 0x285f63, roughness: 0.78 }),
-    coatEdge: new THREE.MeshStandardMaterial({ color: 0x397d78, roughness: 0.72 }),
+    coat: new THREE.MeshStandardMaterial({ color: 0xc59a36, roughness: 0.62 }),
+    coatEdge: new THREE.MeshStandardMaterial({ color: 0xe6bb54, roughness: 0.70 }),
     shirt: new THREE.MeshStandardMaterial({ color: 0xe6d3aa, roughness: 0.86 }),
     scarf: new THREE.MeshStandardMaterial({ color: 0xb94731, roughness: 0.76 }),
     trousers: new THREE.MeshStandardMaterial({ color: 0x3a403d, roughness: 0.9 }),
@@ -107,7 +107,7 @@ export function createIsland22PremiumFishingMaterials(): Island22PremiumFishingM
     leatherDark: new THREE.MeshStandardMaterial({ color: 0x2a1b15, roughness: 0.92 }),
     skin: new THREE.MeshStandardMaterial({ color: 0xd99b68, roughness: 0.84 }),
     blush: new THREE.MeshStandardMaterial({ color: 0xd97660, roughness: 0.88 }),
-    hair: new THREE.MeshStandardMaterial({ color: 0x55311f, roughness: 0.94 }),
+    hair: new THREE.MeshStandardMaterial({ color: 0xa6a18e, roughness: 0.94 }),
     eyeWhite: new THREE.MeshStandardMaterial({ color: 0xfff7de, roughness: 0.62 }),
     eyeDark: new THREE.MeshStandardMaterial({ color: 0x16292a, roughness: 0.72 }),
     brass: new THREE.MeshStandardMaterial({ color: 0xc9913d, roughness: 0.48, metalness: 0.34 }),
@@ -385,6 +385,14 @@ export function createIsland22PremiumFisherman(
     pocket.rotation.z = 0.08;
   }
 
+  for (const side of [-1, 1]) {
+    const lapel = mesh(`ISLAND_006_FISHER_OILSKIN_LAPEL_${side}`,
+      new THREE.CapsuleGeometry(.035, .38, 2, 6), materials.coatEdge, spinePivot);
+    lapel.position.set(side * .15, .57, .31);lapel.rotation.z=side*.18;
+    const cuff = mesh(`ISLAND_006_FISHER_PATCH_POCKET_${side}`,
+      new THREE.BoxGeometry(.18,.15,.035),materials.coatEdge,spinePivot);
+    cuff.position.set(side*.29,.26,.285);cuff.rotation.y=side*.25;
+  }
   const headPivot = namedGroup('ISLAND_22_PREMIUM_FISHER_HEAD_PIVOT');
   headPivot.position.set(0, 1.05, 0);
   spinePivot.add(headPivot);
@@ -1030,7 +1038,7 @@ export function createIsland22PremiumCatchFish(
       eyeWhiteMaterial,
       motionRoot,
     );
-    eyeWhite.position.set(spec.headX + spec.headScale[0] * 0.46, spec.height * 0.16, side * spec.headScale[2] * 0.82);
+    eyeWhite.position.set(spec.headX + spec.headScale[0] * 0.15, head.position.y + spec.headScale[1] * 0.13, side * spec.headScale[2] * 0.425);
     const pupil = mesh(
       `ISLAND_22_PREMIUM_${spec.subtype.toUpperCase()}_PUPIL_${side}`,
       new THREE.SphereGeometry(spec.eyeScale * 0.46, 7, 5),

@@ -1,0 +1,32 @@
+{
+  "reviewer": "visual_review",
+  "evidence": "qa/blockout-v002",
+  "action": "one-bounded-correction",
+  "criticalMinimum": 0.78,
+  "minimumAfterRequired": 0.88,
+  "regressionLimit": 0.05,
+  "defect": "Exposed cradle arm tips end outboard of hull in both obliques and clay views",
+  "correction": "Move cradle tops inward/up to intentional shallow hull contact; keep all other shapes",
+  "macroScores": {
+    "silhouette": [
+      0.87,
+      0.88
+    ],
+    "roofBody": [
+      0.9,
+      0.9
+    ],
+    "openHull": [
+      0.86,
+      0.9
+    ],
+    "foundation": [
+      0.9,
+      0.9
+    ],
+    "gantryCradle": [
+      0.78,
+      0.84
+    ]
+  }
+}

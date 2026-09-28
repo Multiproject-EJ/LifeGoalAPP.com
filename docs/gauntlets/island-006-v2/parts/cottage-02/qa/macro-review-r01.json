@@ -1,0 +1,60 @@
+{
+  "part": "cottage-02",
+  "stage": "macro",
+  "review": 1,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v001",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "baseline": "baseline/v001",
+  "method": "All 11 original blockout views and six world frames inspected before source. Scores are subjective. Live source was already being revised when read, so it is not used to diagnose the immutable r01 capture.",
+  "action": "one-bounded-correction",
+  "threshold": 0.85,
+  "categoryScores": {
+    "compactSingleStoreyVolume": 0.89,
+    "sweptRoofIdentity": 0.78,
+    "roofEnclosureAndNormals": 0.88,
+    "roofTrimContacts": 0.87,
+    "porchSupportAndDoorClearance": 0.90,
+    "loftWindowClearance": 0.89,
+    "sideRearOpenings": 0.88,
+    "terraceSteps": 0.88,
+    "crossViewCoherence": 0.88
+  },
+  "viewScores": {
+    "front-right": 0.79,
+    "front-left": 0.79,
+    "rear-left": 0.79,
+    "rear-right": 0.79,
+    "front": 0.78,
+    "rear": 0.78,
+    "left": 0.87,
+    "right": 0.87,
+    "top": 0.87,
+    "clay-front": 0.79,
+    "clay-rear": 0.79
+  },
+  "boundedCorrection": {
+    "family": "swept roof profile identity",
+    "pixelFinding": "The front/rear gable and obliques read as a conventional gable with outward rounding. The inferred target has a distinctive steeper upper slope that flattens toward the eaves.",
+    "hypothesis": "Change the shared roof profile to a clear inward sweep while retaining peak/eave limits and loft/porch clearance. Derive roof, gable shell closure and bargeboard paths from the same curve.",
+    "controls": "Keep body footprint, terrace, doors, porch and neighboring buildings frozen. Finish withheld until macro approval.",
+    "requiredDelta": "Swept-roof identity at least 0.88 (+0.10), every critical view/category at least 0.85, no critical regression over 0.05."
+  },
+  "assembly": {
+    "evidence": "qa/world-blockout-v001",
+    "action": "one-bounded-correction",
+    "categoryScores": {"frontEntryClearance": 0.76, "foliageClearance": 0.89, "rearThresholdClearance": 0.88, "terraceGroundSupport": 0.86, "cottage01AnnexClearance": 0.86, "cottage03Clearance": 0.88},
+    "views": {
+      "mender-world-azimuth-0": "Large scene barrel intrudes into left half of front step/approach. Removed conifer no longer crosses the cottage.",
+      "mender-world-azimuth-90": "Neighbor blocks much of cottage lower half; not used alone as clearance evidence.",
+      "mender-world-azimuth-180": "Rear threshold clear; terrace meets visible coastline shelf. Cottage01 annex remains below west eave.",
+      "mender-world-azimuth-270": "Mostly occluded by cottage01; insufficient standalone contact evidence.",
+      "mender-world-azimuth-45": "Elevated evidence shows narrow cottage01 interface and open cottage03 gap.",
+      "mender-world-azimuth-135": "Opposite elevated view corroborates roof-volume separation and terrace support."
+    },
+    "correctionScope": "Move only the scene barrel away from the step/door approach, checking its new footprint against neighboring entrances. Recapture after roof correction because that profile changes the tight cottage01 interface.",
+    "note": "Other assembly scores are provisional passes; final assembly is withheld until corrected curve/barrel evidence."
+  },
+  "remainingTargetGap": "Macro only: net rack, slate courses, weathering and hardware intentionally absent. Exact inferred-reference parity is not claimed."
+}

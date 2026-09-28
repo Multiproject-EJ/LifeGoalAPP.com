@@ -1,0 +1,62 @@
+{
+  "part": "cottage-01",
+  "stage": "macro",
+  "review": 1,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v001",
+  "baseline": "baseline/v002",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "Original target, baseline and all 11 blockout frames inspected before source. Subjective visual scores for the compact game asset.",
+  "action": "one-bounded-correction",
+  "threshold": 0.85,
+  "categoryScores": {
+    "mainSilhouetteVolume": 0.88,
+    "twoStoreyJettyProportions": 0.87,
+    "cottageAndLeanToIdentity": 0.88,
+    "roofSurfaceContinuity": 0.72,
+    "annexRoofPostContact": 0.80,
+    "dormerMassAndPlacement": 0.86,
+    "openingClearance": 0.87,
+    "terraceAndSteps": 0.89,
+    "crossViewCoherence": 0.80
+  },
+  "viewScores": {
+    "front-right": 0.87,
+    "front-left": 0.80,
+    "rear-left": 0.80,
+    "rear-right": 0.86,
+    "front": 0.87,
+    "rear": 0.87,
+    "left": 0.86,
+    "right": 0.86,
+    "top": 0.88,
+    "clay-front": 0.86,
+    "clay-rear": 0.72
+  },
+  "boundedCorrection": {
+    "family": "roof enclosure integrity",
+    "pixelFindings": [
+      "The rear main roof sheet disappears in clay-rear, exposing shell/trim bands while beauty remains filled.",
+      "Far annex corner post stops short of the lean-to underside in front-left and rear-left, leaving a visible small gap."
+    ],
+    "sourceDiagnosisAfterPixels": "Main side +1 and -1 roof meshes reuse the same winding; one therefore has inward normals. Annex lean-to triangle winding is downward. DoubleSide beauty materials conceal the culling issue. Dormer roof normals should be audited in the same bounded fix.",
+    "hypothesis": "Orient every roof face outward and fit annex corner posts to the lean-to underside without changing frozen roof/shell silhouettes or openings.",
+    "controls": "Same 11 camera frames; no finish additions until macro passes.",
+    "requiredDelta": "Every critical score at least 0.85; worst dimension improves by at least 0.10; no critical regression over 0.05."
+  },
+  "assembly": {
+    "evidence": "qa/world-blockout-v001",
+    "action": "one-bounded-correction",
+    "categoryScores": {"foliageAndEntryClearance": 0.68, "rearDoorTerrainClearance": 0.76, "terrainSupport": 0.86, "lighthouseClearanceVisibleEvidence": 0.86, "adjacentCottageClearance": null},
+    "views": {
+      "cottage-world-azimuth-0": "Conifer intersects/obscures annex and terrace; grass enters the front approach.",
+      "cottage-world-azimuth-90": "Neighboring cottage occludes lower annex. Outer eave is very close to neighbor side; clearance not proven.",
+      "cottage-world-azimuth-180": "Pointed terrain rock protrudes into rear service-door threshold. Broad terrace is supported by coastline. Annex-to-neighbor contact remains too close for confident approval.",
+      "cottage-world-azimuth-270": "Lighthouse occludes lower cottage; exposed roofs appear separated, without a demonstrated intersection."
+    },
+    "correctionScope": "Clear local conifer/grass from cottage footprint and entrances, and remove only the rear threshold terrain intrusion. Preserve frozen neighbor buildings. Supply unobstructed or bounding-surface evidence for annex outer eave versus cottage-02 wall/gutter before assembly approval.",
+    "note": "Projected overlaps alone are not treated as confirmed architectural collisions."
+  },
+  "remainingTargetGap": "Finish deliberately absent. Target weathering, roof courses, shutters, flower boxes and hardware are not evaluated at macro stage."
+}

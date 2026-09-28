@@ -1,0 +1,50 @@
+{
+  "part": "cottage-03",
+  "stage": "macro",
+  "review": 3,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v003",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "All 11 original studio images and six actual world frames inspected. Scores reflect pixels, not builder assertions. Existing support scan retained for unchanged terrace and transform.",
+  "action": "approve",
+  "threshold": 0.85,
+  "categoryScores": {
+    "twoStoreyVolumeAndJetty": 0.89,
+    "sweptRoofIdentity": 0.90,
+    "closedRoofEnclosure": 0.90,
+    "lowLeftAnnexProportions": 0.88,
+    "architecturalAttachmentClearance": 0.90,
+    "upperSideWindowClearance": 0.85,
+    "otherOpeningsAndChimneyContacts": 0.89,
+    "continuousTerraceAndSteps": 0.88,
+    "crossViewCoherence": 0.89
+  },
+  "viewScores": {"front-right": 0.90, "front-left": 0.89, "rear-left": 0.87, "rear-right": 0.88, "front": 0.90, "rear": 0.88, "left": 0.85, "right": 0.88, "top": 0.90, "clay-front": 0.90, "clay-rear": 0.88},
+  "representationResult": {
+    "familyIndex": 2,
+    "family": "wall-clipped closed annex roof footprint",
+    "status": "accepted",
+    "sameDefectRetained": true,
+    "finding": "The slab and trim now stop together at the main wall. The angled spike across the upper front facade is gone in front, front-left, front-right, top and clay-front. Roof remains solid and attached in opposite/clay views. The earlier front/rear corbel correction remains effective, leaving both door crowns clear.",
+    "scoreHistory": "Architectural attachment 0.79 at r01, 0.84 rejected at r02, 0.90 at r03. Total gain from original 0.11; r03 is the baseline review of a genuinely different construction family, not a second parameter correction of the retired family.",
+    "regressions": "No critical regression greater than 0.05. Main roof, annex proportions, openings, chimneys, terrace and root placement retain the accepted silhouette."
+  },
+  "familyLedger": [
+    {"index": 1, "representation": "buried rectangular annex roof with independently shortened trim", "reviews": [1, 2], "boundedCorrectionsUsed": 1, "status": "retired"},
+    {"index": 2, "representation": "wall-clipped closed annex roof footprint", "reviews": [3], "boundedCorrectionsUsed": 0, "status": "accepted"}
+  ],
+  "assembly": {
+    "evidence": "qa/world-blockout-v003",
+    "action": "approve",
+    "categoryScores": {"mainEntryClearance": 0.89, "workroomEntryClearance": 0.89, "rearThresholdClearance": 0.88, "rearTerraceSupport": 0.88, "cottage02AnnexClearance": 0.87, "cottage04GuildClearance": 0.88, "treeGrassClearance": 0.89},
+    "viewScores": {"smoke-world-azimuth-0": 0.89, "smoke-world-azimuth-180": 0.88, "smoke-world-azimuth-45": 0.88, "smoke-world-azimuth-135": 0.88, "smoke-world-azimuth-90": null, "smoke-world-azimuth-270": 0.85},
+    "findings": "All three entries remain clear. Removed shrub and relocated cargo do not reappear in either front approach. The low annex remains separate from cottage02; cottage04/guild separation is unchanged. No new terrain, foliage or support issue is visible.",
+    "supportEvidence": ["qa/support-top-scan.json", "qa/support-method-note.md"],
+    "supportAssessment": "Retain the approved nine-point terrain-only scan for unchanged base/transform: every footprint sample intersects supporting terrain, including both rear corners with 0.084 world units overlap. Updated views are consistent with that support.",
+    "limitations": "World90 is fully occluded; world270 partly occluded. Front/rear/elevated45/135 provide usable contact evidence."
+  },
+  "finishControls": "Freeze accepted macro and clipped roof boundary. Annex finish courses must use that same wall termination rather than restore the retired protruding rectangle. Keep the small upper-left window gap clear of roof courses/flashing; it is the tightest accepted macro contact.",
+  "release": "Finish may begin. It requires its own independent finish and final assembly gate.",
+  "remainingTargetGap": "Slate/clay layers, masonry, timber, shutters and smokehouse-specific detail remain deliberately absent. Approval does not claim exact inferred-reference identity or complete island V2."
+}

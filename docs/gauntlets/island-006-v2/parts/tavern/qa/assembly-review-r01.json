@@ -1,0 +1,10 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "island-context-v002/tavern-right.png",
+  "decision": "one-bounded-correction",
+  "findings": [
+    "Decorative cottage intersects tavern wall/roof.",
+    "Generic camera presets do not center subject reliably."
+  ],
+  "action": "Remove decorative plot collision; supply correctly centered world context plus canonical-board overview."
+}

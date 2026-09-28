@@ -1,0 +1,116 @@
+{
+  "cottage": 7,
+  "intrusions": [],
+  "doorway": [
+    {
+      "localOrigin": [
+        -1.43,
+        0.3,
+        0.715
+      ],
+      "nearestHatchery": null
+    },
+    {
+      "localOrigin": [
+        -1.43,
+        0.6,
+        0.715
+      ],
+      "nearestHatchery": null
+    },
+    {
+      "localOrigin": [
+        -1.43,
+        0.9,
+        0.715
+      ],
+      "nearestHatchery": null
+    },
+    {
+      "localOrigin": [
+        -1.265,
+        0.3,
+        0.715
+      ],
+      "nearestHatchery": null
+    },
+    {
+      "localOrigin": [
+        -1.265,
+        0.6,
+        0.715
+      ],
+      "nearestHatchery": null
+    },
+    {
+      "localOrigin": [
+        -1.265,
+        0.9,
+        0.715
+      ],
+      "nearestHatchery": null
+    },
+    {
+      "localOrigin": [
+        -1.1,
+        0.3,
+        0.715
+      ],
+      "nearestHatchery": null
+    },
+    {
+      "localOrigin": [
+        -1.1,
+        0.6,
+        0.715
+      ],
+      "nearestHatchery": null
+    },
+    {
+      "localOrigin": [
+        -1.1,
+        0.9,
+        0.715
+      ],
+      "nearestHatchery": null
+    }
+  ],
+  "candidates": [
+    {
+      "position": [
+        3.2,
+        0.57,
+        9.4
+      ],
+      "blockedDoorSamples": 0,
+      "nearestHatchery": null
+    },
+    {
+      "position": [
+        2.8,
+        0.57,
+        9.6
+      ],
+      "blockedDoorSamples": 0,
+      "nearestHatchery": null
+    },
+    {
+      "position": [
+        3,
+        0.57,
+        9.8
+      ],
+      "blockedDoorSamples": 0,
+      "nearestHatchery": null
+    },
+    {
+      "position": [
+        2.8,
+        0.57,
+        10
+      ],
+      "blockedDoorSamples": 0,
+      "nearestHatchery": null
+    }
+  ]
+}

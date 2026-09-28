@@ -1,0 +1,67 @@
+{
+  "reason": "Baseline market overlapped lighthouse quay and decorative boats occupied pier supports",
+  "changes": {
+    "marketFactoryOffset": {
+      "before": [
+        0,
+        0.28,
+        -0.5
+      ],
+      "after": [
+        -2.5,
+        0.28,
+        -0.5
+      ]
+    },
+    "accessSpur": {
+      "center": [
+        -0.725,
+        0.525,
+        1.0
+      ],
+      "size": [
+        0.47,
+        0.11,
+        0.51
+      ],
+      "space": "parent dock local"
+    },
+    "boats": {
+      "before": [
+        [
+          -9.1,
+          -0.55,
+          -5.8,
+          -0.6
+        ],
+        [
+          -7.35,
+          -0.55,
+          -7.25,
+          0.5
+        ]
+      ],
+      "after": [
+        [
+          -11.9,
+          -0.55,
+          -5.75,
+          -0.78
+        ],
+        [
+          -12.05,
+          -0.55,
+          -9.8,
+          -0.78
+        ]
+      ]
+    }
+  },
+  "preserved": [
+    "dock root position/yaw",
+    "lighthouse module and placement",
+    "canonical gameplay"
+  ],
+  "evidence": "qa/world-blockout-v002",
+  "review": "qa/assembly-review-r02.json"
+}

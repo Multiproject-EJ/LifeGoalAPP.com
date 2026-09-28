@@ -1,0 +1,56 @@
+{
+  "part": "fish-market",
+  "stage": "macro",
+  "review": 1,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v001",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "Original pixels inspected before source. Scores are subjective visual judgments for the compact game asset, not measured likeness.",
+  "action": "one-bounded-correction",
+  "threshold": 0.85,
+  "categoryScores": {
+    "silhouetteVolume": 0.89,
+    "architecturalIdentity": 0.87,
+    "roofShellClosure": 0.88,
+    "roofTimberAttachmentClearance": 0.79,
+    "canopyShapeAndSupport": 0.89,
+    "counterAndEntryClearance": 0.91,
+    "pierSupportContinuity": 0.90,
+    "derrickPulleyHookContinuity": 0.88,
+    "crossViewCoherence": 0.88
+  },
+  "viewScores": {
+    "front-right": 0.81,
+    "front-left": 0.81,
+    "rear-left": 0.79,
+    "rear-right": 0.79,
+    "front": 0.82,
+    "rear": 0.81,
+    "left": 0.79,
+    "right": 0.79,
+    "top": 0.79,
+    "clay-front": 0.81,
+    "clay-rear": 0.79
+  },
+  "boundedCorrection": {
+    "family": "roof-timber attachment clearance",
+    "observation": "Four square timber ends protrude through the blue roof near both eaves. These persist in top, opposite sides, rear obliques and clay, so are real attachments rather than shading.",
+    "hypothesis": "Shorten or fit the underlying timber ends below the continuous roof underside while preserving shell, roof, canopy and pier silhouettes.",
+    "requiredDelta": "Roof attachment score at least 0.89 (+0.10), every required score at least 0.85, no critical regression over 0.05.",
+    "controls": "Same 11 cameras, same macro proportions, no finish additions until gate passes."
+  },
+  "assembly": {
+    "evidence": "qa/world-blockout-v001",
+    "action": "one-bounded-correction",
+    "scores": {"lighthouseClearance": 0.55, "boatPierClearance": 0.57, "functionalAccess": 0.58, "structuralSupport": 0.88},
+    "views": {
+      "market-world-azimuth-0": "Partial market evidence; lighthouse quay overlaps frontage.",
+      "market-world-azimuth-90": "Market fully occluded by lighthouse; not clearance proof.",
+      "market-world-azimuth-180": "Quay/building collision and boats within pier supports are visible.",
+      "market-world-azimuth-270": "Lighthouse stone quay cuts through market counter and door zone; boat overlaps pier bracing."
+    },
+    "correctionScope": "Move market outboard within dock parent, add supported access spur and clear decorative boat/pier intersections. Preserve frozen lighthouse and neighboring architecture. Recapture actual four-angle assembly before approval."
+  },
+  "remainingTargetGap": "Finish deliberately absent. Target weathering, planking, market stock and hardware are not evaluated at macro stage."
+}

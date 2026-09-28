@@ -1,0 +1,13 @@
+{
+  "unit": "Two-storey cottage03 with left smokehouse annex",
+  "parts": [
+    "continuous terrace and steps",
+    "two-storey closed shell and jetty",
+    "swept solid main roof and chimney",
+    "attached left lean-to workroom and flue",
+    "openings and supports",
+    "finish masonry/roof/timber systems and restrained fishing props"
+  ],
+  "dependencies": "Finish after independent macro approval",
+  "exclusions": "Eight prior approved modules, other cottage transforms, gameplay"
+}

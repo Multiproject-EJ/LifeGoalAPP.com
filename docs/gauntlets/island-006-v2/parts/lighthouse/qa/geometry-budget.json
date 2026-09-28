@@ -1,0 +1,74 @@
+[
+  {
+    "landmark": "wisdom",
+    "level": 1,
+    "quality": "low",
+    "vertices": 11645,
+    "triangles": 4708,
+    "draws": 9
+  },
+  {
+    "landmark": "wisdom",
+    "level": 2,
+    "quality": "low",
+    "vertices": 13326,
+    "triangles": 5940,
+    "draws": 14
+  },
+  {
+    "landmark": "wisdom",
+    "level": 3,
+    "quality": "low",
+    "vertices": 25026,
+    "triangles": 12208,
+    "draws": 39
+  },
+  {
+    "landmark": "wisdom",
+    "level": 1,
+    "quality": "medium",
+    "vertices": 13365,
+    "triangles": 5380,
+    "draws": 9
+  },
+  {
+    "landmark": "wisdom",
+    "level": 2,
+    "quality": "medium",
+    "vertices": 15094,
+    "triangles": 6644,
+    "draws": 14
+  },
+  {
+    "landmark": "wisdom",
+    "level": 3,
+    "quality": "medium",
+    "vertices": 29234,
+    "triangles": 13936,
+    "draws": 39
+  },
+  {
+    "landmark": "wisdom",
+    "level": 1,
+    "quality": "high",
+    "vertices": 13365,
+    "triangles": 5380,
+    "draws": 9
+  },
+  {
+    "landmark": "wisdom",
+    "level": 2,
+    "quality": "high",
+    "vertices": 15094,
+    "triangles": 6644,
+    "draws": 14
+  },
+  {
+    "landmark": "wisdom",
+    "level": 3,
+    "quality": "high",
+    "vertices": 29234,
+    "triangles": 13936,
+    "draws": 39
+  }
+]

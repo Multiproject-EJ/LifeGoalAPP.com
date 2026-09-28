@@ -1,0 +1,302 @@
+{
+  "captures": [
+    {
+      "name": "sequence-21.35",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=21.35&capture=1",
+      "state": {
+        "time": 21.35,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            20.219424625169648,
+            35.046842802247696,
+            66.92040322035288
+          ],
+          "target": [
+            -5.8,
+            13.190526117105197,
+            12.8
+          ],
+          "fov": 60
+        },
+        "calls": 1574,
+        "triangles": 539412
+      }
+    },
+    {
+      "name": "sequence-21.45",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=21.45&capture=1",
+      "state": {
+        "time": 21.45,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            20.36124491793257,
+            34.6991550158788,
+            67.05718828111364
+          ],
+          "target": [
+            -5.8,
+            12.806438325610012,
+            12.8
+          ],
+          "fov": 59.86282578875172
+        },
+        "calls": 816,
+        "triangles": 292524
+      }
+    },
+    {
+      "name": "sequence-21.6",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=21.6&capture=1",
+      "state": {
+        "time": 21.6,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            18.995513492094837,
+            32.15836098060805,
+            66.47683696099763
+          ],
+          "target": [
+            -6.197084014973067,
+            10.771935482266327,
+            12.979347794217356
+          ],
+          "fov": 59.24554183813443
+        },
+        "calls": 819,
+        "triangles": 292888
+      }
+    },
+    {
+      "name": "sequence-21.9",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=21.9&capture=1",
+      "state": {
+        "time": 21.9,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            14.107680666341267,
+            20.2517930024133,
+            52.65642860673285
+          ],
+          "target": [
+            -5.908032316059809,
+            5.492110612376168,
+            12.955425737136371
+          ],
+          "fov": 57.34430727023321
+        },
+        "calls": 807,
+        "triangles": 288496
+      }
+    },
+    {
+      "name": "sequence-22.2",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=22.2&capture=1",
+      "state": {
+        "time": 22.2,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            11.619218269638203,
+            13.238425325913099,
+            44.22664111730011
+          ],
+          "target": [
+            -5.74638691248839,
+            2.140185836083586,
+            12.83760411631284
+          ],
+          "fov": 56.035665294924556
+        },
+        "calls": 780,
+        "triangles": 283472
+      }
+    },
+    {
+      "name": "sequence-22.4",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=22.4&capture=1",
+      "state": {
+        "time": 22.4,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            10.27588271848835,
+            14.542948240819216,
+            41.727794005462286
+          ],
+          "target": [
+            -5.726440426320583,
+            2.188680783441568,
+            12.537628008580505
+          ],
+          "fov": 55.19696748797202
+        },
+        "calls": 758,
+        "triangles": 277472
+      }
+    },
+    {
+      "name": "sequence-22.5",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=22.5&capture=1",
+      "state": {
+        "time": 22.5,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            9.63601257149627,
+            12.49013812086205,
+            39.1508889919896
+          ],
+          "target": [
+            -5.499175256585284,
+            1.9081644450332589,
+            12.21914934823754
+          ],
+          "fov": 53.94430675025514
+        },
+        "calls": 748,
+        "triangles": 273960
+      }
+    },
+    {
+      "name": "sequence-22.55",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=22.55&capture=1",
+      "state": {
+        "time": 22.55,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            9.152249529942752,
+            11.49185492174588,
+            37.52557839952897
+          ],
+          "target": [
+            -5.367515699675289,
+            1.8749069471838142,
+            12.02085437454457
+          ],
+          "fov": 53.16576760460707
+        },
+        "calls": 747,
+        "triangles": 273508
+      }
+    },
+    {
+      "name": "sequence-22.6",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=22.6&capture=1",
+      "state": {
+        "time": 22.6,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            8.487016076969136,
+            10.877307327164594,
+            35.604429564419206
+          ],
+          "target": [
+            -5.244390195429443,
+            1.8338795785474786,
+            11.78181254599882
+          ],
+          "fov": 52.313748359819186
+        },
+        "calls": 744,
+        "triangles": 269612
+      }
+    },
+    {
+      "name": "sequence-22.68",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=22.68&capture=1",
+      "state": {
+        "time": 22.68,
+        "phase": "repair-mission",
+        "camera": {
+          "position": [
+            7.1502022336073034,
+            10.483322280363467,
+            32.10520499581877
+          ],
+          "target": [
+            -5.065902186541442,
+            1.776668213781825,
+            11.337227647022752
+          ],
+          "fov": 50.85008076979152
+        },
+        "calls": 722,
+        "triangles": 267960
+      }
+    }
+  ],
+  "errors": [],
+  "sourceStart": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22ChartmakerCottageV2.ts": "11faf47899821e5dcee2ef1a2d38a3f9a16b38210a3b03da284ddb53ddbf30d2",
+    "Island22CooperCottageV2.ts": "19f533458c4af3cf20fd3c9d7bb1cbaad4777b3bc4a02b2ee5e9f183af854126",
+    "Island22DragonAnatomyV2.ts": "9388815addb53ac035c678a512cbee72c35ce0544ded98e6f964058caa26e4e1",
+    "Island22DragonCinematicCamera.ts": "285187170162ae909fb56646aa7d191c1622fc78a762a24b83f184d231835ec9",
+    "Island22DragonFinishV2.ts": "7d7dc789739f77f772ce8ef5cf659fadcae3ba3345e739a5949bd37674782a98",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22DragonWaterVFX.ts": "f5a518830dbff4a385305f1f0c11429b97e0dabff7213a2f43643c9334fbcbd1",
+    "Island22FishMarketV2.ts": "20d3f3076e6feba45114f2a12877de2af6da3e167df7245d6cfc9fd57c1f6cd7",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "ad274a6924c89ac792df863f22c9c5ce0e8bbcb862a5d0e7fbb1fdf960a3b47e",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "3fa2bf8f4e581e8d845438bba88167de8bc073dec25a7551f6c8104d082e07f5",
+    "Island22HarborCookCottageV2.ts": "68ea89202af9943d825bbf06e8ef24ade1d8bf19124c4b599634a8710c8564e1",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "3f5749100c54e2f7daec793422c0011fe73ebc0942dcbded097d265355ba389c",
+    "Island22KeeperCottageV2.ts": "ca7de2e100440ef503f735999875d681656b2f10a0bfadf5621f34b5bb1c1ee5",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22NetMenderCottageV2.ts": "f444abfba89193a2a01dcf45caafd7379e0847831b9b21917d44748243db4fb8",
+    "Island22NorthCottageV2.ts": "b33721f450e808e5904bb79bce8ad0d8f7c73eeac1d9744951043ffedc95088d",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "99f00d41cbacc5380006cf1974956422f767736a37991a7811a5a48832a6a418",
+    "Island22RopeMakerCottageV2.ts": "7eaadc57dff6821cd750c80a4f7a9cb39b791a7e9b5b90da1567dfd8efd89623",
+    "Island22SailmakerCottageV2.ts": "3a71718b13bf339e5448f0639fd1843a303517f68c0c98c54f6acc89998cb7d9",
+    "Island22SecondaryCottagesV2.ts": "e9a9ceea248d94f318703860c81093f8d3ba356175329be7c47dc91c59ce1c5d",
+    "Island22ShellDiverCottageV2.ts": "30e22e8dfbbfb8e374122f456ad324bf678999c531d3cc3cf129dabcc4f26d37",
+    "Island22SkipperCottageV2.ts": "a656601fdcf7e364440ff746983a49135492dda661e0e3d9325b16180e5e76d0",
+    "Island22SmokehouseCottageV2.ts": "e0e04306df5a467f7de5931e273dbd6a5155fde688adb3ce59eaa6e62745edb3",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "bc392646a9ece4d497b3b817b10357e3c7dbbaf98eb82e053578bc7aaa15771d"
+  },
+  "sourceEnd": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22ChartmakerCottageV2.ts": "11faf47899821e5dcee2ef1a2d38a3f9a16b38210a3b03da284ddb53ddbf30d2",
+    "Island22CooperCottageV2.ts": "19f533458c4af3cf20fd3c9d7bb1cbaad4777b3bc4a02b2ee5e9f183af854126",
+    "Island22DragonAnatomyV2.ts": "9388815addb53ac035c678a512cbee72c35ce0544ded98e6f964058caa26e4e1",
+    "Island22DragonCinematicCamera.ts": "285187170162ae909fb56646aa7d191c1622fc78a762a24b83f184d231835ec9",
+    "Island22DragonFinishV2.ts": "7d7dc789739f77f772ce8ef5cf659fadcae3ba3345e739a5949bd37674782a98",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22DragonWaterVFX.ts": "f5a518830dbff4a385305f1f0c11429b97e0dabff7213a2f43643c9334fbcbd1",
+    "Island22FishMarketV2.ts": "20d3f3076e6feba45114f2a12877de2af6da3e167df7245d6cfc9fd57c1f6cd7",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "ad274a6924c89ac792df863f22c9c5ce0e8bbcb862a5d0e7fbb1fdf960a3b47e",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "3fa2bf8f4e581e8d845438bba88167de8bc073dec25a7551f6c8104d082e07f5",
+    "Island22HarborCookCottageV2.ts": "68ea89202af9943d825bbf06e8ef24ade1d8bf19124c4b599634a8710c8564e1",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "3f5749100c54e2f7daec793422c0011fe73ebc0942dcbded097d265355ba389c",
+    "Island22KeeperCottageV2.ts": "ca7de2e100440ef503f735999875d681656b2f10a0bfadf5621f34b5bb1c1ee5",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22NetMenderCottageV2.ts": "f444abfba89193a2a01dcf45caafd7379e0847831b9b21917d44748243db4fb8",
+    "Island22NorthCottageV2.ts": "b33721f450e808e5904bb79bce8ad0d8f7c73eeac1d9744951043ffedc95088d",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "99f00d41cbacc5380006cf1974956422f767736a37991a7811a5a48832a6a418",
+    "Island22RopeMakerCottageV2.ts": "7eaadc57dff6821cd750c80a4f7a9cb39b791a7e9b5b90da1567dfd8efd89623",
+    "Island22SailmakerCottageV2.ts": "3a71718b13bf339e5448f0639fd1843a303517f68c0c98c54f6acc89998cb7d9",
+    "Island22SecondaryCottagesV2.ts": "e9a9ceea248d94f318703860c81093f8d3ba356175329be7c47dc91c59ce1c5d",
+    "Island22ShellDiverCottageV2.ts": "30e22e8dfbbfb8e374122f456ad324bf678999c531d3cc3cf129dabcc4f26d37",
+    "Island22SkipperCottageV2.ts": "a656601fdcf7e364440ff746983a49135492dda661e0e3d9325b16180e5e76d0",
+    "Island22SmokehouseCottageV2.ts": "e0e04306df5a467f7de5931e273dbd6a5155fde688adb3ce59eaa6e62745edb3",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "bc392646a9ece4d497b3b817b10357e3c7dbbaf98eb82e053578bc7aaa15771d"
+  },
+  "changedDuringCapture": false
+}

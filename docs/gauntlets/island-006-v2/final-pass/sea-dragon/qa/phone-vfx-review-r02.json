@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "asset": "island-006 sea-dragon",
+  "stage": "phone-vfx",
+  "review": 2,
+  "reviewer": "independent reference_curator",
+  "verdict": "approve-phone-still-framing-and-vfx",
+  "approved": true,
+  "threshold": 0.85,
+  "evidence": {
+    "directory": "qa/motion-phone-v004",
+    "originalFramesInspected": 24,
+    "dimensions": [
+      430,
+      932
+    ],
+    "comparison": "qa/motion-phone-v003 and phone-vfx-review-r01.json",
+    "scope": "Read-only phone stills across full sequence; continuous replay/temporal and runtime validation remain root/main-reviewer responsibilities."
+  },
+  "categories": {
+    "phoneAnatomyReadability": 0.85,
+    "fullWingTailFraming": 0.88,
+    "phoneMembraneReadability": 0.85,
+    "phoneFaceReadability": 0.85,
+    "eruptionVfxReadability": 0.86,
+    "waterImpactAndTailExit": 0.87,
+    "housePayoffReadability": 0.88
+  },
+  "correctionAudit": {
+    "weakestCriterion": "fullWingTailFraming",
+    "before": 0.74,
+    "after": 0.88,
+    "gain": 0.14,
+    "requiredGain": 0.1,
+    "maximumObservedCriticalRegression": 0.01,
+    "maximumAllowedRegression": 0.05,
+    "pass": true,
+    "observations": [
+      "At 7.8 and 8.4 both visible wing extrema now remain well within the right viewport; approximately 80px right margin replaces prior cropping.",
+      "9.2 now retains margin around tip instead of nearly touching edge.",
+      "Early wider shot trades facial detail for a complete emergence silhouette; recognizable head, cream belly and wing anatomy remain at .85.",
+      "Later flight, dive, splash and damaged-house payoff retain prior composition and legibility."
+    ]
+  },
+  "views": [
+    {
+      "view": "sequence-0.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-3.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-6.5.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": null,
+      "notes": "Intentional aperture close-up; no dragon framing claim."
+    },
+    {
+      "view": "sequence-7.15.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-7.4.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": 0.87,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-7.8.png",
+      "framing": 0.88,
+      "anatomyReadability": 0.85,
+      "vfxReadability": 0.87,
+      "notes": "Prior right-wing cropping resolved; whole visible emergence fits with ample margin."
+    },
+    {
+      "view": "sequence-8.4.png",
+      "framing": 0.88,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "Both wing panels fit; face and underside remain readable."
+    },
+    {
+      "view": "sequence-9.2.png",
+      "framing": 0.88,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "Wing tip now clear of edge; entire exposed body fits."
+    },
+    {
+      "view": "sequence-10.2.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-11.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-12.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-13.4.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-15.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-16.5.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-18.3.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-19.2.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-20.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-20.8.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-21.3.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-21.5.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": 0.87,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-21.8.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": 0.87,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-22.2.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": 0.87,
+      "notes": "Tail-last exit and splash preserved."
+    },
+    {
+      "view": "sequence-22.6.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": 0.87,
+      "notes": "No critical still-frame regression observed."
+    },
+    {
+      "view": "sequence-23.5.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": 0.87,
+      "notes": "Damaged-house close-up remains unambiguous."
+    }
+  ],
+  "hardVetoes": [],
+  "requiredCorrections": [],
+  "limits": [
+    "This approval covers sampled actual phone framing and VFX, not every intermediate animation frame.",
+    "Replay continuity, smoothness of the early camera-envelope transition, deterministic reset and gameplay validation are not certified by these stills.",
+    "Approved anatomy/finish remain frozen; no geometry edits were needed for correction.",
+    "No threshold change or waiver applied."
+  ]
+}

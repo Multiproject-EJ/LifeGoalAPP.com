@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "partId": "cottage-12",
+  "referenceClass": "secondary-inferred",
+  "status": "generated-design-goal",
+  "generator": "built-in image_gen",
+  "inputImages": [],
+  "failedModelUsedAsReference": false,
+  "prompt": "prompts/target-v001.txt",
+  "output": "goals/target-v001.png",
+  "originalOutput": "/Users/ejmac/.codex/generated_images/01a0e966-6285-7ea0-8a2e-7c7ab6970293/exec-32ed5750-1a41-46f0-9e93-58ab254cfeb3.png",
+  "sha256": "24598f396c6bf7b5131980273faede9dd2eea784df9508f4ab386a2215cb7389",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "transparentPixels": 1572864,
+  "fullyTransparentPixels": 591109,
+  "provenance": "Text-only inferred goal for user-authorized island006 V2 continuation; not exact approved pixel identity. Geometry contract controls footprint, access, attachment and cross-view consistency.",
+  "visualInspection": "Single-storey slate skipper cottage with small loft light, wheel and rope coil mounted beside front door. Compact coherent roof and terrace with clear rear service door."
+}

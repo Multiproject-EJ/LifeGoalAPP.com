@@ -1,0 +1,68 @@
+{
+  "part": "cottage-01",
+  "stage": "finish",
+  "review": 2,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/finish-v002",
+  "approvedMacro": "qa/blockout-v002",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "Original pixels in all 11 isolated finish views, all six world-context views and the phone overview inspected. Subjective visual judgments; runtime validation is separate.",
+  "action": "approve",
+  "threshold": 0.85,
+  "categoryScores": {
+    "preservedSilhouetteVolume": 0.88,
+    "architecturalIdentity": 0.89,
+    "roofMaterialReadability": 0.88,
+    "roofCourseRelief": 0.89,
+    "surfaceCoverage": 0.88,
+    "roofAttachmentIntegrity": 0.89,
+    "doorShutterFlowerboxAttachments": 0.88,
+    "barrelSignPlacement": 0.87,
+    "openingAndEntryClearance": 0.88,
+    "crossViewCoherence": 0.89
+  },
+  "viewScores": {
+    "front-right": 0.89,
+    "front-left": 0.89,
+    "rear-left": 0.89,
+    "rear-right": 0.89,
+    "front": 0.88,
+    "rear": 0.88,
+    "left": 0.86,
+    "right": 0.86,
+    "top": 0.88,
+    "clay-front": 0.89,
+    "clay-rear": 0.89
+  },
+  "correctionAssessment": {
+    "family": "roof course finish readability",
+    "roofMaterialReadability": {"before": 0.76, "after": 0.88, "delta": 0.12},
+    "roofCourseRelief": {"before": 0.79, "after": 0.89, "delta": 0.10},
+    "findings": [
+      "Strong checkerboard colors are removed from main, dormer and annex roofs.",
+      "Staggered tile joints and lower course lips now read as roofing. Both clay views show course shadows that were absent in r01.",
+      "Tile finish remains inside the accepted roof envelope without renewed roof/post penetration or conspicuous overshoot.",
+      "Doors, shutters, planter, sign and barrel retain their prior attachment and clearance quality."
+    ],
+    "largestCriticalRegression": 0.01,
+    "regressionNote": "Roof attachment integrity .90 to .89 due slightly more visible course edges at trim; no gate-level defect or regression above .05."
+  },
+  "assembly": {
+    "evidence": "qa/world-context-v002",
+    "action": "approve",
+    "categoryScores": {"foliageAndEntryClearance": 0.89, "rearThresholdClearance": 0.90, "lighthouseClearance": 0.87, "adjacentCottageClearance": 0.86, "terrainSupport": 0.86},
+    "viewScores": {"cottage-world-azimuth-0": 0.89, "cottage-world-azimuth-90": 0.86, "cottage-world-azimuth-180": 0.89, "cottage-world-azimuth-270": 0.86, "cottage-world-azimuth-45": 0.87, "cottage-world-azimuth-135": 0.86},
+    "limitations": "90 and 270 are partly occluded; elevated45/135 and front/rear supply the relevant missing clearance evidence. Approximate roof bounds are not used as approval authority.",
+    "findings": "No new visible collision from the roof course lips. Doors and rear sill remain clear, terrace is supported, and prior lighthouse/neighbor separation is retained."
+  },
+  "phoneProof": {
+    "evidence": "qa/island-fit-v001/overview.png",
+    "action": "approve",
+    "score": 0.87,
+    "finding": "Warm main roof, front dormer and low blue annex remain legible in the wide board view. Roof no longer produces the distracting checker pattern. Fine props and individual joints naturally diminish at this scale; this is not close-contact evidence."
+  },
+  "boundedCorrectionCounter": {"macroReviews": 2, "finishReviews": 2, "finishCorrectionsUsed": 1},
+  "remainingTargetGaps": "Clean regular tiles, simple masonry and uniform timber/plaster remain less weathered and rich than the inferred cinematic reference.",
+  "scope": "Accept cottage-01 finish and evidenced assembly for this iteration. Other V1 cottages and broader island quality are outside this gate; exact target parity and whole-island V2 completion are not claimed."
+}

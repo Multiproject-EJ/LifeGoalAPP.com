@@ -1,0 +1,13 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "finish-v001",
+  "decision": "one-bounded-correction",
+  "family": "detail attachment continuity",
+  "worstScores": {
+    "silhouette": 0.89,
+    "finishReadability": 0.86,
+    "attachments": 0.79,
+    "entryGrounding": 0.88
+  },
+  "action": "Trim timber tips below slate and connect outer sign hanger to arm."
+}

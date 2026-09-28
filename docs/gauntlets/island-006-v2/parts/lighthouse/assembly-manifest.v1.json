@@ -1,0 +1,23 @@
+{
+  "part": "lighthouse-library",
+  "runtimeIsland": 6,
+  "worldSource": 22,
+  "moduleSha256": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+  "position": [
+    -6.35,
+    0.38,
+    -5.75
+  ],
+  "rootTransform": "Canonical radial orientation and architecture y=.3 unchanged",
+  "constructionParts": [
+    "macro-tower-annex",
+    "gallery-lantern-library",
+    "restored-detail-system"
+  ],
+  "localEnvironmentCorrection": "Excluded conifers from quay; shifted decorative cottage cluster0 from [-3.75,-7.05] to [-3.65,-7.65], preserving associated windows. Other cluster placements unchanged.",
+  "context": "qa/world-context-v002",
+  "board": "qa/island-fit-v001",
+  "invalidation": "Source changes require new captures and portrait fingerprint.",
+  "approvedBuild": "qa/finish-v002",
+  "approval": "Independent finish and assembly gates passed; user review next."
+}

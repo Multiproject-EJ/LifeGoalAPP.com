@@ -1,0 +1,20 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "finish-v002",
+  "decision": "approve",
+  "scores": {
+    "macro": 0.88,
+    "surfaceCoverage": 0.88,
+    "netPool": 0.89,
+    "materials": 0.85,
+    "doorwayAccess": 0.89,
+    "lifeRingPlacement": 0.88
+  },
+  "gain": {
+    "doorway": 0.15,
+    "lifeRing": 0.1
+  },
+  "regressions": "none visible",
+  "remaining": "Materials relatively clean and roof regular compared with concept.",
+  "action": "accept hatchery finish for user review"
+}

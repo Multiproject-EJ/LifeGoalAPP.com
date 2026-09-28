@@ -1,0 +1,51 @@
+{
+  "part": "cottage-03",
+  "stage": "macro",
+  "review": 2,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v002",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "All 11 original studio and six world images inspected. Ground-support report read after image inspection. Subjective scores; the same unresolved junction defect is not renamed as a new defect.",
+  "action": "retire-family",
+  "threshold": 0.85,
+  "categoryScores": {
+    "twoStoreyVolumeAndJetty": 0.89,
+    "sweptRoofIdentity": 0.90,
+    "closedRoofEnclosure": 0.90,
+    "lowLeftAnnexProportions": 0.88,
+    "architecturalAttachmentClearance": 0.84,
+    "upperSideWindowClearance": 0.85,
+    "otherOpeningsAndChimneyContacts": 0.89,
+    "continuousTerraceAndSteps": 0.88,
+    "crossViewCoherence": 0.87
+  },
+  "viewScores": {"front-right": 0.84, "front-left": 0.84, "rear-left": 0.87, "rear-right": 0.88, "front": 0.84, "rear": 0.88, "left": 0.85, "right": 0.88, "top": 0.84, "clay-front": 0.84, "clay-rear": 0.87},
+  "correctionResult": {
+    "family": "buried rectangular annex roof with independent barge adjustment",
+    "accepted": false,
+    "before": 0.79,
+    "after": 0.84,
+    "improvement": 0.05,
+    "finding": "Front and rear door-overlapping corbels are removed; front arch is now clearly unobstructed. However, after shortening the barge the closed clay roof slab itself still projects past the main left wall onto the upper front facade as a thin angled spike. This is visible in front-left, front-right, front, top and clay-front. The underlying original wall-junction defect remains, so the required +0.10 and >=0.89 are not achieved.",
+    "regressions": "No new critical regression; roof sweep/enclosure, volumes and windows remain unchanged."
+  },
+  "familyLedger": [
+    {"index": 1, "representation": "buried rectangular annex roof with independently shortened trim", "reviews": [1, 2], "boundedCorrectionsUsed": 1, "status": "retired", "reason": "Same dominant junction defect remains and gain is insufficient."},
+    {"index": 2, "representation": "wall-clipped closed annex roof footprint", "status": "permitted-next-not-yet-reviewed", "constraint": "Generate slab, soffit, end caps and trim from the actual main-wall termination boundary. This changes the construction representation addressing the SAME defect. Preserve main roof, annex volume, openings, terrace, transforms and accepted corbel fix. R03 is the first gate; at most r04 is its one bounded correction. No third family within this gate."}
+  ],
+  "nextAcceptance": "No visible slab or trim spike across the front facade; closed roof-wall contact retained in all required views; architectural attachment at least 0.89 versus original 0.79 and every critical score at least 0.85, without regression over 0.05.",
+  "assembly": {
+    "evidence": "qa/world-blockout-v002",
+    "action": "approve",
+    "categoryScores": {"mainEntryClearance": 0.89, "workroomEntryClearance": 0.89, "rearThresholdClearance": 0.88, "rearTerraceSupport": 0.88, "cottage02AnnexClearance": 0.87, "cottage04GuildClearance": 0.88, "treeGrassClearance": 0.89},
+    "viewScores": {"smoke-world-azimuth-0": 0.89, "smoke-world-azimuth-180": 0.88, "smoke-world-azimuth-45": 0.88, "smoke-world-azimuth-135": 0.88, "smoke-world-azimuth-90": null, "smoke-world-azimuth-270": 0.85},
+    "findings": "Workroom threshold shrub is gone, improving entry 0.76 to 0.89 (+0.13). Main approach stays clear after prior crate/barrel move. Front/rear/elevated evidence retains separation from cottage02, cottage04 and guild. Rear sill remains unobstructed. No new foliage or ground intrusion visible.",
+    "supportEvidence": ["qa/support-top-scan.json", "qa/support-method-note.md"],
+    "supportAssessment": "Nine terrain-only rays from above all terrain surfaces report support intersecting the terrace underside at every sample. Both outer rear samples are supported by ISLAND_22_TOP_TERRACE at world y=0.58 versus underside y=0.496, a 0.084 overlap. This resolves the earlier evidence hold and is consistent with the visual shelf. No extra footing is required by this evidence.",
+    "supersededEvidence": "support-before.json is excluded: its ray origin was below enclosing support geometry.",
+    "limitations": "World90 is fully occluded; world270 partly occluded. Assembly approval concerns placement/support/access, not the separate studio macro junction defect."
+  },
+  "release": "Finish remains withheld until family2 macro passes. Preserve rejected v002 and review counters.",
+  "remainingTargetGap": "Macro only; no detailed finish expected. Exact inferred-reference identity is not claimed."
+}

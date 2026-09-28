@@ -1,0 +1,19 @@
+{
+  "part": "fish-market",
+  "review": 2,
+  "stage": "assembly",
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/world-blockout-v002",
+  "action": "approve",
+  "threshold": 0.85,
+  "method": "Original four full frames inspected; subjective visual scores.",
+  "categoryScores": {"lighthouseClearance": 0.89, "boatPierClearance": 0.90, "functionalAccess": 0.88, "structuralSupport": 0.89},
+  "deltasFromR01": {"lighthouseClearance": 0.34, "boatPierClearance": 0.33, "functionalAccess": 0.30, "structuralSupport": 0.01},
+  "views": {
+    "market-world-azimuth-0": {"score": 0.88, "finding": "Short supported spur visibly joins existing berth and market; front door and counters unobstructed."},
+    "market-world-azimuth-90": {"score": null, "finding": "Occluded by neighboring cottages and lighthouse. Not used as clearance proof."},
+    "market-world-azimuth-180": {"score": 0.89, "finding": "Market body, roof and deck are separated from lighthouse quay; no visible boat/support intersection."},
+    "market-world-azimuth-270": {"score": 0.90, "finding": "Clear market frontage and both boats outside pier braces/piles; no visible neighbor collision."}
+  },
+  "scope": "Assembly placement accepted only. Isolated macro roof-tip correction still pending. Finish not evaluated."
+}

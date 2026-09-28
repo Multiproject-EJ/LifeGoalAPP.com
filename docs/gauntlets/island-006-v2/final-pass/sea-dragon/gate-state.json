@@ -1,0 +1,10 @@
+{
+  "scope": "whole-anatomy",
+  "family": 2,
+  "reviewsCompleted": 1,
+  "family1": "retired hard neck seam and flat fluke veto",
+  "family2": "builder in progress",
+  "threshold": 0.85,
+  "approvalAuthority": "User delegated all future island/building internal approvals; latest directive prioritizes water dragon and animation",
+  "doNotClaimFinished": true
+}

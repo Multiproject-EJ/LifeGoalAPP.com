@@ -1,0 +1,2 @@
+# Finish specification
+After macro acceptance: staggered blue-grey slate courses, stone coping and quay coursing, door planks and ironwork, amber lantern, nursery fish and subtle ripples, supported sorting bench, open woven baskets, rear drying net, mooring lashings and float buoys. Cottage and canopy silhouette frozen. Apply subtle procedural wood grain and small edge chamfers for readable material response. Keep medium authored triangles under 14,000 and static material batches under 45.

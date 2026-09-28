@@ -1,0 +1,74 @@
+[
+  {
+    "landmark": "market",
+    "level": 1,
+    "quality": "low",
+    "vertices": 4556,
+    "triangles": 2460,
+    "draws": 7
+  },
+  {
+    "landmark": "market",
+    "level": 2,
+    "quality": "low",
+    "vertices": 5762,
+    "triangles": 3252,
+    "draws": 15
+  },
+  {
+    "landmark": "market",
+    "level": 3,
+    "quality": "low",
+    "vertices": 12703,
+    "triangles": 8608,
+    "draws": 33
+  },
+  {
+    "landmark": "market",
+    "level": 1,
+    "quality": "medium",
+    "vertices": 4700,
+    "triangles": 2556,
+    "draws": 7
+  },
+  {
+    "landmark": "market",
+    "level": 2,
+    "quality": "medium",
+    "vertices": 5906,
+    "triangles": 3348,
+    "draws": 15
+  },
+  {
+    "landmark": "market",
+    "level": 3,
+    "quality": "medium",
+    "vertices": 14083,
+    "triangles": 9504,
+    "draws": 33
+  },
+  {
+    "landmark": "market",
+    "level": 1,
+    "quality": "high",
+    "vertices": 4700,
+    "triangles": 2556,
+    "draws": 7
+  },
+  {
+    "landmark": "market",
+    "level": 2,
+    "quality": "high",
+    "vertices": 5906,
+    "triangles": 3348,
+    "draws": 15
+  },
+  {
+    "landmark": "market",
+    "level": 3,
+    "quality": "high",
+    "vertices": 14083,
+    "triangles": 9504,
+    "draws": 33
+  }
+]

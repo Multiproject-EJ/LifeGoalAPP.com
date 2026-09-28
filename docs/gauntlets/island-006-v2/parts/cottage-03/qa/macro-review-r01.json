@@ -1,0 +1,46 @@
+{
+  "part": "cottage-03",
+  "stage": "macro",
+  "review": 1,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v001",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "baseline": "baseline/v001",
+  "method": "All 11 original studio views inspected before source. All six world frames inspected separately. Scores are subjective; occluded frames are not clearance evidence.",
+  "action": "one-bounded-correction",
+  "threshold": 0.85,
+  "categoryScores": {
+    "twoStoreyVolumeAndJetty": 0.89,
+    "sweptRoofIdentity": 0.90,
+    "closedRoofEnclosure": 0.90,
+    "lowLeftAnnexProportions": 0.88,
+    "architecturalAttachmentClearance": 0.79,
+    "upperSideWindowClearance": 0.85,
+    "otherOpeningsAndChimneyContacts": 0.88,
+    "continuousTerraceAndSteps": 0.88,
+    "crossViewCoherence": 0.87
+  },
+  "viewScores": {"front-right": 0.79, "front-left": 0.79, "rear-left": 0.86, "rear-right": 0.87, "front": 0.79, "rear": 0.87, "left": 0.85, "right": 0.88, "top": 0.80, "clay-front": 0.79, "clay-rear": 0.86},
+  "positiveFindings": "Compact two-storey main mass and lower clay-roof left workroom read as one building. Main roof has the correct steeper-top/flatter-eave sweep and continuous visible soffit in clay. Both chimneys remain planted. Openings are authored coherently rather than duplicated. Continuous terrace supports the complete isolated module.",
+  "boundedCorrection": {
+    "family": "architectural attachment clearance",
+    "pixelFinding": "Front annex barge continues through the main left-wall junction onto the upper front facade, obvious in front/front-left/top and clay-front. The jetty corbel near the main front door center descends onto the arch crown in front/front-left views.",
+    "sourceDiagnosis": "Workroom barge ends at x=-0.66 while main upper wall is x=-0.825; front barge z=0.71 is forward of the upper shell face z=0.66. Front corbel at x=0.24 spans y=0.87..1.035 immediately over the arched opening centered x=0.32, bottom=0.09,height=0.82, with stone reveal above it.",
+    "correction": "Terminate annex trim cleanly into the main wall junction and move/fit the front corbel clear of the arch opening. Preserve accepted main roof, annex volume, terrace and root transform.",
+    "requiredResult": "Attachment clearance at least 0.89 (+0.10); all critical views/categories at least 0.85; no regression over 0.05.",
+    "watchItem": "Left upper side window has a small clearance between annex roof and main eave. It appears tight rather than definitely intersecting; retain a visible gap and allow room for finish without expanding it."
+  },
+  "assembly": {
+    "evidence": "qa/world-blockout-v001",
+    "action": "one-bounded-correction",
+    "categoryScores": {"mainEntryClearance": 0.89, "workroomEntryClearance": 0.76, "rearThresholdClearance": 0.88, "rearTerraceSupportEvidence": 0.84, "cottage02AnnexClearance": 0.87, "cottage04GuildClearance": 0.88, "treeGrassClearance": 0.89},
+    "viewScores": {"smoke-world-azimuth-0": 0.76, "smoke-world-azimuth-180": 0.84, "smoke-world-azimuth-45": 0.78, "smoke-world-azimuth-135": 0.86, "smoke-world-azimuth-90": null, "smoke-world-azimuth-270": 0.85},
+    "findings": "Moved scene crate/barrel clear the main door and step. A small green shrub with orange tips remains directly in the workroom doorway/threshold, visible in world0/45. New low annex retains a visible gap to cottage02; right neighbor and guild separation remain clear in elevated45/135. Rear sill is unobstructed.",
+    "boundedCorrection": "Remove or move only the shrub occupying the workroom threshold; retain other dressing and frozen buildings.",
+    "supportEvidenceNeeded": "Rear terrace is visibly supported centrally by retained rock lobes, but its wider outer rear corners project over the coastline shelf. These high views do not prove a floating gap; check actual corner ground contact numerically or in a lower diagnostic before final support acceptance. This is an evidence hold, not an instruction to add support without diagnosis.",
+    "limitations": "World90 is fully blocked by a foreground roof. World270 is partially occluded. Elevated and front/rear views carry the neighbor-clearance evidence."
+  },
+  "release": "Finish withheld pending corrected architectural contacts and assembly evidence.",
+  "remainingTargetGap": "Macro only. Slate/clay courses, stonework, timber, shutters, smoking-fish details and hardware are intentionally absent. No exact inferred-reference identity claimed."
+}

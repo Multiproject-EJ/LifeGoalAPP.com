@@ -1,0 +1,54 @@
+{
+  "part": "fisherfolk-guild-hall",
+  "runtimeIsland": 6,
+  "worldSource": 22,
+  "approvedBuild": "qa/finish-v001",
+  "moduleSha256": "3fa2bf8f4e581e8d845438bba88167de8bc073dec25a7551f6c8104d082e07f5",
+  "position": [
+    6.25,
+    1.3,
+    -6.25
+  ],
+  "rootTransform": "Canonical radial orientation and architecture y=.3 preserved",
+  "sockets": {
+    "focus": [
+      0,
+      1.75,
+      0
+    ],
+    "entry": [
+      0,
+      0.25,
+      1.58
+    ],
+    "build": [
+      0.92,
+      0.15,
+      1.36
+    ]
+  },
+  "groups": [
+    "raised-coastal-precinct",
+    "coastal-apron-occupied-shell",
+    "wings-dormers-crown",
+    "restored-detail-system",
+    "runtime-sockets"
+  ],
+  "environmentChanges": [
+    "Stair conifers removed",
+    "Cluster3 moved [4,-6.72]\u2192[3.35,-8.5]",
+    "Cluster4 moved [7,-3.3]\u2192[8.1,-2.6]",
+    "Shared supplementary windows follow placements",
+    "Stone shoulders support moved cottages",
+    "Coastal precinct footing extends below waterline"
+  ],
+  "frozenModules": [
+    "Island22BoatwrightV2.ts",
+    "Island22HatcheryV2.ts",
+    "Island22TavernV2.ts",
+    "Island22LighthouseV2.ts"
+  ],
+  "context": "qa/world-context-v001",
+  "canonicalBoard": "qa/island-fit-v001",
+  "invalidation": "Source changes require new captures and portrait fingerprint"
+}

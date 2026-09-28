@@ -1,0 +1,276 @@
+{
+  "checks": [
+    {
+      "landmark": "boss",
+      "level": 1,
+      "quality": "low",
+      "vertices": 9746
+    },
+    {
+      "landmark": "hatchery",
+      "level": 1,
+      "quality": "low",
+      "vertices": 1225
+    },
+    {
+      "landmark": "habit",
+      "level": 1,
+      "quality": "low",
+      "vertices": 23000
+    },
+    {
+      "landmark": "wisdom",
+      "level": 1,
+      "quality": "low",
+      "vertices": 1406
+    },
+    {
+      "landmark": "event",
+      "level": 1,
+      "quality": "low",
+      "vertices": 1147
+    },
+    {
+      "landmark": "boss",
+      "level": 2,
+      "quality": "low",
+      "vertices": 26480
+    },
+    {
+      "landmark": "hatchery",
+      "level": 2,
+      "quality": "low",
+      "vertices": 2239
+    },
+    {
+      "landmark": "habit",
+      "level": 2,
+      "quality": "low",
+      "vertices": 23228
+    },
+    {
+      "landmark": "wisdom",
+      "level": 2,
+      "quality": "low",
+      "vertices": 1963
+    },
+    {
+      "landmark": "event",
+      "level": 2,
+      "quality": "low",
+      "vertices": 1792
+    },
+    {
+      "landmark": "boss",
+      "level": 3,
+      "quality": "low",
+      "vertices": 30003
+    },
+    {
+      "landmark": "hatchery",
+      "level": 3,
+      "quality": "low",
+      "vertices": 3229
+    },
+    {
+      "landmark": "habit",
+      "level": 3,
+      "quality": "low",
+      "vertices": 23228
+    },
+    {
+      "landmark": "wisdom",
+      "level": 3,
+      "quality": "low",
+      "vertices": 2980
+    },
+    {
+      "landmark": "event",
+      "level": 3,
+      "quality": "low",
+      "vertices": 2571
+    },
+    {
+      "landmark": "boss",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 9846
+    },
+    {
+      "landmark": "hatchery",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 1545
+    },
+    {
+      "landmark": "habit",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 23496
+    },
+    {
+      "landmark": "wisdom",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 1598
+    },
+    {
+      "landmark": "event",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 1315
+    },
+    {
+      "landmark": "boss",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 27332
+    },
+    {
+      "landmark": "hatchery",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 3063
+    },
+    {
+      "landmark": "habit",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 23742
+    },
+    {
+      "landmark": "wisdom",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 2311
+    },
+    {
+      "landmark": "event",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 2116
+    },
+    {
+      "landmark": "boss",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 31023
+    },
+    {
+      "landmark": "hatchery",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 4752
+    },
+    {
+      "landmark": "habit",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 23742
+    },
+    {
+      "landmark": "wisdom",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 3625
+    },
+    {
+      "landmark": "event",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 3201
+    },
+    {
+      "landmark": "boss",
+      "level": 1,
+      "quality": "high",
+      "vertices": 9946
+    },
+    {
+      "landmark": "hatchery",
+      "level": 1,
+      "quality": "high",
+      "vertices": 1797
+    },
+    {
+      "landmark": "habit",
+      "level": 1,
+      "quality": "high",
+      "vertices": 23496
+    },
+    {
+      "landmark": "wisdom",
+      "level": 1,
+      "quality": "high",
+      "vertices": 1790
+    },
+    {
+      "landmark": "event",
+      "level": 1,
+      "quality": "high",
+      "vertices": 1483
+    },
+    {
+      "landmark": "boss",
+      "level": 2,
+      "quality": "high",
+      "vertices": 28500
+    },
+    {
+      "landmark": "hatchery",
+      "level": 2,
+      "quality": "high",
+      "vertices": 4155
+    },
+    {
+      "landmark": "habit",
+      "level": 2,
+      "quality": "high",
+      "vertices": 23742
+    },
+    {
+      "landmark": "wisdom",
+      "level": 2,
+      "quality": "high",
+      "vertices": 2659
+    },
+    {
+      "landmark": "event",
+      "level": 2,
+      "quality": "high",
+      "vertices": 2372
+    },
+    {
+      "landmark": "boss",
+      "level": 3,
+      "quality": "high",
+      "vertices": 32263
+    },
+    {
+      "landmark": "hatchery",
+      "level": 3,
+      "quality": "high",
+      "vertices": 6132
+    },
+    {
+      "landmark": "habit",
+      "level": 3,
+      "quality": "high",
+      "vertices": 23742
+    },
+    {
+      "landmark": "wisdom",
+      "level": 3,
+      "quality": "high",
+      "vertices": 4069
+    },
+    {
+      "landmark": "event",
+      "level": 3,
+      "quality": "high",
+      "vertices": 3869
+    }
+  ],
+  "passed": 45,
+  "scope": "All five authored landmarks at L1/L2/L3 and low/medium/high: finite, nonempty geometry and transforms. Visual acceptance remains screenshot-based."
+}

@@ -1,0 +1,55 @@
+{
+  "part": "cottage-03",
+  "stage": "finish",
+  "review": 1,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/finish-v001",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "approvedMacro": "qa/blockout-v003",
+  "method": "All 11 original studio images, six world-context frames and actual board phone overview inspected. Pixel judgments precede metrics; runtime success is not visual acceptance evidence. Scores are subjective.",
+  "action": "approve",
+  "threshold": 0.85,
+  "categoryScores": {
+    "macroSilhouetteRetention": 0.90,
+    "roofClosureAndClippedAnnexJunction": 0.90,
+    "slateClayCoverageAndRelief": 0.88,
+    "upperLeftWindowGap": 0.85,
+    "masonryContinuity": 0.90,
+    "materialHierarchy": 0.87,
+    "shuttersDoorsAndIronwork": 0.89,
+    "fishRackIdentityAndAttachment": 0.88,
+    "doorAndWindowClearance": 0.89,
+    "crossViewCoherence": 0.89
+  },
+  "viewScores": {"front-right": 0.89, "front-left": 0.89, "rear-left": 0.87, "rear-right": 0.88, "front": 0.90, "rear": 0.88, "left": 0.85, "right": 0.88, "top": 0.89, "clay-front": 0.89, "clay-rear": 0.88},
+  "findings": [
+    "Slate and clay courses remain inside the accepted roof edges. The corrected annex wall junction stays clipped, with no return of the facade spike in front/top/clay.",
+    "Both roofs retain solid soffits, main sweep and planted chimneys. Clay renders show physical course lips rather than only painted lines.",
+    "The upper-left side window remains tightly placed but clear of annex courses and main eave. This is the minimum accepted criterion; no expansion of courses into that gap is warranted.",
+    "Terrace and wall-base stone courses remain solid in every oblique and clay view. No angle-dependent triangular fragments or missing facing found.",
+    "Front shutters and planked doors carry coherent hardware. Lantern bracket remains attached and clear of the main opening.",
+    "Three hanging fish have visible suspending strings and a supported beam. Front orthographic/top show the rack between the workroom door and lower window; apparent overlap in an oblique is projection, not a blocked door or window.",
+    "Rear service door remains clear of corbels and finish. No new attachment protrusion or material regression requires correction."
+  ],
+  "boundedCorrection": null,
+  "finishFamilyLedger": "First finish candidate accepted; zero finish corrections used. Prior macro family retirement remains recorded in macro reviews and is not reset.",
+  "assembly": {
+    "evidence": "qa/world-context-v001",
+    "action": "approve",
+    "categoryScores": {"mainEntryClearance": 0.89, "workroomEntryClearance": 0.89, "rearThresholdClearance": 0.88, "rearTerraceSupport": 0.88, "cottage02AnnexClearance": 0.87, "cottage04GuildClearance": 0.88, "localDressingClearance": 0.89, "finishWithinPlot": 0.88},
+    "viewScores": {"smoke-world-azimuth-0": 0.89, "smoke-world-azimuth-180": 0.88, "smoke-world-azimuth-45": 0.88, "smoke-world-azimuth-135": 0.88, "smoke-world-azimuth-90": null, "smoke-world-azimuth-270": 0.85},
+    "findings": "Finish retains clean main/workroom approaches and rear threshold. Removed shrub remains absent; relocated cargo stays off the main step. Annex and finish details do not visibly collide with frozen cottage02, cottage04 or guild. Updated context retains supported terrace and a clear coast-side door.",
+    "supportEvidence": ["qa/support-top-scan.json", "qa/support-method-note.md"],
+    "supportAssessment": "Accepted terrain scan remains valid for unchanged terrace/transform; both rear corners intersect the supporting top terrace by 0.084 world units. Final images are consistent with that support.",
+    "limitations": "World90 is entirely occluded by a foreground roof and carries no clearance evidence. World270 is partially occluded and supports only visible upper-roof/annex relationships. Front/rear/elevated45/135 are the primary assembly evidence."
+  },
+  "phoneScale": {
+    "evidence": "qa/island-fit-v001/overview.png",
+    "action": "approve",
+    "score": 0.88,
+    "finding": "Two-storey swept blue roof, round loft, paired upper windows and contrasting low clay annex remain distinct in the northern village. The silhouette is readable beside the smaller cottage02 and taller guild. Fish/hardware are too small for fine assessment at this wide board scale, so close views establish those details. No route or neighboring-building occlusion regression is apparent."
+  },
+  "remainingTargetGap": "The procedural result is cleaner and more regular than the generated weathered concept. Clay courses are simplified flat tiles, stone is regular masonry, fish are stylized and facade clutter is reduced. These are acknowledged fidelity limits, not unresolved attachment failures. Exact inferred-reference parity is not claimed.",
+  "release": "Cottage03 finish, assembly and phone readability accepted. Preserve the accepted geometry and frozen neighboring modules. This gate does not assert completion of the entire island V2 program."
+}

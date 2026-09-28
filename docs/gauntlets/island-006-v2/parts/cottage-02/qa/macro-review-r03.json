@@ -1,0 +1,46 @@
+{
+  "part": "cottage-02",
+  "stage": "macro",
+  "review": 3,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v003",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "All 11 original studio images and six actual village frames visually inspected. Scores are subjective pixel judgments; builder metrics did not determine acceptance.",
+  "action": "approve",
+  "threshold": 0.85,
+  "categoryScores": {
+    "compactSingleStoreyVolume": 0.89,
+    "sweptRoofIdentity": 0.90,
+    "roofEnclosureAndNormals": 0.91,
+    "roofTrimContacts": 0.90,
+    "porchSupportAndDoorClearance": 0.90,
+    "loftWindowClearance": 0.89,
+    "sideRearOpenings": 0.88,
+    "terraceSteps": 0.88,
+    "crossViewCoherence": 0.90
+  },
+  "viewScores": {"front-right": 0.90, "front-left": 0.90, "rear-left": 0.90, "rear-right": 0.90, "front": 0.89, "rear": 0.89, "left": 0.88, "right": 0.88, "top": 0.89, "clay-front": 0.90, "clay-rear": 0.91},
+  "correctionResult": {
+    "family": "closed roof enclosure and soffit representation",
+    "familyIndex": 2,
+    "accepted": true,
+    "delta": "Enclosure 0.80 to 0.91 (+0.11); trim contacts 0.85 to 0.90; swept profile retained at 0.90. No critical regression.",
+    "pixelFinding": "Open background strips have become a continuous shaded underside along the far gable overhang. Front-left, rear-right and clay-rear now show a closed roof with coherent gable contact. Porch also reads as a thin solid canopy. Body, doors, loft window, chimney and terrace retain their accepted proportions.",
+    "remainingConstructionNotes": "The deeper shaded band is a visible overhang underside rather than an open hole. Deliberately plain roof/stone materials are appropriate to the macro gate."
+  },
+  "familyLedger": [
+    {"family": "swept roof profile identity", "introducedReview": 1, "acceptedReview": 2, "result": "0.78 to 0.90"},
+    {"family": "closed roof enclosure and soffit representation", "introducedReview": 2, "acceptedReview": 3, "result": "0.80 to 0.91"}
+  ],
+  "assembly": {
+    "evidence": "qa/world-blockout-v003",
+    "action": "approve",
+    "categoryScores": {"frontEntryClearance": 0.89, "foliageClearance": 0.89, "rearThresholdClearance": 0.88, "terraceGroundSupport": 0.86, "cottage01AnnexClearance": 0.86, "cottage03Clearance": 0.88},
+    "viewScores": {"mender-world-azimuth-0": 0.88, "mender-world-azimuth-180": 0.86, "mender-world-azimuth-45": 0.87, "mender-world-azimuth-135": 0.87, "mender-world-azimuth-90": null, "mender-world-azimuth-270": null},
+    "findings": "Barrel remains outside the front step and central entry. Rear door sill remains free of terrain intrusion; terrace meets the coastline shelf. The closed roof has not introduced a visible clash with the lower cottage01 annex or cottage03. Local foliage remains clear.",
+    "limitations": "Cardinal 90/270 are heavily occluded by frozen neighbors. Front/rear and elevated 45/135 jointly provide the usable contact evidence. Tight cottage01 interface warrants keeping finish/net rack inside the existing plot."
+  },
+  "release": "Finish may proceed with accepted macro silhouette, root transform, terrace, roof curve and neighboring modules frozen. Finish requires its own attachment and assembly gate.",
+  "remainingTargetGap": "Net-mender identity details, layered slate, masonry, timber finish and hardware intentionally absent at macro stage. Acceptance is not a claim of exact inferred-reference identity or complete island V2."
+}

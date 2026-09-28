@@ -1,0 +1,91 @@
+{
+  "captures": [
+    {
+      "name": "calm",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=overview&weatherTime=4"
+    },
+    {
+      "name": "squall",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=overview&weatherTime=50"
+    },
+    {
+      "name": "clearing",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=overview&weatherTime=80"
+    },
+    {
+      "name": "guild",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=boss&isolate=1&azimuth=30&weatherTime=4"
+    },
+    {
+      "name": "lighthouse",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=wisdom&isolate=1&weatherTime=4"
+    },
+    {
+      "name": "boatwright",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=habit&isolate=1&weatherTime=4"
+    },
+    {
+      "name": "tavern",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=event&isolate=1&weatherTime=4"
+    },
+    {
+      "name": "hatchery",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=hatchery&isolate=1&weatherTime=4"
+    },
+    {
+      "name": "fisherman",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?phase=reeling&landmarks=1&weatherTime=4"
+    },
+    {
+      "name": "dragon-erupt",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=7&weatherTime=4"
+    },
+    {
+      "name": "dragon-flight",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=12&weatherTime=4"
+    },
+    {
+      "name": "dragon-dive",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=18.5&weatherTime=4"
+    },
+    {
+      "name": "eruption-8s",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=8.8&weatherTime=4"
+    },
+    {
+      "name": "flight-15s",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=15&weatherTime=4"
+    },
+    {
+      "name": "dive-20s",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=20.5&weatherTime=4"
+    }
+  ],
+  "errors": [],
+  "sourceStart": {
+    "Island22FishermansVillageThreeWorld.ts": "af21f812f142242343fc26d0cca51d513e7ff6436681fa02b0dc0406f8fd41bd",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22IconicWaterDragonParts.ts": "791e7047d5bed043435620906ea07d672ef9eec4d52eef431acbcef5c49f13f3",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "443ec956a0445720dcc92f50fbab28e5c06224324684b4112d6d3ccfb8b76a09",
+    "Island22WaterDragonMission.ts": "4987bab78cec87e4a8bb4d277845c8b9f2ad709688abc64722cee006a2dd411c",
+    "Island6DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island6FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island6HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island6MoonveilThreeWorld.ts": "260350d7c8b1d8f510de79e49383b587e335bd55a2a21f1a69b639ba67467f58"
+  },
+  "sourceEnd": {
+    "Island22FishermansVillageThreeWorld.ts": "af21f812f142242343fc26d0cca51d513e7ff6436681fa02b0dc0406f8fd41bd",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22IconicWaterDragonParts.ts": "791e7047d5bed043435620906ea07d672ef9eec4d52eef431acbcef5c49f13f3",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "443ec956a0445720dcc92f50fbab28e5c06224324684b4112d6d3ccfb8b76a09",
+    "Island22WaterDragonMission.ts": "4987bab78cec87e4a8bb4d277845c8b9f2ad709688abc64722cee006a2dd411c",
+    "Island6DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island6FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island6HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island6MoonveilThreeWorld.ts": "260350d7c8b1d8f510de79e49383b587e335bd55a2a21f1a69b639ba67467f58"
+  },
+  "changedDuringCapture": false,
+  "scope": "Actual world factory and mission in evidence lab; no gameplay board in lab. 900x900, DPR1, medium tier, locked weather/mission phase."
+}

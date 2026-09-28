@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-05-cooper",
+  "stage": "finish-and-assembly",
+  "review": "r01",
+  "reviewer": "independent-reference-curator",
+  "referenceAuthority": "secondary-inferred",
+  "pixelsFirst": true,
+  "threshold": 0.85,
+  "evidence": {
+    "studio": "finish-v001",
+    "studioViewsInspected": 11,
+    "assembly": "world-context-v001",
+    "assemblyViewsInspected": 6,
+    "previous": "macro-review-r02.json",
+    "baseline": "../baseline/v001/front-right.png",
+    "target": "../goals/target-v001.png"
+  },
+  "finish": {
+    "action": "approve",
+    "criticalScores": {
+      "twoStoreyRightAnnexSilhouette": 0.9,
+      "sweptClosedSlateRoofs": 0.9,
+      "roofTileReliefAndContacts": 0.89,
+      "upperShuttersAndWindowReadability": 0.88,
+      "masonryRelief": 0.88,
+      "timberAndDoorHardware": 0.88,
+      "cooperBarrelAndSpareHoop": 0.89,
+      "mainAndAnnexDoorClearance": 0.89,
+      "rearSideCompleteness": 0.88
+    },
+    "viewScores": {
+      "front": 0.89,
+      "front-right": 0.9,
+      "right": 0.89,
+      "rear-right": 0.89,
+      "rear": 0.88,
+      "rear-left": 0.89,
+      "left": 0.88,
+      "front-left": 0.9,
+      "top": 0.89,
+      "clay-front": 0.89,
+      "clay-rear": 0.89
+    },
+    "observations": [
+      "Main slate roof and right lean-to have visible staggered courses with closed edges and no apparent coplanar flicker in supplied stills.",
+      "Paired upper blue shutters support cottage identity; side/rear openings clean although simpler and unshuttered.",
+      "Barrel with hoops and separate leaned hoop sit left of annex door, leaving threshold and central approach clear.",
+      "Removed tight upper annex-side window remains omitted; roof-wall strip clean.",
+      "Stone courses and timber/door relief improve baseline substantially; irregular target weathering remains simplified, not exact pixel likeness."
+    ]
+  },
+  "assembly": {
+    "action": "approve",
+    "criticalScores": {
+      "coastalSupport": 0.9,
+      "neighborClearance": 0.89,
+      "routePreservation": 0.89,
+      "foliageAndFrontApproachClearance": 0.91,
+      "terrainToTerraceSurfaceContinuity": 0.92
+    },
+    "correctionDelta": {
+      "criterion": "terrainToTerraceSurfaceContinuity",
+      "before": 0.81,
+      "after": 0.92,
+      "gain": 0.11,
+      "requiredAfter": 0.91,
+      "maxObservedOtherRegression": 0
+    },
+    "viewScores": {
+      "0": null,
+      "45": 0.89,
+      "90": 0.9,
+      "135": 0.89,
+      "180": null,
+      "270": 0.92
+    },
+    "observations": [
+      "World270 comparison against blockout-v002 shows left-front angular intrusion eliminated; clear paving beneath left timber post and along annex-front approach.",
+      "Coastal shoulder remains under terrace with rear support visible in world90 and elevated135.",
+      "Conifer stands clear of entrance and annex; guild and adjacent landmark remain visibly separated in usable angles.",
+      "World0 and180 remain heavily occluded and are not used as hidden-clearance evidence."
+    ]
+  },
+  "metrics": {
+    "studioReportedTriangles": 19500,
+    "studioReportedCalls": 51,
+    "note": "Capture renderer counters include studio rendering overhead and are not isolated mesh-budget certification. Root runtime budget check remains separate."
+  },
+  "limitations": [
+    "No phone-scale acceptance in this packet.",
+    "No exact target surface-texture parity claimed.",
+    "No after-contact numeric file in packet at review time; assembly verdict based on original screenshots."
+  ],
+  "overallAction": "approve",
+  "notes": "All 17 original images inspected before capture counters. Reviewer made no model edits; wrote only this review JSON."
+}

@@ -1,0 +1,17 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "blockout-v002",
+  "decision": "approve",
+  "scores": {
+    "silhouette": 0.88,
+    "roofBodyContinuity": 0.89,
+    "doorContact": 0.9,
+    "foundationPileContact": 0.9,
+    "poolBridge": 0.88,
+    "net": 0.9,
+    "crossView": 0.87
+  },
+  "largestMismatchGain": 0.13,
+  "regression": "none observed",
+  "action": "proceed finish with frozen structure"
+}

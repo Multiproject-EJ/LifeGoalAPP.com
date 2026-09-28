@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "asset": "island-006 sea-dragon",
+  "stage": "macro-anatomy",
+  "constructionFamily": 2,
+  "review": 2,
+  "reviewer": "independent reference_curator",
+  "verdict": "one-bounded-correction",
+  "approved": false,
+  "threshold": 0.85,
+  "evidence": {
+    "directory": "qa/macro-studio-v002",
+    "originalPixelsInspected": 18,
+    "reference": "goals/target-v001.png (secondary-inferred) and build-contract.md",
+    "previous": "qa/macro-review-r01.json",
+    "order": "Pixels first, implementation consulted afterward",
+    "scope": "Anatomy only; actual phone/sequence reviewer separate"
+  },
+  "hardVetoes": [],
+  "priorVetoResolution": {
+    "neckCutSeam": "Resolved: skull-to-throat is continuous in both profiles, clay and underside. A mild curvature/shading band remains, without the prior flat cut/open attachment appearance.",
+    "planarFlukeCollapse": "Resolved: closed cambered lobes remain visible in top, profiles, rear and opposite three-quarter. Edge-on narrowing does not erase their existence."
+  },
+  "categories": {
+    "silhouetteVolume": 0.83,
+    "identity": 0.8,
+    "attachment": 0.75,
+    "crossViewCoherence": 0.83,
+    "assembly": 0.8,
+    "intendedScaleReadability": 0.81,
+    "continuousBodyTaper": 0.87,
+    "integratedSkullMuzzle": 0.87,
+    "neckSkullJunction": 0.85,
+    "wingShoulderIntegration": 0.75,
+    "elbowWristFingerMembrane": 0.86,
+    "tailFlukeVolume": 0.86,
+    "hornPair": 0.86,
+    "dorsalCheekFinMacroIdentity": 0.76
+  },
+  "views": [
+    {
+      "view": "flight-orbit-0.png",
+      "silhouetteVolume": 0.85,
+      "identity": 0.84,
+      "attachment": 0.83,
+      "crossViewCoherence": 0.85,
+      "notes": "Face/body continuous; cheek discs read as ears. Wing membrane edge-on here is expected, and broad elsewhere."
+    },
+    {
+      "view": "flight-orbit-45.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.8,
+      "attachment": 0.75,
+      "crossViewCoherence": 0.83,
+      "notes": "Cone cuff at near shoulder; crest is bead-like. Neck no longer terminates flat."
+    },
+    {
+      "view": "flight-orbit-90.png",
+      "silhouetteVolume": 0.84,
+      "identity": 0.81,
+      "attachment": 0.79,
+      "crossViewCoherence": 0.85,
+      "notes": "Continuous throat and skull; repeated rounded crest plates; root upper arm remains abrupt."
+    },
+    {
+      "view": "flight-orbit-135.png",
+      "silhouetteVolume": 0.85,
+      "identity": 0.82,
+      "attachment": 0.8,
+      "crossViewCoherence": 0.86,
+      "notes": "Tail lobes retain volume; shoulder transition and rounded dorsal identity need correction."
+    },
+    {
+      "view": "flight-orbit-180.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.83,
+      "attachment": 0.84,
+      "crossViewCoherence": 0.86,
+      "notes": "Paired fluke lobes clear; fin row rounds into beads."
+    },
+    {
+      "view": "flight-orbit-225.png",
+      "silhouetteVolume": 0.84,
+      "identity": 0.8,
+      "attachment": 0.76,
+      "crossViewCoherence": 0.85,
+      "notes": "Opposite conical root evident; lobe volume holds."
+    },
+    {
+      "view": "flight-orbit-270.png",
+      "silhouetteVolume": 0.84,
+      "identity": 0.81,
+      "attachment": 0.79,
+      "crossViewCoherence": 0.85,
+      "notes": "Opposite continuous neck has mild curvature/shading band, not an open seam."
+    },
+    {
+      "view": "flight-orbit-315.png",
+      "silhouetteVolume": 0.84,
+      "identity": 0.8,
+      "attachment": 0.78,
+      "crossViewCoherence": 0.85,
+      "notes": "Cheek ear-disc silhouette and neck band evident; no detached collar."
+    },
+    {
+      "view": "flight-top.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.83,
+      "attachment": 0.82,
+      "crossViewCoherence": 0.88,
+      "notes": "Fluke now clearly present; three-ray membranes readable; dorsal shapes thin but volumetric."
+    },
+    {
+      "view": "flight-clay-45.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.8,
+      "attachment": 0.75,
+      "crossViewCoherence": 0.83,
+      "notes": "Clay confirms shoulder cuff is shape, not a material artefact; crest pebble silhouette."
+    },
+    {
+      "view": "flight-clay-225.png",
+      "silhouetteVolume": 0.84,
+      "identity": 0.8,
+      "attachment": 0.76,
+      "crossViewCoherence": 0.85,
+      "notes": "Same opposing root issue in clay; coherent overall silhouette."
+    },
+    {
+      "view": "pose-8.8.png",
+      "silhouetteVolume": 0.84,
+      "identity": 0.81,
+      "attachment": 0.8,
+      "crossViewCoherence": 0.84,
+      "notes": "Continuous underside; folded roots thick and angular but no gap/disconnection observed."
+    },
+    {
+      "view": "pose-10.5.png",
+      "silhouetteVolume": 0.84,
+      "identity": 0.81,
+      "attachment": 0.8,
+      "crossViewCoherence": 0.84,
+      "notes": "Neck radius transition band and cheek discs; wing membranes readable."
+    },
+    {
+      "view": "pose-12.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.8,
+      "attachment": 0.78,
+      "crossViewCoherence": 0.84,
+      "notes": "Crest reads separated round beads on curved back."
+    },
+    {
+      "view": "pose-17.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.8,
+      "attachment": 0.75,
+      "crossViewCoherence": 0.84,
+      "notes": "Bank makes bell-shaped shoulder root especially explicit."
+    },
+    {
+      "view": "pose-19.8.png",
+      "silhouetteVolume": 0.85,
+      "identity": 0.81,
+      "attachment": 0.79,
+      "crossViewCoherence": 0.85,
+      "notes": "Folded wing remains connected; form reads mechanically angular at root."
+    },
+    {
+      "view": "pose-20.8.png",
+      "silhouetteVolume": 0.85,
+      "identity": 0.81,
+      "attachment": 0.79,
+      "crossViewCoherence": 0.85,
+      "notes": "Face partly obscured by stream; no anatomy approval inferred through VFX."
+    },
+    {
+      "view": "pose-21.5.png",
+      "silhouetteVolume": 0.85,
+      "identity": 0.81,
+      "attachment": 0.79,
+      "crossViewCoherence": 0.85,
+      "notes": "Folded membranes intact; crest and root appearance persist."
+    }
+  ],
+  "findings": [
+    {
+      "id": "root-cuff",
+      "score": 0.75,
+      "severity": "bounded-correction",
+      "evidence": [
+        "flight-orbit-45.png",
+        "flight-orbit-225.png",
+        "flight-clay-45.png",
+        "flight-clay-225.png",
+        "pose-17.png"
+      ],
+      "description": "Shoulder no longer floats, but short bell/cone base changes abruptly into narrow straight arm. Broad end reads as an applied cuff rather than a muscular emergence. No open root slot or detached shoulder seen, so this is eligible form correction rather than hard veto."
+    },
+    {
+      "id": "rounded-fin-profile",
+      "score": 0.76,
+      "severity": "bounded-correction",
+      "evidence": [
+        "flight-orbit-90.png",
+        "flight-orbit-315.png",
+        "flight-clay-45.png",
+        "pose-12.png"
+      ],
+      "description": "Dorsal fins read as repeated rounded pebble/petal lobes; cheek masses read as ear discs. They supply volume but miss the target's swept, tapered aquatic fin identity. This is macro silhouette, not scales/finish."
+    },
+    {
+      "id": "neck-band",
+      "score": 0.85,
+      "severity": "preserve-and-smooth",
+      "description": "Much better continuous neck has mild ring-like curvature/shading transition at torso end in profiles/underside. Smooth longitudinal radius derivative while preserving new shared surface; do not reintroduce overlapping collars."
+    }
+  ],
+  "boundedCorrection": {
+    "eligible": true,
+    "familyAllowanceRemaining": 1,
+    "weakestBefore": 0.75,
+    "weakestRequiredAfter": 0.85,
+    "minimumGain": 0.1,
+    "maximumCriticalRegression": 0.05,
+    "hypothesis": "Abrupt, short longitudinal profile changes produce both the shoulder cuff and rounded fin masses. A single controlled profile/tangent revision—longer torso-tangent shoulder taper and asymmetric swept fin profiles—will remove cuff/bead readings while retaining the now-correct continuous skin and closed volumes.",
+    "controls": [
+      "Same target, all 18 cameras/timestamps, global scale, API and gate thresholds.",
+      "Keep shared continuous nose-to-tail construction and closed cambered fluke; no new collars or flat-plane shortcuts.",
+      "Shoulder broad base follows local torso tangent across a longer footprint; taper smoothly into humerus with no cap ridge, disk, or short cone.",
+      "Dorsal/cheek fins use swept asymmetric leading/trailing contours, broad buried root and tapered tips. Retain finite thickness and avoid needle spikes; preserve ordered size falloff.",
+      "Preserve wing three-finger membranes and articulated fold. Do not increase detail to disguise root geometry.",
+      "Repeat all 18 original frames plus root close-ups only if needed to disambiguate contact."
+    ],
+    "passConditions": [
+      "Every critical view/category >=.85.",
+      "Shoulder integration improves .75 to at least .85; dorsal/cheek fin identity .76 to at least .86.",
+      "No critical regression greater than .05; no new hard veto.",
+      "Same dominant defect, insufficient gain, or post-correction score below .75 retires family2; no automatic further family."
+    ]
+  },
+  "phoneAndMotion": "Studio evidence shows membrane area and three rays in broadside/top/folded views. This is not actual phone readability or temporal clearance approval; those remain separate.",
+  "notes": [
+    "No production geometry/camera edits by reviewer.",
+    "Numeric closure/boundary tests may authorize recapture but cannot approve the photographed silhouette.",
+    "Family2 is genuinely better constructed; approval still requires the bounded profile correction."
+  ]
+}

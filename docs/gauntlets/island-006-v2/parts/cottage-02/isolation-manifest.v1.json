@@ -1,0 +1,29 @@
+{
+  "part": "cottage-02 net-mender",
+  "authority": "secondary-inferred",
+  "generator": "built-in image_gen",
+  "inputs": [],
+  "target": "goals/target-v001.png",
+  "prompt": "prompts/target-v001.txt",
+  "sha256": "ed1955abe555d3fa2529438db10fc20a72c899ced425f5bb4c9d8d2e84cde67b",
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    255
+  ],
+  "audit": "Four inferred consistent views; gable/side/rear shape coherent. Net-frame side placement interpreted left as prompt; exact weathering not runtime parity authority.",
+  "invariants": [
+    "single storey",
+    "curved slate roof with ridgeZ",
+    "cream/oak closed shell",
+    "small arched doorway and supported canopy",
+    "round loft window",
+    "compact rectangle stone terrace",
+    "small side net frame"
+  ],
+  "hiddenConfidence": "medium inferred"
+}

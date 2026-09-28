@@ -1,0 +1,14 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "blockout-v001",
+  "decision": "one-bounded-correction",
+  "family": "perimeter surface alignment",
+  "worstScores": {
+    "silhouette": 0.82,
+    "shellCupola": 0.89,
+    "roofContinuity": 0.77,
+    "terraceContact": 0.82
+  },
+  "hypothesis": "Flat octagonal eave facets project as vertical upstands. Round perimeter between eight hips, close shell underside, shift terrace pads onto quay.",
+  "action": "recapture macro with fixed main masses"
+}

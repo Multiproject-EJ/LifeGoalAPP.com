@@ -1,0 +1,9 @@
+{
+  "baselineCommit": "cac04bb9203afa75c2d9238eee4275f2a15daeaa",
+  "baselinePassed": 2411,
+  "baselineFailed": 27,
+  "finalPassed": 2411,
+  "finalFailed": 27,
+  "newFailures": [],
+  "resolvedFailures": []
+}

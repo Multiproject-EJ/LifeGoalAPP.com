@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "partId": "cottage-05",
+  "referenceClass": "secondary-inferred",
+  "status": "generated-design-goal",
+  "generator": "built-in image_gen",
+  "inputImages": [],
+  "failedModelUsedAsReference": false,
+  "prompt": "prompts/target-v001.txt",
+  "output": "goals/target-v001.png",
+  "originalOutput": "/Users/ejmac/.codex/generated_images/01a0e966-6285-7ea0-8a2e-7c7ab6970293/exec-7dd1981b-c8a5-460d-9771-444d5ba36d1a.png",
+  "sha256": "dc0b1500c14fc97e152f9b8405da4e183857591edffd63c0010a523d46f8b4b2",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "transparentPixels": 1572864,
+  "fullyTransparentPixels": 576198,
+  "provenance": "Text-only inferred goal for user-authorized island006 V2 continuation; not exact approved pixel identity. Geometry contract controls footprint, access, attachment and cross-view consistency.",
+  "visualInspection": "Clear two-storey slate main roof and RIGHT lean-to annex. Cooper barrel in target sits close to annex entrance; implementation must move beside entrance and preserve clear approach."
+}

@@ -1,0 +1,14 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "blockout-v002",
+  "decision": "approve",
+  "worstScores": {
+    "silhouette": 0.88,
+    "roofContinuity": 0.88,
+    "shellCupola": 0.89,
+    "terraceContact": 0.88
+  },
+  "worstGain": 0.11,
+  "regression": "none meaningful",
+  "action": "finish; clean up rib junction tips"
+}

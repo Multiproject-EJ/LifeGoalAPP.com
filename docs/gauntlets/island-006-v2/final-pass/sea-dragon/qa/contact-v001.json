@@ -1,0 +1,131 @@
+{
+  "samples": [
+    {
+      "time": 20.8,
+      "visible": true,
+      "minDistance": 8.403636838263933,
+      "maxDistance": 47.38318182941463,
+      "belowFraction": 0,
+      "minName": "ISLAND_22_DRAGON_POWERFUL_LOWER_JAW",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 21.3,
+      "visible": true,
+      "minDistance": 0.5369828390326372,
+      "maxDistance": 42.22281047088952,
+      "belowFraction": 0,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 21.44,
+      "visible": true,
+      "minDistance": -0.016822208100274016,
+      "maxDistance": 41.60470371888567,
+      "belowFraction": 0.0023346303501945525,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 21.45,
+      "visible": true,
+      "minDistance": -0.019286698299893823,
+      "maxDistance": 41.592913261613155,
+      "belowFraction": 0.0023346303501945525,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 21.46,
+      "visible": true,
+      "minDistance": -0.029346168998452993,
+      "maxDistance": 41.57323191859162,
+      "belowFraction": 0.0023346303501945525,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 21.6,
+      "visible": true,
+      "minDistance": -2.114438139999725,
+      "maxDistance": 39.34546636641645,
+      "belowFraction": 0.086284046692607,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 21.9,
+      "visible": true,
+      "minDistance": -15.147424509577418,
+      "maxDistance": 25.96703111767001,
+      "belowFraction": 0.6414396887159534,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 22.2,
+      "visible": true,
+      "minDistance": -31.67094316860614,
+      "maxDistance": 9.366375359410211,
+      "belowFraction": 0.9416342412451362,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 22.4,
+      "visible": true,
+      "minDistance": -39.70839526036233,
+      "maxDistance": 1.5892572716261453,
+      "belowFraction": 0.9864785992217899,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 22.5,
+      "visible": true,
+      "minDistance": -41.72555422013187,
+      "maxDistance": -0.3131219559072188,
+      "belowFraction": 1,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 22.55,
+      "visible": true,
+      "minDistance": -42.07197863165661,
+      "maxDistance": -0.6042850986792014,
+      "belowFraction": 1,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 22.59,
+      "visible": true,
+      "minDistance": -42.083045501582795,
+      "maxDistance": -0.5737124555615052,
+      "belowFraction": 1,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 22.6,
+      "visible": false,
+      "minDistance": -42.083271960500866,
+      "maxDistance": -0.5638925146520235,
+      "belowFraction": 1,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    },
+    {
+      "time": 22.68,
+      "visible": false,
+      "minDistance": -42.08514789670899,
+      "maxDistance": -0.4907402049087076,
+      "belowFraction": 1,
+      "minName": "ISLAND_22_DRAGON_CONTINUOUS_BODY",
+      "maxName": "ISLAND_22_DRAGON_TAIL_FIN"
+    }
+  ],
+  "scope": "Opaque visible anatomy vertices against same ocean displacement field; clipping disabled only for CPU measurement. Negative distance is below sea."
+}

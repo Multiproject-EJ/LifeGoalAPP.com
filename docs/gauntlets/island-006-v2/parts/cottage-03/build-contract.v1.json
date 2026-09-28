@@ -1,0 +1,35 @@
+{
+  "authorization": "Good continue after cottage02; established house-by-house progression",
+  "unit": "Two-storey cottage03 with left smokehouse annex",
+  "parts": [
+    "continuous terrace and steps",
+    "two-storey closed shell and jetty",
+    "swept solid main roof and chimney",
+    "attached left lean-to workroom and flue",
+    "openings and supports",
+    "finish masonry/roof/timber systems and restrained fishing props"
+  ],
+  "transform": {
+    "position": [
+      1.35,
+      0.73,
+      -7.3
+    ],
+    "yaw": -0.08,
+    "scale": 0.9
+  },
+  "envelope": "Mainwidth1.55/depth1.22; leftannexx\u22121.6..\u2212.63; terraceaboutx\u22121.72...95,z\u2212.8..1.0; mainpeak~2.9,chimneymax~3.25",
+  "budget": {
+    "triangles": 12000,
+    "batches": 36
+  },
+  "frozen": "Eight prior approved modules, other cottage transforms, gameplay",
+  "gates": {
+    "macro": 0.85,
+    "finish": 0.85,
+    "rule": "One bounded correction perfamily, +.10 weakest/no>.05regression, max2families/4reviews pergate"
+  },
+  "camera": "targetY1.35,halfHeight2.5,floor\u2212.34;11studio views",
+  "representation": "Procedural Three.js with macro/finish groups; actual closed roofs/soffits from start",
+  "owner": "Root integration; serialized module builder; independent reviewer"
+}

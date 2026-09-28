@@ -1,0 +1,38 @@
+{
+  "part": "north-cottage-01",
+  "authorization": "User good, continue after fishmarket; established house-by-house workflow",
+  "owner": "root integration; serialized builder owns new module; independent reviewer",
+  "allowlist": [
+    "Island22NorthCottageV2.ts",
+    "first cottage factory and supplementary window exclusion in world module",
+    "diagnostic harnesses"
+  ],
+  "frozen": [
+    "all six approved building modules",
+    "other cottage geometry and placements",
+    "gameplay"
+  ],
+  "position": [
+    -3.65,
+    0.57,
+    -7.65
+  ],
+  "yaw": 0.12,
+  "scale": 1.02,
+  "groups": [
+    "main-and-annex-structure",
+    "cottage-finish"
+  ],
+  "budget": {
+    "triangles": 11000,
+    "materialBatches": 35
+  },
+  "gates": {
+    "macro": 0.85,
+    "finish": 0.85,
+    "correction": "One per family, +.10 weakest, no>.05 regression; twofamilies/fourreviews ceiling"
+  },
+  "authority": "Secondary inferred generated target",
+  "baseline": "baseline/v002",
+  "integrationAdjustment": "Assembly review permits slight current cottage transform adjustment and local dressing clearance; see assembly-decisions.v1.json. Frozen siblings untouched."
+}

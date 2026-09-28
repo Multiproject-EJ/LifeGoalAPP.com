@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "asset": "island-006 sea-dragon",
+  "stage": "macro-anatomy",
+  "constructionFamily": 2,
+  "review": 3,
+  "reviewer": "independent reference_curator",
+  "verdict": "approve-macro",
+  "approved": true,
+  "threshold": 0.85,
+  "scope": "Macro anatomy and posed cross-view coherence only; finish, temporal animation, assembled cinematic and actual phone framing are separate gates.",
+  "evidence": {
+    "directory": "qa/macro-studio-v003",
+    "originalPixelImagesInspected": 18,
+    "reference": "goals/target-v001.png, secondary-inferred, interpreted with build-contract.md",
+    "previousReview": "qa/macro-review-r02.json",
+    "inspectionOrder": "All original pixels reviewed before any claims or numeric geometry validation.",
+    "captureComplete": true
+  },
+  "categories": {
+    "silhouetteVolume": 0.85,
+    "identity": 0.86,
+    "attachment": 0.85,
+    "crossViewCoherence": 0.85,
+    "assembly": 0.85,
+    "intendedScaleReadability": 0.85,
+    "continuousBodyTaper": 0.87,
+    "integratedSkullMuzzle": 0.87,
+    "neckSkullJunction": 0.86,
+    "wingShoulderIntegration": 0.85,
+    "elbowWristFingerMembrane": 0.86,
+    "tailFlukeVolume": 0.86,
+    "hornPair": 0.86,
+    "dorsalCheekFinMacroIdentity": 0.86
+  },
+  "correctionAudit": {
+    "shoulder": {
+      "before": 0.75,
+      "after": 0.85,
+      "gain": 0.1,
+      "pass": true,
+      "evidence": "Both clay opposites and flight45/225/pose17 show elongated tapered scapular root replacing short broad capped cuff. It still has a stylized muscular boundary, but no detached cap or bell-shaped insertion."
+    },
+    "dorsalCheekFins": {
+      "before": 0.76,
+      "after": 0.86,
+      "gain": 0.1,
+      "pass": true,
+      "evidence": "Profiles and bank show broad-rooted asymmetric swept blades, replacing pebbles and ear discs. Natural edge-on narrowing remains, but broad faces and buried bases are coherent in opposite views."
+    },
+    "neck": {
+      "before": 0.85,
+      "after": 0.86,
+      "evidence": "Shared neck/skull remains continuous. Minor underside curvature/shading band is visible but does not create the previous cut boundary or separate collar."
+    },
+    "maximumObservedCriticalRegression": 0,
+    "allCriticalAtLeastThreshold": true,
+    "family2CorrectionConsumed": true
+  },
+  "hardVetoes": [],
+  "views": [
+    {
+      "view": "flight-orbit-0.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.86,
+      "crossViewCoherence": 0.86,
+      "notes": "Paired shoulders join torso without ring cuffs; foreshortened fins remain rooted."
+    },
+    {
+      "view": "flight-orbit-45.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.86,
+      "notes": "Near root is a longer tapered muscle, not short bell cuff; swept dorsal profile clear."
+    },
+    {
+      "view": "flight-orbit-90.png",
+      "silhouetteVolume": 0.87,
+      "identity": 0.87,
+      "attachment": 0.86,
+      "crossViewCoherence": 0.87,
+      "notes": "Continuous neck/throat; tapered aquatic crest; tail volume remains readable."
+    },
+    {
+      "view": "flight-orbit-135.png",
+      "silhouetteVolume": 0.87,
+      "identity": 0.87,
+      "attachment": 0.86,
+      "crossViewCoherence": 0.87,
+      "notes": "Root blends longitudinally into torso; three fingers and scalloped membranes preserved."
+    },
+    {
+      "view": "flight-orbit-180.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.86,
+      "crossViewCoherence": 0.86,
+      "notes": "Symmetric limb attachments and volumetric tail lobes; thin front-on crest edges expected."
+    },
+    {
+      "view": "flight-orbit-225.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.86,
+      "notes": "Opposite shoulder now elongated and swept rather than abrupt cone; no open contact."
+    },
+    {
+      "view": "flight-orbit-270.png",
+      "silhouetteVolume": 0.87,
+      "identity": 0.87,
+      "attachment": 0.86,
+      "crossViewCoherence": 0.87,
+      "notes": "Opposite profile preserves continuity; dorsal blades have broad roots and tapered swept tips."
+    },
+    {
+      "view": "flight-orbit-315.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.86,
+      "crossViewCoherence": 0.86,
+      "notes": "Cheek fins read as rear-swept fins rather than discs; throat continuous."
+    },
+    {
+      "view": "flight-top.png",
+      "silhouetteVolume": 0.87,
+      "identity": 0.86,
+      "attachment": 0.86,
+      "crossViewCoherence": 0.88,
+      "notes": "Tail lobes hold volume and both wings retain coherent skeleton; crest thin in its natural edge direction."
+    },
+    {
+      "view": "flight-clay-45.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.86,
+      "notes": "Naked shoulder muscle visibly longer with rounded taper, no broad capped cone."
+    },
+    {
+      "view": "flight-clay-225.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.86,
+      "notes": "Opposite clay confirms root and fin corrections are actual shape changes."
+    },
+    {
+      "view": "pose-8.8.png",
+      "silhouetteVolume": 0.85,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.85,
+      "notes": "Folded wing attaches through elongated root; throat continuous. Narrow transition shading persists but no cut seam."
+    },
+    {
+      "view": "pose-10.5.png",
+      "silhouetteVolume": 0.85,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.85,
+      "notes": "Underside continuity retained; fine shading ring is minor and does not form separate collar geometry."
+    },
+    {
+      "view": "pose-12.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.87,
+      "attachment": 0.86,
+      "crossViewCoherence": 0.86,
+      "notes": "Curved back retains ordered swept fin silhouette rather than bead row."
+    },
+    {
+      "view": "pose-17.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.86,
+      "notes": "Former worst shoulder cuff now a streamlined muscle bed; bank preserves root contact."
+    },
+    {
+      "view": "pose-19.8.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.86,
+      "notes": "Folded arm and membranes readable; cheek fins and crest retain swept silhouette."
+    },
+    {
+      "view": "pose-20.8.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.86,
+      "notes": "Stream obscures muzzle; visible body/root/fins stable. No hidden-face judgment inferred."
+    },
+    {
+      "view": "pose-21.5.png",
+      "silhouetteVolume": 0.86,
+      "identity": 0.86,
+      "attachment": 0.85,
+      "crossViewCoherence": 0.86,
+      "notes": "Folded shoulder remains attached; dorsal fin falloff and tail silhouette consistent."
+    }
+  ],
+  "freeze": [
+    "Continuous nose-to-tail silhouette and neck/socket topology.",
+    "Elongated shoulder root profiles and existing articulated wing skeleton.",
+    "Closed cambered tail lobes and swept dorsal/cheek fin macro profiles.",
+    "Global scale and approved macro proportions."
+  ],
+  "permittedNextStage": "Finish and expression detail may proceed without changing frozen macro silhouettes. Any silhouette/contact change invalidates dependent approval and needs new evidence.",
+  "limits": [
+    "Macro does not claim target-level finish; cream underside segmentation, surface variation and facial refinement are later work.",
+    "Stills do not certify transitions, water clipping, dynamic intersections, reset behavior, or mission state.",
+    "Actual phone-scale wing readability and cinematic camera choreography remain with sequence reviewer.",
+    "No code or camera edits were made by this reviewer."
+  ]
+}

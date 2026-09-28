@@ -1,0 +1,28 @@
+{
+  "gate": "finish",
+  "reviewCount": 2,
+  "maximumReviews": 4,
+  "families": [
+    {
+      "id": 1,
+      "mechanism": "Terrace side masonry facing",
+      "worstScore": 0.74,
+      "failure": "coplanar-facing surface fragments",
+      "boundedCorrection": "Offset facing a small physical thickness outside the frozen base plane",
+      "correctionsUsed": 1,
+      "finalScore": 0.9
+    },
+    {
+      "id": 2,
+      "mechanism": "Shallow net identity",
+      "worstScore": 0.77,
+      "failure": "rigid orthogonal lattice rather than hanging net",
+      "boundedCorrection": "Shallow sagging diamond mesh with tied floats, outerx\u2265\u2212.83",
+      "correctionsUsed": 1,
+      "finalScore": 0.88
+    }
+  ],
+  "controls": "Frozen roof/soffit/macro/other finish; same11studio+6context views",
+  "requiredDelta": "+.10 each weakest; every critical\u2265.85; no>.05 regression",
+  "status": "Both correction families approved at finish r02"
+}

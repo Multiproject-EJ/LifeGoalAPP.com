@@ -17,7 +17,7 @@ import '../features/gamification/level-worlds/LevelWorlds.css';
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Island 016 fishing lab requires #app.');
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, stencil: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -80,6 +80,18 @@ const landmarkObjectNames: Record<string, string> = {
   wisdom: 'ISLAND_22_WISDOM_LANDMARK_ROOT',
   event: 'ISLAND_22_EVENT_LANDMARK_ROOT',
   market: 'ISLAND_22_FISH_MARKET_HALL',
+  'cottage-01': 'ISLAND_22_NORTH_COTTAGE',
+  'cottage-02': 'ISLAND_22_NET_MENDER_COTTAGE',
+  'cottage-03': 'ISLAND_22_SMOKEHOUSE_COTTAGE',
+  'cottage-04': 'ISLAND_22_AUTHORED_HARBOR_CLUSTER_4',
+  'cottage-05': 'ISLAND_22_AUTHORED_HARBOR_CLUSTER_5',
+  'cottage-07': 'ISLAND_22_AUTHORED_HARBOR_CLUSTER_7',
+  'cottage-08': 'ISLAND_22_AUTHORED_HARBOR_CLUSTER_8',
+  'cottage-09': 'ISLAND_22_AUTHORED_HARBOR_CLUSTER_9',
+  'cottage-10': 'ISLAND_22_AUTHORED_HARBOR_CLUSTER_10',
+  'cottage-11': 'ISLAND_22_AUTHORED_HARBOR_CLUSTER_11',
+  'cottage-12': 'ISLAND_22_AUTHORED_HARBOR_CLUSTER_12',
+
 };
 // `?landmarks=1` keeps every built landmark in the fishing sequence, so the
 // fishing camera can be checked against the real skyline (it must never sit
@@ -300,7 +312,7 @@ function frame() {
     const viewDirection = baselineView === 'market'
       ? towardCenter.clone().negate()
       : towardCenter;
-    const lockedGuildHallOrbit = baselineView === 'boss' && hasRequestedAzimuth;
+    const lockedGuildHallOrbit = (baselineView === 'boss' || params.get('context') === '1') && hasRequestedAzimuth;
     if (lockedGuildHallOrbit) {
       const orbitRadians = THREE.MathUtils.degToRad(requestedAzimuth);
       viewDirection.set(Math.sin(orbitRadians), 0, Math.cos(orbitRadians));
@@ -310,9 +322,10 @@ function frame() {
     const landmarkDistance = baselineView === 'boss' ? distance * 1.08 : distance;
     const landmarkTangent = lockedGuildHallOrbit ? 0 : baselineView === 'boss' ? distance * 0.46 : distance * 0.24;
     camera.position.copy(target)
-      .addScaledVector(viewDirection, baselineView === 'market' ? distance * 0.65 : landmarkDistance)
-      .addScaledVector(tangent, baselineView === 'market' ? -distance * 1.15 : landmarkTangent);
+      .addScaledVector(viewDirection, baselineView === 'market' && !lockedGuildHallOrbit ? distance * 0.65 : landmarkDistance)
+      .addScaledVector(tangent, baselineView === 'market' && !lockedGuildHallOrbit ? -distance * 1.15 : landmarkTangent);
     camera.position.y = target.y + Math.max(2.8, size.y * (baselineView === 'boss' ? 0.82 : 0.74));
+    if (params.get('contextTop') === '1') camera.position.y = target.y + 12;
     camera.lookAt(target.x, target.y + size.y * 0.03, target.z);
   } else {
     const pose = world.getFishingInteractionCameraPose();

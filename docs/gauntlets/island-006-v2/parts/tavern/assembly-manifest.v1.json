@@ -1,0 +1,23 @@
+{
+  "part": "round-lantern-tavern",
+  "runtimeIsland": 6,
+  "worldSource": 22,
+  "approvedBuild": "qa/finish-v003",
+  "moduleSha256": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+  "position": [
+    7.45,
+    0.38,
+    2.15
+  ],
+  "architectureScale": 0.72,
+  "rootTransform": "canonical radial orientation and architecture y=.3 unchanged",
+  "constructionParts": [
+    "round-macro",
+    "roof-lantern-terrace",
+    "occupied-detail-system"
+  ],
+  "localEnvironmentCorrection": "Tavern-plot tree exclusion plus omission of overlapping decorative cottage [7.18,2.7]; other cluster indices and window elevations preserved.",
+  "context": "qa/world-context-v001",
+  "board": "qa/island-fit-v002",
+  "invalidation": "Source changes require new capture/portrait fingerprint."
+}

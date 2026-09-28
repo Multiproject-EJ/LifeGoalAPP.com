@@ -1,0 +1,127 @@
+{
+  "terrainHits": [
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -3.884932108261238,
+        0.683520488107043,
+        -8.320296102113037
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -3.935565348689785,
+        0.6440198253828184,
+        -8.314190779541303
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -3.8342988678326915,
+        0.6384753680902389,
+        -8.326401424684772
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -3.8898163663186263,
+        0.6115003986981463,
+        -8.360802694455876
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -3.9404496067471717,
+        0.6085845252835871,
+        -8.35469737188414
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -3.986198589118332,
+        0.6045191626585936,
+        -8.308085456969568
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -3.945333864804561,
+        0.5731492251843524,
+        -8.395203964226978
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -3.9910828471757194,
+        0.5690838625593624,
+        -8.348592049312405
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -4.0368318295468795,
+        0.5650184999343709,
+        -8.301980134397832
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -3.9959671052331065,
+        0.533648562460129,
+        -8.389098641655243
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -4.041716087604267,
+        0.5295831998351378,
+        -8.34248672674067
+      ]
+    },
+    {
+      "name": "ISLAND_006_EMBEDDED_COASTAL_STRATA",
+      "instance": 59,
+      "point": [
+        -4.087465069975426,
+        0.5255178372101461,
+        -8.295874811826097
+      ]
+    }
+  ],
+  "annexEaveInNeighborLocal": [
+    [
+      -0.8287039467513493,
+      1.1377272727272727,
+      -0.9707076592552468
+    ],
+    [
+      -0.5900656630826084,
+      1.1377272727272727,
+      0.3407112630634659
+    ]
+  ],
+  "neighborWallMinX": -0.71,
+  "neighborFootingMinX": -0.7419499999999999,
+  "neighborRoofMinX": -0.7952
+}

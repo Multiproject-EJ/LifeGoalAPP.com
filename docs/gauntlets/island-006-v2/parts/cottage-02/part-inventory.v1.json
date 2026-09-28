@@ -1,0 +1,19 @@
+{
+  "unit": "Single-storey cottage02 with porch and net-mending frame",
+  "parts": [
+    "terrace and entrance steps",
+    "closed plaster/timber shell and gables",
+    "curved slate roof and chimney",
+    "supported porch canopy",
+    "all doors and windows",
+    "finish surfaces and small fishing props"
+  ],
+  "dependencies": "Finish after macro; assembly after integration",
+  "exclusions": "Seven prior approved building modules, other cottage geometry/transforms, gameplay.",
+  "reference": "goals/target-v001.png (secondary-inferred)",
+  "macroEvidence": [
+    "qa/blockout-v001",
+    "qa/blockout-v002"
+  ],
+  "macroCorrection": "Roof sweep only, including dependent shell/trim/chimney contacts"
+}

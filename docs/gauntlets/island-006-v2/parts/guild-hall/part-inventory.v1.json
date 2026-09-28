@@ -1,0 +1,36 @@
+{
+  "reviewUnit": "One coupled guild hall building",
+  "parts": [
+    {
+      "id": "coastal-precinct",
+      "owner": "root",
+      "surfaces": "lower retaining foundation and outer stair flight",
+      "dependency": "canonical boss root transform"
+    },
+    {
+      "id": "occupied-shell",
+      "owner": "guild_builder",
+      "surfaces": "terrace, hall, front entrance and main swept roof",
+      "dependency": "coastal-precinct"
+    },
+    {
+      "id": "wings-dormers-crown",
+      "owner": "guild_builder",
+      "surfaces": "two closed side wings, two seated dormers, copper crown",
+      "dependency": "occupied-shell"
+    },
+    {
+      "id": "finish-systems",
+      "owner": "guild_builder",
+      "surfaces": "roof slate, stone courses, wood grain, hardware and small guild props",
+      "dependency": "macro gate"
+    }
+  ],
+  "frozenNeighbors": [
+    "boatwright",
+    "hatchery",
+    "tavern",
+    "lighthouse"
+  ],
+  "assemblyCorrection": "two decorative cottages repositioned along shore with shared windows and stone shoulders; guild conifers excluded"
+}

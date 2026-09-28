@@ -1,0 +1,36 @@
+{
+  "unit": "One building and attachedworkingpier",
+  "parts": [
+    {
+      "id": "hall-pier",
+      "owner": "builder",
+      "surfaces": "closedcottage,curvedroof,piles,crossbraces,deck",
+      "parent": "existingmarketdock"
+    },
+    {
+      "id": "market-operations",
+      "owner": "builder",
+      "surfaces": "canopy,crane,twocounters",
+      "depends": "hall-pier"
+    },
+    {
+      "id": "finish",
+      "owner": "builder",
+      "surfaces": "courses,boards,fish,containers,ropes,hardware",
+      "depends": "macroreview"
+    },
+    {
+      "id": "access-spur-berths",
+      "owner": "root",
+      "surfaces": "outboardoffset,shortaccessbridge,decorativeboatpositions",
+      "depends": "assemblyreview"
+    }
+  ],
+  "frozen": [
+    "guildhall",
+    "lighthouse",
+    "tavern",
+    "hatchery",
+    "boatwright"
+  ]
+}

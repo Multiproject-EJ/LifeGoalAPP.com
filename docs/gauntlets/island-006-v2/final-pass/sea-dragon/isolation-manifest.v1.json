@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "partId": "sea-dragon",
+  "referenceClass": "secondary-inferred",
+  "status": "generated-design-goal",
+  "generator": "built-in image_gen",
+  "inputImages": [],
+  "failedModelUsedAsReference": false,
+  "prompt": "prompts/target-v001.txt",
+  "output": "goals/target-v001.png",
+  "originalOutput": "/Users/ejmac/.codex/generated_images/01a0e966-6285-7ea0-8a2e-7c7ab6970293/exec-57bc0a0a-29f6-45b8-ac57-70b356102960.png",
+  "sha256": "762c39a93119f34324f519f49f369d22d6b9df2a6fa645f9f48cfa3ce2c127b3",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "transparentPixels": 1572864,
+  "fullyTransparentPixels": 1018476,
+  "provenance": "Text-only secondary-inferred goal for user-authorized island006 V2 continuation. Baseline inspected only for defects, never used as image input or identity authority. Written anatomy and animation contract controls coherent reconstruction; not exact approved pixels.",
+  "visualInspection": "Continuous serpentine teal neck/body, integrated expressive head, swept ivory horns, cream belly, fluke tail and joined scalloped wings. Target has multiple visible wing rays: enforce three tapered fingers plus arm boundary from written contract rather than copying extra inferred rays. Main wing nearly fills frame. Fine scales are aspirational; no requirement for texture parity. Baseline viewed for defects only and never supplied as input.",
+  "defectInspectionOnly": "../baseline-details-v001/dragon-flight.png"
+}

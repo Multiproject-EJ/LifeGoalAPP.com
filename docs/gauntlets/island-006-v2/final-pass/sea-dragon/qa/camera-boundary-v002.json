@@ -1,0 +1,66 @@
+{
+  "boundaryDeltaSeconds": 0.002,
+  "measurements": [
+    {
+      "time": 5.2,
+      "positionJump": 0.00002098012169358252,
+      "targetJump": 0.000007100211199984052,
+      "fovJump": 0
+    },
+    {
+      "time": 6.55,
+      "positionJump": 0,
+      "targetJump": 0.008954936528934976,
+      "fovJump": 0
+    },
+    {
+      "time": 7.18,
+      "positionJump": 0.02566737684411918,
+      "targetJump": 0.00026137882386923986,
+      "fovJump": 0.004369561186116755
+    },
+    {
+      "time": 8.15,
+      "positionJump": 0.01745192516399304,
+      "targetJump": 0.009744742259693443,
+      "fovJump": 0.0016792987988338837
+    },
+    {
+      "time": 10.2,
+      "positionJump": 0.01472171232588292,
+      "targetJump": 0.019607978603311458,
+      "fovJump": 0.003544692558143936
+    },
+    {
+      "time": 13.4,
+      "positionJump": 0.0014678149049556742,
+      "targetJump": 0.0014676830577020463,
+      "fovJump": 0.0000012392937662752956
+    },
+    {
+      "time": 19.2,
+      "positionJump": 0.021328689154632142,
+      "targetJump": 0.006210027113334074,
+      "fovJump": 0.008739182521630084
+    },
+    {
+      "time": 21.45,
+      "positionJump": 0.06524928310256971,
+      "targetJump": 0.028105419376782015,
+      "fovJump": 0.005267467764063838
+    },
+    {
+      "time": 22.5,
+      "positionJump": 0.07588319248361393,
+      "targetJump": 0.008988750818085804,
+      "fovJump": 0.029391983671118282
+    },
+    {
+      "time": 22.68,
+      "positionJump": 0.09690886762243661,
+      "targetJump": 0.013195217370257896,
+      "fovJump": 0.037554572969867195
+    }
+  ],
+  "scope": "Numeric discontinuity diagnostic only, not visual-motion approval."
+}

@@ -4205,6 +4205,7 @@ export default function Island5ThreePilot({
       renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: qualityProfile.antialias,
+        stencil: isFishermansVillage,
         alpha: isCoasterCarnival,
         powerPreference: qualityProfile.id === 'high' ? 'high-performance' : 'default',
       });
@@ -10859,8 +10860,8 @@ export default function Island5ThreePilot({
           }
           camera.position.copy(pose.position);
           if (!isReducedMotion && pose.shake > 0) {
-            camera.position.x += Math.sin(elapsed * 79) * pose.shake;
-            camera.position.y += Math.cos(elapsed * 91) * pose.shake * 0.6;
+            camera.position.x += Math.sin(waterDragonElapsed * 79) * pose.shake;
+            camera.position.y += Math.cos(waterDragonElapsed * 91) * pose.shake * 0.6;
           }
           controls.target.copy(pose.target);
           camera.lookAt(controls.target);

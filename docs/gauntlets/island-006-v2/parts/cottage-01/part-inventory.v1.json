@@ -1,0 +1,37 @@
+{
+  "unit": "One two-storey cottage and attached annex",
+  "parts": [
+    {
+      "id": "terrace-and-steps",
+      "owner": "builder",
+      "surfaces": "continuous supporting stonebase, entry approach"
+    },
+    {
+      "id": "main-shell-jetty-roof",
+      "owner": "builder",
+      "surfaces": "ground/upper floor, corbels, curved roof, dormer, chimney"
+    },
+    {
+      "id": "annex-and-service-shelter",
+      "owner": "builder",
+      "surfaces": "attached lower volume, slate roof, rear canopy"
+    },
+    {
+      "id": "openings",
+      "owner": "builder",
+      "surfaces": "all front/rear/side doors and windows"
+    },
+    {
+      "id": "finish",
+      "owner": "builder",
+      "dependency": "approved macro",
+      "surfaces": "tile/stone/wood systems, shutters, hardware, flowerbox, sign and modestprops"
+    }
+  ],
+  "placementOwner": "root, unchanged",
+  "exclusions": [
+    "other cottages",
+    "six approved buildings",
+    "gameplay"
+  ]
+}

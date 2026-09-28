@@ -1,0 +1,74 @@
+[
+  {
+    "landmark": "event",
+    "level": 1,
+    "quality": "low",
+    "vertices": 9440,
+    "triangles": 5108,
+    "draws": 10
+  },
+  {
+    "landmark": "event",
+    "level": 2,
+    "quality": "low",
+    "vertices": 10944,
+    "triangles": 6312,
+    "draws": 14
+  },
+  {
+    "landmark": "event",
+    "level": 3,
+    "quality": "low",
+    "vertices": 19119,
+    "triangles": 12726,
+    "draws": 30
+  },
+  {
+    "landmark": "event",
+    "level": 1,
+    "quality": "medium",
+    "vertices": 9440,
+    "triangles": 5108,
+    "draws": 10
+  },
+  {
+    "landmark": "event",
+    "level": 2,
+    "quality": "medium",
+    "vertices": 10944,
+    "triangles": 6312,
+    "draws": 14
+  },
+  {
+    "landmark": "event",
+    "level": 3,
+    "quality": "medium",
+    "vertices": 19887,
+    "triangles": 13686,
+    "draws": 30
+  },
+  {
+    "landmark": "event",
+    "level": 1,
+    "quality": "high",
+    "vertices": 9440,
+    "triangles": 5108,
+    "draws": 10
+  },
+  {
+    "landmark": "event",
+    "level": 2,
+    "quality": "high",
+    "vertices": 10944,
+    "triangles": 6312,
+    "draws": 14
+  },
+  {
+    "landmark": "event",
+    "level": 3,
+    "quality": "high",
+    "vertices": 19887,
+    "triangles": 13686,
+    "draws": 30
+  }
+]

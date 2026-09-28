@@ -1,0 +1,74 @@
+[
+  {
+    "landmark": "boss",
+    "level": 1,
+    "quality": "low",
+    "vertices": 3982,
+    "triangles": 2954,
+    "draws": 12
+  },
+  {
+    "landmark": "boss",
+    "level": 2,
+    "quality": "low",
+    "vertices": 9812,
+    "triangles": 6828,
+    "draws": 20
+  },
+  {
+    "landmark": "boss",
+    "level": 3,
+    "quality": "low",
+    "vertices": 21804,
+    "triangles": 13296,
+    "draws": 36
+  },
+  {
+    "landmark": "boss",
+    "level": 1,
+    "quality": "medium",
+    "vertices": 4606,
+    "triangles": 3194,
+    "draws": 12
+  },
+  {
+    "landmark": "boss",
+    "level": 2,
+    "quality": "medium",
+    "vertices": 11476,
+    "triangles": 7468,
+    "draws": 20
+  },
+  {
+    "landmark": "boss",
+    "level": 3,
+    "quality": "medium",
+    "vertices": 25536,
+    "triangles": 14664,
+    "draws": 36
+  },
+  {
+    "landmark": "boss",
+    "level": 1,
+    "quality": "high",
+    "vertices": 4606,
+    "triangles": 3194,
+    "draws": 12
+  },
+  {
+    "landmark": "boss",
+    "level": 2,
+    "quality": "high",
+    "vertices": 11476,
+    "triangles": 7468,
+    "draws": 20
+  },
+  {
+    "landmark": "boss",
+    "level": 3,
+    "quality": "high",
+    "vertices": 25536,
+    "triangles": 14664,
+    "draws": 36
+  }
+]

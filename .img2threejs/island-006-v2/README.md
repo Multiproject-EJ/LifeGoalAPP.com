@@ -1,0 +1,2 @@
+# Manual existing-scene revision
+The optional generic reconstruction tracker was initialized during intake. This task instead corrected and extended the existing procedural source022 scene in bounded slices. No automatic reconstruction stages or full image-likeness pass are claimed. Authoritative iteration evidence: docs/gauntlets/island-006-v2/VALIDATION.md and review/index.html. Final art approval remains with the user.

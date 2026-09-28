@@ -1,4 +1,6 @@
+import { seaDragonFinVolume, seaDragonHeadGeometry, taperedOrganicTube } from './Island22DragonAnatomyV2';
 import * as THREE from 'three';
+import { addSeaDragonScaleSurface, createSeaDragonNeckGeometry } from './Island22DragonV2';
 
 export type Island22WaterDragonPartQuality = 'low' | 'medium' | 'high';
 
@@ -84,9 +86,9 @@ function qualitySegments(quality: Island22WaterDragonPartQuality) {
 }
 
 function createMaterials(options: Island22IconicWaterDragonPartsOptions): DragonMaterials {
-  const bodyColor = options.bodyColor ?? 0x138d9a;
+  const bodyColor = options.bodyColor ?? 0x328c95;
   const bodyDarkColor = options.bodyDarkColor ?? 0x075f76;
-  const bellyColor = options.bellyColor ?? 0xa8e4d8;
+  const bellyColor = options.bellyColor ?? 0xe3d8b9;
   const shellColor = options.shellColor ?? 0x287f8a;
   const membraneColor = options.membraneColor ?? 0x36c6c8;
   const electricColor = options.electricColor ?? 0x73f7ff;
@@ -405,9 +407,9 @@ function createCrown(
   crown.position.set(0, 0.46, -0.24);
 
   const spines = [
-    { x: 0, y: 1.58, z: -0.22, radius: 0.14 },
-    { x: -0.36, y: 1.26, z: -0.14, radius: 0.122 },
-    { x: 0.36, y: 1.26, z: -0.14, radius: 0.122 },
+    { x: 0, y: .78, z: -0.60, radius: 0.14 },
+    { x: -0.52, y: 1.12, z: -0.64, radius: 0.17 },
+    { x: 0.52, y: 1.12, z: -0.64, radius: 0.17 },
     { x: -0.7, y: 0.86, z: -0.02, radius: 0.105 },
     { x: 0.7, y: 0.86, z: -0.02, radius: 0.105 },
   ];
@@ -421,7 +423,7 @@ function createCrown(
       spine.radius,
       0.018,
       segments.radial,
-      index === 0 ? materials.shellEdge : materials.bodyDark,
+      index === 0 ? materials.bodyDark : materials.ivory,
       true,
     ));
   });
@@ -587,6 +589,10 @@ export function createIsland22IconicWaterDragonParts(
   const quality = options.quality ?? 'medium';
   const segments = qualitySegments(quality);
   const materials = createMaterials(options);
+  // Macro gate: no scale texture or microdetail.
+  materials.body.roughness = .48;
+  materials.body.clearcoat = .18;
+  materials.body.clearcoatRoughness = .42;
   // Identity accents must survive the deliberately heavy high-altitude fog.
   // The body and wings retain fog so the creature still belongs to the scene.
   materials.eye.fog = false;
@@ -602,186 +608,37 @@ export function createIsland22IconicWaterDragonParts(
   headPivot.name = 'ISLAND_22_DRAGON_ICONIC_HEAD_PIVOT';
   root.add(headPivot);
 
-  const skull = namedMesh(
-    'ISLAND_22_DRAGON_ICONIC_SKULL',
-    new THREE.SphereGeometry(1, segments.sphereWidth, segments.sphereHeight),
-    materials.body,
-  );
-  skull.scale.set(0.84, 0.66, 1.02);
-  skull.position.set(0, 0.14, 0.04);
+  const skull = namedMesh('ISLAND_22_DRAGON_ICONIC_SKULL', seaDragonHeadGeometry(), materials.body);
   headPivot.add(skull);
-
-  const muzzle = namedMesh(
-    'ISLAND_22_DRAGON_AQUATIC_SHARK_MUZZLE',
-    new THREE.SphereGeometry(1, segments.sphereWidth, segments.sphereHeight),
-    materials.body,
-  );
-  muzzle.scale.set(0.78, 0.38, 0.9);
-  muzzle.position.set(0, -0.08, 0.69);
-  headPivot.add(muzzle);
-  const sharkNoseBridge = namedMesh(
-    'ISLAND_22_DRAGON_ICONIC_SHARK_NOSE_BRIDGE',
-    new THREE.BoxGeometry(0.86, 0.18, 0.76, 2, 1, 2),
-    materials.bodyDark,
-    true,
-  );
-  sharkNoseBridge.position.set(0, 0.08, 0.93);
-  sharkNoseBridge.rotation.x = -0.08;
-  headPivot.add(sharkNoseBridge);
-  ([-1, 1] as const).forEach((side) => {
-    const nostril = namedMesh(
-      `ISLAND_22_DRAGON_${side < 0 ? 'LEFT' : 'RIGHT'}_SHARK_NOSTRIL`,
-      new THREE.SphereGeometry(0.078, segments.sphereWidth, segments.sphereHeight),
-      materials.pupil,
-      true,
-    );
-    nostril.position.set(side * 0.2, -0.06, 1.43);
-    nostril.scale.set(0.72, 0.42, 0.28);
-    headPivot.add(nostril);
-  });
-
-  const upperMouth = namedMesh(
-    'ISLAND_22_DRAGON_UPPER_MOUTH_CAVITY',
-    new THREE.SphereGeometry(1, segments.sphereWidth, segments.sphereHeight),
-    materials.mouth,
-    true,
-  );
-  upperMouth.scale.set(0.65, 0.075, 0.72);
-  upperMouth.position.set(0, -0.27, 0.7);
-  headPivot.add(upperMouth);
-
-  const upperTeeth = createIsland22InterlockingSharkTeeth(quality, materials.ivory);
-  upperTeeth.position.y = -0.19;
-  headPivot.add(upperTeeth);
-
-  const jawPivot = new THREE.Group();
-  jawPivot.name = 'ISLAND_22_DRAGON_SHARK_JAW_HINGE_PIVOT';
-  jawPivot.position.set(0, -0.24, 0.08);
-  const lowerJaw = namedMesh(
-    'ISLAND_22_DRAGON_POWERFUL_LOWER_JAW',
-    new THREE.SphereGeometry(1, segments.sphereWidth, segments.sphereHeight),
-    materials.belly,
-  );
-  lowerJaw.scale.set(0.69, 0.19, 0.83);
-  lowerJaw.position.set(0, -0.08, 0.55);
-  const lowerMouth = namedMesh(
-    'ISLAND_22_DRAGON_LOWER_MOUTH_CAVITY',
-    new THREE.SphereGeometry(1, segments.sphereWidth, segments.sphereHeight),
-    materials.mouth,
-    true,
-  );
-  lowerMouth.scale.set(0.62, 0.07, 0.7);
-  lowerMouth.position.set(0, 0.03, 0.61);
-  const lowerTeeth = createLowerSharkTeeth(quality, materials.ivory);
-  lowerTeeth.position.set(0, 0.08, -0.02);
-  jawPivot.add(lowerJaw, lowerMouth, lowerTeeth);
-  headPivot.add(jawPivot);
-
-  // The frontal rows above establish the interlock. A second lateral set is
-  // deliberately larger so the great-white silhouette survives the required
-  // profile and wide-flight phone shots rather than collapsing into one beige
-  // pixel cluster inside the mouth.
-  ([-1, 1] as const).forEach((side) => {
-    [0.48, 0.68, 0.88, 1.08].forEach((z, index) => {
-      const upperProfileTooth = namedMesh(
-        `ISLAND_22_DRAGON_${side < 0 ? 'LEFT' : 'RIGHT'}_UPPER_PROFILE_TOOTH_${index + 1}`,
-        new THREE.ConeGeometry(0.075 - index * 0.006, 0.3 - index * 0.018, Math.max(5, segments.radial / 2)),
-        materials.ivory,
-        true,
-      );
-      upperProfileTooth.position.set(side * 0.57, -0.3, z);
-      upperProfileTooth.rotation.z = Math.PI;
-      upperProfileTooth.rotation.x = -0.08;
-      headPivot.add(upperProfileTooth);
-
-      const lowerProfileTooth = namedMesh(
-        `ISLAND_22_DRAGON_${side < 0 ? 'LEFT' : 'RIGHT'}_LOWER_PROFILE_TOOTH_${index + 1}`,
-        new THREE.ConeGeometry(0.068 - index * 0.005, 0.27 - index * 0.016, Math.max(5, segments.radial / 2)),
-        materials.ivory,
-        true,
-      );
-      lowerProfileTooth.position.set(side * 0.55, 0.09, z);
-      lowerProfileTooth.rotation.x = 0.08;
-      jawPivot.add(lowerProfileTooth);
-    });
-  });
-
-  const crownPivot = createCrown(segments, materials);
-  headPivot.add(crownPivot);
-
-  const neckCollar = namedMesh(
-    'ISLAND_22_DRAGON_CONTINUOUS_NECK_COLLAR',
-    new THREE.CapsuleGeometry(0.76, 2.36, Math.max(4, segments.tube), segments.radial),
-    materials.body,
-  );
-  neckCollar.rotation.x = Math.PI * 0.5;
-  neckCollar.position.set(0, -0.02, -1.86);
-  neckCollar.scale.set(1.02, 0.96, 1);
-  root.add(neckCollar);
-
-  const eyes: THREE.Mesh[] = [];
-  ([-1, 1] as const).forEach((side) => {
-    const brow = createBeam(
-      `ISLAND_22_DRAGON_${side < 0 ? 'LEFT' : 'RIGHT'}_EXPRESSIVE_BROW`,
-      new THREE.Vector3(side * 0.18, 0.51, 0.34),
-      new THREE.Vector3(side * 0.61, 0.37, 0.23),
-      0.11,
-      0.045,
-      segments.radial,
-      materials.bodyDark,
-      true,
-    );
-    const eyeSocket = namedMesh(
-      `ISLAND_22_DRAGON_${side < 0 ? 'LEFT' : 'RIGHT'}_EYE_SOCKET`,
-      new THREE.SphereGeometry(0.3, segments.sphereWidth, segments.sphereHeight),
-      materials.bodyDark,
-      true,
-    );
-    eyeSocket.position.set(side * 0.54, 0.25, 0.56);
-    eyeSocket.scale.set(0.58, 1.08, 1.02);
-    const eye = namedMesh(
-      `ISLAND_22_DRAGON_${side < 0 ? 'LEFT' : 'RIGHT'}_AMBER_EYE`,
-      new THREE.SphereGeometry(0.215, segments.sphereWidth, segments.sphereHeight),
-      materials.eye,
-      true,
-    );
-    eye.position.set(side * 0.67, 0.25, 0.59);
-    eye.scale.set(0.62, 1.02, 0.92);
-    const pupil = namedMesh(
-      `ISLAND_22_DRAGON_${side < 0 ? 'LEFT' : 'RIGHT'}_VERTICAL_PUPIL`,
-      new THREE.SphereGeometry(0.108, segments.sphereWidth, segments.sphereHeight),
-      materials.pupil,
-      true,
-    );
-    pupil.position.set(side * 0.79, 0.25, 0.61);
-    pupil.scale.set(0.36, 1.08, 0.72);
-    headPivot.add(brow, eyeSocket, eye, pupil);
-    eyes.push(eye);
-  });
-
-  const leftGill = createGillBank(-1, segments, materials);
-  const rightGill = createGillBank(1, segments, materials);
-  headPivot.add(leftGill.pivot, rightGill.pivot);
-
-  const leftWhisker = createWhisker('ISLAND_22_DRAGON_LEFT_ICONIC_WHISKER', -1, 0.02, segments.tube, materials.membrane);
-  const rightWhisker = createWhisker('ISLAND_22_DRAGON_RIGHT_ICONIC_WHISKER', 1, 0.02, segments.tube, materials.membrane);
-  headPivot.add(leftWhisker, rightWhisker);
-
-  ([-1, 1] as const).forEach((side) => {
-    const cheekFin = namedMesh(
-      `ISLAND_22_DRAGON_${side < 0 ? 'LEFT' : 'RIGHT'}_CHEEK_FIN_FRILL`,
-      createFinGeometry(0.65, 0.54),
-      materials.membrane,
-      true,
-    );
-    cheekFin.position.set(side * 0.68, 0.17, 0.2);
-    cheekFin.rotation.set(0, side * Math.PI * 0.5, side * 0.18);
-    cheekFin.scale.x = side;
-    headPivot.add(cheekFin);
-  });
-
-  const ramShieldPivot = createRamShield(segments, materials);
-  root.add(ramShieldPivot);
+  for(const side of [-1,1])headPivot.add(namedMesh('ISLAND_22_DRAGON_CHEEK_FIN_'+side,seaDragonFinVolume(side,'cheek'),materials.body));
+  const jawPivot=new THREE.Group();jawPivot.name='ISLAND_22_DRAGON_SHARK_JAW_HINGE_PIVOT';jawPivot.position.set(0,-.25,.08);headPivot.add(jawPivot);
+  const jaw=namedMesh('ISLAND_22_DRAGON_POWERFUL_LOWER_JAW',new THREE.SphereGeometry(1,20,12),materials.belly);jaw.scale.set(.375,.12,.69);jaw.position.set(0,-.055,.75);jawPivot.add(jaw);
+  const mouth=namedMesh('ISLAND_22_DRAGON_LOWER_MOUTH_CAVITY',new THREE.SphereGeometry(1,16,10),materials.mouth);mouth.scale.set(.335,.025,.59);mouth.position.set(0,.058,.78);jawPivot.add(mouth);
+  const crownPivot=new THREE.Group();crownPivot.name='ISLAND_22_DRAGON_ICONIC_CROWN_PIVOT';headPivot.add(crownPivot);
+  for(const side of [-1,1]){
+    const horn=namedMesh('ISLAND_22_DRAGON_CURVED_IVORY_HORN_'+side,taperedOrganicTube([new THREE.Vector3(side*.39,.48,-.28),new THREE.Vector3(side*.51,.84,-.45),new THREE.Vector3(side*.61,1.10,-.80),new THREE.Vector3(side*.65,1.34,-1.06)],.145,.008,20,10),materials.ivory);crownPivot.add(horn);
+    const eye=namedMesh('ISLAND_22_DRAGON_AMBER_EYE_'+side,new THREE.SphereGeometry(1,14,10),materials.eye);eye.position.set(side*.506,.238,.345);eye.scale.set(.082,.128,.138);headPivot.add(eye);
+    const pupil=namedMesh('ISLAND_22_DRAGON_VERTICAL_PUPIL_'+side,new THREE.SphereGeometry(1,10,8),materials.pupil);pupil.position.set(side*.577,.238,.370);pupil.scale.set(.014,.082,.045);headPivot.add(pupil);
+    const brow=namedMesh('ISLAND_22_DRAGON_ORBITAL_BROW_'+side,taperedOrganicTube([new THREE.Vector3(side*.46,.34,.52),new THREE.Vector3(side*.56,.395,.31),new THREE.Vector3(side*.52,.34,.14)],.055,.022,10,7),materials.bodyDark);headPivot.add(brow);
+    const nostril=namedMesh('ISLAND_22_DRAGON_NOSTRIL_'+side,new THREE.SphereGeometry(1,8,6),materials.pupil);nostril.position.set(side*.20,.073,1.40);nostril.scale.set(.032,.013,.048);headPivot.add(nostril);
+  }
+  // Small seated teeth remain inside the approved muzzle envelope when closed.
+  for(const side of [-1,1])for(let i=0;i<3;i++){
+    const tooth=namedMesh('ISLAND_22_DRAGON_LOWER_TOOTH_'+side+'_'+i,new THREE.ConeGeometry(.026,.105,7),materials.ivory);
+    tooth.position.set(side*(.27-i*.025),.085,.43+i*.27);jawPivot.add(tooth);
+    const upper=namedMesh('ISLAND_22_DRAGON_UPPER_TOOTH_'+side+'_'+i,new THREE.ConeGeometry(.024,.09,7),materials.ivory);
+    upper.rotation.z=Math.PI;upper.position.set(side*(.27-i*.025),-.205,.55+i*.27);headPivot.add(upper);
+  }
+  const neckCollar=new THREE.Group();neckCollar.name='ISLAND_22_DRAGON_CONTINUOUS_NECK_COLLAR';root.add(neckCollar);
+  const emptyGill=(side:number)=>{const pivot=new THREE.Group();pivot.name=`ISLAND_22_DRAGON_${side<0?'LEFT':'RIGHT'}_GILL_PIVOT`;pivot.position.set(side*.72,-.02,-.1);const chargeOrgan=new THREE.Mesh(new THREE.BufferGeometry(),materials.electric);pivot.add(chargeOrgan);headPivot.add(pivot);return{pivot,chargeOrgan};};
+  const leftGill=emptyGill(-1),rightGill=emptyGill(1);
+  const leftWhisker=new THREE.Group(),rightWhisker=new THREE.Group();leftWhisker.name='ISLAND_22_DRAGON_LEFT_ICONIC_WHISKER';rightWhisker.name='ISLAND_22_DRAGON_RIGHT_ICONIC_WHISKER';headPivot.add(leftWhisker,rightWhisker);
+  for(const [side,pivot] of [[-1,leftWhisker],[1,rightWhisker]] as const){
+    const whisker=namedMesh('ISLAND_22_DRAGON_TAPERED_WHISKER_'+side,taperedOrganicTube([
+      new THREE.Vector3(side*.31,-.10,.98),new THREE.Vector3(side*.51,-.16,.79),new THREE.Vector3(side*.72,-.20,.40),new THREE.Vector3(side*.87,-.09,.10)
+    ],.021,.002,20,6),materials.ivory);pivot.add(whisker);
+  }
+  const ramShieldPivot=new THREE.Group();ramShieldPivot.name='ISLAND_22_DRAGON_RAM_SHIELD_PIVOT';ramShieldPivot.position.set(0,-.53,-.34);root.add(ramShieldPivot);
 
   const chargeChannels: Array<{ mesh: THREE.Mesh; curve: THREE.CatmullRomCurve3 }> = [];
   ([-1, 1] as const).forEach((side) => {
@@ -894,7 +751,7 @@ export function createIsland22IconicWaterDragonParts(
     const visibleCharge = clamp01(chargeEnvelope * organicPulse);
     materials.electric.opacity = visibleCharge * 0.92;
     materials.electric.emissiveIntensity = 0.2 + visibleCharge * 4.8;
-    materials.eye.emissiveIntensity = 0.65 + visibleCharge * 1.65;
+    materials.eye.emissiveIntensity = 0.12 + visibleCharge * .65;
 
     chargeChannels.forEach(({ mesh }, index) => {
       mesh.visible = visibleCharge > 0.015;

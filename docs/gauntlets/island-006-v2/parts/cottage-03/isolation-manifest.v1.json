@@ -1,0 +1,29 @@
+{
+  "part": "cottage03 fish-smoker",
+  "authority": "secondary-inferred",
+  "generator": "built-in image_gen",
+  "inputs": [],
+  "target": "goals/target-v001.png",
+  "prompt": "prompts/target-v001.txt",
+  "sha256": "674d38c58256ca51605d6cc918f6e78cdf417bbb5799c39f751f3425c39d1f8a",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "alphaAudit": "Transparent pixels present",
+  "views": "One large three-quarter plus rear-three-quarter/front/side inferred views",
+  "invariants": [
+    "two-storey main and attached lower LEFT workroom",
+    "blue mainroof/clay lean-to",
+    "slight jetty and corbels",
+    "upperpairedwindows/roundgablelight",
+    "two frontdoors and rear service",
+    "one continuous stone terrace"
+  ],
+  "hiddenConfidence": "medium inferred; small-view variations subordinate to coherent mainview identity"
+}

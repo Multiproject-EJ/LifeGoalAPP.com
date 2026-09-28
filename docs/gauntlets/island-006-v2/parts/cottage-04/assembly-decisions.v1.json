@@ -1,0 +1,9 @@
+{
+  "transform": "unchanged",
+  "supportShoulder": "preserved",
+  "diagnosis": "qa/plot-intrusions-before.json",
+  "change": "Lower strata71/73 and accentrock16 tops below terrace cap at world y0.636; no other terrain/building changes",
+  "status": "pending corrected world review",
+  "correctionFailure": "Initial code ran before shoreline accents existed, so accent16 was skipped; strata fitting alone improved .80 to .84 but failed threshold. Preserve world-context-v001.",
+  "correctionMechanism": "Fit accent16 after construction; same intended terrace cap and unchanged shoulder. Pipeline-order bug correction, required contact>=.90 retained."
+}

@@ -1,0 +1,36 @@
+{
+  "part": "lighthouse-library",
+  "authority": "secondary-inferred",
+  "tool": "built-in ImageGen",
+  "target": {
+    "path": "goals/target-v001.png",
+    "sha256": "0a8c3b7a1ae606fc3481924a47e53b56b4ac85e6bf8a718260b5b7043104ff0d",
+    "mode": "RGBA",
+    "dimensions": [
+      1536,
+      1024
+    ],
+    "alphaRange": [
+      0,
+      254
+    ]
+  },
+  "prompt": {
+    "path": "prompts/target-v001.txt",
+    "sha256": "b258da7831868676ce79f6b905b5c55107f7b78772a518e1bd22ff12afedbe97"
+  },
+  "audit": [
+    "Generated sheet supplies a backdrop despite transparent request; no alpha guarantee claimed.",
+    "Rear and overhead layout are inferred; roof/cottage interpreted within game footprint.",
+    "No failed runtime render used as identity reference."
+  ],
+  "frozen": [
+    "boatwright geometry",
+    "hatchery geometry",
+    "tavern geometry",
+    "gameplay",
+    "canonical landmark transforms"
+  ],
+  "baseline": "baseline/v001/capture.json",
+  "userApproval": "good continue after tavern review"
+}

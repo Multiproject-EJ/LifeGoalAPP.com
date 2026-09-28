@@ -1,0 +1,496 @@
+{
+  "captures": [
+    {
+      "name": "sequence-0",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=0&capture=1",
+      "state": {
+        "time": 0,
+        "phase": "vortex",
+        "camera": {
+          "position": [
+            9.5,
+            8.2,
+            11.5
+          ],
+          "fov": 48
+        },
+        "calls": 671,
+        "triangles": 253923
+      }
+    },
+    {
+      "name": "sequence-3",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=3&capture=1",
+      "state": {
+        "time": 3,
+        "phase": "evacuation",
+        "camera": {
+          "position": [
+            9.5,
+            8.2,
+            11.5
+          ],
+          "fov": 48
+        },
+        "calls": 682,
+        "triangles": 256323
+      }
+    },
+    {
+      "name": "sequence-6.5",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=6.5&capture=1",
+      "state": {
+        "time": 6.5,
+        "phase": "ground-shake",
+        "camera": {
+          "position": [
+            3.1256871411878278,
+            4.614449016918153,
+            3.4325102880658456
+          ],
+          "fov": 48
+        },
+        "calls": 88,
+        "triangles": 82438
+      }
+    },
+    {
+      "name": "sequence-7.15",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=7.15&capture=1",
+      "state": {
+        "time": 7.15,
+        "phase": "ground-shake",
+        "camera": {
+          "position": [
+            3.1,
+            4.6,
+            3.4
+          ],
+          "fov": 48
+        },
+        "calls": 82,
+        "triangles": 81294
+      }
+    },
+    {
+      "name": "sequence-7.4",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=7.4&capture=1",
+      "state": {
+        "time": 7.4,
+        "phase": "eruption",
+        "camera": {
+          "position": [
+            19.702826751750088,
+            40.22677344459627,
+            13.047893385692362
+          ],
+          "fov": 62
+        },
+        "calls": 986,
+        "triangles": 292354
+      }
+    },
+    {
+      "name": "sequence-7.8",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=7.8&capture=1",
+      "state": {
+        "time": 7.8,
+        "phase": "eruption",
+        "camera": {
+          "position": [
+            27.143826978556397,
+            49.95731220272759,
+            17.626970448342398
+          ],
+          "fov": 62
+        },
+        "calls": 986,
+        "triangles": 292354
+      }
+    },
+    {
+      "name": "sequence-8.4",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=8.4&capture=1",
+      "state": {
+        "time": 8.4,
+        "phase": "eruption",
+        "camera": {
+          "position": [
+            31.86076812582522,
+            55.737801250707335,
+            20.655823333962072
+          ],
+          "fov": 62
+        },
+        "calls": 986,
+        "triangles": 292354
+      }
+    },
+    {
+      "name": "sequence-9.2",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=9.2&capture=1",
+      "state": {
+        "time": 9.2,
+        "phase": "eruption",
+        "camera": {
+          "position": [
+            41.884070167292975,
+            64.32920300053684,
+            28.292624889366074
+          ],
+          "fov": 62
+        },
+        "calls": 986,
+        "triangles": 292354
+      }
+    },
+    {
+      "name": "sequence-10.2",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=10.2&capture=1",
+      "state": {
+        "time": 10.2,
+        "phase": "unfurl",
+        "camera": {
+          "position": [
+            25.28097060997717,
+            48.727531740550646,
+            38.47594416401696
+          ],
+          "fov": 52
+        },
+        "calls": 874,
+        "triangles": 274093
+      }
+    },
+    {
+      "name": "sequence-11",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=11&capture=1",
+      "state": {
+        "time": 11,
+        "phase": "unfurl",
+        "camera": {
+          "position": [
+            23.848887914283672,
+            50.05535681327116,
+            38.98962094490379
+          ],
+          "fov": 52
+        },
+        "calls": 802,
+        "triangles": 253328
+      }
+    },
+    {
+      "name": "sequence-12",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=12&capture=1",
+      "state": {
+        "time": 12,
+        "phase": "unfurl",
+        "camera": {
+          "position": [
+            21.653135274898645,
+            52.00414543528933,
+            40.06887938601972
+          ],
+          "fov": 52
+        },
+        "calls": 750,
+        "triangles": 233971
+      }
+    },
+    {
+      "name": "sequence-13.4",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=13.4&capture=1",
+      "state": {
+        "time": 13.4,
+        "phase": "flight",
+        "camera": {
+          "position": [
+            42.592000485361375,
+            72.18132029219618,
+            83.46822461606746
+          ],
+          "fov": 62
+        },
+        "calls": 972,
+        "triangles": 288990
+      }
+    },
+    {
+      "name": "sequence-15",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=15&capture=1",
+      "state": {
+        "time": 15,
+        "phase": "flight",
+        "camera": {
+          "position": [
+            45.2173813815902,
+            71.94616428989161,
+            85.98010559785602
+          ],
+          "fov": 62
+        },
+        "calls": 972,
+        "triangles": 288990
+      }
+    },
+    {
+      "name": "sequence-16.5",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=16.5&capture=1",
+      "state": {
+        "time": 16.5,
+        "phase": "flight",
+        "camera": {
+          "position": [
+            37.24990077785383,
+            70.816444435488,
+            91.84606274635067
+          ],
+          "fov": 62
+        },
+        "calls": 984,
+        "triangles": 293382
+      }
+    },
+    {
+      "name": "sequence-18.3",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=18.3&capture=1",
+      "state": {
+        "time": 18.3,
+        "phase": "flight",
+        "camera": {
+          "position": [
+            28.99576226579708,
+            64.79895939022046,
+            79.67409550578228
+          ],
+          "fov": 62
+        },
+        "calls": 1922,
+        "triangles": 559136
+      }
+    },
+    {
+      "name": "sequence-19.2",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=19.2&capture=1",
+      "state": {
+        "time": 19.2,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            -6.0793640090466035,
+            49.212891665215565,
+            77.0011119974077
+          ],
+          "fov": 68
+        },
+        "calls": 1910,
+        "triangles": 554744
+      }
+    },
+    {
+      "name": "sequence-20",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=20&capture=1",
+      "state": {
+        "time": 20,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            -0.8965852966290004,
+            51.12911672028596,
+            87.22036449225365
+          ],
+          "fov": 68
+        },
+        "calls": 996,
+        "triangles": 293726
+      }
+    },
+    {
+      "name": "sequence-20.8",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=20.8&capture=1",
+      "state": {
+        "time": 20.8,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            4.908238886494201,
+            41.661855250490376,
+            95.1027485735744
+          ],
+          "fov": 68
+        },
+        "calls": 1942,
+        "triangles": 559800
+      }
+    },
+    {
+      "name": "sequence-21.3",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=21.3&capture=1",
+      "state": {
+        "time": 21.3,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            6.140171344501285,
+            33.8400685385957,
+            94.63814545323761
+          ],
+          "fov": 68
+        },
+        "calls": 1942,
+        "triangles": 559800
+      }
+    },
+    {
+      "name": "sequence-21.5",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=21.5&capture=1",
+      "state": {
+        "time": 21.5,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            35,
+            28,
+            55
+          ],
+          "fov": 68
+        },
+        "calls": 1017,
+        "triangles": 300906
+      }
+    },
+    {
+      "name": "sequence-21.8",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=21.8&capture=1",
+      "state": {
+        "time": 21.8,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            35,
+            28,
+            55
+          ],
+          "fov": 68
+        },
+        "calls": 1008,
+        "triangles": 296878
+      }
+    },
+    {
+      "name": "sequence-22.2",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=22.2&capture=1",
+      "state": {
+        "time": 22.2,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            35,
+            28,
+            55
+          ],
+          "fov": 68
+        },
+        "calls": 1008,
+        "triangles": 296878
+      }
+    },
+    {
+      "name": "sequence-22.6",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=22.6&capture=1",
+      "state": {
+        "time": 22.6,
+        "phase": "dive",
+        "camera": {
+          "position": [
+            2.7,
+            5.37,
+            18
+          ],
+          "fov": 44
+        },
+        "calls": 471,
+        "triangles": 186371
+      }
+    },
+    {
+      "name": "sequence-23.5",
+      "url": "http://127.0.0.1:5186/island-006-dragon-study.html?time=23.5&capture=1",
+      "state": {
+        "time": 23.5,
+        "phase": "repair-mission",
+        "camera": {
+          "position": [
+            2.7,
+            5.37,
+            18
+          ],
+          "fov": 44
+        },
+        "calls": 459,
+        "triangles": 178971
+      }
+    }
+  ],
+  "errors": [],
+  "sourceStart": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22ChartmakerCottageV2.ts": "11faf47899821e5dcee2ef1a2d38a3f9a16b38210a3b03da284ddb53ddbf30d2",
+    "Island22CooperCottageV2.ts": "19f533458c4af3cf20fd3c9d7bb1cbaad4777b3bc4a02b2ee5e9f183af854126",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22FishMarketV2.ts": "20d3f3076e6feba45114f2a12877de2af6da3e167df7245d6cfc9fd57c1f6cd7",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "aa46dd665e0900148d37713dd1332b317cdae0126ba241cea9670b2037d7f6b8",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "3fa2bf8f4e581e8d845438bba88167de8bc073dec25a7551f6c8104d082e07f5",
+    "Island22HarborCookCottageV2.ts": "68ea89202af9943d825bbf06e8ef24ade1d8bf19124c4b599634a8710c8564e1",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+    "Island22KeeperCottageV2.ts": "ca7de2e100440ef503f735999875d681656b2f10a0bfadf5621f34b5bb1c1ee5",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22NetMenderCottageV2.ts": "f444abfba89193a2a01dcf45caafd7379e0847831b9b21917d44748243db4fb8",
+    "Island22NorthCottageV2.ts": "b33721f450e808e5904bb79bce8ad0d8f7c73eeac1d9744951043ffedc95088d",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "99f00d41cbacc5380006cf1974956422f767736a37991a7811a5a48832a6a418",
+    "Island22RopeMakerCottageV2.ts": "7eaadc57dff6821cd750c80a4f7a9cb39b791a7e9b5b90da1567dfd8efd89623",
+    "Island22SailmakerCottageV2.ts": "3a71718b13bf339e5448f0639fd1843a303517f68c0c98c54f6acc89998cb7d9",
+    "Island22SecondaryCottagesV2.ts": "e9a9ceea248d94f318703860c81093f8d3ba356175329be7c47dc91c59ce1c5d",
+    "Island22ShellDiverCottageV2.ts": "30e22e8dfbbfb8e374122f456ad324bf678999c531d3cc3cf129dabcc4f26d37",
+    "Island22SkipperCottageV2.ts": "a656601fdcf7e364440ff746983a49135492dda661e0e3d9325b16180e5e76d0",
+    "Island22SmokehouseCottageV2.ts": "e0e04306df5a467f7de5931e273dbd6a5155fde688adb3ce59eaa6e62745edb3",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "97b28d8d284e8f813581a12a5f4514440b7da5812d501ba52ae2fbef42df8c19"
+  },
+  "sourceEnd": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22ChartmakerCottageV2.ts": "11faf47899821e5dcee2ef1a2d38a3f9a16b38210a3b03da284ddb53ddbf30d2",
+    "Island22CooperCottageV2.ts": "19f533458c4af3cf20fd3c9d7bb1cbaad4777b3bc4a02b2ee5e9f183af854126",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22FishMarketV2.ts": "20d3f3076e6feba45114f2a12877de2af6da3e167df7245d6cfc9fd57c1f6cd7",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "aa46dd665e0900148d37713dd1332b317cdae0126ba241cea9670b2037d7f6b8",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "3fa2bf8f4e581e8d845438bba88167de8bc073dec25a7551f6c8104d082e07f5",
+    "Island22HarborCookCottageV2.ts": "68ea89202af9943d825bbf06e8ef24ade1d8bf19124c4b599634a8710c8564e1",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+    "Island22KeeperCottageV2.ts": "ca7de2e100440ef503f735999875d681656b2f10a0bfadf5621f34b5bb1c1ee5",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22NetMenderCottageV2.ts": "f444abfba89193a2a01dcf45caafd7379e0847831b9b21917d44748243db4fb8",
+    "Island22NorthCottageV2.ts": "b33721f450e808e5904bb79bce8ad0d8f7c73eeac1d9744951043ffedc95088d",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "99f00d41cbacc5380006cf1974956422f767736a37991a7811a5a48832a6a418",
+    "Island22RopeMakerCottageV2.ts": "7eaadc57dff6821cd750c80a4f7a9cb39b791a7e9b5b90da1567dfd8efd89623",
+    "Island22SailmakerCottageV2.ts": "3a71718b13bf339e5448f0639fd1843a303517f68c0c98c54f6acc89998cb7d9",
+    "Island22SecondaryCottagesV2.ts": "e9a9ceea248d94f318703860c81093f8d3ba356175329be7c47dc91c59ce1c5d",
+    "Island22ShellDiverCottageV2.ts": "30e22e8dfbbfb8e374122f456ad324bf678999c531d3cc3cf129dabcc4f26d37",
+    "Island22SkipperCottageV2.ts": "a656601fdcf7e364440ff746983a49135492dda661e0e3d9325b16180e5e76d0",
+    "Island22SmokehouseCottageV2.ts": "e0e04306df5a467f7de5931e273dbd6a5155fde688adb3ce59eaa6e62745edb3",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "97b28d8d284e8f813581a12a5f4514440b7da5812d501ba52ae2fbef42df8c19"
+  },
+  "changedDuringCapture": false
+}

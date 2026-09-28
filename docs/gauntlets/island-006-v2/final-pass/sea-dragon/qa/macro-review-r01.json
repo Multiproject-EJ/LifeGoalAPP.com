@@ -1,0 +1,242 @@
+{
+  "schemaVersion": 1,
+  "asset": "island-006 sea-dragon",
+  "stage": "macro-anatomy",
+  "reviewer": "independent reference_curator",
+  "constructionFamily": 1,
+  "review": 1,
+  "verdict": "retire-family",
+  "approved": false,
+  "threshold": 0.85,
+  "correctionPolicy": {
+    "minimumWeakestGain": 0.1,
+    "maximumCriticalRegression": 0.05,
+    "boundedCorrectionEligible": false,
+    "reason": "First-pass hard veto: visible neck termination seam and camera-dependent planar fluke collapse. The production-loop hard-veto rule requires immediate family retirement; scores are not averaged to waive this."
+  },
+  "reference": {
+    "path": "goals/target-v001.png",
+    "authority": "secondary-inferred; written build-contract governs anatomy and three wing fingers; no pixel-exact texture requirement"
+  },
+  "evidence": {
+    "directory": "qa/macro-studio-v001",
+    "originalPixelImagesInspected": 18,
+    "inspectionOrder": "All actual orbit, clay, and pose pixels before implementation diagnosis.",
+    "scope": "Anatomy and posed cross-view coherence only. Separate reviewer owns cinematic sequence, camera, and temporal proof."
+  },
+  "categories": {
+    "silhouetteVolume": 0.79,
+    "identity": 0.8,
+    "attachment": 0.58,
+    "crossViewCoherence": 0.55,
+    "assembly": 0.66,
+    "intendedScaleReadability": 0.76,
+    "continuousBodyTaper": 0.85,
+    "integratedSkullMuzzle": 0.86,
+    "neckSkullJunction": 0.58,
+    "wingShoulderIntegration": 0.69,
+    "elbowWristFingerMembrane": 0.85,
+    "tailFlukeVolume": 0.55,
+    "hornPair": 0.85,
+    "dorsalCheekFinMacroPresence": 0.65
+  },
+  "views": [
+    {
+      "view": "flight-orbit-0.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.83,
+      "attachment": 0.73,
+      "crossViewCoherence": 0.8,
+      "notes": "Front foreshortening hides the neck seam; recognizably friendly face, but shoulder emergence reads narrow and mechanical."
+    },
+    {
+      "view": "flight-orbit-45.png",
+      "silhouetteVolume": 0.79,
+      "identity": 0.82,
+      "attachment": 0.58,
+      "crossViewCoherence": 0.6,
+      "notes": "Flat rear skull/neck boundary and broad cream neck termination; fluke collapses almost entirely edge-on."
+    },
+    {
+      "view": "flight-orbit-90.png",
+      "silhouetteVolume": 0.82,
+      "identity": 0.82,
+      "attachment": 0.6,
+      "crossViewCoherence": 0.73,
+      "notes": "Profile confirms abrupt skull collar, uniform straight extended neck, plugged-in rod shoulder; flat leaf tail blades."
+    },
+    {
+      "view": "flight-orbit-135.png",
+      "silhouetteVolume": 0.84,
+      "identity": 0.83,
+      "attachment": 0.72,
+      "crossViewCoherence": 0.78,
+      "notes": "Good long curved body silhouette and scalloped wings; shoulder is a blunt inserted tube and tail remains planar."
+    },
+    {
+      "view": "flight-orbit-180.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.81,
+      "attachment": 0.74,
+      "crossViewCoherence": 0.75,
+      "notes": "Tail fork reads as two thin leaf planes; body coherent, paired arm emergence undersculpted."
+    },
+    {
+      "view": "flight-orbit-225.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.82,
+      "attachment": 0.69,
+      "crossViewCoherence": 0.77,
+      "notes": "Opposite shoulder projects as a blunt cylindrical stump; successful long torso taper."
+    },
+    {
+      "view": "flight-orbit-270.png",
+      "silhouetteVolume": 0.82,
+      "identity": 0.82,
+      "attachment": 0.6,
+      "crossViewCoherence": 0.72,
+      "notes": "Opposite profile repeats neck cut boundary and straight rigid sleeve; leaf-blade fluke."
+    },
+    {
+      "view": "flight-orbit-315.png",
+      "silhouetteVolume": 0.8,
+      "identity": 0.82,
+      "attachment": 0.58,
+      "crossViewCoherence": 0.7,
+      "notes": "Neck extends into a visibly larger separate skull with circumferential edge, not a blended nape/throat."
+    },
+    {
+      "view": "flight-top.png",
+      "silhouetteVolume": 0.8,
+      "identity": 0.79,
+      "attachment": 0.68,
+      "crossViewCoherence": 0.55,
+      "notes": "Tail fluke disappears to the axial line; no volumetric shoulder transition and absent dorsal macro fin silhouette."
+    },
+    {
+      "view": "flight-clay-45.png",
+      "silhouetteVolume": 0.79,
+      "identity": 0.81,
+      "attachment": 0.58,
+      "crossViewCoherence": 0.6,
+      "notes": "Same neck step exists without materials; surface finish cannot solve geometry."
+    },
+    {
+      "view": "flight-clay-225.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.81,
+      "attachment": 0.69,
+      "crossViewCoherence": 0.77,
+      "notes": "Opposite shoulder stump and flat tail remain in naked clay."
+    },
+    {
+      "view": "pose-8.8.png",
+      "silhouetteVolume": 0.79,
+      "identity": 0.77,
+      "attachment": 0.6,
+      "crossViewCoherence": 0.69,
+      "notes": "Underside exposes cream neck sleeve terminating beneath separate round head; folded wings readable."
+    },
+    {
+      "view": "pose-10.5.png",
+      "silhouetteVolume": 0.79,
+      "identity": 0.77,
+      "attachment": 0.58,
+      "crossViewCoherence": 0.69,
+      "notes": "Underside neck-to-body transition also forms a discrete ring; head end remains abrupt."
+    },
+    {
+      "view": "pose-12.png",
+      "silhouetteVolume": 0.81,
+      "identity": 0.82,
+      "attachment": 0.59,
+      "crossViewCoherence": 0.73,
+      "notes": "Unfurled pose preserves obvious skull seam and shoulder-cylinder origin."
+    },
+    {
+      "view": "pose-17.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.82,
+      "attachment": 0.6,
+      "crossViewCoherence": 0.76,
+      "notes": "Bank pose shows long graceful body, but collar and planar tail persist; charge streaks are VFX, not whisker anatomy."
+    },
+    {
+      "view": "pose-19.8.png",
+      "silhouetteVolume": 0.81,
+      "identity": 0.81,
+      "attachment": 0.62,
+      "crossViewCoherence": 0.71,
+      "notes": "Folded wing overlaps complicate shoulder reading; no proof of integrated root surface."
+    },
+    {
+      "view": "pose-20.8.png",
+      "silhouetteVolume": 0.81,
+      "identity": 0.81,
+      "attachment": 0.62,
+      "crossViewCoherence": 0.7,
+      "notes": "Stream obscures face; shoulder still a right-angle pipe and flat fluke. VFX not accepted as anatomy proof."
+    },
+    {
+      "view": "pose-21.5.png",
+      "silhouetteVolume": 0.83,
+      "identity": 0.82,
+      "attachment": 0.63,
+      "crossViewCoherence": 0.72,
+      "notes": "Near wing foreshortened/occluded; same neck joint defect persists. No temporal conclusion from still."
+    }
+  ],
+  "hardVetoes": [
+    {
+      "id": "neck-cut-seam",
+      "views": [
+        "flight-orbit-45.png",
+        "flight-orbit-90.png",
+        "flight-orbit-270.png",
+        "flight-orbit-315.png",
+        "flight-clay-45.png",
+        "pose-10.5.png"
+      ],
+      "observation": "Visible circumferential flat termination/step between straight neck sleeve and independently swept skull. Cream throat ends as a straight cut below the cheek. It survives clay and both sides.",
+      "criterion": "No visible seams/root slots; parent owns attachment socket; no duplicate collar."
+    },
+    {
+      "id": "planar-fluke-collapse",
+      "views": [
+        "flight-orbit-45.png",
+        "flight-top.png",
+        "flight-orbit-90.png",
+        "flight-orbit-270.png"
+      ],
+      "observation": "Required tail fluke is thin leaf geometry: visible as two flat blades in profile but collapses to almost a line from top/45. Changing view determines whether the tail identity exists.",
+      "criterion": "No camera-dependent shapes, disappearing required forms, or flat-plane collapse; build-contract explicitly forbids flat fins disappearing in profile."
+    }
+  ],
+  "constructionDiagnosis": {
+    "neck": "Head sections are authored independently in seaDragonHeadGeometry; mission body ends using separate ring radius and extension (2.05*scaleZ) while skull position uses 2.30*scaleZ. Those unrelated end profiles and normals produce the photographed cut. Deepening overlap alone does not provide a shared tangent/section.",
+    "shoulder": "addSeaDragonArticulatedWing builds a small tube/sphere shoulder then rigid elbow tubes. Whole group is positioned at points[6]; no body-surface skin transition follows local torso cross-section. Pixels show the resulting stump/rod insertion.",
+    "fluke": "tailFinGeometry uses THREE.ShapeGeometry rotated into a single plane. This directly explains edge-on disappearance.",
+    "finSystem": "Dorsal/cheek fins cannot be postponed wholesale as finish because they change the approved macro outline. Scales, fine whiskers, and eye polish may remain later."
+  },
+  "nextFamilyProposal": {
+    "hypothesis": "Use a shared section/frame construction for continuous torso-neck-skull boundary, body-owned muscular shoulder roots consumed by articulated wing limbs, and a closed cambered fluke with finite cross-section. These are a genuinely different attachment/volume representation, not more collars layered over family1.",
+    "controls": [
+      "Same target, cameras, orbit timestamps, global scale, gameplay API, and thresholds.",
+      "Keep successful long torso taper, continuous snout, modest eyes, curved horns, and three-finger scalloped membrane identity.",
+      "One source owns neck boundary section and normals, including cream throat continuity; animated head consumes that exact socket.",
+      "Build shoulder root volume from the local moving torso surface to the upper arm; preserve arm articulation without exposed root caps.",
+      "Replace planar tail leaves with closed cambered lobes sharing a tapered tail peduncle; retain silhouette in top, side, front/rear and fold poses.",
+      "Include macro dorsal/cheek fin masses before renewed macro gate; micro-detail follows approval."
+    ],
+    "requiredEvidence": [
+      "Repeat all 18 unchanged studio images plus close neck/shoulder/fluke clay crops.",
+      "Add clear underside and neutral spread/fold frames if existing poses remain occluded.",
+      "Require every critical view/category >=.85; family2 has at most its own one bounded correction if no hard veto."
+    ]
+  },
+  "notes": [
+    "No production code or cameras edited by reviewer.",
+    "This is a substantial improvement over baseline primitive head and sail wings, but improvement does not equal gate approval.",
+    "No animation, phone, final finish, or gameplay approval is implied."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "frozenSiblings": 8,
+  "captures": [
+    {
+      "folder": "finish-v001",
+      "count": 11,
+      "errors": [],
+      "sourceMatches": true
+    },
+    {
+      "folder": "world-context-v001",
+      "count": 6,
+      "errors": [],
+      "sourceMatches": true
+    },
+    {
+      "folder": "island-fit-v001",
+      "count": 1,
+      "errors": [],
+      "sourceMatches": true,
+      "changedDuringCapture": false
+    }
+  ],
+  "galleryLinks": "pass"
+}

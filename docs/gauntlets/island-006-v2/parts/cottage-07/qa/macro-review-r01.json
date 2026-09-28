@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-07-rope-maker",
+  "stage": "macro",
+  "review": "r01",
+  "referenceAuthority": "secondary-inferred",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "reviewer": "independent-visual-review",
+  "evidence": {
+    "studio": "blockout-v001",
+    "studioViews": 11,
+    "world": "world-blockout-v001",
+    "worldViews": 6,
+    "baseline": "../baseline/v001/front-right.png",
+    "target": "../goals/target-v001.png"
+  },
+  "macro": {
+    "action": "one-bounded-correction",
+    "finishMayProceed": false,
+    "criticalScores": {
+      "twoStoreyLeftAnnexSilhouette": 0.9,
+      "sweptClayRoofShape": 0.9,
+      "roofEnclosure": 0.9,
+      "annexWallTermination": 0.9,
+      "sideOpeningRoofClearance": 0.79,
+      "doorClearance": 0.88,
+      "terraceAndStep": 0.88,
+      "rearCompleteness": 0.89
+    },
+    "viewScores": {
+      "front": 0.88,
+      "front-right": 0.89,
+      "right": 0.89,
+      "rear-right": 0.89,
+      "rear": 0.89,
+      "rear-left": 0.79,
+      "left": 0.79,
+      "front-left": 0.79,
+      "top": 0.89,
+      "clay-front": 0.89,
+      "clay-rear": 0.79
+    },
+    "observations": [
+      "Clean two-storey clay main roof and lower left annex form the intended silhouette; closed surfaces and clipped annex termination read coherently.",
+      "One small upper side window sits beneath the main fascia and immediately above annex roof; left/front-left/clay-rear show header occlusion and negligible sill gap.",
+      "Remaining doors, floors, structural beams and plain terrace read clearly; rope-making finish deliberately absent."
+    ],
+    "correction": {
+      "family": "side-opening-roof-clearance",
+      "request": "Reduce/reposition or omit only the small upper annex-side window. Preserve roofs and existing openings. The inferred target shows a side window but does not justify an intersecting one; any retained version needs actual clearance including finish relief.",
+      "before": 0.79,
+      "requiredAfter": 0.89,
+      "maxOtherRegression": 0.05,
+      "sourceDiagnosisAfterPixels": "Same roofY/main fascia and opening(-.842,1.69,0,-PI/2,.27,.24) dimensions as cooper r01. Header overlaps fascia; sill gap approximately .016 to annex surface."
+    },
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0
+    }
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "criticalScores": {
+      "frozenNeighborClearance": 0.45,
+      "mainAndWorkroomApproach": 0.55,
+      "vegetationClearance": 0.72,
+      "groundSupportReadability": 0.78
+    },
+    "viewAssessments": {
+      "0": "Hatchery facade and roof overlap subject rear; side terrace partly obscured.",
+      "45": "Elevated image confirms overlapping roof and quay footprints.",
+      "90": "Hatchery heavily occludes subject; not independent clearance proof.",
+      "135": "Elevated image confirms hatchery occupies much of new cottage footprint.",
+      "180": "Hard collision: hatchery gable/roof passes through clay slope; hatchery quay/post sits across front entry; annex is occupied by neighbor geometry.",
+      "270": "Interleaved building footprints and conifer tight to right facade."
+    },
+    "correction": {
+      "family": "new-cottage-footprint-integration",
+      "owner": "root integration",
+      "request": "Move only new cottage07 to a supported location outside accepted hatchery body, roof and quay; retain recognizable macro and actual access. Provide local support where needed, then exclude vegetation/cargo only within relocated plot. Recheck adjacent cottage08/route too. Do not move or edit accepted hatchery.",
+      "beforeNeighbor": 0.45,
+      "requiredAfterNeighbor": 0.85,
+      "beforeApproach": 0.55,
+      "requiredAfterApproach": 0.85,
+      "maxOtherRegression": 0.05
+    },
+    "limitations": [
+      "This is confirmed geometric collision across multiple angles, not a judgment based on occlusion.",
+      "New placement requires fresh support and route evidence.",
+      "No phone or finish acceptance yet."
+    ]
+  },
+  "overallAction": "one-bounded-correction",
+  "notes": "Macro correction and separate root-owned assembly relocation needed; no production edits by reviewer."
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "island006.motion-review.v1",
+  "packet": "motion-sequence-v001",
+  "reviewer": "independent visual_review",
+  "action": "one-bounded-correction",
+  "scope": "Landscape camera/composition/contact review; anatomy is delegated to its independent gate and legacy splash VFX explicitly excluded from approval.",
+  "evidence": "All24 exact-timestamp original frames inspected, 0–23.5seconds. No continuous playback or portrait evidence in this packet.",
+  "scores": {
+    "aperture_context": 0.88,
+    "eruption_composition": 0.87,
+    "unfurl_composition": 0.88,
+    "flight_readability": 0.9,
+    "dive_full_subject_containment": 0.67,
+    "offshore_contact_location_readability": 0.88,
+    "progressive_immersion_evidence": 0.78,
+    "damage_destination_framing": 0.88
+  },
+  "improvements": [
+    "7.4–10.2 retain readable aperture/island and emerging creature together.",
+    "13.4–19.2 creature is approximately60–65% frame width instead of about24%; facial silhouette, body and both wing positions are substantially clearer.",
+    "16.5 no longer shows the sky-dome edge that was visible in prior packet.",
+    "21.5 offshore nose contact and22.2 surviving tail convey head-first immersion better than prior elevated shoreline contact.",
+    "23.5 reaches an intelligible close view of the correct damaged house."
+  ],
+  "correction": {
+    "family": "camera envelope during dive",
+    "views": [
+      "20.8",
+      "21.3",
+      "21.5",
+      "21.8"
+    ],
+    "hypothesis": "Current dive framing follows head/contact too closely and excludes upper body/tail through top edge.",
+    "change": "Increase distance and bias target toward the full body/tail envelope through approach/contact; tighten smoothly only as immersion removes upper anatomy. Preserve trajectory, contact coordinates, anatomy scale and accepted flight framing.",
+    "acceptance": "Entire visible dragon including fluke remains inside safe frame before and during contact; waterline remains visible. Raise worst containment .67 to at least .85, gain>=.10, with no accepted category regression>.05. Check dense frames between samples and portrait separately."
+  },
+  "contactLimit": "Frames21.5→21.8→22.2→22.6 show progressive disappearance, but this24-frame sampling does not establish exact21.45 tip contact or all-anatomy submergence before22.6. Need dense contact frames and CPU signed-distance diagnostic; top clipping currently weakens independent proof.",
+  "continuityLimit": "Root numeric2ms boundary checks are useful but do not prove cinematic speed/acceleration. Continuous playback still needed, especially6.5 close shaft→7.15 wider view and the rapid21.8→22.6 immersion/house transition.",
+  "vfxLimit": "Old torus bands/cone forest remain visibly placeholder; neither splash identity nor final damage wash causality is approved."
+}

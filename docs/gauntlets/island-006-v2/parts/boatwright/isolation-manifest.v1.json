@@ -1,0 +1,10 @@
+{
+  "part": "boatwright-yard",
+  "authority": "secondary-inferred",
+  "image": "docs/gauntlets/island-006-v2/parts/boatwright/goals/target-v001.png",
+  "sha256": "fed9d9c259308c6021386bda9b2ac4a748617f2cda6db5f4b7f5e1ada630c95a",
+  "prompt": "prompts/target-v001.txt",
+  "generator": "built-in image_gen",
+  "source": "006-v2-target-v001.png",
+  "audit": "Four rendered inferred views, opaque brown studio backdrop despite requested alpha; reference only, never runtime texture. No transparent alpha claimed. Exact rear arrangement is not established by these views; original game footprint and socket ownership remain authoritative."
+}

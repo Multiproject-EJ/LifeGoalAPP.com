@@ -1,0 +1,13 @@
+{
+  "name": "cooper",
+  "placementIndex": 4,
+  "parts": [
+    "terrace/support",
+    "main shell and swept closed roof",
+    "annex if two-storey",
+    "windows/doors/chimney",
+    "finish and tradecue"
+  ],
+  "status": "baseline and inferred target preparation",
+  "authority": "2026-09-28 delegated internal approvals"
+}

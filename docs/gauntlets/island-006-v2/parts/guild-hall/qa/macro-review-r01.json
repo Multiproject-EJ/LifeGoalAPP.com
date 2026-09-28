@@ -1,0 +1,32 @@
+{
+  "reviewer": "visual_review",
+  "action": "one-bounded-correction",
+  "packet": "blockout-v001",
+  "reviewedViews": ["front-right", "front-left", "rear-left", "rear-right", "front", "rear", "left", "right", "top", "clay-front", "clay-rear"],
+  "scoresAreSubjectiveVisualJudgments": true,
+  "scores": {
+    "sweptRoofAndCrownSilhouette": 0.88,
+    "WingAndEntryVolumeCoherence": 0.87,
+    "roofWallConnections": 0.86,
+    "openingStructureClearance": 0.78,
+    "isolatedFoundationAndSteps": 0.89
+  },
+  "boundedCorrection": {
+    "family": "opening-structure clearance",
+    "issues": [
+      "Diagonal timber braces cross the inner tall window arches in front and rear views.",
+      "Outer wing side-window arch tops nick the roof edge in left/right and clay views."
+    ],
+    "request": "Shorten or relocate braces to solid pier areas and clear side-window arches below the wing roof, preserving accepted volumes.",
+    "targetWorstScore": 0.88,
+    "maximumAllowedRegression": 0.05
+  },
+  "assemblyAction": "hold-for-local-clearance-and-support",
+  "assemblyPacket": "world-blockout-v001",
+  "assemblyObservations": [
+    "Conifers intersect the staircase in azimuth 0 and 270.",
+    "Both flanking decorative cottage clusters occupy the new precinct edges, visible at azimuth 90 and 180.",
+    "The rear rectangular mesa extends beyond the rocky shore and reads unsupported from azimuth 90 and 180."
+  ],
+  "limits": ["Macro gate only; finish not expected or scored.", "Generated reference is inferred rather than exact approved identity."]
+}

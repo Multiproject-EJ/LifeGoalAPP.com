@@ -1,0 +1,125 @@
+{
+  "reviewer": "visual_review",
+  "reviewRound": 1,
+  "finishPacket": "finish-v001",
+  "approvedMacroPacket": "blockout-v002",
+  "finishAction": "approve",
+  "assemblyPacket": "world-context-v001",
+  "assemblyAction": "approve",
+  "threshold": 0.85,
+  "scoresAreSubjectiveVisualJudgments": true,
+  "categoryScores": {
+    "silhouetteAndArchitecturalIdentity": 0.88,
+    "surfaceCoverage": 0.89,
+    "materialReadability": 0.86,
+    "detailAttachments": 0.87,
+    "openingClearance": 0.89,
+    "entryAndStairUsability": 0.91,
+    "shadowIntegrity": 0.9
+  },
+  "perViewScores": {
+    "front-right": {
+      "identity": 0.88,
+      "surfaces": 0.88,
+      "attachments": 0.87,
+      "clearance": 0.9
+    },
+    "front-left": {
+      "identity": 0.88,
+      "surfaces": 0.88,
+      "attachments": 0.87,
+      "clearance": 0.9
+    },
+    "rear-left": {
+      "identity": 0.87,
+      "surfaces": 0.89,
+      "attachments": 0.88,
+      "clearance": 0.89
+    },
+    "rear-right": {
+      "identity": 0.87,
+      "surfaces": 0.89,
+      "attachments": 0.88,
+      "clearance": 0.89
+    },
+    "front": {
+      "identity": 0.89,
+      "surfaces": 0.87,
+      "attachments": 0.87,
+      "clearance": 0.91
+    },
+    "rear": {
+      "identity": 0.87,
+      "surfaces": 0.88,
+      "attachments": 0.88,
+      "clearance": 0.89
+    },
+    "left": {
+      "identity": 0.86,
+      "surfaces": 0.88,
+      "attachments": 0.86,
+      "clearance": 0.89
+    },
+    "right": {
+      "identity": 0.86,
+      "surfaces": 0.88,
+      "attachments": 0.86,
+      "clearance": 0.89
+    },
+    "top": {
+      "identity": 0.88,
+      "surfaces": 0.89,
+      "attachments": 0.88,
+      "clearance": 0.91
+    },
+    "clay-front": {
+      "identity": 0.88,
+      "surfaces": 0.88,
+      "attachments": 0.87,
+      "clearance": 0.9
+    },
+    "clay-rear": {
+      "identity": 0.87,
+      "surfaces": 0.89,
+      "attachments": 0.88,
+      "clearance": 0.89
+    }
+  },
+  "assemblyScores": {
+    "0": {
+      "approach": 0.9,
+      "neighborClearance": 0.88,
+      "support": 0.87
+    },
+    "90": {
+      "neighborClearance": 0.88,
+      "support": 0.87
+    },
+    "180": {
+      "neighborClearance": 0.88,
+      "support": 0.87
+    },
+    "270": {
+      "approach": 0.9,
+      "neighborClearance": 0.88,
+      "support": 0.87
+    }
+  },
+  "observations": [
+    "Slate courses follow the swept mansard and lower gables without visible tile overshoot or perforated cast shadows.",
+    "Previously corrected tall-window and outer side-window clearances remain intact.",
+    "Fish crest, paired lanterns, door hardware and noticeboard establish a readable guild entrance.",
+    "Noticeboard, barrels and rope runs stay beside the central approach; the door and descending stair remain unobstructed.",
+    "Staggered precinct masonry replaces the inconsistent exposed foundation texture and reads continuously across visible corners.",
+    "The four world views retain cottage separation and coastal support from the accepted assembly macro; no new visible collision is introduced."
+  ],
+  "meaningfulTargetGaps": [
+    "Masonry and slate remain very regular, with cleaner surfaces and less weathering than the inferred generated goal.",
+    "The fish crest is a simplified emblem and the crown has a simple flat cap and posts.",
+    "The retained elevated precinct is taller and visually heavier than the inferred goal's low terrace."
+  ],
+  "limits": [
+    "Approval covers this compact game asset and its visible assembly, not exact parity with the inferred generated target.",
+    "Runtime behavior, render budgets and automated validators were not independently tested in this pixel review."
+  ]
+}

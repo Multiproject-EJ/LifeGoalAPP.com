@@ -1,4 +1,11 @@
+import { ISLAND_22_V2_SECONDARY_INDICES, populateIsland22SecondaryCottageV2 } from './Island22SecondaryCottagesV2';
+import { populateIsland22SmokehouseCottageV2 } from './Island22SmokehouseCottageV2';
+import { populateIsland22NetMenderCottageV2 } from './Island22NetMenderCottageV2';
+import { populateIsland22NorthCottageV2 } from './Island22NorthCottageV2';
+import { populateIsland22GuildHallV2 } from './Island22GuildHallV2';
 import * as THREE from 'three';
+import { createHarborFisherCrowdV2 } from './Island22FisherCrowdV2';
+import { attachHarborWaterDetail, addHarborSlateSurface, createHarborV2Environment } from './Island22HarborV2';
 import type {
   Island3DQuality,
   Island3DQualityProfile,
@@ -543,7 +550,7 @@ function markPart(node: THREE.Object3D, partId: string, sockets: Record<string, 
 
 export function createIsland22FishermansVillageMaterials(): Island22FishermansVillageMaterials {
   const oceanAlphaSize = 128;
-  const oceanAlphaData = new Uint8Array(oceanAlphaSize * oceanAlphaSize);
+  const oceanAlphaData = new Uint8Array(oceanAlphaSize * oceanAlphaSize * 4);
   for (let y = 0; y < oceanAlphaSize; y += 1) {
     for (let x = 0; x < oceanAlphaSize; x += 1) {
       const nx = (x / (oceanAlphaSize - 1) - 0.5) * 2;
@@ -551,23 +558,26 @@ export function createIsland22FishermansVillageMaterials(): Island22FishermansVi
       const radius = Math.sqrt(nx * nx + ny * ny);
       const fade = THREE.MathUtils.clamp((radius - 0.24) / (0.68 - 0.24), 0, 1);
       const smoothFade = fade * fade * (3 - 2 * fade);
-      oceanAlphaData[y * oceanAlphaSize + x] = Math.round((1 - smoothFade) * 255);
+      const alpha = Math.round((1 - smoothFade) * 255);
+      const pixel = (y * oceanAlphaSize + x) * 4;
+      oceanAlphaData[pixel] = oceanAlphaData[pixel + 1] = oceanAlphaData[pixel + 2] = alpha;
+      oceanAlphaData[pixel + 3] = 255;
     }
   }
   const oceanAlphaMap = new THREE.DataTexture(
     oceanAlphaData,
     oceanAlphaSize,
     oceanAlphaSize,
-    THREE.RedFormat,
+    THREE.RGBAFormat,
   );
   oceanAlphaMap.name = 'ISLAND_22_OCEAN_RADIAL_ALPHA';
   oceanAlphaMap.needsUpdate = true;
 
   const cliffSurface = createProceduralSurfaceMaps('cliff', [67, 83, 81], 22);
-  const stoneSurface = createProceduralSurfaceMaps('stone', [132, 124, 105], 37);
-  const cobbleSurface = createProceduralSurfaceMaps('cobble', [185, 164, 119], 53);
+  const stoneSurface = createProceduralSurfaceMaps('stone', [115, 125, 121], 37);
+  const cobbleSurface = createProceduralSurfaceMaps('cobble', [151, 146, 127], 53);
   const grassSurface = createProceduralSurfaceMaps('grass', [87, 119, 69], 71);
-  const timberSurface = createProceduralSurfaceMaps('wood', [157, 101, 55], 89);
+  const timberSurface = createProceduralSurfaceMaps('wood', [129, 91, 57], 89);
   const darkTimberSurface = createProceduralSurfaceMaps('dark-wood', [71, 47, 34], 107);
 
   const foliage = new THREE.MeshStandardMaterial({
@@ -632,7 +642,7 @@ export function createIsland22FishermansVillageMaterials(): Island22FishermansVi
       roughnessMap: grassSurface.roughnessMap,
       metalness: 0.004,
     }),
-    plaster: new THREE.MeshStandardMaterial({ color: 0xe0aa70, roughness: 0.8, metalness: 0 }),
+    plaster: new THREE.MeshStandardMaterial({ color: 0xf1d8ae, roughness: 0.88, metalness: 0 }),
     timber: new THREE.MeshStandardMaterial({
       color: 0xffffff,
       map: timberSurface.map,
@@ -666,7 +676,7 @@ export function createIsland22FishermansVillageMaterials(): Island22FishermansVi
       color: 0xffb94f,
       roughness: 0.2,
       emissive: 0xff8426,
-      emissiveIntensity: 1.25,
+      emissiveIntensity: 0.55,
     }),
     pond: new THREE.MeshPhysicalMaterial({
       color: 0x087789,
@@ -695,14 +705,15 @@ function addHarborSky(root: THREE.Group, quality: Island3DQuality): Island22Harb
     side: THREE.BackSide,
     depthWrite: false,
     uniforms: {
-      topColor: { value: new THREE.Color(0x3f91bc) },
-      horizonColor: { value: new THREE.Color(0xb7d8d2) },
-      lowColor: { value: new THREE.Color(0x5d9eaa) },
+      topColor: { value: new THREE.Color(0x4987b4) },
+      horizonColor: { value: new THREE.Color(0xb7d5e1) },
+      lowColor: { value: new THREE.Color(0x638ea4) },
     },
     vertexShader: `varying float vSkyHeight;
       void main() {
         vSkyHeight = normalize(position).y;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        gl_Position.z = gl_Position.w;
       }`,
     fragmentShader: `uniform vec3 topColor;
       uniform vec3 horizonColor;
@@ -716,10 +727,13 @@ function addHarborSky(root: THREE.Group, quality: Island3DQuality): Island22Harb
       }`,
   });
   const sky = new THREE.Mesh(
-    new THREE.SphereGeometry(48, quality === 'low' ? 16 : 24, quality === 'low' ? 9 : 14),
+    new THREE.SphereGeometry(100, quality === 'low' ? 16 : 24, quality === 'low' ? 9 : 14),
     skyMaterial,
   );
   sky.name = 'ISLAND_22_HARBOR_GRADIENT_SKY';
+  const skyCameraCenter=new THREE.Vector3();
+  sky.frustumCulled=false;
+  sky.onBeforeRender=(_renderer,_scene,camera)=>{camera.getWorldPosition(skyCameraCenter);sky.matrixWorld.setPosition(skyCameraCenter);};
   sky.renderOrder = -20;
   sky.visible = true;
   root.add(sky);
@@ -753,12 +767,12 @@ function addHarborSky(root: THREE.Group, quality: Island3DQuality): Island22Harb
     color: 0xffffff,
     roughness: 1,
     metalness: 0,
-    transparent: true,
-    opacity: 0.78,
-    depthWrite: false,
+    transparent: false,
+    opacity: 1,
+    depthWrite: true,
   });
   const clouds = new THREE.InstancedMesh(
-    new THREE.SphereGeometry(1, quality === 'low' ? 8 : 12, quality === 'low' ? 5 : 8),
+    new THREE.SphereGeometry(1, quality === 'low' ? 8 : 12, quality === 'low' ? 6 : 9),
     cloudMaterial,
     cloudClusterCount * puffsPerCluster,
   );
@@ -767,12 +781,12 @@ function addHarborSky(root: THREE.Group, quality: Island3DQuality): Island22Harb
     color: 0xdce9e7,
     roughness: 1,
     metalness: 0,
-    transparent: true,
-    opacity: 0.54,
-    depthWrite: false,
+    transparent: false,
+    opacity: 1,
+    depthWrite: true,
   });
   const cloudBases = new THREE.InstancedMesh(
-    new THREE.SphereGeometry(1, quality === 'low' ? 8 : 12, quality === 'low' ? 5 : 8),
+    new THREE.SphereGeometry(1, quality === 'low' ? 8 : 12, quality === 'low' ? 6 : 9),
     cloudBaseMaterial,
     cloudClusterCount,
   );
@@ -1009,11 +1023,11 @@ function addHarborSky(root: THREE.Group, quality: Island3DQuality): Island22Harb
   skyRuntimeRoot.add(distantCloudRoot, cloudRoot, gullRoot);
   root.add(skyRuntimeRoot);
 
-  const calmTop = new THREE.Color(0x3f91bc);
+  const calmTop = new THREE.Color(0x4987b4);
   const windyTop = new THREE.Color(0x426d84);
-  const calmHorizon = new THREE.Color(0xb7d8d2);
+  const calmHorizon = new THREE.Color(0xb7d5e1);
   const windyHorizon = new THREE.Color(0x839fa7);
-  const calmLow = new THREE.Color(0x5d9eaa);
+  const calmLow = new THREE.Color(0x638ea4);
   const windyLow = new THREE.Color(0x426674);
   const calmCloud = new THREE.Color(0xffffff);
   const windyCloud = new THREE.Color(0xa9bec4);
@@ -1315,13 +1329,17 @@ function createGabledRoof(
   material: THREE.Material,
   ridgeMaterial: THREE.Material,
 ) {
+  if (material instanceof THREE.MeshStandardMaterial) {
+    material = material.clone();
+    addHarborSlateSurface(material as THREE.MeshStandardMaterial);
+  }
   const root = new THREE.Group();
   const pitch = 0.58;
   const panelWidth = width * 0.64;
   [-1, 1].forEach((side) => {
     const panel = box(panelWidth, 0.14, depth * 1.14, material);
     panel.position.set(side * width * 0.24, width * 0.17, 0);
-    panel.rotation.z = side * pitch;
+    panel.rotation.z = -side * pitch;
     root.add(panel);
   });
   const ridge = cylinder(0.065, 0.065, depth * 1.2, ridgeMaterial, 8);
@@ -1910,22 +1928,26 @@ function createAuthoredHarborHouse(
         roofWidth * 0.145,
         0.018 + (course % 2) * 0.004,
         depth * 1.08,
-        course === 3
-          ? materials.brass
-          : course === 1
-            ? roofVariant === 'warm' ? materials.timberDark : materials.roofWarm
-            : roofMaterial,
+        roofMaterial,
       );
       strip.position.set(
         side * roofWidth * (0.095 + course * 0.12),
-        roofWidth * (0.335 - course * 0.068) + 0.012,
+        roofWidth * (0.335 - (0.095 + course * 0.12) * Math.tan(0.58)) + 0.018,
         0,
       );
-      strip.rotation.z = side * 0.58;
+      strip.rotation.z = -side * 0.58;
       roof.add(strip);
     }
   });
   root.add(roof);
+  for (const end of [-1, 1]) {
+    const gableShape = new THREE.Shape();
+    gableShape.moveTo(-width * 0.5, 0); gableShape.lineTo(width * 0.5, 0);
+    gableShape.lineTo(0, roofWidth * 0.34); gableShape.closePath();
+    const gable = new THREE.Mesh(new THREE.ExtrudeGeometry(gableShape, { depth: 0.08, bevelEnabled: false }), materials.plaster);
+    gable.position.set(0, bodyHeight, end * depth * 0.5 - 0.04);
+    root.add(gable);
+  }
 
   if (stories === 2) {
     const dormerX = width * 0.2;
@@ -2194,600 +2216,22 @@ function createLighthouse(level: 1 | 2 | 3, quality: Island3DQuality, materials:
 export function createIsland22FisherfolkGuildHall(
   level: 1 | 2 | 3,
   quality: Island3DQuality,
-  sharedMaterials: Island22FishermansVillageMaterials,
+  materials: Island22FishermansVillageMaterials,
 ) {
-  const guildTimberDark = sharedMaterials.timberDark.clone();
-  guildTimberDark.color.set(0x30211c);
-  guildTimberDark.roughness = 0.58;
-  const guildRoof = sharedMaterials.roof.clone();
-  guildRoof.color.set(0x2f444e);
-  guildRoof.roughness = 0.64;
-  guildRoof.emissiveIntensity = 0.06;
-  const guildPlaster = sharedMaterials.plaster.clone();
-  guildPlaster.color.set(0x9b744f);
-  guildPlaster.roughness = 0.8;
-  const guildRoofWarm = sharedMaterials.roofWarm.clone();
-  guildRoofWarm.color.set(0x8f4f32);
-  guildRoofWarm.emissiveIntensity = 0.05;
-  const guildBrass = sharedMaterials.brass.clone();
-  guildBrass.color.set(0xd69542);
-  guildBrass.roughness = 0.34;
-  const materials: Island22FishermansVillageMaterials = {
-    ...sharedMaterials,
-    timberDark: guildTimberDark,
-    roof: guildRoof,
-    plaster: guildPlaster,
-    roofWarm: guildRoofWarm,
-    brass: guildBrass,
-  };
-  const form = ISLAND_22_GUILD_HALL_FORM;
   const root = new THREE.Group();
   root.name = 'ISLAND_22_FISHERFOLK_GUILD_HALL';
-
-  const apron = createGuildHallPart('coastal-apron');
-  const apronMesh = cylinder(form.apron.radiusTop, form.apron.radiusBottom, form.apron.height, materials.stone, qualitySegments(quality));
-  apronMesh.scale.z = form.apron.depthScale;
-  apronMesh.position.set(0, form.apron.height / 2, 0.12);
-  apron.add(apronMesh);
-  for (let step = 0; step < 3; step += 1) {
-    const stair = box(1.05 + step * 0.28, 0.1, 0.3, materials.cobble);
-    stair.position.set(0, 0.16 + step * 0.08, 1.42 - step * 0.22);
-    apron.add(stair);
-  }
-  root.add(apron);
-
-  const shell = createGuildHallPart('occupied-shell');
-  const centralBody = box(form.occupiedShell.width, form.occupiedShell.height, form.occupiedShell.depth, materials.plaster);
-  centralBody.position.y = form.occupiedShell.centerY;
-  const lowerBand = box(3.04, 0.24, 2.08, materials.stone);
-  lowerBand.position.y = 0.34;
-  shell.add(centralBody, lowerBand);
-  root.add(shell);
-
-  const mansard = createGuildHallPart('central-mansard');
-  const mansardLevels: LoftedRectLevel[] = level === 1
-    ? form.mansard.level1.map((ring) => ({ ...ring }))
-    : form.mansard.mature.map((ring) => ({ ...ring }));
-  if (level === 1) {
-    mansard.add(new THREE.Mesh(createLoftedRectGeometry(mansardLevels), materials.roof));
-  } else {
-    mansard.add(createSweptMansardShell(mansardLevels, materials.roof, quality));
-  }
-  const lowerRoofBand = box(3.92, 0.12, 2.82, materials.brass);
-  lowerRoofBand.position.y = 1.82;
-  mansard.add(lowerRoofBand);
-  if (level >= 2) {
-    const roofSurfaceDetail = new THREE.Group();
-    roofSurfaceDetail.name = 'ISLAND_22_GUILD_HALL_ROOF_SURFACE_DETAIL';
-    addSweptMansardCornerRibs(roofSurfaceDetail, mansardLevels, materials.brass, quality);
-    addSweptMansardSlateCourses(
-      roofSurfaceDetail,
-      mansardLevels,
-      quality,
-      materials.roof,
-      materials.roofWarm,
-    );
-    mansard.add(roofSurfaceDetail);
-  }
-  root.add(mansard);
-
-  const frontGable = createGuildHallPart('front-gable');
-  const frontGableBacking = createProfileExtrusion(
-    [[-1.28, 0], [1.28, 0], [0.96, 0.68], [0, 1.96], [-0.96, 0.68]],
-    0.22,
-    materials.roofWarm,
-    0.025,
-  );
-  frontGableBacking.position.set(0, 1.12, 1.04);
-  frontGable.add(frontGableBacking);
-  const frontGableMesh = createProfileExtrusion(
-    [[-1.1, 0], [1.1, 0], [0.82, 0.58], [0, 1.74], [-0.82, 0.58]],
-    0.28,
-    materials.plaster,
-    0.025,
-  );
-  frontGableMesh.position.set(0, form.frontGable.baseY, form.frontGable.frontZ);
-  frontGable.add(frontGableMesh);
-  addFacadeBeam(frontGable, [-1.08, 1.22], [0, 2.9], 1.285, materials.timberDark, 0.07);
-  addFacadeBeam(frontGable, [1.08, 1.22], [0, 2.9], 1.285, materials.timberDark, 0.07);
-  addFacadeBeam(frontGable, [-1.04, 1.24], [1.04, 1.24], 1.285, materials.timberDark, 0.065);
-  root.add(frontGable);
-
-  const entry = createGuildHallPart('entry-depth');
-  const pointedEntryBacking = createProfileExtrusion(
-    [[-1.08, 0], [1.08, 0], [0.93, 1.2], [0, 2.58], [-0.93, 1.2]],
-    0.16,
-    materials.stone,
-    0.018,
-  );
-  pointedEntryBacking.position.set(0, 0.23, 1.31);
-  entry.add(pointedEntryBacking);
-  const portalSurround = createArchedPanel(1.05, 1.42, 0.16, materials.stone, materials.timberDark);
-  portalSurround.position.set(0, 0.31, 1.365);
-  entry.add(portalSurround);
-  const door = createArchedPanel(0.72, 1.16, 0.18, materials.timber, materials.timberDark);
-  door.position.set(0, 0.34, 1.46);
-  entry.add(door);
-  const doorWindow = createArchedPanel(0.42, 0.44, 0.08, materials.window, materials.timberDark);
-  doorWindow.position.set(0, 0.88, 1.585);
-  const doorWindowMullion = box(0.035, 0.31, 0.035, materials.brass);
-  doorWindowMullion.position.set(0, 1.08, 1.635);
-  const doorWindowRail = box(0.32, 0.035, 0.035, materials.brass);
-  doorWindowRail.position.set(0, 1.05, 1.635);
-  entry.add(doorWindow, doorWindowMullion, doorWindowRail);
-  const doorKick = box(0.65, 0.48, 0.075, materials.timberDark);
-  doorKick.position.set(0, 0.59, 1.565);
-  entry.add(doorKick);
-  [-0.94, 0.94].forEach((x) => {
-    const carvedPier = box(0.18, 1.46, 0.19, materials.stone);
-    carvedPier.position.set(x, 0.96, 1.41);
-    const pierCap = box(0.25, 0.12, 0.23, materials.brass);
-    pierCap.position.set(x, 1.72, 1.42);
-    entry.add(carvedPier, pierCap);
-  });
-  const portalUpperWindow = createArchedPanel(0.62, 0.7, 0.16, materials.window, materials.timberDark);
-  portalUpperWindow.position.set(0, 1.5, 1.555);
-  const portalUpperMullion = box(0.04, 0.5, 0.04, materials.brass);
-  portalUpperMullion.position.set(0, 1.86, 1.67);
-  const portalUpperRail = box(0.46, 0.04, 0.04, materials.brass);
-  portalUpperRail.position.set(0, 1.8, 1.67);
-  entry.add(portalUpperWindow, portalUpperMullion, portalUpperRail);
-  const canopy = createProfileExtrusion([[-0.52, 0], [0.52, 0], [0, 0.34]], 0.52, materials.roofWarm, 0.018);
-  canopy.position.set(0, 2.16, 1.55);
-  entry.add(canopy);
-  addFacadeBeam(entry, [-1.04, 0.3], [0, 2.78], 1.51, materials.timber, 0.075);
-  addFacadeBeam(entry, [1.04, 0.3], [0, 2.78], 1.51, materials.timber, 0.075);
-  addFacadeBeam(entry, [-0.8, 0.48], [0, 2.35], 1.575, materials.brass, 0.045);
-  addFacadeBeam(entry, [0.8, 0.48], [0, 2.35], 1.575, materials.brass, 0.045);
-  const guildNamePlaque = box(0.88, 0.18, 0.09, materials.timberDark);
-  guildNamePlaque.position.set(0, 1.34, 1.61);
-  const guildNameMedallion = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.026, 6, 14), materials.brass);
-  guildNameMedallion.position.set(0, 1.35, 1.665);
-  entry.add(guildNamePlaque, guildNameMedallion);
-  root.add(entry);
-
-  const windows = createGuildHallPart('window-apertures');
-  [-0.83, 0.83].forEach((x) => {
-    const window = createArchedPanel(0.38, 0.58, 0.1, materials.window, materials.timberDark);
-    window.position.set(x, 0.88, 1.03);
-    windows.add(window);
-  });
-  if (level >= 2) {
-    const dormerSurround = createArchedPanel(0.88, 0.96, 0.12, materials.timberDark, materials.stone);
-    dormerSurround.position.set(0, 2.48, 0.92);
-    windows.add(dormerSurround);
-    const dormerWindow = createArchedPanel(0.62, 0.74, 0.16, materials.window, materials.timberDark);
-    dormerWindow.position.set(0, 2.59, 1.015);
-    windows.add(dormerWindow);
-    const dormerCanopy = createProfileExtrusion([[-0.48, 0], [0.48, 0], [0.14, 0.28], [0, 0.43], [-0.14, 0.28]], 0.34, materials.roofWarm, 0.012);
-    dormerCanopy.position.set(0, 3.43, 0.96);
-    windows.add(dormerCanopy);
-    [-0.13, 0.13].forEach((x) => {
-      const mullion = box(0.036, 0.5, 0.07, materials.timberDark);
-      mullion.position.set(x, 2.87, 1.11);
-      windows.add(mullion);
-    });
-    const dormerTransom = box(0.58, 0.038, 0.07, materials.timberDark);
-    dormerTransom.position.set(0, 2.93, 1.11);
-    windows.add(dormerTransom);
-    [-0.23, 0, 0.23].forEach((x) => {
-      windows.add(createBeamBetween(
-        new THREE.Vector3(0, 3.05, 1.115),
-        new THREE.Vector3(x, 3.3 - Math.abs(x) * 0.35, 1.115),
-        0.018,
-        materials.timberDark,
-        5,
-      ));
-    });
-  }
-
-  const frontGableWindow = createArchedPanel(0.52, 0.68, 0.12, materials.window, materials.timberDark);
-  frontGableWindow.position.set(0, 1.7, 1.43);
-  windows.add(frontGableWindow);
-  const frontGableCanopy = createProfileExtrusion([[-0.44, 0], [0.44, 0], [0, 0.32]], 0.3, materials.roofWarm, 0.01);
-  frontGableCanopy.position.set(0, 2.38, 1.42);
-  windows.add(frontGableCanopy);
-  const frontGableMullion = box(0.034, 0.46, 0.06, materials.timberDark);
-  frontGableMullion.position.set(0, 1.96, 1.52);
-  windows.add(frontGableMullion);
-
-  if (level >= 2) {
-    const rearRoofDormer = createArchedPanel(0.5, 0.66, 0.12, materials.window, materials.timberDark);
-    rearRoofDormer.rotation.y = Math.PI;
-    rearRoofDormer.position.set(0.4, 2.63, -0.96);
-    windows.add(rearRoofDormer);
-    const rearDormerCanopy = createProfileExtrusion([[-0.42, 0], [0.42, 0], [0, 0.34]], 0.32, materials.roofWarm, 0.01);
-    rearDormerCanopy.rotation.y = Math.PI;
-    rearDormerCanopy.position.set(0.4, 3.27, -0.98);
-    windows.add(rearDormerCanopy);
-  }
-  [-0.9, 0, 0.9].forEach((x) => {
-    const rearWindow = createArchedPanel(0.34, 0.5, 0.08, materials.window, materials.timberDark);
-    rearWindow.rotation.y = Math.PI;
-    rearWindow.position.set(x, 0.88, -1.03);
-    windows.add(rearWindow);
-  });
-  root.add(windows);
-
-  if (level >= 2) {
-    const wingRoofs = createGuildHallPart('swept-wing-roofs');
-    [-1, 1].forEach((side) => {
-      const wingBody = box(form.wing.width, form.wing.bodyHeight, form.wing.depth, materials.timber);
-      wingBody.position.set(side * form.wing.centerX, 0.8, 0.03);
-      shell.add(wingBody);
-      const peakX = side < 0 ? 0.38 : -0.38;
-      const wingProfile = [
-        [-1.04, 0] as const,
-        [-0.94, 0.18] as const,
-        [peakX - 0.34, 0.92] as const,
-        [peakX, 1.38] as const,
-        [peakX + 0.3, 0.9] as const,
-        [0.94, 0.18] as const,
-        [1.04, 0] as const,
-      ];
-      const wingRoof = createProfileExtrusion(
-        wingProfile,
-        2.04,
-        materials.roof,
-        0.02,
-      );
-      wingRoof.position.set(side * form.wing.centerX, 1.25, 0.03);
-      wingRoofs.add(wingRoof);
-
-      [-1, 1].forEach((frontBack) => {
-        const z = 0.03 + frontBack * 1.045;
-        for (let pointIndex = 0; pointIndex < wingProfile.length - 1; pointIndex += 1) {
-          const start = wingProfile[pointIndex];
-          const end = wingProfile[pointIndex + 1];
-          wingRoofs.add(createBeamBetween(
-            new THREE.Vector3(side * form.wing.centerX + start[0], 1.25 + start[1], z),
-            new THREE.Vector3(side * form.wing.centerX + end[0], 1.25 + end[1], z),
-            0.032,
-            materials.brass,
-            6,
-          ));
-        }
-        const outerX = side * (form.wing.centerX + 1.04);
-        const curlMid = new THREE.Vector3(outerX + side * 0.18, 1.39, z);
-        wingRoofs.add(
-          createBeamBetween(new THREE.Vector3(outerX, 1.26, z), curlMid, 0.045, materials.roofWarm, 7),
-          createBeamBetween(curlMid, new THREE.Vector3(outerX + side * 0.1, 1.64, z), 0.04, materials.brass, 7),
-        );
-      });
-      const outerEave = box(0.12, 0.13, 2.2, materials.roofWarm);
-      outerEave.position.set(side * (form.wing.centerX + 1.02), 1.27, 0.03);
-      outerEave.rotation.z = side * -0.15;
-      wingRoofs.add(outerEave);
-
-      const ridgeX = side * form.wing.centerX + peakX;
-      const ridge = cylinder(0.055, 0.055, 2.18, materials.brass, 8);
-      ridge.rotation.x = Math.PI / 2;
-      ridge.position.set(ridgeX, 2.63, 0.03);
-      wingRoofs.add(ridge);
-
-      [-1.05, 1.05].forEach((z) => {
-        const finialStem = cylinder(0.035, 0.045, 0.32, materials.brass, 7);
-        finialStem.position.set(ridgeX, 2.76, z);
-        const finialTip = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.18, 7), materials.brass);
-        finialTip.position.set(ridgeX, 3, z);
-        wingRoofs.add(finialStem, finialTip);
-      });
-    });
-    root.add(wingRoofs);
-
-    const sideGables = createGuildHallPart('side-gables');
-    [-1, 1].forEach((side) => {
-      const gable = createProfileExtrusion([[-0.64, 0], [0.64, 0], [0, 0.9]], 0.2, materials.plaster, 0.02);
-      gable.rotation.y = side * Math.PI / 2;
-      gable.position.set(side * 2.18, 1.05, 0.03);
-      sideGables.add(gable);
-      const sideWindow = createArchedPanel(0.34, 0.52, 0.1, materials.window, materials.timberDark);
-      sideWindow.rotation.y = side * Math.PI / 2;
-      sideWindow.position.set(side * 2.29, 1.32, 0.03);
-      sideGables.add(sideWindow);
-    });
-    root.add(sideGables);
-
-    const facade = createGuildHallPart('facade-structure');
-    [-1.44, -0.49, 0.49, 1.44].forEach((x) => {
-      const beam = box(0.09, 1.28, 0.09, materials.timberDark);
-      beam.position.set(x, 0.98, 1.02);
-      facade.add(beam);
-    });
-    [0.45, 1.18, 1.58].forEach((y) => {
-      const beam = box(3.02, 0.09, 0.09, materials.timberDark);
-      beam.position.set(0, y, 1.02);
-      facade.add(beam);
-    });
-    addFacadeBeam(facade, [-1.42, 0.48], [-0.52, 1.14], 1.075, materials.timberDark);
-    addFacadeBeam(facade, [1.42, 0.48], [0.52, 1.14], 1.075, materials.timberDark);
-    root.add(facade);
-
-    const rear = createGuildHallPart('rear-service-elevation');
-    const rearDeck = box(1.76, 0.12, 0.62, materials.timber);
-    rearDeck.position.set(-0.28, 0.24, -1.28);
-    rear.add(rearDeck);
-    for (let step = 0; step < 2; step += 1) {
-      const rearStep = box(0.8 + step * 0.22, 0.09, 0.24, materials.cobble);
-      rearStep.position.set(-0.32, 0.1 + step * 0.07, -1.58 + step * 0.16);
-      rear.add(rearStep);
-    }
-    const loadingBay = box(1.08, 0.88, 0.12, materials.timberDark);
-    loadingBay.position.set(-0.55, 0.68, -1.08);
-    rear.add(loadingBay);
-    const loadingDoor = box(0.84, 0.68, 0.07, materials.timber);
-    loadingDoor.position.set(-0.55, 0.68, -1.16);
-    rear.add(loadingDoor);
-    addFacadeBeam(rear, [-0.94, 0.37], [-0.17, 0.99], -1.22, materials.timberDark, 0.04);
-    addFacadeBeam(rear, [-0.17, 0.37], [-0.94, 0.99], -1.22, materials.timberDark, 0.04);
-    const rearAwning = createProfileExtrusion([[-0.72, 0], [0.72, 0], [0, 0.38]], 0.52, materials.roofWarm, 0.015);
-    rearAwning.rotation.x = Math.PI;
-    rearAwning.position.set(-0.55, 1.2, -1.18);
-    rear.add(rearAwning);
-    const serviceGable = createProfileExtrusion([[-0.66, 0], [0.66, 0], [0, 0.72]], 0.18, materials.plaster, 0.015);
-    serviceGable.position.set(0.68, 1.18, -1.12);
-    rear.add(serviceGable);
-    addFacadeBeam(rear, [0.03, 1.2], [0.68, 1.88], -1.22, materials.timberDark, 0.05);
-    addFacadeBeam(rear, [1.33, 1.2], [0.68, 1.88], -1.22, materials.timberDark, 0.05);
-    const serviceWindow = createArchedPanel(0.4, 0.58, 0.1, materials.window, materials.timberDark);
-    serviceWindow.rotation.y = Math.PI;
-    serviceWindow.position.set(0.68, 1.3, -1.24);
-    rear.add(serviceWindow);
-    [-1.05, 1.3].forEach((x) => {
-      const servicePost = cylinder(0.055, 0.065, 0.72, materials.timberDark, 7);
-      servicePost.position.set(x, 0.62, -1.47);
-      const serviceLantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), materials.window);
-      serviceLantern.position.set(x, 1.03, -1.47);
-      rear.add(servicePost, serviceLantern);
-    });
-    root.add(rear);
-
-    const sideOccupation = createGuildHallPart('side-occupation');
-    [-1, 1].forEach((side) => {
-      const wingOuterX = side * (form.wing.centerX + form.wing.width / 2 + 0.025);
-      [-0.5, 0.5].forEach((z) => {
-        const wingWindow = createArchedPanel(0.3, 0.48, 0.1, materials.window, materials.timberDark);
-        wingWindow.rotation.y = side * Math.PI / 2;
-        wingWindow.position.set(wingOuterX, 0.46, z);
-        sideOccupation.add(wingWindow);
-      });
-      [-0.7, 0, 0.7].forEach((z) => {
-        const wingPost = box(0.085, 1.04, 0.085, materials.timberDark);
-        wingPost.position.set(wingOuterX, 0.66, z);
-        sideOccupation.add(wingPost);
-      });
-      [0.25, 1.12].forEach((y) => {
-        const wingRail = box(0.085, 0.09, 1.62, materials.timberDark);
-        wingRail.position.set(wingOuterX, y, 0);
-        sideOccupation.add(wingRail);
-      });
-      sideOccupation.add(
-        createBeamBetween(
-          new THREE.Vector3(wingOuterX, 0.28, -0.65),
-          new THREE.Vector3(wingOuterX, 1.06, -0.08),
-          0.035,
-          materials.timberDark,
-          6,
-        ),
-        createBeamBetween(
-          new THREE.Vector3(wingOuterX, 0.28, 0.65),
-          new THREE.Vector3(wingOuterX, 1.06, 0.08),
-          0.035,
-          materials.timberDark,
-          6,
-        ),
-      );
-      [-0.48, 0.48].forEach((z) => {
-        const sideWindow = createArchedPanel(0.34, 0.54, 0.11, materials.window, materials.timberDark);
-        sideWindow.rotation.y = side * Math.PI / 2;
-        sideWindow.position.set(side * 1.57, 0.86, z);
-        sideOccupation.add(sideWindow);
-        const sideMullion = box(0.04, 0.38, 0.035, materials.brass);
-        sideMullion.rotation.y = side * Math.PI / 2;
-        sideMullion.position.set(side * 1.635, 1.12, z);
-        sideOccupation.add(sideMullion);
-      });
-      sideOccupation.add(
-        createBeamBetween(
-          new THREE.Vector3(side * 1.64, 0.42, -0.86),
-          new THREE.Vector3(side * 1.64, 1.48, 0.86),
-          0.045,
-          materials.timberDark,
-          6,
-        ),
-        createBeamBetween(
-          new THREE.Vector3(side * 1.64, 0.42, 0.86),
-          new THREE.Vector3(side * 1.64, 1.48, -0.86),
-          0.045,
-          materials.timberDark,
-          6,
-        ),
-      );
-      const sideGutter = cylinder(0.045, 0.045, 2.28, materials.brass, 8);
-      sideGutter.rotation.x = Math.PI / 2;
-      sideGutter.position.set(side * 1.68, 1.87, 0);
-      sideOccupation.add(sideGutter);
-      const downpipe = cylinder(0.035, 0.035, 1.44, materials.brass, 7);
-      downpipe.position.set(side * 1.68, 1.13, -1.03);
-      sideOccupation.add(downpipe);
-    });
-    root.add(sideOccupation);
-  }
-
-  if (level >= 3) {
-    const crown = createGuildHallPart('roof-crown');
-    const crownDeck = box(form.crown.width, 0.16, form.crown.depth, materials.timberDark);
-    crownDeck.position.y = form.crown.deckY;
-    crown.add(crownDeck);
-    const crownDrum = box(1.12, 0.3, 0.78, materials.roofWarm);
-    crownDrum.position.y = 4.24;
-    const crownCap = box(1.38, 0.11, 1, materials.brass);
-    crownCap.position.y = 4.44;
-    crown.add(crownDrum, crownCap);
-    [-0.58, 0.58].forEach((x) => [-0.42, 0.42].forEach((z) => {
-      const finial = cylinder(0.035, 0.055, 0.28, materials.brass, 8);
-      finial.position.set(x, 4.58, z);
-      const point = new THREE.Mesh(new THREE.ConeGeometry(0.085, 0.2, 8), materials.brass);
-      point.position.set(x, 4.81, z);
-      crown.add(finial, point);
-    }));
-    root.add(crown);
-
-    const chimney = createGuildHallPart('chimney');
-    const stack = box(0.32, 1.08, 0.38, materials.stone);
-    stack.position.set(-1.02, 3.53, -0.22);
-    stack.rotation.z = -0.05;
-    const cap = box(0.46, 0.14, 0.5, materials.brass);
-    cap.position.set(-1.02, 4.1, -0.22);
-    chimney.add(stack, cap);
-    root.add(chimney);
-
-    const terrace = createGuildHallPart('terrace-silhouette');
-    [-1.7, 1.7].forEach((x) => {
-      const post = cylinder(0.08, 0.1, 0.82, materials.timberDark, 8);
-      post.position.set(x, 0.57, 1.22);
-      const lantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.14, 0), materials.window);
-      lantern.position.set(x, 1.08, 1.22);
-      terrace.add(post, lantern);
-    });
-    [-1.45, 1.28].forEach((x, index) => {
-      const barrel = cylinder(0.2, 0.22, 0.48, materials.timber, 10);
-      barrel.position.set(x, 0.44, index === 0 ? 1.18 : 1.28);
-      terrace.add(barrel);
-    });
-    const crate = box(0.42, 0.38, 0.42, materials.timberDark);
-    crate.position.set(1.68, 0.37, -0.72);
-    crate.rotation.y = 0.24;
-    terrace.add(crate);
-    [-0.56, 0.56].forEach((x) => {
-      const entryLantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), materials.window);
-      entryLantern.position.set(x, 1.34, 1.5);
-      const bracket = createBeamBetween(
-        new THREE.Vector3(x, 1.34, 1.35),
-        new THREE.Vector3(x, 1.34, 1.5),
-        0.025,
-        materials.brass,
-        6,
-      );
-      terrace.add(entryLantern, bracket);
-    });
-    const ropeCoil = createRopeCoil(materials.rope, quality);
-    ropeCoil.position.set(1.18, 0.84, 1.51);
-    ropeCoil.rotation.z = -0.16;
-    terrace.add(ropeCoil);
-
-    const netRack = createNetRack(materials.timberDark, materials.rope);
-    netRack.position.set(-1.02, 0.22, 1.49);
-    netRack.rotation.y = -0.08;
-    terrace.add(netRack);
-
-    const fishCrate = createSlattedFishCrate(0.58, 0.34, 0.42, materials.timberDark);
-    fishCrate.position.set(1.2, 0.2, 1.44);
-    fishCrate.rotation.y = -0.14;
-    terrace.add(fishCrate);
-    const stackedCrate = createSlattedFishCrate(0.45, 0.29, 0.36, materials.timber);
-    stackedCrate.position.set(1.56, 0.2, 1.12);
-    stackedCrate.rotation.y = 0.32;
-    terrace.add(stackedCrate);
-
-    [-1, 1].forEach((side) => {
-      const basket = cylinder(0.18, 0.14, 0.22, materials.rope, 10);
-      basket.position.set(side * 1.48, 0.3, 0.92);
-      const basketRim = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.025, 5, 10), materials.timberDark);
-      basketRim.rotation.x = Math.PI / 2;
-      basketRim.position.set(side * 1.48, 0.42, 0.92);
-      terrace.add(basket, basketRim);
-    });
-
-    const hangingSign = box(0.48, 0.28, 0.065, materials.timber);
-    hangingSign.position.set(-1.34, 1.45, 1.48);
-    hangingSign.rotation.z = -0.05;
-    const signBracket = createBeamBetween(
-      new THREE.Vector3(-1.34, 1.78, 1.35),
-      new THREE.Vector3(-1.34, 1.56, 1.48),
-      0.025,
-      materials.brass,
-      6,
-    );
-    terrace.add(hangingSign, signBracket);
-
-    const guildCrest = new THREE.Group();
-    guildCrest.name = 'ISLAND_22_GUILD_HALL_FISH_CREST';
-    const crestPlaque = box(0.58, 0.34, 0.07, materials.timberDark);
-    crestPlaque.rotation.z = Math.PI / 4;
-    crestPlaque.position.z = -0.045;
-    const crestBody = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 6), materials.brass);
-    crestBody.scale.set(1.35, 0.68, 0.32);
-    crestBody.position.z = 0.035;
-    const crestTail = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.24, 3), materials.brass);
-    crestTail.rotation.z = Math.PI / 2;
-    crestTail.position.x = -0.26;
-    crestTail.position.z = 0.035;
-    const crestEye = new THREE.Mesh(new THREE.SphereGeometry(0.028, 7, 5), materials.timberDark);
-    crestEye.position.set(0.12, 0.025, 0.095);
-    const crestFin = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.14, 3), materials.brass);
-    crestFin.position.set(-0.01, 0.11, 0.035);
-    crestFin.rotation.z = Math.PI;
-    guildCrest.position.set(0, 2.18, 1.58);
-    guildCrest.scale.setScalar(1.3);
-    guildCrest.add(crestPlaque, crestBody, crestTail, crestEye, crestFin);
-    terrace.add(guildCrest);
-    const awningStripeCount = quality === 'low' ? 4 : 6;
-    [-1, 1].forEach((side) => {
-      for (let stripe = 0; stripe < awningStripeCount; stripe += 1) {
-        const awningStripe = box(
-          0.78 / awningStripeCount,
-          0.055,
-          0.42,
-          stripe % 2 ? materials.plaster : materials.roofWarm,
-        );
-        awningStripe.position.set(
-          side * 1.28 + (stripe - (awningStripeCount - 1) / 2) * 0.78 / awningStripeCount,
-          1.28,
-          1.47,
-        );
-        awningStripe.rotation.x = 0.18;
-        terrace.add(awningStripe);
-      }
-    });
-    root.add(terrace);
-
-    const rearBalcony = createGuildHallPart('rear-balcony');
-    const rearBalconyDeck = box(2.46, 0.12, 0.58, materials.timber);
-    rearBalconyDeck.position.set(0, 0.62, -1.48);
-    rearBalcony.add(rearBalconyDeck);
-    [-1.08, -0.54, 0, 0.54, 1.08].forEach((x) => {
-      const post = cylinder(0.032, 0.038, 0.62, materials.brass, 7);
-      post.position.set(x, 0.96, -1.7);
-      rearBalcony.add(post);
-    });
-    const rearRail = box(2.32, 0.055, 0.055, materials.brass);
-    rearRail.position.set(0, 1.25, -1.7);
-    rearBalcony.add(rearRail);
-    [-0.82, 0.82].forEach((x) => {
-      const rearLanternPost = cylinder(0.045, 0.055, 0.74, materials.timberDark, 7);
-      rearLanternPost.position.set(x, 0.98, -1.72);
-      const rearLantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), materials.window);
-      rearLantern.position.set(x, 1.42, -1.72);
-      rearBalcony.add(rearLanternPost, rearLantern);
-    });
-    const rearCrate = createSlattedFishCrate(0.52, 0.32, 0.4, materials.timberDark);
-    rearCrate.position.set(-0.64, 0.68, -1.55);
-    rearCrate.rotation.y = 0.18;
-    const rearBarrel = cylinder(0.18, 0.2, 0.46, materials.timber, 10);
-    rearBarrel.position.set(0.72, 0.84, -1.54);
-    rearBalcony.add(rearCrate, rearBarrel);
-    root.add(rearBalcony);
-  }
-
+  const macro = createGuildHallPart('coastal-apron-occupied-shell');
+  const operations = createGuildHallPart('wings-dormers-crown');
+  const restored = createGuildHallPart('restored-detail-system');
+  populateIsland22GuildHallV2({ macro, operations, restored }, { level, quality, materials });
+  root.add(macro);
+  if (level >= 2) root.add(operations);
+  if (level >= 3) root.add(restored);
   const sockets = createGuildHallPart('runtime-sockets');
-  sockets.userData.sockets = {
-    focus: [0, 1.75, 0],
-    entry: [0, 0.25, 1.58],
-    build: [0.92, 0.15, 1.36],
-  };
+  sockets.userData.sockets = { focus: [0, 1.75, 0], entry: [0, 0.25, 1.58], build: [0.92, 0.15, 1.36] };
   root.add(sockets);
   setShadow(root);
+  for (const part of [macro, operations, restored]) compactStaticGeometry(part, part.name);
   return root;
 }
 
@@ -2964,25 +2408,60 @@ export function buildIsland22FishermansVillageLandmark(
     // precinct above the smaller harbor venues. Raise the complete locked
     // assembly on real support terrain so its portal and roof remain separate
     // from the round tavern in the canonical phone overview.
-    const guildMesa = cylinder(2.58, 2.92, 1.16, materials.stone, qualitySegments(quality));
+    const precinct = createGuildHallPart('raised-coastal-precinct');
+    const masonry = new THREE.MeshStandardMaterial({ color: 0x939589, roughness: 0.96 });
+    const stairStone = new THREE.MeshStandardMaterial({ color: 0xa7a799, roughness: 0.94 });
+    const guildMesa = level > 0
+      ? box(5.02, 1.16, 3.4, masonry)
+      : cylinder(2.58, 2.92, 1.16, materials.stone, qualitySegments(quality));
     guildMesa.name = 'ISLAND_22_GUILD_HALL_RAISED_STONE_PRECINCT';
     guildMesa.position.y = -0.58;
-    const guildMesaLip = new THREE.Mesh(
-      new THREE.TorusGeometry(2.48, 0.11, 6, qualitySegments(quality)),
-      materials.cobble,
-    );
-    guildMesaLip.name = 'ISLAND_22_GUILD_HALL_PRECINCT_COBBLE_LIP';
-    guildMesaLip.rotation.x = Math.PI / 2;
-    guildMesaLip.position.y = 0.02;
-    root.add(guildMesa, guildMesaLip);
-    for (let step = 0; step < 5; step += 1) {
-      const guildStep = box(1.28 + step * 0.16, 0.16, 0.48, materials.cobble);
-      guildStep.name = `ISLAND_22_GUILD_HALL_PRECINCT_STEP_${step + 1}`;
-      guildStep.position.set(0, -0.32 + step * 0.13, 2.35 + step * 0.28);
-      root.add(guildStep);
+    precinct.add(guildMesa);
+    if (level > 0) {
+      // Coastal retaining footing reaches below the waterline under the rear corners.
+      const profile = new THREE.Shape();
+      profile.moveTo(-2.51, 0); profile.lineTo(2.51, 0);
+      profile.lineTo(2.72, -0.72); profile.lineTo(-2.72, -0.72); profile.closePath();
+      const footingGeometry = new THREE.ExtrudeGeometry(profile, { depth: 3.62, bevelEnabled: false });
+      footingGeometry.translate(0, -1.12, -1.81);
+      const footing = new THREE.Mesh(footingGeometry, masonry);
+      footing.name = 'ISLAND_22_GUILD_HALL_COASTAL_FOOTING';
+      precinct.add(footing);
     }
+    // Steps descend toward the board; each solid riser bears on the slope below.
+    for (let step = 0; step < 8; step += 1) {
+      const top = 0.30 - step * 0.18;
+      const height = Math.max(0.16, top + 1.16);
+      const guildStep = box(1.28 + step * 0.07, height, 0.3, stairStone);
+      guildStep.name = `ISLAND_22_GUILD_HALL_PRECINCT_STEP_${step + 1}`;
+      guildStep.position.set(0, top - height / 2, 2.04 + step * 0.19);
+      precinct.add(guildStep);
+    }
+    if (level >= 3) {
+      const stones = [0x9da292, 0x8e978a, 0xa5aa98].map(color => new THREE.MeshStandardMaterial({ color, roughness: 0.97 }));
+      const course = (w: number, h: number, d: number, x: number, y: number, z: number, index: number) => {
+        const block = box(w, h, d, stones[index % stones.length]);
+        block.position.set(x, y, z); precinct.add(block);
+      };
+      for (let row = 0; row < 5; row += 1) {
+        const y = -1.04 + row * 0.225;
+        for (const z of [-1.706, 1.706]) for (let i = -1; i < 10; i += 1) {
+          const left = Math.max(-2.50, -2.50 + i * 0.5 + (row % 2) * 0.25);
+          const right = Math.min(2.50, -2.50 + (i + 1) * 0.5 + (row % 2) * 0.25);
+          if (right - left > 0.02) course(right - left - 0.012, 0.21, 0.035, (left + right) / 2, y, z, i + row + 3);
+        }
+        for (const x of [-2.516, 2.516]) for (let i = -1; i < 7; i += 1) {
+          const near = Math.max(-1.68, -1.68 + i * 0.48 + (row % 2) * 0.24);
+          const far = Math.min(1.68, -1.68 + (i + 1) * 0.48 + (row % 2) * 0.24);
+          if (far - near > 0.02) course(0.035, 0.21, far - near - 0.012, x, y, (near + far) / 2, i + row + 4);
+        }
+      }
+    }
+    setShadow(precinct);
+    compactStaticGeometry(precinct, precinct.name);
+    root.add(precinct);
   }
-  root.add(foundation);
+  if ((definition.id !== 'habit' && definition.id !== 'hatchery' && definition.id !== 'event' && definition.id !== 'wisdom' && definition.id !== 'boss') || level === 0) root.add(foundation);
   if (level > 0) {
     const builtLevel = Math.max(1, level) as 1 | 2 | 3;
     const premiumFactory = definition.id === 'boss'
@@ -3117,12 +2596,75 @@ function createBoat(materials: Island22FishermansVillageMaterials, quality: Isla
   return root;
 }
 
+// The first cottage is offset along the shore to clear the lighthouse quay and library eave.
+// This shared list also places its supplementary windows.
 const ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS = [
-  [-3.75, -7.05, 0.12, 1.02, 2], [-1.35, -7.35, -0.06, 0.88, 1], [1.35, -7.3, -0.08, 0.9, 2],
-  [4.0, -6.72, -0.32, 0.88, 1], [7.0, -3.3, -1.22, 0.92, 2], [7.18, 2.7, -1.82, 0.88, 1],
-  [4.05, 6.8, -2.78, 0.9, 2], [1.35, 7.2, -3.02, 0.82, 1], [-1.65, 7.18, 3.02, 0.86, 2],
-  [-4.2, 6.6, 2.66, 0.9, 1], [-7.05, 3.35, 1.88, 0.86, 2], [-7.2, -1.9, 1.32, 0.88, 1],
+  [-3.77, -7.65, -0.06, 1.02, 2], [-1.35, -7.35, -0.06, 0.88, 1], [1.35, -7.3, -0.08, 0.9, 2],
+  [3.35, -8.5, -0.32, 0.88, 1], [8.1, -2.6, -1.22, 0.92, 2], [7.18, 2.7, -1.82, 0.88, 1],
+  [2.8, 9.6, -2.78, 0.9, 2], [1.35, 7.2, -3.02, 0.82, 1], [-1.65, 7.18, 3.02, 0.86, 2],
+  [-4.1, 9.4, 2.66, 0.9, 1], [-7.05, 3.35, 1.88, 0.86, 2], [-7.2, -1.9, 1.32, 0.88, 1],
 ] as const;
+
+// Keep vegetation clear of the individually rebuilt cottage and its door approaches.
+function overlapsNorthCottagePlot(x: number, z: number, margin: number) {
+  const [cx, cz, yaw, size] = ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS[0];
+  const localX = (Math.cos(yaw) * (x - cx) - Math.sin(yaw) * (z - cz)) / size;
+  const localZ = (Math.sin(yaw) * (x - cx) + Math.cos(yaw) * (z - cz)) / size;
+  return localX > -1 - margin && localX < 1.65 + margin && localZ > -.86 - margin && localZ < 1.25 + margin;
+}
+
+function overlapsNetMenderCottagePlot(x: number, z: number, margin: number) {
+  const [cx, cz, yaw, size] = ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS[1];
+  const localX = (Math.cos(yaw) * (x - cx) - Math.sin(yaw) * (z - cz)) / size;
+  const localZ = (Math.sin(yaw) * (x - cx) + Math.cos(yaw) * (z - cz)) / size;
+  return Math.abs(localX) < .94 + margin && localZ > -.78 - margin && localZ < 1.0 + margin;
+}
+
+function overlapsSmokehouseCottagePlot(x: number, z: number, margin: number) {
+  const [cx, cz, yaw, size] = ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS[2];
+  const localX = (Math.cos(yaw) * (x - cx) - Math.sin(yaw) * (z - cz)) / size;
+  const localZ = (Math.sin(yaw) * (x - cx) + Math.cos(yaw) * (z - cz)) / size;
+  return localX > -1.72 - margin && localX < .95 + margin && localZ > -.80 - margin && localZ < 1.0 + margin;
+}
+
+// Reviewed cooper cottage plot: the old conifer crossed its front openings.
+function overlapsCooperCottagePlot(x: number, z: number, margin: number) {
+  const [cx,cz,yaw,size] = ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS[4];
+  const lx = (Math.cos(yaw)*(x-cx)-Math.sin(yaw)*(z-cz))/size;
+  const lz = (Math.sin(yaw)*(x-cx)+Math.cos(yaw)*(z-cz))/size;
+  return lx > -.95-margin && lx < 1.72+margin && lz > -.8-margin && lz < 1+margin;
+}
+
+function overlapsRopeMakerCottagePlot(x:number,z:number,margin:number) {
+  const [cx,cz,yaw,size]=ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS[6];
+  const lx=(Math.cos(yaw)*(x-cx)-Math.sin(yaw)*(z-cz))/size;
+  const lz=(Math.sin(yaw)*(x-cx)+Math.cos(yaw)*(z-cz))/size;
+  return lx > -1.72-margin && lx < .95+margin && lz > -.8-margin && lz < 1+margin;
+}
+
+function overlapsHarborCookCottagePlot(x:number,z:number,margin:number) {
+  const [cx,cz,yaw,size]=ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS[7];
+  const lx=(Math.cos(yaw)*(x-cx)-Math.sin(yaw)*(z-cz))/size;
+  const lz=(Math.sin(yaw)*(x-cx)+Math.cos(yaw)*(z-cz))/size;
+  return Math.abs(lx)<.94+margin && lz>-.78-margin && lz<1+margin;
+}
+
+function overlapsChartmakerCottagePlot(x:number,z:number,margin:number) {
+  const [cx,cz,yaw,size]=ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS[8];
+  const lx=(Math.cos(yaw)*(x-cx)-Math.sin(yaw)*(z-cz))/size;
+  const lz=(Math.sin(yaw)*(x-cx)+Math.cos(yaw)*(z-cz))/size;
+  return lx>-.95-margin && lx<1.72+margin && lz>-.8-margin && lz<1+margin;
+}
+
+function overlapsSkipperCottagePlot(x:number,z:number,margin:number) {
+  const [cx,cz,yaw,size]=ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS[11];
+  const lx=(Math.cos(yaw)*(x-cx)-Math.sin(yaw)*(z-cz))/size;
+  const lz=(Math.sin(yaw)*(x-cx)+Math.cos(yaw)*(z-cz))/size;
+  return Math.abs(lx)<.95+margin && lz>-.8-margin && lz<1+margin;
+}
+
+// Decorative cottages must not occupy the canonical tavern plot. Keep original indices for other clusters.
+const overlapsTavernPlot = (x: number, z: number) => Math.hypot(x - 7.45, z - 2.15) < 2.4;
 
 function addOccupiedVillageSideWindows(
   root: THREE.Group,
@@ -3132,7 +2674,7 @@ function addOccupiedVillageSideWindows(
   const placements: ReadonlyArray<readonly [number, number, number, number, 1 | 2]> = quality === 'low'
     ? ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS.slice(0, 8)
     : ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS;
-  const windowCount = placements.reduce((total, placement) => total + placement[4] * 2, 0);
+  const windowCount = placements.reduce((total, placement, index) => total + (index <= 2 || ISLAND_22_V2_SECONDARY_INDICES.includes(index) || overlapsTavernPlot(placement[0], placement[1]) ? 0 : placement[4] * 2), 0);
   const frames = new THREE.InstancedMesh(
     new THREE.BoxGeometry(0.075, 0.45, 0.4),
     materials.timberDark,
@@ -3163,11 +2705,13 @@ function addOccupiedVillageSideWindows(
   const scale = new THREE.Vector3();
   let instance = 0;
   let elevationInstance = 0;
-  placements.forEach(([x, z, yaw, size, stories]) => {
+  let skippedWindowCount = 0;
+  placements.forEach(([x, z, yaw, size, stories], index) => {
+    if (index <= 2 || ISLAND_22_V2_SECONDARY_INDICES.includes(index) || overlapsTavernPlot(x, z)) { skippedWindowCount += stories * 2; return; }
     const width = (stories === 2 ? 1.55 : 1.42) * size;
     const depth = 1.22 * size;
     for (let floor = 0; floor < stories; floor += 1) {
-      const y = 0.57 + (instance % 3) * 0.012 + (0.58 + floor * 0.76) * size;
+      const y = 0.57 + ((instance + skippedWindowCount) % 3) * 0.012 + (0.58 + floor * 0.76) * size;
       [-1, 1].forEach((side) => {
         const localX = side * (width / 2 + 0.045 * size);
         const worldX = x + Math.cos(yaw) * localX;
@@ -3225,6 +2769,139 @@ function addOccupiedVillageSideWindows(
   root.add(frames, panes, elevationFrames, elevationPanes);
 }
 
+/** Individually reviewed two-storey home and attached smokehouse. */
+export function createIsland22SmokehouseCottage(quality: Island3DQuality, materials: Island22FishermansVillageMaterials) {
+  const root = new THREE.Group(); root.name = 'ISLAND_22_SMOKEHOUSE_COTTAGE';
+  const macro = new THREE.Group(); macro.name = 'ISLAND_22_SMOKEHOUSE_COTTAGE_STRUCTURE';
+  const finish = new THREE.Group(); finish.name = 'ISLAND_22_SMOKEHOUSE_COTTAGE_FINISH';
+  markPart(macro, 'smokehouse-cottage-structure'); markPart(finish, 'smokehouse-cottage-finish');
+  populateIsland22SmokehouseCottageV2({macro, finish}, {quality, materials});
+  root.add(macro, finish); setShadow(root);
+  compactStaticGeometry(macro, macro.name); compactStaticGeometry(finish, finish.name);
+  return root;
+}
+
+/** Individually reviewed single-storey net-mender's cottage. */
+export function createIsland22NetMenderCottage(quality: Island3DQuality, materials: Island22FishermansVillageMaterials) {
+  const root = new THREE.Group(); root.name = 'ISLAND_22_NET_MENDER_COTTAGE';
+  const macro = new THREE.Group(); macro.name = 'ISLAND_22_NET_MENDER_COTTAGE_STRUCTURE';
+  const finish = new THREE.Group(); finish.name = 'ISLAND_22_NET_MENDER_COTTAGE_FINISH';
+  markPart(macro, 'net-mender-cottage-structure'); markPart(finish, 'net-mender-cottage-finish');
+  populateIsland22NetMenderCottageV2({macro, finish}, {quality, materials});
+  root.add(macro, finish); setShadow(root);
+  compactStaticGeometry(macro, macro.name); compactStaticGeometry(finish, finish.name);
+  return root;
+}
+
+/** Individually reviewed first cottage; placement remains in the shared village list. */
+export function createIsland22NorthCottage(quality: Island3DQuality, materials: Island22FishermansVillageMaterials) {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_22_NORTH_COTTAGE';
+  const macro = new THREE.Group(); macro.name = 'ISLAND_22_NORTH_COTTAGE_STRUCTURE';
+  const finish = new THREE.Group(); finish.name = 'ISLAND_22_NORTH_COTTAGE_FINISH';
+  markPart(macro, 'north-cottage-main-and-annex');
+  markPart(finish, 'north-cottage-finish');
+  populateIsland22NorthCottageV2({ macro, finish }, { quality, materials });
+  root.add(macro, finish); setShadow(root);
+  for (const part of [macro, finish]) compactStaticGeometry(part, part.name);
+  return root;
+}
+
+/** Origin-local legacy cottage packet for isolated capture; the world owns its placement. */
+export function createIsland22SecondaryCottage(
+  index: number,
+  quality: Island3DQuality,
+  materials: Island22FishermansVillageMaterials,
+): THREE.Group {
+  if (![3, 4, 6, 7, 8, 9, 10, 11].includes(index)) {
+    throw new RangeError(`No remaining secondary cottage at index ${index}`);
+  }
+  const stories = ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS[index][4];
+  const cluster = new THREE.Group();
+  cluster.name = `ISLAND_22_AUTHORED_HARBOR_CLUSTER_${index + 1}`;
+
+  const macro = new THREE.Group(); macro.name = `${cluster.name}_STRUCTURE`;
+  const finish = new THREE.Group(); finish.name = `${cluster.name}_FINISH`;
+  if (populateIsland22SecondaryCottageV2({macro,finish},{index,quality,materials})) {
+    if (index === 3 || index === 4) {
+      const shoulder = cylinder(index === 3 ? 1.18 : 1.62, index === 3 ? 1.46 : 1.92, .94, materials.stone, 9);
+      shoulder.position.set(index === 3 ? 0 : .34, -.54, .05); shoulder.scale.z = .74;
+      shoulder.name = `${cluster.name}_COASTAL_SHOULDER`; macro.add(shoulder);
+    }
+    markPart(macro, `cottage-${index+1}-structure`); markPart(finish, `cottage-${index+1}-finish`);
+    if (index === 9) {
+      // The authored house participates in impact/repair; its masonry stays fixed.
+      const paving = new THREE.Group(); paving.name = 'ISLAND_22_SHELL_DIVER_STATIC_PAVING';
+      for (const group of [macro, finish]) for (const child of [...group.children]) {
+        if (/TERRACE|ENTRY_STEP/.test(child.name)) paving.add(child);
+      }
+      const body = new THREE.Group(); body.name = 'ISLAND_22_SHELL_DIVER_DAMAGE_BODY';
+      body.add(macro, finish); cluster.add(paving, body);
+      compactStaticGeometry(paving,paving.name);
+    } else cluster.add(macro,finish);
+    setShadow(cluster);
+    compactStaticGeometry(macro,macro.name); compactStaticGeometry(finish,finish.name);
+    return cluster;
+  }
+
+  const plinth = cylinder(1.12, 1.28, 0.32, materials.stone, 10);
+  plinth.position.y = -0.13;
+  plinth.scale.z = 0.76;
+  cluster.add(plinth);
+  if (index === 3 || index === 4) {
+    // Shoreward cottages retain their complete design on supported coastal shoulders.
+    const shoulder = cylinder(index === 3 ? 1.18 : 1.62, index === 3 ? 1.46 : 1.92, 0.94, materials.stone, 9);
+    shoulder.position.set(index === 3 ? 0 : 0.34, -0.54, 0.05);
+    shoulder.scale.z = 0.74;
+    shoulder.name = `${cluster.name}_COASTAL_SHOULDER`;
+    cluster.add(shoulder);
+  }
+
+  const mainHouse = createAuthoredHarborHouse(
+    `${cluster.name}_MAIN_HOUSE`,
+    stories === 2 ? 1.55 : 1.42,
+    1.22,
+    stories as 1 | 2,
+    index % 3 === 0 ? 'warm' : 'slate',
+    materials,
+  );
+  cluster.add(mainHouse);
+
+  if (quality !== 'low' && index % 2 === 0) {
+    const annex = createAuthoredHarborHouse(
+      `${cluster.name}_ANNEX`,
+      0.92,
+      0.82,
+      1,
+      index % 4 === 0 ? 'slate' : 'warm',
+      materials,
+    );
+    annex.position.set(index % 4 === 0 ? 1.05 : -1.02, 0.03, 0.18);
+    annex.rotation.y = index % 4 === 0 ? -0.2 : 0.18;
+    cluster.add(annex);
+  }
+  if (index % 2 === 0) {
+    const barrel = cylinder(0.13, 0.15, 0.34, materials.timber, 8);
+    barrel.name = `${cluster.name}_OCCUPIED_BARREL`;
+    barrel.position.set(-0.9, 0.18, 0.76);
+    const barrelBand = new THREE.Mesh(new THREE.TorusGeometry(0.145, 0.018, 4, 8), materials.brass);
+    barrelBand.name = `${cluster.name}_OCCUPIED_BARREL_BAND`;
+    barrelBand.rotation.x = Math.PI / 2;
+    barrelBand.position.set(-0.9, 0.22, 0.76);
+    cluster.add(barrel, barrelBand);
+  } else {
+    const crate = box(0.34, 0.28, 0.3, materials.timber);
+    crate.name = `${cluster.name}_OCCUPIED_CRATE`;
+    crate.position.set(0.92, 0.14, 0.72);
+    const crateBrace = box(0.035, 0.32, 0.32, materials.timberDark);
+    crateBrace.name = `${cluster.name}_OCCUPIED_CRATE_BRACE`;
+    crateBrace.position.copy(crate.position);
+    crateBrace.rotation.z = 0.66;
+    cluster.add(crate, crateBrace);
+  }
+  return cluster;
+}
+
 function addAuthoredVillageClusters(
   root: THREE.Group,
   quality: Island3DQuality,
@@ -3232,62 +2909,94 @@ function addAuthoredVillageClusters(
 ) {
   const villageRoot = new THREE.Group();
   villageRoot.name = 'ISLAND_22_AUTHORED_HARBOR_VILLAGE';
-  const count = quality === 'low' ? 8 : ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS.length;
-  ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS.slice(0, count).forEach(([x, z, yaw, size, stories], index) => {
-    const cluster = new THREE.Group();
-    cluster.name = `ISLAND_22_AUTHORED_HARBOR_CLUSTER_${index + 1}`;
+  ISLAND_22_AUTHORED_CLUSTER_PLACEMENTS.forEach(([x, z, yaw, size], index) => {
+    if (quality === 'low' && index >= 8 && index !== 9) return;
+    if (overlapsTavernPlot(x, z)) return;
+    if (index === 0) {
+      const cottage = createIsland22NorthCottage(quality, materials);
+      cottage.position.set(x, 0.57, z); cottage.rotation.y = yaw; cottage.scale.setScalar(size);
+      root.add(cottage);
+      // Fit the local coastal rock tops beneath the rear service threshold.
+      const strata = root.getObjectByName('ISLAND_006_EMBEDDED_COASTAL_STRATA') as THREE.InstancedMesh | undefined;
+      if (strata) {
+        cottage.updateMatrix(); strata.geometry.computeBoundingBox();
+        const inverse = cottage.matrix.clone().invert();
+        const instance = new THREE.Matrix4();
+        const doorway = new THREE.Box3(new THREE.Vector3(-.58, .03, -.94), new THREE.Vector3(.08, .35, -.59));
+        for (let rock = 0; rock < strata.count; rock += 1) {
+          strata.getMatrixAt(rock, instance);
+          const bounds = strata.geometry.boundingBox!.clone().applyMatrix4(inverse.clone().multiply(instance));
+          if (!bounds.intersectsBox(doorway)) continue;
+          const worldTop = strata.geometry.boundingBox!.clone().applyMatrix4(instance).max.y;
+          instance.elements[13] -= Math.max(0, worldTop - .60);
+          strata.setMatrixAt(rock, instance);
+        }
+        strata.instanceMatrix.needsUpdate = true;
+      }
+      return;
+    }
+    if (index === 1) {
+      const cottage = createIsland22NetMenderCottage(quality, materials);
+      cottage.position.set(x, .65, z); cottage.rotation.y = yaw; cottage.scale.setScalar(size);
+      root.add(cottage); return;
+    }
+    if (index === 2) {
+      const cottage = createIsland22SmokehouseCottage(quality, materials);
+      cottage.position.set(x, .73, z); cottage.rotation.y = yaw; cottage.scale.setScalar(size);
+      root.add(cottage); return;
+    }
+    const cluster = createIsland22SecondaryCottage(index, quality, materials);
+    if (index !== 9) compactStaticGeometry(cluster, cluster.name);
     cluster.position.set(x, 0.57 + (index % 3) * 0.08, z);
     cluster.rotation.y = yaw;
     cluster.scale.setScalar(size);
-
-    const plinth = cylinder(1.12, 1.28, 0.32, materials.stone, 10);
-    plinth.position.y = -0.13;
-    plinth.scale.z = 0.76;
-    cluster.add(plinth);
-
-    const mainHouse = createAuthoredHarborHouse(
-      `${cluster.name}_MAIN_HOUSE`,
-      stories === 2 ? 1.55 : 1.42,
-      1.22,
-      stories as 1 | 2,
-      index % 3 === 0 ? 'warm' : 'slate',
-      materials,
-    );
-    cluster.add(mainHouse);
-
-    if (quality !== 'low' && index % 2 === 0) {
-      const annex = createAuthoredHarborHouse(
-        `${cluster.name}_ANNEX`,
-        0.92,
-        0.82,
-        1,
-        index % 4 === 0 ? 'slate' : 'warm',
-        materials,
-      );
-      annex.position.set(index % 4 === 0 ? 1.05 : -1.02, 0.03, 0.18);
-      annex.rotation.y = index % 4 === 0 ? -0.2 : 0.18;
-      cluster.add(annex);
+    if (index === 6) {
+      // Dedicated shoreline quay moves this new house clear of the frozen hatchery.
+      const quay = new THREE.Group(); quay.name = 'ISLAND_22_ROPE_MAKER_SUPPORT_QUAY';
+      for (let course=0;course<3;course++) {
+        const ledge = box(2.68+course*.12,course === 2 ? .84 : .40,1.78+course*.10,materials.stone);
+        ledge.position.set(-.385,-.435-course*.39,.1); quay.add(ledge);
+      }
+      // A continuous supported landing joins the front terrace to the village street.
+      for (let step=0;step<5;step++) {
+        const landing = box(.94,.36,.29,materials.stone);
+        landing.name = 'ISLAND_22_ROPE_MAKER_STREET_LANDING';
+        landing.position.set(-.24,-.155-step*.01,1.08+step*.255); quay.add(landing);
+      }
+      setShadow(quay); compactStaticGeometry(quay,quay.name);
+      cluster.add(quay);
     }
-    if (index % 2 === 0) {
-      const barrel = cylinder(0.13, 0.15, 0.34, materials.timber, 8);
-      barrel.name = `${cluster.name}_OCCUPIED_BARREL`;
-      barrel.position.set(-0.9, 0.18, 0.76);
-      const barrelBand = new THREE.Mesh(new THREE.TorusGeometry(0.145, 0.018, 4, 8), materials.brass);
-      barrelBand.name = `${cluster.name}_OCCUPIED_BARREL_BAND`;
-      barrelBand.rotation.x = Math.PI / 2;
-      barrelBand.position.set(-0.9, 0.22, 0.76);
-      cluster.add(barrel, barrelBand);
-    } else {
-      const crate = box(0.34, 0.28, 0.3, materials.timber);
-      crate.name = `${cluster.name}_OCCUPIED_CRATE`;
-      crate.position.set(0.92, 0.14, 0.72);
-      const crateBrace = box(0.035, 0.32, 0.32, materials.timberDark);
-      crateBrace.name = `${cluster.name}_OCCUPIED_CRATE_BRACE`;
-      crateBrace.position.copy(crate.position);
-      crateBrace.rotation.z = 0.66;
-      cluster.add(crate, crateBrace);
+    if (index === 9) {
+      const quay = new THREE.Group(); quay.name = 'ISLAND_22_SHELL_DIVER_SUPPORT_QUAY';
+      for (let course=0;course<3;course++) {
+        const ledge=box(1.9+course*.12,course===2?.84:.40,1.64+course*.1,materials.stone);
+        ledge.position.set(0,-.435-course*.39,.08); quay.add(ledge);
+      }
+      for (let step=0;step<5;step++) {
+        const landing=box(.94,.36,.29,materials.stone);
+        landing.position.set(-.22,-.155-step*.01,1.08+step*.255); quay.add(landing);
+      }
+      setShadow(quay); compactStaticGeometry(quay,quay.name); cluster.add(quay);
     }
-    villageRoot.add(cluster);
+    if (index === 3) {
+      // Reviewed cottage04 terrace contacts: keep the support shoulder, bury only
+      // the three accent instances confirmed above its paving by terrain rays.
+      const capY = cluster.position.y + .075 * size;
+      for (const [name, ids] of [['ISLAND_006_EMBEDDED_COASTAL_STRATA', [71,73]]] as const) {
+        const rocks = root.getObjectByName(name) as THREE.InstancedMesh | undefined;
+        if (!rocks) continue;
+        rocks.geometry.computeBoundingBox(); const matrix = new THREE.Matrix4();
+        for (const id of ids) {
+          if (id >= rocks.count) continue;
+          rocks.getMatrixAt(id,matrix);
+          const top = rocks.geometry.boundingBox!.clone().applyMatrix4(matrix).max.y;
+          matrix.elements[13] -= Math.max(0,top-capY);
+          rocks.setMatrixAt(id,matrix);
+        }
+        rocks.instanceMatrix.needsUpdate = true;
+      }
+    }
+    root.add(cluster);
   });
   compactStaticGeometry(villageRoot, 'ISLAND_22_AUTHORED_HARBOR_VILLAGE');
   root.add(villageRoot);
@@ -3330,6 +3039,7 @@ function addCozyHarborGroundDressing(
     dressingCount * 2,
   );
   flowers.name = 'ISLAND_22_HARBOR_WINDOW_GARDEN_FLOWERS';
+  let visibleShrubCount = 0;
   for (let index = 0; index < dressingCount; index += 1) {
     const angle = index / dressingCount * Math.PI * 2 + 0.08 + (index % 3 - 1) * 0.035;
     const radius = 6.25 + index % 4 * 0.31;
@@ -3348,13 +3058,14 @@ function addCozyHarborGroundDressing(
     const shrubRadius = radius + (index % 2 ? 0.34 : -0.28);
     const shrubX = Math.cos(angle + 0.045) * shrubRadius;
     const shrubZ = Math.sin(angle + 0.045) * shrubRadius * 1.035;
+    if (overlapsSmokehouseCottagePlot(shrubX, shrubZ, .2) || overlapsCooperCottagePlot(shrubX, shrubZ, .2) || overlapsRopeMakerCottagePlot(shrubX, shrubZ, .2) || overlapsHarborCookCottagePlot(shrubX, shrubZ, .2) || overlapsChartmakerCottagePlot(shrubX, shrubZ, .2) || overlapsSkipperCottagePlot(shrubX, shrubZ, .2)) continue;
     matrix.compose(
       position.set(shrubX, 0.88, shrubZ),
       quaternion.setFromEuler(new THREE.Euler(0, angle, 0)),
       scale.set(0.72 + index % 4 * 0.11, 0.58 + index % 3 * 0.12, 0.72 + index % 2 * 0.12),
     );
-    shrubs.setMatrixAt(index, matrix);
-    shrubs.setColorAt(index, foliagePalette[index % foliagePalette.length]);
+    shrubs.setMatrixAt(visibleShrubCount, matrix);
+    shrubs.setColorAt(visibleShrubCount, foliagePalette[index % foliagePalette.length]);
     [-1, 1].forEach((side, flowerIndex) => {
       matrix.compose(
         position.set(
@@ -3365,9 +3076,12 @@ function addCozyHarborGroundDressing(
         quaternion.identity(),
         scale.setScalar(0.85 + index % 3 * 0.12),
       );
-      flowers.setMatrixAt(index * 2 + flowerIndex, matrix);
+      flowers.setMatrixAt(visibleShrubCount * 2 + flowerIndex, matrix);
     });
+    visibleShrubCount += 1;
   }
+  shrubs.count = visibleShrubCount;
+  flowers.count = visibleShrubCount * 2;
   [cobbles, shrubs, flowers].forEach((mesh) => {
     mesh.instanceMatrix.needsUpdate = true;
     mesh.castShadow = true;
@@ -3404,7 +3118,7 @@ function addSteppedHarborTerraces(
   const scale = new THREE.Vector3(1, 1, 1);
   const segmentCount = quality === 'low' ? 18 : 30;
   const retaining = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1.18, 0.5, 0.62),
+    new THREE.BoxGeometry(1.18, 0.18, 0.62),
     materials.stone,
     segmentCount,
   );
@@ -3420,13 +3134,13 @@ function addSteppedHarborTerraces(
     const radius = 5.18 + (index % 5 === 0 ? 0.12 : 0);
     quaternion.setFromEuler(new THREE.Euler(0, -angle, 0));
     matrix.compose(
-      position.set(Math.cos(angle) * radius, 0.64 + (index % 3) * 0.035, Math.sin(angle) * radius * 1.03),
+      position.set(Math.cos(angle) * radius, 0.60 + (index % 3) * 0.02, Math.sin(angle) * radius * 1.03),
       quaternion,
       scale,
     );
     retaining.setMatrixAt(index, matrix);
     matrix.compose(
-      position.set(Math.cos(angle) * 4.7, 0.91, Math.sin(angle) * 4.7),
+      position.set(Math.cos(angle) * 4.7, 0.72, Math.sin(angle) * 4.7),
       quaternion,
       scale,
     );
@@ -3561,199 +3275,6 @@ function addVillageLanternRing(root: THREE.Group, materials: Island22FishermansV
   });
 }
 
-function addFisherCrowd(
-  root: THREE.Group,
-  quality: Island3DQuality,
-  materials: Island22FishermansVillageMaterials,
-) {
-  const fisherCount = quality === 'low' ? 7 : quality === 'medium' ? 11 : 15;
-  const crowdCoatMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.78 });
-  const crowdSkinMaterial = new THREE.MeshStandardMaterial({ color: 0xe3a271, roughness: 0.82 });
-  const crowdHatMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.74 });
-  const bodies = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.115, 0.17, 0.46, 8), crowdCoatMaterial, fisherCount);
-  bodies.name = 'ISLAND_22_FISHER_CROWD_BODIES';
-  const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(0.125, 9, 7), crowdSkinMaterial, fisherCount);
-  heads.name = 'ISLAND_22_FISHER_CROWD_HEADS';
-  const hatBrims = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.205, 0.205, 0.045, 10), crowdHatMaterial, fisherCount);
-  hatBrims.name = 'ISLAND_22_FISHER_CROWD_HAT_BRIMS';
-  const hatCrowns = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.15, 0.15, 9), crowdHatMaterial, fisherCount);
-  hatCrowns.name = 'ISLAND_22_FISHER_CROWD_HAT_CROWNS';
-  const arms = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.035, 0.052, 0.36, 6), crowdCoatMaterial, fisherCount * 2);
-  arms.name = 'ISLAND_22_FISHER_CROWD_ARMS';
-  const boots = new THREE.InstancedMesh(new THREE.BoxGeometry(0.11, 0.17, 0.16), materials.timberDark, fisherCount * 2);
-  boots.name = 'ISLAND_22_FISHER_CROWD_BOOTS';
-  const eyes = new THREE.InstancedMesh(new THREE.SphereGeometry(0.024, 6, 4), materials.timberDark, fisherCount * 2);
-  eyes.name = 'ISLAND_22_FISHER_CROWD_EYES';
-  const noses = new THREE.InstancedMesh(new THREE.SphereGeometry(0.036, 7, 5), crowdSkinMaterial, fisherCount);
-  noses.name = 'ISLAND_22_FISHER_CROWD_NOSES';
-  const scarves = new THREE.InstancedMesh(new THREE.TorusGeometry(0.13, 0.025, 4, 9), materials.brass, fisherCount);
-  scarves.name = 'ISLAND_22_FISHER_CROWD_SCARVES';
-  const aprons = new THREE.InstancedMesh(new THREE.BoxGeometry(0.2, 0.28, 0.025), materials.rope, fisherCount);
-  aprons.name = 'ISLAND_22_FISHER_CROWD_APRONS';
-  const rods = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.018, 0.024, 1.28, 5), materials.rope, fisherCount);
-  rods.name = 'ISLAND_22_FISHING_RODS';
-  const matrix = new THREE.Matrix4();
-  const position = new THREE.Vector3();
-  const scale = new THREE.Vector3(1, 1, 1);
-  const quaternion = new THREE.Quaternion();
-  for (let index = 0; index < fisherCount; index += 1) {
-    const { angle, radius: platformRadius, yaw } = resolvePondPlatformPose(index, fisherCount);
-    const radius = platformRadius;
-    const x = Math.cos(angle) * radius;
-    const z = Math.sin(angle) * radius;
-    const tangentX = -Math.sin(angle);
-    const tangentZ = Math.cos(angle);
-    const inwardX = -Math.cos(angle);
-    const inwardZ = -Math.sin(angle);
-    const coatColor = [0x2f7c82, 0xb4593c, 0x536b91, 0x5b7d4f][index % 4];
-    const hatColor = [0xb8733e, 0x8b6548, 0xc49355, 0x6d5d4b, 0xa45b43][index % 5];
-    bodies.setColorAt(index, new THREE.Color(coatColor));
-    hatBrims.setColorAt(index, new THREE.Color(hatColor));
-    hatCrowns.setColorAt(index, new THREE.Color(hatColor).multiplyScalar(0.88));
-    matrix.compose(
-      position.set(x, 1.04 + (index % 3) * 0.015, z),
-      quaternion.setFromEuler(new THREE.Euler(0, yaw + Math.PI, (index % 3 - 1) * 0.035)),
-      scale.set(0.92 + index % 4 * 0.035, 0.94 + index % 3 * 0.045, 0.92 + index % 4 * 0.035),
-    );
-    bodies.setMatrixAt(index, matrix);
-    matrix.compose(position.set(x, 1.36 + (index % 3) * 0.015, z), quaternion, scale.setScalar(0.94 + index % 3 * 0.035));
-    heads.setMatrixAt(index, matrix);
-    matrix.compose(position.set(x, 1.48 + (index % 3) * 0.015, z), quaternion, scale.set(1.04, 1, 1));
-    hatBrims.setMatrixAt(index, matrix);
-    matrix.compose(position.set(x, 1.57 + (index % 3) * 0.015, z), quaternion, scale.set(0.94 + index % 2 * 0.09, 1, 0.94 + index % 2 * 0.09));
-    hatCrowns.setMatrixAt(index, matrix);
-    [-1, 1].forEach((side, sideIndex) => {
-      matrix.compose(
-        position.set(
-          x + inwardX * 0.116 + tangentX * side * 0.046,
-          1.39 + (index % 3) * 0.015,
-          z + inwardZ * 0.116 + tangentZ * side * 0.046,
-        ),
-        quaternion.identity(),
-        scale.setScalar(1),
-      );
-      eyes.setMatrixAt(index * 2 + sideIndex, matrix);
-    });
-    matrix.compose(
-      position.set(x + inwardX * 0.142, 1.35 + (index % 3) * 0.015, z + inwardZ * 0.142),
-      quaternion.identity(),
-      scale.set(0.8, 1, 0.8),
-    );
-    noses.setMatrixAt(index, matrix);
-    matrix.compose(
-      position.set(x, 1.25 + (index % 3) * 0.015, z),
-      quaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)),
-      scale.setScalar(1),
-    );
-    scarves.setMatrixAt(index, matrix);
-    matrix.compose(
-      position.set(x + inwardX * 0.165, 1.06, z + inwardZ * 0.165),
-      quaternion.setFromEuler(new THREE.Euler(0, yaw + Math.PI, 0)),
-      scale.set(0.9 + index % 3 * 0.06, 1, 1),
-    );
-    aprons.setMatrixAt(index, matrix);
-    [-1, 1].forEach((side, sideIndex) => {
-      matrix.compose(
-        position.set(x + tangentX * side * 0.14, 1.08, z + tangentZ * side * 0.14),
-        quaternion.setFromEuler(new THREE.Euler(side * (0.08 + index % 3 * 0.1), yaw + Math.PI, side * (0.28 + index % 4 * 0.11))),
-        scale.set(1, 1, 1),
-      );
-      arms.setMatrixAt(index * 2 + sideIndex, matrix);
-      matrix.compose(
-        position.set(x + tangentX * side * 0.075, 0.82, z + tangentZ * side * 0.075),
-        quaternion.setFromEuler(new THREE.Euler(0, yaw + Math.PI, 0)),
-        scale.set(1, 1, 1),
-      );
-      boots.setMatrixAt(index * 2 + sideIndex, matrix);
-    });
-    quaternion.setFromEuler(new THREE.Euler(Math.sin(angle) * 0.36, yaw, Math.cos(angle) * 0.36));
-    matrix.compose(position.set(x * 0.92, 1.27 + (index % 2) * 0.04, z * 0.92), quaternion, scale.set(0.92, 0.9 + index % 3 * 0.07, 0.92));
-    rods.setMatrixAt(index, matrix);
-  }
-  [bodies, heads, hatBrims, hatCrowns, arms, boots, eyes, noses, scarves, aprons, rods].forEach((mesh) => {
-    mesh.instanceMatrix.needsUpdate = true;
-    root.add(mesh);
-  });
-  [bodies, hatBrims, hatCrowns].forEach((mesh) => {
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  });
-  return (progress: number, panic: number) => {
-    for (let index = 0; index < fisherCount; index += 1) {
-      const { angle, radius: baseRadius, yaw } = resolvePondPlatformPose(index, fisherCount);
-      const route = index === 0 ? -1.7 : index === 1 ? 7.8 : 3.8 + (index % 4) * 0.8;
-      const radius = baseRadius + route * progress;
-      const wobble = Math.sin(progress * Math.PI * 10 + index) * panic * 0.12;
-      const x = Math.cos(angle + wobble) * radius;
-      const z = Math.sin(angle + wobble) * radius;
-      const tangentX = -Math.sin(angle + wobble);
-      const tangentZ = Math.cos(angle + wobble);
-      const inwardX = -Math.cos(angle + wobble);
-      const inwardZ = -Math.sin(angle + wobble);
-      const jump = Math.abs(Math.sin(progress * Math.PI * (4 + index % 3))) * panic * 0.22;
-      quaternion.setFromEuler(new THREE.Euler(0, yaw + Math.PI, wobble));
-      matrix.compose(position.set(x, 1.04 + jump, z), quaternion, scale.setScalar(1));
-      bodies.setMatrixAt(index, matrix);
-      matrix.compose(position.set(x, 1.36 + jump, z), quaternion, scale);
-      heads.setMatrixAt(index, matrix);
-      matrix.compose(position.set(x, 1.48 + jump, z), quaternion, scale);
-      hatBrims.setMatrixAt(index, matrix);
-      matrix.compose(position.set(x, 1.57 + jump, z), quaternion, scale);
-      hatCrowns.setMatrixAt(index, matrix);
-      [-1, 1].forEach((side, sideIndex) => {
-        matrix.compose(
-          position.set(
-            x + inwardX * 0.116 + tangentX * side * 0.046,
-            1.39 + jump,
-            z + inwardZ * 0.116 + tangentZ * side * 0.046,
-          ),
-          quaternion.identity(),
-          scale.setScalar(1),
-        );
-        eyes.setMatrixAt(index * 2 + sideIndex, matrix);
-      });
-      matrix.compose(
-        position.set(x + inwardX * 0.142, 1.35 + jump, z + inwardZ * 0.142),
-        quaternion.identity(),
-        scale.set(0.8, 1, 0.8),
-      );
-      noses.setMatrixAt(index, matrix);
-      matrix.compose(
-        position.set(x, 1.25 + jump, z),
-        quaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)),
-        scale.setScalar(1),
-      );
-      scarves.setMatrixAt(index, matrix);
-      matrix.compose(
-        position.set(x + inwardX * 0.165, 1.06 + jump, z + inwardZ * 0.165),
-        quaternion.setFromEuler(new THREE.Euler(0, yaw + Math.PI, wobble)),
-        scale.setScalar(1),
-      );
-      aprons.setMatrixAt(index, matrix);
-      [-1, 1].forEach((side, sideIndex) => {
-        matrix.compose(
-          position.set(x + tangentX * side * 0.14, 1.08 + jump, z + tangentZ * side * 0.14),
-          quaternion.setFromEuler(new THREE.Euler(
-            side * 0.18 + panic * Math.sin(progress * 18 + index + sideIndex) * 0.35,
-            yaw + Math.PI,
-            side * 0.5 + wobble,
-          )),
-          scale.setScalar(1),
-        );
-        arms.setMatrixAt(index * 2 + sideIndex, matrix);
-        matrix.compose(
-          position.set(x + tangentX * side * 0.075, 0.82 + jump, z + tangentZ * side * 0.075),
-          quaternion.setFromEuler(new THREE.Euler(0, yaw + Math.PI, wobble)),
-          scale.setScalar(1),
-        );
-        boots.setMatrixAt(index * 2 + sideIndex, matrix);
-      });
-      matrix.compose(position.set(x * 0.98, 1.22 + jump, z * 0.98), quaternion, scale.setScalar(1 - panic * 0.7));
-      rods.setMatrixAt(index, matrix);
-    }
-    [bodies, heads, hatBrims, hatCrowns, arms, boots, eyes, noses, scarves, aprons, rods].forEach((mesh) => { mesh.instanceMatrix.needsUpdate = true; });
-  };
-}
-
 function addFishingProps(root: THREE.Group, materials: Island22FishermansVillageMaterials) {
   const propPlacements = [
     [-7.45, -5.0], [-6.85, -5.35], [-5.75, -6.6], [-4.65, -5.95], [-2.0, -6.25],
@@ -3768,9 +3289,16 @@ function addFishingProps(root: THREE.Group, materials: Island22FishermansVillage
   const quaternion = new THREE.Quaternion();
   const scale = new THREE.Vector3(1, 1, 1);
   propPlacements.forEach(([x, z], index) => {
-    matrix.compose(new THREE.Vector3(x, 0.72, z), quaternion.identity(), scale);
+    const cratePosition = index === 5 ? new THREE.Vector3(2.45, .72, -6.05) : index === 13 ? new THREE.Vector3(-3.0,.72,5.9) : new THREE.Vector3(x, .72, z);
+    matrix.compose(cratePosition, quaternion.identity(), scale);
     crates.setMatrixAt(index, matrix);
-    matrix.compose(new THREE.Vector3(x + 0.38, 0.78, z + (index % 2 ? 0.28 : -0.28)), quaternion.identity(), scale);
+    // Keep the net-mender's central entrance lane clear; retain the other cargo placements.
+    const barrelPosition = index === 4
+      ? new THREE.Vector3(-.54, .78, -6.5)
+      : index === 5 ? new THREE.Vector3(2.93, .78, -6.12)
+      : index === 13 ? new THREE.Vector3(-3.55,.78,5.82)
+      : new THREE.Vector3(x + .38, .78, z + (index % 2 ? .28 : -.28));
+    matrix.compose(barrelPosition, quaternion.identity(), scale);
     barrels.setMatrixAt(index, matrix);
   });
   crates.instanceMatrix.needsUpdate = true;
@@ -4572,9 +4100,9 @@ function createHeroFishingInteraction(
   const lineDirection = new THREE.Vector3();
   const rodControl = new THREE.Vector3();
   const lineUp = new THREE.Vector3(0, 1, 0);
-  const cameraPositionWide = new THREE.Vector3(6.65, 4.95, -7.9);
-  const cameraPositionCast = new THREE.Vector3(6.42, 4.72, -7.55);
-  const cameraPositionCatch = new THREE.Vector3(6.78, 5.12, -7.72);
+  const cameraPositionWide = new THREE.Vector3(2.9, 4.3, -3.1);
+  const cameraPositionCast = new THREE.Vector3(2.65, 3.8, -2.7);
+  const cameraPositionCatch = new THREE.Vector3(2.2, 3.9, -2.5);
   const cameraTarget = new THREE.Vector3(-0.58, 1.2, 1.34);
   const cameraTargetCatch = new THREE.Vector3(-0.56, 1.46, 1.94);
   let presentation: Island22FishingInteractionPresentation = {
@@ -4977,6 +4505,9 @@ export function createIsland22FishermansVillageLivingAmbience(
   root.name = 'ISLAND_22_FISHERMANS_VILLAGE_WORLD_ROOT';
   scene.add(root);
   const harborSky = addHarborSky(root, qualityProfile.id);
+  const harborV2 = createHarborV2Environment(root, qualityProfile.id);
+  attachHarborWaterDetail(materials.ocean);
+  attachHarborWaterDetail(materials.pond, true);
 
   sharedOcean.geometry.dispose();
   sharedOcean.geometry = createHarborOceanGeometry(
@@ -5129,7 +4660,39 @@ export function createIsland22FishermansVillageLivingAmbience(
   accentRocks.instanceMatrix.needsUpdate = true;
   accentRocks.castShadow = true;
   accentRocks.receiveShadow = true;
+  // Shoreline accents are constructed after the cottages: fit the reviewed
+  // sailmaker contact here, once the actual instance exists.
+  if (accentRockCount > 16) {
+    accentRocks.geometry.computeBoundingBox();
+    accentRocks.getMatrixAt(16,matrix);
+    const top = accentRocks.geometry.boundingBox!.clone().applyMatrix4(matrix).max.y;
+    matrix.elements[13] -= Math.max(0,top-(.57+.075*.88));
+    accentRocks.setMatrixAt(16,matrix); accentRocks.instanceMatrix.needsUpdate = true;
+  }
   root.add(accentRocks);
+  // Fit the cooper's newly exposed accent contacts after both terrain systems
+  // exist. Geometry bounds, not tier-specific instance IDs, retain low-tier safety.
+  for (const [cottageId,minX,maxX] of [[5,-.95,1.72],[7,-1.72,.95],[9,-.95,1.72],[10,-.94,.94]]) {
+  const cooper = root.getObjectByName(`ISLAND_22_AUTHORED_HARBOR_CLUSTER_${cottageId}`);
+  if (cooper) {
+    cooper.updateMatrix(); const inverse = cooper.matrix.clone().invert();
+    const paving = new THREE.Box3(new THREE.Vector3(minX,.075,-.8),new THREE.Vector3(maxX,.42,[7,10].includes(cottageId)?2.35:1));
+    for (const rockName of ['ISLAND_006_EMBEDDED_COASTAL_STRATA','ISLAND_22_SHORELINE_ACCENT_ROCKS']) {
+      const rocks = root.getObjectByName(rockName) as THREE.InstancedMesh | undefined;
+      if (!rocks) continue;
+      rocks.geometry.computeBoundingBox();
+      for (let ri=0;ri<rocks.count;ri++) {
+        rocks.getMatrixAt(ri,matrix);
+        const localBounds = rocks.geometry.boundingBox!.clone().applyMatrix4(inverse.clone().multiply(matrix));
+        if (!localBounds.intersectsBox(paving)) continue;
+        matrix.elements[13] -= Math.max(0,localBounds.max.y-.075)*cooper.scale.y;
+        rocks.setMatrixAt(ri,matrix);
+      }
+      rocks.instanceMatrix.needsUpdate = true;
+    }
+  }
+
+  }
 
   // Broken turf shelves give the cliff a readable wet-rock → dry-stone →
   // grass value stack instead of one uninterrupted green terrace disc.
@@ -5300,8 +4863,25 @@ export function createIsland22FishermansVillageLivingAmbience(
     materials,
   });
   premiumMarketHall.name = 'ISLAND_22_FISH_MARKET_HALL';
-  premiumMarketHall.position.set(0, 0.28, -0.5);
+  // The working market sits outboard of the lighthouse quay, joined to the existing berth.
+  premiumMarketHall.position.set(-2.5, 0.28, -0.5);
   marketDock.add(premiumMarketHall);
+  const marketAccess = new THREE.Group();
+  marketAccess.name = 'ISLAND_22_FISH_MARKET_ACCESS_SPUR';
+  const accessWood = new THREE.MeshStandardMaterial({ color: 0x816342, roughness: 0.9 });
+  for (let i = 0; i < 4; i += 1) {
+    const board = box(0.47, 0.11, 0.12, accessWood);
+    board.position.set(-0.725, 0.525, 0.805 + i * 0.13);
+    marketAccess.add(board);
+  }
+  for (const z of [0.76, 1.26]) {
+    const bearer = box(0.54, 0.10, 0.07, accessWood);
+    bearer.position.set(-0.725, 0.44, z);
+    marketAccess.add(bearer);
+  }
+  setShadow(marketAccess);
+  compactStaticGeometry(marketAccess, marketAccess.name);
+  marketDock.add(marketAccess);
 
   root.add(marketDock);
   markPart(marketDock, 'fish-market-offload-dock', {
@@ -5316,8 +4896,8 @@ export function createIsland22FishermansVillageLivingAmbience(
 
   const boats: THREE.Group[] = [];
   const boatPlacements = [
-    [-9.1, -0.55, -5.8, -0.6], [-7.35, -0.55, -7.25, 0.5],
-    [-3.6, -0.62, 10.0, 0.1], [0.4, -0.62, 10.45, -0.18],
+    [-11.90, -0.55, -5.75, -0.78], [-12.05, -0.55, -9.8, -0.78],
+    [-3.2, -0.62, 11.45, 0.1], [0.4, -0.62, 10.45, -0.18],
     [8.9, -0.6, 5.7, 1.15], [9.4, -0.62, -1.8, 1.42],
   ] as const;
   boatPlacements.slice(0, Math.max(3, Math.round(boatPlacements.length * qualityScale(qualityProfile.id)))).forEach(([x, y, z, yaw], index) => {
@@ -5330,7 +4910,7 @@ export function createIsland22FishermansVillageLivingAmbience(
   });
 
   addPondFishingPlatforms(root, qualityProfile.id, materials);
-  const updateFishers = addFisherCrowd(root, qualityProfile.id, materials);
+  const updateFishers = createHarborFisherCrowdV2(root, qualityProfile.id, resolvePondPlatformPose);
   addFishingProps(root, materials);
 
   const pondSkiffs: THREE.Group[] = [];
@@ -5368,6 +4948,10 @@ export function createIsland22FishermansVillageLivingAmbience(
   );
   treeTrunks.name = 'ISLAND_22_HARDY_CONIFER_TRUNKS';
   const hatcheryAngle = Math.atan2(6.2 / 1.05, 5.75);
+  const hatcheryYaw = Math.atan2(-5.75, -6.2);
+  const lighthouseYaw = Math.atan2(6.35, 5.75);
+  const guildYaw = Math.atan2(-6.25, 6.25);
+  let visibleTreeCount = 0;
   for (let index = 0; index < treeCount; index += 1) {
     const angle = index / treeCount * Math.PI * 2 + 0.26;
     const hatcheryOccluder = Math.abs(Math.atan2(Math.sin(angle - hatcheryAngle), Math.cos(angle - hatcheryAngle))) < 0.12;
@@ -5375,12 +4959,28 @@ export function createIsland22FishermansVillageLivingAmbience(
     const treeScale = (0.72 + (index % 5) * 0.08) * (hatcheryOccluder ? 0.75 : 1);
     const x = Math.cos(angle) * radius;
     const z = Math.sin(angle) * radius * 1.05;
+    if (overlapsNorthCottagePlot(x, z, 0.48) || overlapsNetMenderCottagePlot(x, z, .4) || overlapsSmokehouseCottagePlot(x, z, .4) || overlapsCooperCottagePlot(x, z, .4) || overlapsRopeMakerCottagePlot(x, z, .4) || overlapsChartmakerCottagePlot(x, z, .4) || overlapsSkipperCottagePlot(x, z, .4)) continue;
+    // Keep landscape instances clear of the rebuilt landmark plots and guild staircase.
+    // This is visual placement only; landmark transforms and progression stay canonical.
+    const dx = x - 5.75;
+    const dz = z - 6.2;
+    const localX = Math.cos(hatcheryYaw) * dx - Math.sin(hatcheryYaw) * dz;
+    const localZ = Math.sin(hatcheryYaw) * dx + Math.cos(hatcheryYaw) * dz;
+    if (Math.abs(localX) < 2.3 && Math.abs(localZ) < 2.0) continue;
+    if (Math.hypot(x - 7.45, z - 2.15) < 2.1) continue;
+    const lighthouseX = Math.cos(lighthouseYaw) * (x + 6.35) - Math.sin(lighthouseYaw) * (z + 5.75);
+    const lighthouseZ = Math.sin(lighthouseYaw) * (x + 6.35) + Math.cos(lighthouseYaw) * (z + 5.75);
+    if (Math.abs(lighthouseX) < 2.45 && Math.abs(lighthouseZ) < 1.95) continue;
+    const guildX = Math.cos(guildYaw) * (x - 6.25) - Math.sin(guildYaw) * (z + 6.25);
+    const guildZ = Math.sin(guildYaw) * (x - 6.25) + Math.cos(guildYaw) * (z + 6.25);
+    if ((Math.abs(guildX) < 2.8 && Math.abs(guildZ) < 1.95)
+      || (Math.abs(guildX) < 1.3 && guildZ > 1.4 && guildZ < 3.8)) continue;
     matrix.compose(
       position.set(x, 1.12, z),
       quaternion.setFromEuler(new THREE.Euler(0, angle, 0)),
       scale.setScalar(treeScale),
     );
-    treeTrunks.setMatrixAt(index, matrix);
+    treeTrunks.setMatrixAt(visibleTreeCount, matrix);
     for (let layer = 0; layer < 3; layer += 1) {
       const layerScale = treeScale * (1 - layer * 0.19);
       matrix.compose(
@@ -5388,13 +4988,16 @@ export function createIsland22FishermansVillageLivingAmbience(
         quaternion.setFromEuler(new THREE.Euler(0, angle + layer * 0.22, 0)),
         scale.set(layerScale * (1.08 - layer * 0.09), layerScale, layerScale),
       );
-      treeCrowns.setMatrixAt(index * 3 + layer, matrix);
+      treeCrowns.setMatrixAt(visibleTreeCount * 3 + layer, matrix);
       treeCrowns.setColorAt(
-        index * 3 + layer,
+        visibleTreeCount * 3 + layer,
         coniferPalette[(index + layer) % coniferPalette.length],
       );
     }
+    visibleTreeCount += 1;
   }
+  treeCrowns.count = visibleTreeCount * 3;
+  treeTrunks.count = visibleTreeCount;
   treeCrowns.instanceMatrix.needsUpdate = true;
   if (treeCrowns.instanceColor) treeCrowns.instanceColor.needsUpdate = true;
   treeTrunks.instanceMatrix.needsUpdate = true;
@@ -5415,6 +5018,7 @@ export function createIsland22FishermansVillageLivingAmbience(
     new THREE.Color(0xa3ad69),
     new THREE.Color(0x486c47),
   ];
+  let visibleGrassCount = 0;
   for (let index = 0; index < grassCount; index += 1) {
     const clusterIndex = index % turfClusterAngles.length;
     const clusterLayer = Math.floor(index / turfClusterAngles.length);
@@ -5423,14 +5027,19 @@ export function createIsland22FishermansVillageLivingAmbience(
       + Math.sin(index * 1.31) * 0.012;
     const radius = 6.72 + (clusterLayer % 6) * 0.14 + Math.sin(index * 0.73) * 0.07;
     const tuftScale = 0.66 + (index % 5) * 0.11;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius * 1.045;
+    if (overlapsNorthCottagePlot(x, z, 0.18) || overlapsNetMenderCottagePlot(x, z, .16) || overlapsSmokehouseCottagePlot(x, z, .16) || overlapsCooperCottagePlot(x, z, .16) || overlapsRopeMakerCottagePlot(x, z, .16) || overlapsChartmakerCottagePlot(x, z, .16) || overlapsSkipperCottagePlot(x, z, .16)) continue;
     matrix.compose(
-      position.set(Math.cos(angle) * radius, 0.61 + index % 3 * 0.025, Math.sin(angle) * radius * 1.045),
+      position.set(x, 0.61 + index % 3 * 0.025, z),
       quaternion.setFromEuler(new THREE.Euler(0, angle * 1.37, (index % 3 - 1) * 0.07)),
       scale.set(tuftScale * (1 + index % 3 * 0.08), tuftScale, tuftScale),
     );
-    grassTufts.setMatrixAt(index, matrix);
-    grassTufts.setColorAt(index, grassPalette[index % grassPalette.length]);
+    grassTufts.setMatrixAt(visibleGrassCount, matrix);
+    grassTufts.setColorAt(visibleGrassCount, grassPalette[index % grassPalette.length]);
+    visibleGrassCount += 1;
   }
+  grassTufts.count = visibleGrassCount;
   grassTufts.instanceMatrix.needsUpdate = true;
   if (grassTufts.instanceColor) grassTufts.instanceColor.needsUpdate = true;
   grassTufts.castShadow = true;
@@ -5475,8 +5084,20 @@ export function createIsland22FishermansVillageLivingAmbience(
     },
   };
 
+  const impactHouseAnchor = root.getObjectByName('ISLAND_22_AUTHORED_HARBOR_CLUSTER_10');
+  const impactHouseBody = impactHouseAnchor?.getObjectByName('ISLAND_22_SHELL_DIVER_DAMAGE_BODY');
   const waterDragonMission = createIsland22WaterDragonMission({
+    impactHouse: impactHouseAnchor && impactHouseBody ? {
+      anchor: impactHouseAnchor,
+      applyDamage: (amount, age, reducedMotion) => {
+        impactHouseBody.position.set(0, ((reducedMotion?0:Math.sin(age*13)*.08*Math.exp(-age*4))-.24)*amount, 0);
+        impactHouseBody.rotation.set(.12*amount, 0, (-.72+(reducedMotion?0:Math.sin(age*16)*.08*Math.exp(-age*4)))*amount);
+        impactHouseBody.scale.set(1,1-amount*.34,1);
+      },
+    } : undefined,
     parent: root,
+    ocean: sharedOcean,
+    quality: qualityProfile.id,
     pond,
     depth,
     pondShadow,
@@ -5486,8 +5107,8 @@ export function createIsland22FishermansVillageLivingAmbience(
   });
   const fishingInteraction = createHeroFishingInteraction(root, materials, qualityProfile.id);
   let waterDragonPresentation: Island22WaterDragonPresentation = { fishCaughtKg: 0 };
-  const calmOceanColor = new THREE.Color(0x0d78a4);
-  const windyOceanColor = new THREE.Color(0x0a607b);
+  const calmOceanColor = new THREE.Color(0x12647d);
+  const windyOceanColor = new THREE.Color(0x214457);
 
   return {
     root,
@@ -5499,15 +5120,18 @@ export function createIsland22FishermansVillageLivingAmbience(
       root.userData.harborWeatherPhase = weather.phase;
       root.userData.harborWeatherIntensity = weather.intensity;
       harborSky.update(elapsed, weather);
+      harborV2.update(elapsed, weather.intensity);
+      materials.ocean.userData.harborDetailTime.value = elapsed;
+      materials.pond.userData.harborDetailTime.value = elapsed;
       harborOceanDetail.update(elapsed, weather);
       updateHarborWeatherUniforms(materials.ocean, elapsed, 0.018 + weather.waveStrength * 0.22);
       updateHarborWeatherUniforms(materials.foliage, elapsed, weather.wind);
       updateHarborWeatherUniforms(materials.grassBlade, elapsed, weather.wind);
       updateHarborWeatherUniforms(coniferMaterial, elapsed, weather.wind);
       materials.ocean.color.copy(calmOceanColor).lerp(windyOceanColor, weather.intensity * 0.72);
-      materials.ocean.roughness = THREE.MathUtils.lerp(0.12, 0.28, weather.waveStrength);
+      materials.ocean.roughness = THREE.MathUtils.lerp(0.24, 0.38, weather.waveStrength);
       materials.ocean.clearcoatRoughness = THREE.MathUtils.lerp(0.14, 0.31, weather.waveStrength);
-      materials.ocean.opacity = THREE.MathUtils.lerp(0.54, 0.69, weather.waveStrength);
+      materials.ocean.opacity = THREE.MathUtils.lerp(0.92, 0.98, weather.waveStrength);
       sharedOcean.position.y = -0.82
         + Math.sin(elapsed * (0.34 + weather.wind * 0.32)) * (0.003 + weather.waveStrength * 0.012);
       pond.position.y = 0.66 + motion * (0.011 + weather.waveStrength * 0.005);

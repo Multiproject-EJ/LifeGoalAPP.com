@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-08-harbor-cook",
+  "stage": "macro",
+  "review": "r01",
+  "threshold": 0.85,
+  "referenceAuthority": "secondary-inferred",
+  "pixelsFirst": true,
+  "reviewer": "independent-visual-review",
+  "evidence": {
+    "studio": "blockout-v001",
+    "studioViews": 11,
+    "world": "world-blockout-v001",
+    "worldViews": 6,
+    "target": "../goals/target-v001.png",
+    "baseline": "../baseline/v001/front-right.png"
+  },
+  "macro": {
+    "action": "approve",
+    "finishMayProceed": true,
+    "criticalScores": {
+      "compactSingleStoreySilhouette": 0.9,
+      "sweptSlateRoof": 0.9,
+      "ridgeAndGableIdentity": 0.88,
+      "roofEnclosure": 0.91,
+      "trimAndShellContacts": 0.87,
+      "frontRearOpeningClearance": 0.9,
+      "sideOpeningClearance": 0.9,
+      "terraceAndStep": 0.89
+    },
+    "viewScores": {
+      "front": 0.9,
+      "front-right": 0.88,
+      "right": 0.9,
+      "rear-right": 0.89,
+      "rear": 0.89,
+      "rear-left": 0.89,
+      "left": 0.9,
+      "front-left": 0.88,
+      "top": 0.9,
+      "clay-front": 0.87,
+      "clay-rear": 0.89
+    },
+    "observations": [
+      "Continuous swept slate roof and modest ridge terminals give the compact one-storey target identity.",
+      "Roof skins, gables, fascia and rear shell remain closed across oblique and clay views; no trapped side window or annex joint.",
+      "Front arched door and small front window remain distinct; rear service door and both side windows clear.",
+      "Front gable studs are restrained decorative wall framing; this is not an exact physical replica of the inferred timber reference."
+    ],
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0,
+      "accepted": true
+    },
+    "targetGap": "Finish still needs slate courses, stone facing, shutters and cooking cue; no finish acceptance claimed."
+  },
+  "assembly": {
+    "action": "approve",
+    "scope": "Current captured cottage08 placement only; must recheck after neighboring cottage07 relocation.",
+    "criticalScores": {
+      "neighborClearance": 0.89,
+      "groundSupport": 0.88,
+      "frontRearApproach": 0.87,
+      "foliageClearance": 0.85,
+      "routeClearance": 0.89,
+      "terrainSurfaceContacts": 0.87
+    },
+    "viewAssessments": {
+      "0": {
+        "score": 0.87,
+        "note": "Rear entry and terrace supported; flanking conifers sit close, but neither rear doorway nor terrace is visibly penetrated."
+      },
+      "45": {
+        "score": 0.88,
+        "note": "Elevated roof and terrace separation visible from both neighboring cottages."
+      },
+      "90": {
+        "score": null,
+        "note": "Cottage07 and hatchery heavily obscure subject; not clearance proof."
+      },
+      "135": {
+        "score": 0.88,
+        "note": "Elevated front approach and roof footprint show no current neighbor collision."
+      },
+      "180": {
+        "score": 0.87,
+        "note": "Front doorway and step readable. Shrub lies below window; barrel/crate crowd right apron but remain outside central door line."
+      },
+      "270": {
+        "score": null,
+        "note": "Neighbor and conifer occlude side; does not establish side clearance alone."
+      }
+    },
+    "notes": [
+      "No demonstrated building collision or terrain intrusion in this packet warrants moving cottage08.",
+      "Vegetation is tight around side elevations: preserve clear front/rear doors and inspect side-window readability again at finish.",
+      "Pending relocation of cottage07 invalidates final neighbor acceptance until a new shared context capture."
+    ]
+  },
+  "overallAction": "approve",
+  "limitations": [
+    "This is macro/current-assembly acceptance, not finish, final phone or physical-device acceptance.",
+    "No exact reference-identity claim."
+  ]
+}

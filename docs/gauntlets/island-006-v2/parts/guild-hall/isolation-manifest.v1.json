@@ -1,0 +1,33 @@
+{
+  "part": "fisherfolk-guild-hall",
+  "authority": "secondary-inferred",
+  "generator": "built-in image_gen",
+  "inputImages": [],
+  "prompt": "prompts/target-v001.txt",
+  "target": "goals/target-v001.png",
+  "sha256": "b460c004817dd15d860d9ca2c6326d18a6acf1c2971953f5778a70f80a33cbb8",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "alphaAudit": "Opaque backdrop despite transparency request; image used only as concept reference",
+  "views": [
+    "front-three-quarter",
+    "rear-three-quarter",
+    "front",
+    "side"
+  ],
+  "confidence": "Medium visible form; hidden topology inferred",
+  "invariants": [
+    "swept slate mansard",
+    "two lower wings",
+    "coherent entry",
+    "copper crown",
+    "raised coastal guild identity"
+  ]
+}

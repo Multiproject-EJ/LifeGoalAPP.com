@@ -1,0 +1,56 @@
+{
+  "part": "cottage-03",
+  "transform": {
+    "position": [
+      1.35,
+      0.73,
+      -7.3
+    ],
+    "yaw": -0.08,
+    "scale": 0.9,
+    "changed": false
+  },
+  "dressingCorrections": [
+    {
+      "type": "local plot foliage",
+      "reason": "baseline rear foliage penetrated lowerwall",
+      "action": "Tree/grass exclusion inside cottageplot plus modest canopy margin"
+    },
+    {
+      "type": "cargo index5",
+      "crateBefore": [
+        1.25,
+        0.72,
+        -6.35
+      ],
+      "crateAfter": [
+        2.45,
+        0.72,
+        -6.05
+      ],
+      "barrelBefore": [
+        1.63,
+        0.78,
+        -6.07
+      ],
+      "barrelAfter": [
+        2.93,
+        0.78,
+        -6.12
+      ],
+      "reason": "Clear main door approach shown blocked in baseline0/45"
+    },
+    {
+      "type": "workroom entrance shrub",
+      "action": "Exclude shrub/flower instances inside current cottage footprint; preserve remaining instance transforms and palettes",
+      "reason": "Review r01 identified doorway intrusion"
+    }
+  ],
+  "frozen": "Eight prior modules and all other building transforms",
+  "baseline": "baseline/world-v001",
+  "candidate": "qa/world-context-v001",
+  "status": "Independent final finish/assembly/phone approved",
+  "supportEvidence": "qa/support-top-scan.json; see support-method-note.md",
+  "overview": "qa/island-fit-v001",
+  "review": "qa/finish-review-r01.json"
+}

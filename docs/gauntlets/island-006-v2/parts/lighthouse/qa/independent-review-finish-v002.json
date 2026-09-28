@@ -1,0 +1,35 @@
+{
+  "reviewer": "visual_review",
+  "mode": "independent_pixel_review",
+  "finishPacket": "finish-v002",
+  "assemblyPacket": "world-context-v002",
+  "finishAction": "approve",
+  "assemblyAction": "approve",
+  "threshold": 0.85,
+  "scoresAreSubjectiveVisualJudgments": true,
+  "reviewedFinishViews": ["front-right", "rear-left", "front-left", "rear-right", "clay-front", "clay-rear", "top", "front", "rear", "left", "right"],
+  "reviewedAssemblyAzimuths": [0, 90, 180, 270],
+  "categoryScores": {
+    "towerMasonryFaceReadability": 0.90,
+    "silhouetteAndConnections": 0.87,
+    "beaconAndGallery": 0.87,
+    "finishAttachments": 0.87,
+    "doorsAndApproach": 0.89,
+    "quayAndGrounding": 0.88,
+    "assemblyNeighborClearance": 0.87
+  },
+  "correctionDelta": {"towerMasonryFaceReadability": {"before": 0.80, "after": 0.90, "delta": 0.10}, "beaconAndGallery": {"before": 0.88, "after": 0.87, "delta": -0.01}},
+  "observations": [
+    "Masonry faces read as planar blocks; the prior pinched highlight pattern is removed. Angular course shadows remain visible.",
+    "Tower door stays clear to the sill and beacon cap retains its clean aligned perimeter.",
+    "Simplified optic retains recognizable stacked rings and beacon identity.",
+    "Bookshelf, bench and sign remain attached, with both entrances unobstructed.",
+    "World captures show front quay conifers removed and the shifted cottage separated from library eaves and footing.",
+    "No obvious new floating foundation or route obstruction is visible in the four assembly views. Existing market foreground occlusion remains."
+  ],
+  "limits": [
+    "Visual approval of this compact game asset, not exact identity with the inferred generated target.",
+    "Masonry and slate remain more uniform and less weathered than the target.",
+    "Runtime, geometry budget and automated checks are owned by the parent agent and were not independently run here."
+  ]
+}

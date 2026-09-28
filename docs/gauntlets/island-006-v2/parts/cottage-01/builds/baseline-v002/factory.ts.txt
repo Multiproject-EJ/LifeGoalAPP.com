@@ -1,0 +1,29 @@
+/** Individually reviewable first cottage; its fixed placement remains in the village list. */
+export function createIsland22NorthCottage(quality: Island3DQuality, materials: Island22FishermansVillageMaterials) {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_22_NORTH_COTTAGE';
+  const plinth = cylinder(1.12, 1.28, 0.32, materials.stone, 10);
+  plinth.position.y = -0.13; plinth.scale.z = 0.76; root.add(plinth);
+  root.add(createAuthoredHarborHouse('ISLAND_22_NORTH_COTTAGE_MAIN', 1.55, 1.22, 2, 'warm', materials));
+  if (quality !== 'low') {
+    const annex = createAuthoredHarborHouse('ISLAND_22_NORTH_COTTAGE_ANNEX', 0.92, 0.82, 1, 'slate', materials);
+    annex.position.set(1.05, 0.03, 0.18); annex.rotation.y = -0.2; root.add(annex);
+  }
+  const barrel = cylinder(0.13, 0.15, 0.34, materials.timber, 8);
+  barrel.position.set(-0.9, 0.18, 0.76); root.add(barrel);
+  const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.145, 0.018, 4, 8), materials.brass);
+  hoop.rotation.x = Math.PI / 2; hoop.position.set(-0.9, 0.22, 0.76); root.add(hoop);
+  // Include this house's formerly scene-instanced extra windows in its own review unit.
+  for (let floor = 0; floor < 2; floor += 1) {
+    const y = 0.58 + floor * 0.76 + ((floor * 2) % 3) * 0.012 / 1.02;
+    for (const side of [-1, 1]) {
+      const frame = box(0.075, 0.45, 0.4, materials.timberDark); frame.position.set(side * 0.82, y, 0);
+      const pane = box(0.085, 0.31, 0.27, materials.window); pane.position.set(side * 0.838, y, 0);
+      const ef = box(0.4, 0.45, 0.075, materials.timberDark); ef.position.set((floor % 2 === 0 ? .22 : -.22) * 1.55, y, side * .655);
+      const ep = box(.27,.31,.085,materials.window); ep.position.set(ef.position.x,y,side*.673);
+      root.add(frame,pane,ef,ep);
+    }
+  }
+  markPart(root, 'north-cottage-main-and-annex'); setShadow(root); compactStaticGeometry(root, root.name);
+  return root;
+}

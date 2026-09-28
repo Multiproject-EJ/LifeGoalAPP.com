@@ -1,0 +1,48 @@
+{
+  "part": "cottage-02",
+  "stage": "macro",
+  "review": 2,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v002",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "All 11 original studio views and six world views inspected. Pixel evidence precedes diagnosis. Scores are subjective.",
+  "action": "one-bounded-correction",
+  "threshold": 0.85,
+  "categoryScores": {
+    "compactSingleStoreyVolume": 0.89,
+    "sweptRoofIdentity": 0.90,
+    "roofEnclosureAndNormals": 0.80,
+    "roofTrimContacts": 0.85,
+    "porchSupportAndDoorClearance": 0.90,
+    "loftWindowClearance": 0.89,
+    "sideRearOpenings": 0.88,
+    "terraceSteps": 0.88,
+    "crossViewCoherence": 0.84
+  },
+  "viewScores": {"front-right": 0.82, "front-left": 0.80, "rear-left": 0.82, "rear-right": 0.80, "front": 0.89, "rear": 0.89, "left": 0.88, "right": 0.88, "top": 0.89, "clay-front": 0.81, "clay-rear": 0.80},
+  "correctionResult": {
+    "family": "swept roof profile identity",
+    "accepted": true,
+    "delta": "0.78 to 0.90 (+0.12)",
+    "finding": "The roof now has a distinct steeper upper slope and flatter eaves, with retained peak/eave endpoints and clear loft/porch. Freeze this profile."
+  },
+  "boundedCorrection": {
+    "family": "closed roof enclosure and soffit representation",
+    "familyIndex": 2,
+    "pixelFinding": "Narrow bright/open strips appear between the far curved barge edge and inset gable shell, most clearly in front-left, rear-right and clay-rear. They are more visible with the new sweep. Enclosure regresses 0.88 to 0.80, exceeding 0.05.",
+    "diagnosis": "The upper roof sheet has no visible closed underside across the overhang; camera rays can see background between forward bargeboard and recessed shell. This is distinct from the now-accepted profile identity.",
+    "hypothesis": "Give the existing curved roof a real thin closed skin with underside and end caps, preserving upper silhouette and FrontSide rendering. Join its underside to the gable shell. Do not hide missing geometry with DoubleSide material.",
+    "requiredDelta": "Enclosure at least 0.90 (+0.10), all critical views/categories at least 0.85; no critical regression over 0.05.",
+    "controls": "Freeze accepted roof curve, cottage body, openings, terrace and neighbors. Finish remains withheld. Review 3 evaluates new family; review 4 is the final bounded correction opportunity."
+  },
+  "assembly": {
+    "evidence": "qa/world-blockout-v002",
+    "action": "approve",
+    "categoryScores": {"frontEntryClearance": 0.89, "foliageClearance": 0.89, "rearThresholdClearance": 0.88, "terraceGroundSupport": 0.86, "cottage01AnnexClearance": 0.86, "cottage03Clearance": 0.88},
+    "viewScores": {"mender-world-azimuth-0": 0.88, "mender-world-azimuth-180": 0.86, "mender-world-azimuth-45": 0.87, "mender-world-azimuth-135": 0.87, "mender-world-azimuth-90": null, "mender-world-azimuth-270": null},
+    "findings": "Moved scene barrel clears the entire front step and central approach (0.76 to 0.89). Rear threshold is free of rock and terrace rests on the visible coastline shelf. Elevated 45/135 views show separation from cottage01 annex and cottage03 without new neighbor clash. Foliage remains clear.",
+    "limitations": "Cardinal 90/270 are heavily occluded by neighbors and are not independent clearance proof. Narrow cottage01 gap and rear support are accepted from complementary elevated/front/rear views. Roof enclosure remains a separate studio macro failure."
+  },
+  "remainingTargetGap": "Macro only; net rack, layered slate and finish intentionally absent. No exact inferred-reference identity claimed."
+}

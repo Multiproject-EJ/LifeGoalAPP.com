@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-04-sailmaker",
+  "stage": "macro",
+  "review": "r01",
+  "reviewer": "independent-visual-review",
+  "referenceAuthority": "secondary-inferred",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "evidence": {
+    "target": "../goals/target-v001.png",
+    "baseline": "../baseline/v001/front-right.png",
+    "studio": "blockout-v001",
+    "assembly": "world-blockout-v001",
+    "studioViewsInspected": 11,
+    "assemblyViewsInspected": 6
+  },
+  "macro": {
+    "action": "approve",
+    "finishMayProceed": true,
+    "criticalScores": {
+      "silhouetteAndSweptProfile": 0.9,
+      "singleStoreyLoftProportion": 0.9,
+      "roofEnclosureAndNormals": 0.91,
+      "roofTrimWallContacts": 0.88,
+      "openingClearance": 0.9,
+      "terraceStepAndShoulder": 0.87,
+      "rearAndSideCompleteness": 0.89
+    },
+    "viewScores": {
+      "front": 0.9,
+      "front-right": 0.89,
+      "right": 0.89,
+      "rear-right": 0.89,
+      "rear": 0.89,
+      "rear-left": 0.89,
+      "left": 0.89,
+      "front-left": 0.89,
+      "top": 0.9,
+      "clay-front": 0.88,
+      "clay-rear": 0.88
+    },
+    "observations": [
+      "Closed swept roof with a readable ridge, fitted gables and continuous soffit; no background strips or protruding barge ends across eleven views.",
+      "Front arched entry, adjacent window and modest loft window remain separately legible. Rear service door and side windows clear.",
+      "Compact single-storey volume with loft reads as intended; finish, shutters, stone joints and sailmaking cue are deliberately absent.",
+      "Legacy coastal shoulder supports the terrace; stylized visible boundary is not an isolated foundation flotation defect."
+    ],
+    "targetGap": "Architectural macro identity accepted. The target's tiles, shutters, stonework and sailmaking trade cue belong to finish and are not claimed present.",
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedMacroCorrectionsUsed": 0
+    }
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "criticalScores": {
+      "neighborRoofAndWallClearance": 0.87,
+      "retainedCoastalSupport": 0.88,
+      "frontApproachReadability": 0.86,
+      "terrainToTerraceSurfaceContinuity": 0.8,
+      "routeAndFrozenSiblingPreservation": 0.88
+    },
+    "viewAssessments": {
+      "0": {
+        "score": 0.8,
+        "evidence": "Visible front entry; angular rock protrudes through left apron. Guild foreground hides the right edge."
+      },
+      "45": {
+        "score": 0.87,
+        "evidence": "Elevated roof separation visible; ground partly obscured."
+      },
+      "90": {
+        "score": null,
+        "evidence": "Guild hall heavily occludes subject; not valid full clearance proof."
+      },
+      "135": {
+        "score": 0.88,
+        "evidence": "Full coastal shoulder and roof separation visible; no frozen-neighbor collision."
+      },
+      "180": {
+        "score": 0.88,
+        "evidence": "Rear shell, shoulder and separation from guild/smokehouse visible."
+      },
+      "270": {
+        "score": 0.8,
+        "evidence": "Side shell clear; front terrace rock intersection remains visible beside foreground smokehouse."
+      }
+    },
+    "correction": {
+      "family": "local-terrain-surface-contact",
+      "owner": "root integration",
+      "affectedViews": [
+        "cottage-world-azimuth-0.png",
+        "cottage-world-azimuth-270.png"
+      ],
+      "defect": "Angular coastal rock protrudes through left-front terrace/apron; broken paving contact despite clear central doorway.",
+      "pixelLocations": {
+        "world0": "approximately x300–345,y575–630",
+        "world270": "approximately x530–565,y600–630"
+      },
+      "request": "Identify and lower or clip only the intersecting accent rock below terrace-cap level; retain the supporting shoulder and accepted cottage geometry/transforms.",
+      "requiredScoreAfter": 0.9,
+      "maxOtherRegression": 0.05
+    },
+    "remainingLimitations": [
+      "No phone-scale acceptance in this macro packet.",
+      "No collision inferred from occlusion alone; world90 cannot establish hidden clearance.",
+      "Frozen neighbors do not require relocation from the six views."
+    ]
+  },
+  "overallAction": "one-bounded-correction",
+  "notes": "Studio macro approved independently, so finish may proceed. Final assembly awaits local terrain correction. No production edits made by reviewer."
+}

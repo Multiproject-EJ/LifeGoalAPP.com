@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-07-rope-maker",
+  "stage": "macro",
+  "review": "r02",
+  "reviewer": "independent-visual-review",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "referenceAuthority": "secondary-inferred",
+  "evidence": {
+    "studio": "blockout-v002",
+    "studioViews": 11,
+    "world": "world-blockout-v002",
+    "worldViews": 6,
+    "previous": "macro-review-r01.json"
+  },
+  "macro": {
+    "action": "approve",
+    "finishMayProceed": true,
+    "criticalScores": {
+      "twoStoreyLeftAnnexSilhouette": 0.9,
+      "sweptClayRoofShape": 0.9,
+      "roofEnclosure": 0.9,
+      "annexWallTermination": 0.9,
+      "sideOpeningRoofClearance": 0.91,
+      "doorClearance": 0.88,
+      "terraceAndStep": 0.88,
+      "rearCompleteness": 0.89
+    },
+    "correctionDelta": {
+      "criterion": "sideOpeningRoofClearance",
+      "before": 0.79,
+      "after": 0.91,
+      "gain": 0.12,
+      "maxOtherRegression": 0
+    },
+    "viewScores": {
+      "front": 0.88,
+      "front-right": 0.89,
+      "right": 0.89,
+      "rear-right": 0.89,
+      "rear": 0.89,
+      "rear-left": 0.9,
+      "left": 0.91,
+      "front-left": 0.9,
+      "top": 0.89,
+      "clay-front": 0.89,
+      "clay-rear": 0.9
+    },
+    "observations": [
+      "Removed upper annex-side window leaves continuous wall strip with clear roof attachments.",
+      "Main/annex roof shape and other openings unchanged. No remaining studio macro veto."
+    ],
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 2,
+      "boundedCorrectionsUsed": 1,
+      "accepted": true
+    }
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "placementFamily": 2,
+    "reviewWithinFamily": 1,
+    "boundedCorrectionsUsed": 0,
+    "criticalScores": {
+      "mainBodyAndRoofSeparation": 0.87,
+      "cottage08Separation": 0.89,
+      "continuousCoastalFooting": 0.88,
+      "terrainToTerraceSurfaceContact": 0.74,
+      "mainEntryApproach": 0.82,
+      "annexDoorAccess": null
+    },
+    "observations": [
+      "Large main roof/body interpenetration is substantially resolved; cottage08 and new masonry support read separate and continuous.",
+      "World270 shows an angular coastal boulder piercing front-right terrace edge/face beside approach; elevated135 confirms jagged rock contact along this apron.",
+      "Annex remains tightly below hatchery eave; all six views obscure its inland door behind hatchery. Do not infer usable access solely from rear separation."
+    ],
+    "viewAssessments": {
+      "0": "Rear facade/support clear; hatchery behind annex.",
+      "45": "Main roof separation and complete three-course footing visible; annex clearance tight.",
+      "90": "Annex roof/wall partially visible beneath hatchery eave; doorway hidden.",
+      "135": "Cottage08 separated; foreground hatchery hides annex doorway; rocks crowd front apron.",
+      "180": "Main front entry visible, annex hidden by hatchery.",
+      "270": "Main facade and step visible; hard boulder/terrace intersection on front-right corner."
+    },
+    "correction": {
+      "family": "new-cottage-footprint-integration",
+      "request": "Within placement family2's remaining bounded correction, lower/clip only coastal rocks protruding through new terrace and approach. Preserve support, accepted cottage macro and frozen hatchery. Provide a targeted annex-door/gap view or exact aperture/approach intersection analysis to prove access; if blocked, adjust only this cottage placement/support within same family.",
+      "terrainBefore": 0.74,
+      "terrainRequiredAfter": 0.85,
+      "maxOtherRegression": 0.05,
+      "remainingReviewsInFamily": 1
+    },
+    "evidenceLimitations": [
+      "Annex access unproven rather than declared collision from occlusion.",
+      "No final phone or finish acceptance.",
+      "Foliage immediately around moved plot no longer causes prior facade obstruction."
+    ]
+  },
+  "overallAction": "one-bounded-correction",
+  "notes": "Studio macro accepted/finish released. Placement family2 remains pending one bounded correction and targeted doorway proof; retain counters from hard-vetoed original placement."
+}

@@ -1,0 +1,258 @@
+{
+  "checks": [
+    {
+      "quality": "low",
+      "reducedMotion": false,
+      "time": 0,
+      "repair": 0,
+      "reset": true,
+      "vertices": 174066,
+      "phase": "vortex"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": false,
+      "time": 21.3,
+      "repair": 0,
+      "reset": true,
+      "vertices": 174066,
+      "phase": "dive"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": false,
+      "time": 21.6,
+      "repair": 0,
+      "reset": false,
+      "vertices": 174066,
+      "phase": "dive"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": false,
+      "time": 22.6,
+      "repair": 0,
+      "reset": false,
+      "vertices": 174066,
+      "phase": "dive"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": false,
+      "time": 23.5,
+      "repair": 0.5,
+      "reset": false,
+      "vertices": 174066,
+      "phase": "repair-mission"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": false,
+      "time": 23.5,
+      "repair": 1,
+      "reset": true,
+      "vertices": 174066,
+      "phase": "fishing"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": false,
+      "time": 0,
+      "repair": 0,
+      "reset": true,
+      "vertices": 174066,
+      "phase": "vortex"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": true,
+      "time": 0,
+      "repair": 0,
+      "reset": true,
+      "vertices": 174066,
+      "phase": "vortex"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": true,
+      "time": 21.3,
+      "repair": 0,
+      "reset": true,
+      "vertices": 174066,
+      "phase": "dive"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": true,
+      "time": 21.6,
+      "repair": 0,
+      "reset": false,
+      "vertices": 174066,
+      "phase": "dive"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": true,
+      "time": 22.6,
+      "repair": 0,
+      "reset": false,
+      "vertices": 174066,
+      "phase": "dive"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": true,
+      "time": 23.5,
+      "repair": 0.5,
+      "reset": false,
+      "vertices": 174066,
+      "phase": "repair-mission"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": true,
+      "time": 23.5,
+      "repair": 1,
+      "reset": true,
+      "vertices": 174066,
+      "phase": "fishing"
+    },
+    {
+      "quality": "low",
+      "reducedMotion": true,
+      "time": 0,
+      "repair": 0,
+      "reset": true,
+      "vertices": 174066,
+      "phase": "vortex"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": false,
+      "time": 0,
+      "repair": 0,
+      "reset": true,
+      "vertices": 241576,
+      "phase": "vortex"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": false,
+      "time": 21.3,
+      "repair": 0,
+      "reset": true,
+      "vertices": 241576,
+      "phase": "dive"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": false,
+      "time": 21.6,
+      "repair": 0,
+      "reset": false,
+      "vertices": 241576,
+      "phase": "dive"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": false,
+      "time": 22.6,
+      "repair": 0,
+      "reset": false,
+      "vertices": 241576,
+      "phase": "dive"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": false,
+      "time": 23.5,
+      "repair": 0.5,
+      "reset": false,
+      "vertices": 241576,
+      "phase": "repair-mission"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": false,
+      "time": 23.5,
+      "repair": 1,
+      "reset": true,
+      "vertices": 241576,
+      "phase": "fishing"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": false,
+      "time": 0,
+      "repair": 0,
+      "reset": true,
+      "vertices": 241576,
+      "phase": "vortex"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": true,
+      "time": 0,
+      "repair": 0,
+      "reset": true,
+      "vertices": 241576,
+      "phase": "vortex"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": true,
+      "time": 21.3,
+      "repair": 0,
+      "reset": true,
+      "vertices": 241576,
+      "phase": "dive"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": true,
+      "time": 21.6,
+      "repair": 0,
+      "reset": false,
+      "vertices": 241576,
+      "phase": "dive"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": true,
+      "time": 22.6,
+      "repair": 0,
+      "reset": false,
+      "vertices": 241576,
+      "phase": "dive"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": true,
+      "time": 23.5,
+      "repair": 0.5,
+      "reset": false,
+      "vertices": 241576,
+      "phase": "repair-mission"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": true,
+      "time": 23.5,
+      "repair": 1,
+      "reset": true,
+      "vertices": 241576,
+      "phase": "fishing"
+    },
+    {
+      "quality": "medium",
+      "reducedMotion": true,
+      "time": 0,
+      "repair": 0,
+      "reset": true,
+      "vertices": 241576,
+      "phase": "vortex"
+    }
+  ],
+  "passed": 28,
+  "scope": "Actual world, low/medium, normal/reduced motion: single bound house, static foundations, damage/repair/reset, finite transforms/geometry/camera. Visual approval separate."
+}

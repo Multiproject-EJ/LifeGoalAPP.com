@@ -1,0 +1,10 @@
+{
+  "action": "approve",
+  "scope": "macro only",
+  "reviewer": "visual_review",
+  "evidence": "qa/blockout-v003",
+  "gantryCradleMinimum": 0.88,
+  "minimumImprovement": 0.1,
+  "regressions": "No meaningful silhouette change",
+  "cleanup": "Trim tiny support tips inside hull before finish; done with .047 tip shortening, geometry unchanged otherwise."
+}

@@ -1,0 +1,14 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "blockout-v001",
+  "decision": "one-bounded-correction",
+  "family": "architectural surface/contact continuity",
+  "worstScores": {
+    "silhouette": 0.85,
+    "towerCottageConnection": 0.87,
+    "surfaceContinuity": 0.73,
+    "foundationApproach": 0.88
+  },
+  "hypothesis": "Door follows taper with deep embedded stone frame; matching octagonal roof/eave rotation removes sawtooth skirt.",
+  "action": "recapture structure without finish"
+}

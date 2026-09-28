@@ -1,0 +1,51 @@
+{
+  "part": "fish-market",
+  "stage": "macro",
+  "review": 2,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v002",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "Original pixels in all 11 views inspected; scores are subjective visual judgments for the compact game asset.",
+  "action": "approve",
+  "threshold": 0.85,
+  "categoryScores": {
+    "silhouetteVolume": 0.89,
+    "architecturalIdentity": 0.87,
+    "roofShellClosure": 0.88,
+    "roofTimberAttachmentClearance": 0.90,
+    "canopyShapeAndSupport": 0.89,
+    "counterAndEntryClearance": 0.91,
+    "pierSupportContinuity": 0.90,
+    "derrickPulleyHookContinuity": 0.88,
+    "crossViewCoherence": 0.89
+  },
+  "viewScores": {
+    "front-right": 0.89,
+    "front-left": 0.89,
+    "rear-left": 0.89,
+    "rear-right": 0.89,
+    "front": 0.90,
+    "rear": 0.88,
+    "left": 0.88,
+    "right": 0.88,
+    "top": 0.90,
+    "clay-front": 0.88,
+    "clay-rear": 0.87
+  },
+  "correctionAssessment": {
+    "family": "roof-timber attachment clearance",
+    "before": 0.79,
+    "after": 0.90,
+    "delta": 0.11,
+    "finding": "All four square tie ends formerly piercing the roof are absent in matched top, sides, obliques and clay. Roof, shell and openings remain continuous; canopy and pier/derrick contacts remain coherent.",
+    "criticalRegression": "None observed; no category fell by more than 0.05."
+  },
+  "assembly": {
+    "action": "approve",
+    "evidence": "qa/world-blockout-v002",
+    "reviewFile": "qa/assembly-review-r02.json",
+    "note": "Separate prior assembly gate remains valid for unchanged placement."
+  },
+  "scope": "Macro approved; finish may proceed. This is not full V2 or exact inferred-target identity approval."
+}

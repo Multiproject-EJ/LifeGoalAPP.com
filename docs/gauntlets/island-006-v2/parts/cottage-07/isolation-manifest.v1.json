@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "partId": "cottage-07",
+  "referenceClass": "secondary-inferred",
+  "status": "generated-design-goal",
+  "generator": "built-in image_gen",
+  "inputImages": [],
+  "failedModelUsedAsReference": false,
+  "prompt": "prompts/target-v001.txt",
+  "output": "goals/target-v001.png",
+  "originalOutput": "/Users/ejmac/.codex/generated_images/01a0e966-6285-7ea0-8a2e-7c7ab6970293/exec-e02537c8-5fb7-4c06-a25f-3f8c56cd0f31.png",
+  "sha256": "127740aa3167880430a35d73874fac29add8d2cc06e2789b59b4dc19e136c282",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "transparentPixels": 1572864,
+  "fullyTransparentPixels": 635610,
+  "provenance": "Text-only inferred goal for user-authorized island006 V2 continuation; not exact approved pixel identity. Geometry contract controls footprint, access, attachment and cross-view consistency.",
+  "visualInspection": "Two-storey clay roof with LEFT lean-to and rope spools. Small side inset varies doorway/window orientation; main front-left and written placement contract control geometry. Clear door approach required."
+}

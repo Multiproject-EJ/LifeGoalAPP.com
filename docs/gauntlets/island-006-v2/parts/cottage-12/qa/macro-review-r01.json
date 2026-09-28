@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-12-retired-skipper",
+  "stage": "macro",
+  "review": "r01",
+  "reviewer": "independent-reference-curator",
+  "referenceAuthority": "secondary-inferred",
+  "pixelsFirst": true,
+  "threshold": 0.85,
+  "evidence": {
+    "studio": "blockout-v001",
+    "studioViewsInspected": 11,
+    "assembly": "world-blockout-v001",
+    "assemblyViewsInspected": 6,
+    "target": "../goals/target-v001.png"
+  },
+  "macro": {
+    "action": "approve",
+    "finishMayProceed": true,
+    "criticalScores": {
+      "singleStoreyLoftIdentity": 0.89,
+      "sweptSlateRoof": 0.9,
+      "roofEnclosure": 0.91,
+      "trimAndGableContacts": 0.88,
+      "frontRearDoorClearance": 0.9,
+      "sideOpeningClearance": 0.9,
+      "terraceAndStep": 0.88
+    },
+    "viewScores": {
+      "front": 0.89,
+      "front-right": 0.89,
+      "right": 0.89,
+      "rear-right": 0.89,
+      "rear": 0.89,
+      "rear-left": 0.89,
+      "left": 0.89,
+      "front-left": 0.89,
+      "top": 0.89,
+      "clay-front": 0.88,
+      "clay-rear": 0.89
+    },
+    "observations": [
+      "Single-storey shell with modest arched loft light and swept slate roof is coherent across all eleven views.",
+      "Roof/gable enclosure continuous; door and window frames clear in isolation.",
+      "Centered front door differs from inferred target offset arrangement but leaves room for skipper cue; not exact pixel identity.",
+      "Finish wheel/rope, shutters, tile courses, masonry and hardware not present yet."
+    ],
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0
+    }
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "criticalScores": {
+      "neighborClearance": 0.89,
+      "groundSupport": 0.86,
+      "rearApproach": 0.86,
+      "frontFoliageClearance": 0.58,
+      "terraceVegetationClearance": 0.75,
+      "routePreservation": 0.88
+    },
+    "viewAssessments": {
+      "0": {
+        "score": 0.75,
+        "note": "Grass emerges through terrace edge; tree close to side obscures window."
+      },
+      "45": {
+        "score": 0.65,
+        "note": "Elevated view shows conifer inside front door volume."
+      },
+      "90": {
+        "score": 0.58,
+        "note": "Three conifer foliage tiers visibly pierce front wall/door from lintel to lower threshold; grass on left apron."
+      },
+      "135": {
+        "score": 0.7,
+        "note": "Roof and neighbor footprint separated; doorway vegetation remains."
+      },
+      "180": {
+        "score": null,
+        "note": "Lighthouse entirely occludes house; no hidden-clearance inference."
+      },
+      "270": {
+        "score": 0.86,
+        "note": "Rear shell/support readable, surrounding rocks beneath apron; no clear rock cap intrusion."
+      }
+    },
+    "correction": {
+      "family": "local-plot-vegetation-clearance",
+      "before": 0.58,
+      "requiredAfter": 0.85,
+      "minimumImprovement": 0.1,
+      "maxOtherRegression": 0.05,
+      "pixelLocations": [
+        "world90 tree tiers x395–513,y458–662 across front door",
+        "world90 grass x276–387,y610–700 on left apron"
+      ],
+      "request": "Omit or relocate the conifer intersecting front wall/door and grass blades inside terrace/approach footprint. Preserve cottage transform, lighthouse, other accepted buildings and shoreline support. Recheck nearby side-window tree for actual collision, not occlusion alone. Recapture six world views."
+    }
+  },
+  "overallAction": "assembly-correction-required",
+  "limitations": [
+    "No finish or phone acceptance.",
+    "Original generated goal is secondary-inferred.",
+    "No geometry/camera edits by reviewer."
+  ]
+}

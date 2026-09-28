@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-10-shell-diver",
+  "stage": "macro",
+  "review": "r01",
+  "reviewer": "independent-reference-curator",
+  "referenceAuthority": "secondary-inferred",
+  "pixelsFirst": true,
+  "threshold": 0.85,
+  "evidence": {
+    "studio": "blockout-v001",
+    "studioViewsInspected": 11,
+    "assembly": "world-blockout-v001",
+    "assemblyViewsInspected": 6,
+    "target": "../goals/target-v001.png",
+    "baseline": "../baseline/v001/front-right.png"
+  },
+  "macro": {
+    "action": "approve",
+    "finishMayProceed": true,
+    "criticalScores": {
+      "singleStoreyRidgeXIdentity": 0.9,
+      "sweptClosedRoof": 0.91,
+      "roofTrimShellContacts": 0.88,
+      "openingClearance": 0.9,
+      "rearSideCompleteness": 0.9,
+      "terraceAndStep": 0.88
+    },
+    "viewScores": {
+      "front": 0.89,
+      "front-right": 0.9,
+      "right": 0.9,
+      "rear-right": 0.89,
+      "rear": 0.89,
+      "rear-left": 0.89,
+      "left": 0.89,
+      "front-left": 0.9,
+      "top": 0.89,
+      "clay-front": 0.89,
+      "clay-rear": 0.89
+    },
+    "observations": [
+      "RidgeX gives broad eave-facing entrance and side gables consistent with inferred shell-diver target.",
+      "Closed curved roof and fitted side gables; no apparent roof-shell background gaps in original oblique/clay views.",
+      "Front arched entry, rear service door, both side windows remain clear.",
+      "Tiles, shutters, shell plaque, basket, masonry detail and hardware intentionally absent; finish not accepted yet."
+    ],
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0
+    }
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "criticalScores": {
+      "legacyShedVolumeClearance": 0.55,
+      "boatwrightVolumeClearance": 0.65,
+      "neighborCottageClearance": 0.86,
+      "frontRearAccess": 0.7,
+      "groundSupport": 0.86,
+      "routePreservation": 0.86
+    },
+    "viewAssessments": {
+      "0": {
+        "score": 0.55,
+        "note": "Cyan legacy shed occupies same footprint as cottage, with cyan facade and roof through new shell."
+      },
+      "45": {
+        "score": 0.65,
+        "note": "Elevated view shows clay cottage overlapping cyan shed and tucked beneath boatwright eave/volume."
+      },
+      "90": {
+        "score": 0.55,
+        "note": "Turquoise triangular blade penetrates clay roof; cyan wall crosses front doorway."
+      },
+      "135": {
+        "score": 0.55,
+        "note": "Top view confirms intersecting cyan roof, not simple camera occlusion; boatwright structure intrudes overhead."
+      },
+      "180": {
+        "score": 0.55,
+        "note": "Large cyan roof triangle through clay roof and cyan wall through arched entry; boatwright eave masks rear/upper cottage."
+      },
+      "270": {
+        "score": null,
+        "note": "Boatwright nearly fully occludes cottage; no hidden-clearance inference."
+      }
+    },
+    "correction": {
+      "family": "plot-occupancy-and-legacy-shed-clearance",
+      "before": 0.55,
+      "requiredAfter": 0.85,
+      "minimumImprovement": 0.1,
+      "maxOtherRegression": 0.05,
+      "request": "Resolve occupied plot: remove/relocate legacy cyan shed geometry and adjust cottage10 plot if necessary to establish actual roof/wall clearance from frozen boatwright. Do not alter frozen boatwright model. Preserve valid terrace support, route access and clear front/rear doors. Recapture six original world views and inspect hidden bounds numerically if occlusion persists.",
+      "defectLocations": [
+        "world90 turquoise blade near x529–579,y274–389 and cyan wall over entrance",
+        "world180 roof blade near x432–554,y342–438 and cyan facade across front door"
+      ]
+    },
+    "notes": [
+      "Studio model approved independently; assembly unapproved until intersections resolved.",
+      "Finish can proceed on accepted isolated shell, but final delivery must await corrected plot."
+    ]
+  },
+  "overallAction": "assembly-correction-required",
+  "limitations": [
+    "No finish or phone acceptance.",
+    "Target is inferred; pixel-texture fidelity not scored."
+  ]
+}

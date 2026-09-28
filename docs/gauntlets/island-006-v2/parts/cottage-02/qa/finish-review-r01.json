@@ -1,0 +1,58 @@
+{
+  "part": "cottage-02",
+  "stage": "finish",
+  "review": 1,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/finish-v001",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "approvedMacro": "qa/blockout-v003",
+  "method": "All 11 original studio images, six world-context images and phone overview inspected before reading source. Scores are subjective. Independent finish and assembly judgments.",
+  "action": "one-bounded-correction",
+  "threshold": 0.85,
+  "categoryScores": {
+    "macroSilhouetteRetention": 0.90,
+    "roofEnclosureAndTrim": 0.90,
+    "slateCoverageAndRelief": 0.88,
+    "materialHierarchy": 0.87,
+    "terraceMasonryContinuity": 0.74,
+    "netMenderIdentity": 0.77,
+    "doorWindowAndHardwareAttachments": 0.89,
+    "entryRearDoorClearance": 0.90,
+    "otherFinishContacts": 0.88
+  },
+  "viewScores": {"front-right": 0.74, "front-left": 0.74, "rear-left": 0.74, "rear-right": 0.74, "front": 0.89, "rear": 0.88, "left": 0.77, "right": 0.86, "top": 0.88, "clay-front": 0.75, "clay-rear": 0.75},
+  "positiveFindings": "Swept roof and closed soffit remain intact. Slate has staggered joints and physical course shadows in clay. Porch courses stay inside trim. Planked doors, hinges, ring handles, shutters, lantern and plaque remain attached without blocking either entry. The chimney remains planted into the roof.",
+  "boundedCorrections": [
+    {
+      "priority": 1,
+      "family": "terrace masonry surface separation",
+      "pixelFinding": "Terrace side courses break into triangular patches or disappear in all four obliques; clay sides lose the stone relief. Exact side views show regular courses, indicating angle-dependent surface overlap rather than intentional stonework.",
+      "sourceDiagnosis": "Continuous terrace width 1.88 gives x planes +/-0.94. Side-facing center +/-0.933 with thickness 0.014 gives the same outer plane +/-0.94, confirming coplanar overlap.",
+      "correction": "Separate the facing outer surface from the backing plane by a small physical offset without changing accepted macro footprint or access.",
+      "requiredResult": "Continuity at least 0.85 and improvement at least 0.10 from 0.74; no critical regression over 0.05."
+    },
+    {
+      "priority": 2,
+      "family": "hanging fishing-net identity",
+      "pixelFinding": "Left/front-left/rear-left show a straight orthogonal garden-like lattice with two round floats. It does not clearly read as suspended fishing net like the inferred reference.",
+      "correction": "Use shallow sagging diamond mesh and tied floats, keeping the existing rack footprint, window clearance and x >= -0.83. No extra props or expansion into cottage01 gap.",
+      "requiredResult": "Net identity at least 0.87 (+0.10 from 0.77), no critical regression over 0.05."
+    }
+  ],
+  "familyLedger": "Two distinct finish families, each allowed one bounded correction. Root authorized both in the same r02 candidate, assessed independently. Macro families remain accepted and frozen.",
+  "assembly": {
+    "evidence": "qa/world-context-v001",
+    "action": "approve",
+    "categoryScores": {"frontEntryClearance": 0.89, "foliageClearance": 0.89, "rearThresholdClearance": 0.88, "terraceGroundSupport": 0.86, "cottage01AnnexClearance": 0.86, "cottage03Clearance": 0.88, "finishWithinPlot": 0.87},
+    "viewScores": {"mender-world-azimuth-0": 0.88, "mender-world-azimuth-180": 0.86, "mender-world-azimuth-45": 0.87, "mender-world-azimuth-135": 0.87, "mender-world-azimuth-90": null, "mender-world-azimuth-270": null},
+    "findings": "Finish does not visibly change neighbor separation, ground support or door clearance. Moved barrel stays outside the front step. Roof remains above and separate from cottage01 annex. Net sits within the narrow side plot without an obvious new collision.",
+    "limitations": "90/270 remain heavily occluded and cannot independently prove attachment or clearance. Elevated45/135 plus front/rear are the usable evidence. Recheck shallow net revision at this interface."
+  },
+  "phoneScale": {
+    "evidence": "qa/island-fit-v001/overview.png",
+    "score": 0.86,
+    "finding": "The compact swept blue roof, bright front and round loft remain legible within the northern village. Fine net, hardware and masonry details are naturally too small to judge here; phone view is not a substitute for close finish evidence."
+  },
+  "remainingTargetGap": "Procedural stone, timber and slate remain much cleaner and more regular than the textured reference. Main blocking gaps are the two named families. Exact inferred-reference parity is not claimed."
+}

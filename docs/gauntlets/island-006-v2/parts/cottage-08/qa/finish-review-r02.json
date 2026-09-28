@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-08-harbor-cook",
+  "stage": "finish-and-assembly",
+  "review": "r02",
+  "reviewer": "independent-reference-curator",
+  "referenceAuthority": "secondary-inferred",
+  "pixelsFirst": true,
+  "threshold": 0.85,
+  "evidence": {
+    "studio": "finish-v001",
+    "studioViewsInspected": 11,
+    "assembly": "world-context-v002",
+    "assemblyViewsInspected": 6,
+    "target": "../goals/target-v001.png",
+    "baseline": "../baseline/v001/front-right.png",
+    "macro": "macro-review-r01.json"
+  },
+  "finish": {
+    "action": "approve",
+    "criticalScores": {
+      "singleStoreySweptRoofIdentity": 0.9,
+      "roofEnclosureAndContacts": 0.9,
+      "slateRelief": 0.88,
+      "shuttersAndWindowReadability": 0.89,
+      "masonryAndTimberFinish": 0.88,
+      "copperPanAndHerbBundle": 0.88,
+      "frontRearDoorClearance": 0.91,
+      "rearSideCompleteness": 0.88
+    },
+    "viewScores": {
+      "front": 0.9,
+      "front-right": 0.89,
+      "right": 0.89,
+      "rear-right": 0.89,
+      "rear": 0.89,
+      "rear-left": 0.88,
+      "left": 0.88,
+      "front-left": 0.89,
+      "top": 0.89,
+      "clay-front": 0.89,
+      "clay-rear": 0.88
+    },
+    "observations": [
+      "Continuous slate courses, ridge terminals, clean gable framing, slightly proud stone courses and blue shutters form coherent cottage finish.",
+      "Copper pan and tied herbs read as a small wall-mounted cooking cue without obstructing the arched door in isolation.",
+      "Rear service door and side openings remain complete. Left side has simple unshuttered window, consistent with restrained secondary elevation.",
+      "Texture/weathering remains simpler than inferred target; no exact pixel likeness claim."
+    ]
+  },
+  "assembly": {
+    "action": "approve",
+    "criticalScores": {
+      "neighborClearance": 0.9,
+      "groundSupport": 0.88,
+      "frontRearApproach": 0.87,
+      "foliageClearanceAtCookingCue": 0.92,
+      "routeClearance": 0.89,
+      "terrainSurfaceContacts": 0.88
+    },
+    "viewAssessments": {
+      "0": {
+        "score": 0.88,
+        "note": "Rear doorway and terrace clear; conifers close beside shell but no demonstrated penetration."
+      },
+      "45": {
+        "score": 0.9,
+        "note": "Final cottage07 seaward position has visible separation from cottage08 shell/terrace."
+      },
+      "90": {
+        "score": null,
+        "note": "Conifer/landmark occludes side-window area; not full side-clearance evidence."
+      },
+      "135": {
+        "score": 0.9,
+        "note": "Elevated view shows final cottage07 clearance and unchanged cottage08 front route."
+      },
+      "180": {
+        "score": 0.92,
+        "note": "Conflicting shrub/flowers absent; copper pan and green herb bundle stand clearly against front wall. Door and step open."
+      },
+      "270": {
+        "score": null,
+        "note": "Neighbor roofs and conifer obscure side; no hidden-clearance inference."
+      }
+    },
+    "correction": {
+      "family": "local-cooking-cue-foliage-clearance",
+      "before": 0.81,
+      "requiredAfter": 0.91,
+      "maxOtherRegression": 0.05,
+      "pixelLocation": "world180 approximately x397\u2013451,y620\u2013669 shrub and x442,y594 orange blossom",
+      "request": "Resolved; no further local correction requested.",
+      "after": 0.92,
+      "gain": 0.11,
+      "passed": true,
+      "maxObservedOtherRegression": 0
+    },
+    "notes": [
+      "All six updated originals inspected. Cooking cue now unobscured.",
+      "Final cottage07 position [2.8,9.6] is visibly separated in elevated45/135; no new cottage08 collision observed.",
+      "Side views remain occluded by vegetation/neighbors; no hidden clearance inferred."
+    ]
+  },
+  "overallAction": "approve",
+  "limitations": [
+    "Phone and final island review pending.",
+    "Occluded side views not proof of collision or clearance.",
+    "Read-only review; only this JSON written."
+  ],
+  "notes": "Studio finish approval retained unchanged from r01; corrected assembly approved from six new originals. No code edits."
+}

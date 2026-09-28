@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-07-rope-maker",
+  "stage": "finish",
+  "review": "r01",
+  "reviewer": "independent-visual-review",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "referenceAuthority": "secondary-inferred",
+  "evidence": {
+    "studio": "finish-v001",
+    "studioViews": 11,
+    "world": "world-context-v001",
+    "worldViews": 6,
+    "supplementary": "plot-and-door-after.json",
+    "previous": "macro-review-r02.json"
+  },
+  "finish": {
+    "action": "approve",
+    "criticalScores": {
+      "silhouetteAndVolume": 0.9,
+      "tradeIdentity": 0.87,
+      "roofSurfaceReadability": 0.85,
+      "roofAndAnnexAttachments": 0.9,
+      "masonrySurfaceContinuity": 0.9,
+      "doorAndWindowHardware": 0.89,
+      "propAttachmentAndDoorClearance": 0.89,
+      "crossViewCoherence": 0.89
+    },
+    "viewScores": {
+      "front": 0.89,
+      "front-right": 0.87,
+      "right": 0.86,
+      "rear-right": 0.87,
+      "rear": 0.89,
+      "rear-left": 0.87,
+      "left": 0.86,
+      "front-left": 0.88,
+      "top": 0.87,
+      "clay-front": 0.87,
+      "clay-rear": 0.87
+    },
+    "observations": [
+      "Finished roof has subdued staggered seams and shallow lower course relief visible in top and oblique pixels; shallower and more regular than inferred reference, but no checkerboard, roof overshoot or enclosure failure.",
+      "Stone courses are visibly separated from base with no triangular coplanar artifacts in inspected views.",
+      "Lantern, rope ring and two spools are attached and do not block portals. Macro silhouette and corrected side opening remain intact."
+    ],
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0,
+      "accepted": true
+    }
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "placement": {
+      "action": "approve",
+      "family": 2,
+      "reviewWithinFamily": 2,
+      "boundedCorrectionsUsed": 1,
+      "position": [
+        2.8,
+        0.57,
+        9.6
+      ],
+      "criticalScores": {
+        "mainBodyAndRoofSeparation": 0.91,
+        "cottage08Separation": 0.9,
+        "continuousCoastalFooting": 0.89,
+        "terrainToTerraceSurfaceContact": 0.9,
+        "annexPortalNeighborClearance": 0.89
+      },
+      "correctionDelta": {
+        "criterion": "terrainToTerraceSurfaceContact",
+        "before": 0.74,
+        "after": 0.9,
+        "gain": 0.16,
+        "maxOtherRegression": 0
+      },
+      "observations": [
+        "World45/135 show actual roof/body separation from frozen hatchery and cottage08; world90/270 confirm sides and continuous footing.",
+        "The former rock-through-terrace intersection is absent. Doorway rays supplement the visible clear annex portal; they prove hatchery clearance only."
+      ]
+    },
+    "remainingCriticalScores": {
+      "villageStreetToFrontTerraceApproach": 0.78
+    },
+    "remainingIssue": "World135/270/180 show an angular coastal rock slope between village street and front terrace, without a continuous landing. A clear portal and empty hatchery ray corridor do not prove an approach over ground.",
+    "correction": {
+      "family": "supported-street-to-terrace-connection",
+      "request": "Provide a short visibly supported landing connecting the current front terrace to existing street over the rocky slope. Preserve accepted house placement, silhouette, frozen neighbors and clear main/annex portals.",
+      "requiredAfter": 0.88,
+      "maxOtherRegression": 0.05
+    },
+    "counterNote": "Placement family2's one correction is consumed and accepted. This hold does not authorize another position search or reset the original placement counter. New connection geometry must receive its own original-pixel assembly evidence.",
+    "viewAssessments": {
+      "0": {
+        "score": 0.89,
+        "scope": "Rear/support; does not prove street approach"
+      },
+      "45": {
+        "score": 0.89,
+        "scope": "Roof and neighbor separation/footing"
+      },
+      "90": {
+        "score": 0.88,
+        "scope": "Annex side and hatchery gap"
+      },
+      "135": {
+        "score": 0.78,
+        "scope": "Unconnected rocky front approach visible"
+      },
+      "180": {
+        "score": 0.78,
+        "scope": "Annex portal clear; main entry partly occluded by foreground tree, ground approach irregular"
+      },
+      "270": {
+        "score": 0.78,
+        "scope": "Old terrace intrusion removed, but no continuous flat landing to street"
+      }
+    }
+  },
+  "phone": {
+    "action": "pending",
+    "reason": "No new production phone-camera packet included in this gate; context closeups are not phone proof."
+  },
+  "overallAction": "one-bounded-correction"
+}

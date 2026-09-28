@@ -1,0 +1,21 @@
+{
+  "family1": "Original placement collides with frozen hatchery, score.45, retired",
+  "family2": "Relocate newhouse only onto continuous supported shoreline quay",
+  "positionBefore": [
+    4.05,
+    0.57,
+    6.8
+  ],
+  "positionAfter": [
+    2.8,
+    0.57,
+    9.6
+  ],
+  "yaw": -2.78,
+  "scale": 0.9,
+  "neighbors": "unchanged",
+  "support": "Three overlapping tapered masonry courses from house terrace down to shoreline water level",
+  "status": "pending first relocation review",
+  "boundedCorrection": "First relocation still blocked annex door within.075worldunits; numeric candidate tests select west/seaward correction with zero9doorhits within1.2. Postconstruction local terrainfit preservesclear terrace.",
+  "evidence": "qa/relocation-candidates.json"
+}

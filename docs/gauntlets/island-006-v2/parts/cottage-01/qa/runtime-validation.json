@@ -1,0 +1,462 @@
+{
+  "checks": [
+    {
+      "landmark": "boss",
+      "level": 1,
+      "quality": "low",
+      "vertices": 3982,
+      "triangles": 2954,
+      "draws": 12
+    },
+    {
+      "landmark": "hatchery",
+      "level": 1,
+      "quality": "low",
+      "vertices": 8267,
+      "triangles": 4640,
+      "draws": 13
+    },
+    {
+      "landmark": "habit",
+      "level": 1,
+      "quality": "low",
+      "vertices": 23166,
+      "triangles": 8908,
+      "draws": 21
+    },
+    {
+      "landmark": "wisdom",
+      "level": 1,
+      "quality": "low",
+      "vertices": 11645,
+      "triangles": 4708,
+      "draws": 9
+    },
+    {
+      "landmark": "event",
+      "level": 1,
+      "quality": "low",
+      "vertices": 9440,
+      "triangles": 5108,
+      "draws": 10
+    },
+    {
+      "landmark": "market",
+      "level": 1,
+      "quality": "low",
+      "vertices": 4556,
+      "triangles": 2460,
+      "draws": 7
+    },
+    {
+      "landmark": "boss",
+      "level": 2,
+      "quality": "low",
+      "vertices": 9812,
+      "triangles": 6828,
+      "draws": 20
+    },
+    {
+      "landmark": "hatchery",
+      "level": 2,
+      "quality": "low",
+      "vertices": 10817,
+      "triangles": 7620,
+      "draws": 17
+    },
+    {
+      "landmark": "habit",
+      "level": 2,
+      "quality": "low",
+      "vertices": 24730,
+      "triangles": 10984,
+      "draws": 26
+    },
+    {
+      "landmark": "wisdom",
+      "level": 2,
+      "quality": "low",
+      "vertices": 13326,
+      "triangles": 5940,
+      "draws": 14
+    },
+    {
+      "landmark": "event",
+      "level": 2,
+      "quality": "low",
+      "vertices": 10944,
+      "triangles": 6312,
+      "draws": 14
+    },
+    {
+      "landmark": "market",
+      "level": 2,
+      "quality": "low",
+      "vertices": 5762,
+      "triangles": 3252,
+      "draws": 15
+    },
+    {
+      "landmark": "boss",
+      "level": 3,
+      "quality": "low",
+      "vertices": 21804,
+      "triangles": 13296,
+      "draws": 36
+    },
+    {
+      "landmark": "hatchery",
+      "level": 3,
+      "quality": "low",
+      "vertices": 18164,
+      "triangles": 12564,
+      "draws": 33
+    },
+    {
+      "landmark": "habit",
+      "level": 3,
+      "quality": "low",
+      "vertices": 29268,
+      "triangles": 14588,
+      "draws": 41
+    },
+    {
+      "landmark": "wisdom",
+      "level": 3,
+      "quality": "low",
+      "vertices": 25026,
+      "triangles": 12208,
+      "draws": 39
+    },
+    {
+      "landmark": "event",
+      "level": 3,
+      "quality": "low",
+      "vertices": 19119,
+      "triangles": 12726,
+      "draws": 30
+    },
+    {
+      "landmark": "market",
+      "level": 3,
+      "quality": "low",
+      "vertices": 12703,
+      "triangles": 8608,
+      "draws": 33
+    },
+    {
+      "landmark": "cottage-01",
+      "level": 3,
+      "quality": "low",
+      "vertices": 13141,
+      "triangles": 7491,
+      "draws": 29
+    },
+    {
+      "landmark": "boss",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 4606,
+      "triangles": 3194,
+      "draws": 12
+    },
+    {
+      "landmark": "hatchery",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 8807,
+      "triangles": 5408,
+      "draws": 13
+    },
+    {
+      "landmark": "habit",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 23546,
+      "triangles": 9596,
+      "draws": 21
+    },
+    {
+      "landmark": "wisdom",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 13365,
+      "triangles": 5380,
+      "draws": 9
+    },
+    {
+      "landmark": "event",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 9440,
+      "triangles": 5108,
+      "draws": 10
+    },
+    {
+      "landmark": "market",
+      "level": 1,
+      "quality": "medium",
+      "vertices": 4700,
+      "triangles": 2556,
+      "draws": 7
+    },
+    {
+      "landmark": "boss",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 11476,
+      "triangles": 7468,
+      "draws": 20
+    },
+    {
+      "landmark": "hatchery",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 11357,
+      "triangles": 8388,
+      "draws": 17
+    },
+    {
+      "landmark": "habit",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 25275,
+      "triangles": 11912,
+      "draws": 26
+    },
+    {
+      "landmark": "wisdom",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 15094,
+      "triangles": 6644,
+      "draws": 14
+    },
+    {
+      "landmark": "event",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 10944,
+      "triangles": 6312,
+      "draws": 14
+    },
+    {
+      "landmark": "market",
+      "level": 2,
+      "quality": "medium",
+      "vertices": 5906,
+      "triangles": 3348,
+      "draws": 15
+    },
+    {
+      "landmark": "boss",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 25536,
+      "triangles": 14664,
+      "draws": 36
+    },
+    {
+      "landmark": "hatchery",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 18842,
+      "triangles": 13472,
+      "draws": 33
+    },
+    {
+      "landmark": "habit",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 31245,
+      "triangles": 16540,
+      "draws": 41
+    },
+    {
+      "landmark": "wisdom",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 29234,
+      "triangles": 13936,
+      "draws": 39
+    },
+    {
+      "landmark": "event",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 19887,
+      "triangles": 13686,
+      "draws": 30
+    },
+    {
+      "landmark": "market",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 14083,
+      "triangles": 9504,
+      "draws": 33
+    },
+    {
+      "landmark": "cottage-01",
+      "level": 3,
+      "quality": "medium",
+      "vertices": 15847,
+      "triangles": 8859,
+      "draws": 29
+    },
+    {
+      "landmark": "boss",
+      "level": 1,
+      "quality": "high",
+      "vertices": 4606,
+      "triangles": 3194,
+      "draws": 12
+    },
+    {
+      "landmark": "hatchery",
+      "level": 1,
+      "quality": "high",
+      "vertices": 8807,
+      "triangles": 5408,
+      "draws": 13
+    },
+    {
+      "landmark": "habit",
+      "level": 1,
+      "quality": "high",
+      "vertices": 23546,
+      "triangles": 9596,
+      "draws": 21
+    },
+    {
+      "landmark": "wisdom",
+      "level": 1,
+      "quality": "high",
+      "vertices": 13365,
+      "triangles": 5380,
+      "draws": 9
+    },
+    {
+      "landmark": "event",
+      "level": 1,
+      "quality": "high",
+      "vertices": 9440,
+      "triangles": 5108,
+      "draws": 10
+    },
+    {
+      "landmark": "market",
+      "level": 1,
+      "quality": "high",
+      "vertices": 4700,
+      "triangles": 2556,
+      "draws": 7
+    },
+    {
+      "landmark": "boss",
+      "level": 2,
+      "quality": "high",
+      "vertices": 11476,
+      "triangles": 7468,
+      "draws": 20
+    },
+    {
+      "landmark": "hatchery",
+      "level": 2,
+      "quality": "high",
+      "vertices": 11357,
+      "triangles": 8388,
+      "draws": 17
+    },
+    {
+      "landmark": "habit",
+      "level": 2,
+      "quality": "high",
+      "vertices": 25275,
+      "triangles": 11912,
+      "draws": 26
+    },
+    {
+      "landmark": "wisdom",
+      "level": 2,
+      "quality": "high",
+      "vertices": 15094,
+      "triangles": 6644,
+      "draws": 14
+    },
+    {
+      "landmark": "event",
+      "level": 2,
+      "quality": "high",
+      "vertices": 10944,
+      "triangles": 6312,
+      "draws": 14
+    },
+    {
+      "landmark": "market",
+      "level": 2,
+      "quality": "high",
+      "vertices": 5906,
+      "triangles": 3348,
+      "draws": 15
+    },
+    {
+      "landmark": "boss",
+      "level": 3,
+      "quality": "high",
+      "vertices": 25536,
+      "triangles": 14664,
+      "draws": 36
+    },
+    {
+      "landmark": "hatchery",
+      "level": 3,
+      "quality": "high",
+      "vertices": 18842,
+      "triangles": 13472,
+      "draws": 33
+    },
+    {
+      "landmark": "habit",
+      "level": 3,
+      "quality": "high",
+      "vertices": 31245,
+      "triangles": 16540,
+      "draws": 41
+    },
+    {
+      "landmark": "wisdom",
+      "level": 3,
+      "quality": "high",
+      "vertices": 29234,
+      "triangles": 13936,
+      "draws": 39
+    },
+    {
+      "landmark": "event",
+      "level": 3,
+      "quality": "high",
+      "vertices": 19887,
+      "triangles": 13686,
+      "draws": 30
+    },
+    {
+      "landmark": "market",
+      "level": 3,
+      "quality": "high",
+      "vertices": 14083,
+      "triangles": 9504,
+      "draws": 33
+    },
+    {
+      "landmark": "cottage-01",
+      "level": 3,
+      "quality": "high",
+      "vertices": 15847,
+      "triangles": 8859,
+      "draws": 29
+    }
+  ],
+  "passed": 57,
+  "scope": "All five authored landmarks plus fish market and cottage01 at L1/L2/L3 and low/medium/high: finite, nonempty geometry and transforms. Visual acceptance remains screenshot-based."
+}

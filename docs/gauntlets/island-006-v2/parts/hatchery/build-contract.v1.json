@@ -1,0 +1,30 @@
+{
+  "part": "net-house-hatchery",
+  "allowlist": [
+    "Island22HatcheryV2.ts",
+    "createIsland22PremiumNetHouseHatchery",
+    "hatchery generic foundation exclusion",
+    "hatchery-footprint foliage exclusion during assembly"
+  ],
+  "levels": [
+    1,
+    2,
+    3
+  ],
+  "threshold": 0.85,
+  "geometryBudget": {
+    "triangles": 14000,
+    "batches": 45,
+    "quality": "medium"
+  },
+  "reviewer": "/root/visual_review",
+  "validation": [
+    "11 locked-camera views",
+    "independent macro and finish gates",
+    "actual island assembly",
+    "45 landmark level/tier finite geometry checks",
+    "TypeScript",
+    "production build",
+    "portrait freshness"
+  ]
+}

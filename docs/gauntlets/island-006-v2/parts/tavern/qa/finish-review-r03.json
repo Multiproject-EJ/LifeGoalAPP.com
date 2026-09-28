@@ -1,0 +1,16 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "finish-v003",
+  "decision": "approve",
+  "scores": {
+    "shadowIntegrity": 0.91,
+    "attachments": 0.89,
+    "silhouette": 0.89,
+    "materialReadability": 0.86,
+    "entry": 0.9,
+    "grounding": 0.88
+  },
+  "shadowGain": 0.15,
+  "regression": "none visible",
+  "action": "accept final finish"
+}

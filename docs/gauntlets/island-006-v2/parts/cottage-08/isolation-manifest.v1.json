@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "partId": "cottage-08",
+  "referenceClass": "secondary-inferred",
+  "status": "generated-design-goal",
+  "generator": "built-in image_gen",
+  "inputImages": [],
+  "failedModelUsedAsReference": false,
+  "prompt": "prompts/target-v001.txt",
+  "output": "goals/target-v001.png",
+  "originalOutput": "/Users/ejmac/.codex/generated_images/01a0e966-6285-7ea0-8a2e-7c7ab6970293/exec-325e7be7-1226-4ee3-a385-9c5aadfe05b9.png",
+  "sha256": "b1a8da06f388e3e42c8f2f8abb9c8db73d387d857ab1eb52bfd4ecf6939466f2",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alphaExtrema": [
+    0,
+    254
+  ],
+  "transparentPixels": 1572864,
+  "fullyTransparentPixels": 649669,
+  "provenance": "Text-only inferred goal for user-authorized island006 V2 continuation; not exact approved pixel identity. Geometry contract controls footprint, access, attachment and cross-view consistency.",
+  "visualInspection": "Compact single-storey slate roof with physically layered tiles, blue shutters, clear front/rear doors, pan and herbs cue. Neutral transparent goal only."
+}

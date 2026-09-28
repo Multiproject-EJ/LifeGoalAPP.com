@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-04-sailmaker",
+  "stage": "finish-and-assembly",
+  "review": "r02",
+  "reviewer": "independent-reference-curator",
+  "independence": "Created inferred goal but did not author model or integration",
+  "referenceAuthority": "secondary-inferred",
+  "threshold": 0.85,
+  "evidence": {
+    "target": "../goals/target-v001.png",
+    "baseline": "../baseline/v001/front-right.png",
+    "studio": "finish-v001",
+    "assembly": "world-context-v002",
+    "previousAssembly": "world-context-v001",
+    "studioViewsInspected": 11,
+    "assemblyViewsInspected": 6,
+    "numericContact": "plot-intrusions-after.json"
+  },
+  "finish": {
+    "action": "approve",
+    "criticalScores": {
+      "silhouetteAndSweptProfile": 0.9,
+      "roofEnclosureAndNormals": 0.91,
+      "roofTileRelief": 0.87,
+      "stoneReliefAndContacts": 0.87,
+      "shuttersAndWindows": 0.88,
+      "timberAndHardware": 0.87,
+      "foldedSailAndSpoolIdentity": 0.87,
+      "doorwayClearance": 0.9,
+      "rearAndSideCompleteness": 0.87
+    },
+    "viewScores": {
+      "front": 0.88,
+      "front-right": 0.89,
+      "right": 0.88,
+      "rear-right": 0.88,
+      "rear": 0.88,
+      "rear-left": 0.87,
+      "left": 0.87,
+      "front-left": 0.89,
+      "top": 0.87,
+      "clay-front": 0.88,
+      "clay-rear": 0.87
+    },
+    "observations": [
+      "Physically raised tile courses follow swept closed roof; ridge and barge silhouette maintained.",
+      "Blue shutters, timber grain, door iron straps/rings, lantern and masonry joints provide readable V2 detail.",
+      "Folded sail bundle with ties and separate small spool sit beside front entry without blocking threshold.",
+      "Rear service entrance and side windows are complete. Left side lacks paired shutters but is cleanly finished.",
+      "Target weathering and irregular masonry are substantially simplified; scores measure coherent procedural production translation, not photoreal likeness."
+    ]
+  },
+  "assembly": {
+    "action": "approve",
+    "criticalScores": {
+      "neighborRoofAndWallClearance": 0.88,
+      "retainedCoastalSupport": 0.9,
+      "frontApproachReadability": 0.88,
+      "terrainToTerraceSurfaceContinuity": 0.91,
+      "routeAndFrozenSiblingPreservation": 0.88
+    },
+    "viewAssessments": {
+      "0": {
+        "score": 0.91,
+        "evidence": "Previously identified gray triangular rock intrusion is now absent; terrace surface continuous beside sail/spool, supporting coastal shoulder retained."
+      },
+      "45": {
+        "score": 0.88,
+        "evidence": "Elevated separation readable; terrace contact partly obscured."
+      },
+      "90": {
+        "score": null,
+        "evidence": "Guild occludes most subject; unsuitable for full clearance claim."
+      },
+      "135": {
+        "score": 0.89,
+        "evidence": "Coastal shoulder retained, rear terrace supported, neighboring roofs distinct."
+      },
+      "180": {
+        "score": 0.89,
+        "evidence": "Rear support continuous; no new frozen-sibling collision apparent."
+      },
+      "270": {
+        "score": 0.91,
+        "evidence": "Previously identified gray triangular rock intrusion is now absent; terrace surface continuous beside sail/spool, supporting coastal shoulder retained."
+      }
+    },
+    "correction": {
+      "family": "local-terrain-surface-contact",
+      "previousScore": 0.8,
+      "currentScore": 0.91,
+      "requiredScoreAfter": 0.9,
+      "requiredDelta": 0.1,
+      "observedDelta": 0.11,
+      "passed": true,
+      "request": "Resolved. No further local correction requested.",
+      "maxOtherRegression": 0.05,
+      "resolution": "Pipeline-order bug: shoreline accent rock16 was created after the old fitting call, so it was never lowered. Postconstruction terrain-contact fitting now processes existing accent geometry. Matched world0/270 visibly clear and numeric diagnostic reports zero above-cap intrusions. No threshold change."
+    },
+    "remainingLimitations": [
+      "No phone-scale acceptance in this packet.",
+      "Occluded world90 is not hidden-clearance evidence.",
+      "Screenshot evidence overrides intended terrain lowering."
+    ]
+  },
+  "overallAction": "approve",
+  "familyLedger": {
+    "finishConstructionFamily": 1,
+    "finishReviewWithinFamily": 1,
+    "assemblyCorrectionFamily": 1,
+    "assemblyBoundedCorrectionCompletedButFailedThreshold": false,
+    "rejectedIntermediatePreserved": "finish-review-r01.json and world-context-v001",
+    "resolutionMechanism": "Postconstruction fitting corrects skipped accent geometry due to pipeline ordering; same unresolved criterion and unchanged threshold."
+  },
+  "notes": "Read-only independent review; all six fresh world images inspected and compared to rejected evidence. Eleven studio finish originals remain approved from r01; unchanged studio construction was not rescored. No phone acceptance yet."
+}

@@ -1,0 +1,20 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "world-context-v001",
+  "decision": "approve-visible-coverage",
+  "usableViews": [
+    0,
+    90,
+    270
+  ],
+  "unusableViews": {
+    "180": "occluded by guild roof"
+  },
+  "findings": [
+    "Decorative cottage collision removed.",
+    "Terrace clear and grounded.",
+    "Separation from hatchery and conifers visible."
+  ],
+  "additionalEvidence": "island-fit-v002 canonical board overview",
+  "action": "present user comparison"
+}

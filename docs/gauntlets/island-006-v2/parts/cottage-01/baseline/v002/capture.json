@@ -1,0 +1,128 @@
+{
+  "captures": [
+    {
+      "name": "front",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=0&clay=0&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[0,5.526182617406994,9.063077870366499],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "front-right",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=45&clay=0&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[6.408563820557885,5.526182617406994,6.408563820557886],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "right",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=90&clay=0&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[9.063077870366499,5.526182617406994,5.5495346521837725e-16],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "rear-right",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=135&clay=0&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[6.408563820557886,5.526182617406994,-6.408563820557885],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "rear",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=180&clay=0&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[1.1099069304367545e-15,5.526182617406994,-9.063077870366499],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "rear-left",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=225&clay=0&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[-6.408563820557885,5.526182617406994,-6.408563820557887],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "left",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=270&clay=0&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[-9.063077870366499,5.526182617406994,-1.6648603956551314e-15],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "front-left",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=315&clay=0&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[-6.408563820557887,5.526182617406994,6.408563820557884],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "top",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=0&clay=0&elevation=70",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[0,10.696926207859084,3.4202014332566884],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "clay-front",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=45&clay=1&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[6.408563820557885,5.526182617406994,6.408563820557886],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    },
+    {
+      "name": "clay-rear",
+      "url": "http://127.0.0.1:5186/island-006-building-study.html?building=cottage-01&level=3&quality=medium&azimuth=225&clay=1&elevation=25",
+      "ready": "true",
+      "calls": "37",
+      "triangles": "9362",
+      "camera": "{\"position\":[-6.408563820557885,5.526182617406994,-6.408563820557887],\"target\":[0,1.3,0],\"orthographic\":[-2.5,2.5,2.5,-2.5]}"
+    }
+  ],
+  "errors": [],
+  "sourceStart": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22FishMarketV2.ts": "20d3f3076e6feba45114f2a12877de2af6da3e167df7245d6cfc9fd57c1f6cd7",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "41f147c2024ea664cdb782fa0c8e0e848842df03249853e9caf7c15312ab3f55",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "3fa2bf8f4e581e8d845438bba88167de8bc073dec25a7551f6c8104d082e07f5",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "99f00d41cbacc5380006cf1974956422f767736a37991a7811a5a48832a6a418",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "4fbe3beb7ba0b3bd2062e97efc67b592f1b2c87b3e5e5852d88a878aaa6e1eb6"
+  },
+  "sourceEnd": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22FishMarketV2.ts": "20d3f3076e6feba45114f2a12877de2af6da3e167df7245d6cfc9fd57c1f6cd7",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "41f147c2024ea664cdb782fa0c8e0e848842df03249853e9caf7c15312ab3f55",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "3fa2bf8f4e581e8d845438bba88167de8bc073dec25a7551f6c8104d082e07f5",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "99f00d41cbacc5380006cf1974956422f767736a37991a7811a5a48832a6a418",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "4fbe3beb7ba0b3bd2062e97efc67b592f1b2c87b3e5e5852d88a878aaa6e1eb6"
+  },
+  "changedDuringCapture": false
+}

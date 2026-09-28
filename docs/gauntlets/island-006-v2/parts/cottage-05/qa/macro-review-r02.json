@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-05-cooper",
+  "stage": "macro",
+  "review": "r02",
+  "reviewer": "independent-visual-review",
+  "pixelsFirst": true,
+  "threshold": 0.85,
+  "evidence": {
+    "studio": "blockout-v002",
+    "views": 11,
+    "assembly": "world-blockout-v002",
+    "worldViews": 6,
+    "previous": "macro-review-r01.json"
+  },
+  "macro": {
+    "action": "approve",
+    "finishMayProceed": true,
+    "criticalScores": {
+      "twoStoreyRightAnnexSilhouette": 0.9,
+      "sweptRoofShape": 0.9,
+      "closedRoofShellAndNormals": 0.9,
+      "annexWallTermination": 0.9,
+      "chimneyRoofContact": 0.89,
+      "sideWindowRoofClearance": 0.91,
+      "mainAndWorkroomDoorClearance": 0.88,
+      "foundationAndStepContacts": 0.87,
+      "rearAndSideCompleteness": 0.89
+    },
+    "correctionDelta": {
+      "criterion": "sideWindowRoofClearance",
+      "before": 0.79,
+      "after": 0.91,
+      "gain": 0.12,
+      "maxObservedOtherRegression": 0
+    },
+    "viewScores": {
+      "front": 0.88,
+      "front-right": 0.9,
+      "right": 0.91,
+      "rear-right": 0.9,
+      "rear": 0.89,
+      "rear-left": 0.89,
+      "left": 0.88,
+      "front-left": 0.88,
+      "top": 0.89,
+      "clay-front": 0.9,
+      "clay-rear": 0.89
+    },
+    "observations": [
+      "Pinched upper annex-side window removed; continuous wall strip between main and annex roof is clean in right/oblique/clay views.",
+      "Both roof silhouettes and other openings retained. No new attachment or enclosure defect observed."
+    ],
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 2,
+      "boundedCorrectionsUsed": 1,
+      "accepted": true
+    }
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "criticalScores": {
+      "coastalSupport": 0.88,
+      "neighborClearance": 0.87,
+      "routePreservation": 0.89,
+      "foliageAndFrontApproachClearance": 0.9,
+      "terrainToTerraceSurfaceContinuity": 0.81
+    },
+    "completedCorrection": {
+      "family": "local-foliage-footprint-clearance",
+      "before": 0.77,
+      "after": 0.9,
+      "gain": 0.13,
+      "accepted": true
+    },
+    "newlyExposedDefect": {
+      "family": "local-terrain-surface-contact",
+      "reason": "Tree removal exposes an angular rock through the left-front terrace cap; this surface was previously hidden.",
+      "view": "world-blockout-v002/cottage-world-azimuth-270.png",
+      "pixelLocation": "approximately x310–365,y615–652 beneath left front timber post",
+      "request": "Use targeted height/contact inspection and lower or clip only rock protrusions into terrace cap; inspect annex-side front edge too. Preserve supporting coastal shoulder, cottage transform and frozen neighbors.",
+      "before": 0.81,
+      "requiredAfter": 0.91
+    },
+    "viewScores": {
+      "0": null,
+      "45": 0.87,
+      "90": 0.88,
+      "135": 0.88,
+      "180": null,
+      "270": 0.81
+    },
+    "limitations": [
+      "World0 and180 heavily occluded; not clearance authority.",
+      "Phone/finish gates remain pending."
+    ]
+  },
+  "overallAction": "one-bounded-correction",
+  "notes": "Studio macro accepted and finish released; foliage family accepted. Final assembly awaits separate newly visible terrain-contact correction."
+}

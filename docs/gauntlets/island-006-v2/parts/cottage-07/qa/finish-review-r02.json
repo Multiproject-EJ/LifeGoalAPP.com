@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-07-rope-maker",
+  "stage": "finish-and-assembly",
+  "review": "r02",
+  "reviewer": "independent-visual-review",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "referenceAuthority": "secondary-inferred",
+  "evidence": {
+    "studio": "finish-v001 (frozen approval retained)",
+    "world": "world-context-v003",
+    "worldViews": 6,
+    "previous": "finish-review-r01.json"
+  },
+  "finish": {
+    "action": "approve",
+    "approvalCarriedFrom": "finish-review-r01.json",
+    "scope": "Frozen accepted studio finish; this recheck is assembly-only.",
+    "criticalScores": {
+      "silhouetteAndVolume": 0.9,
+      "tradeIdentity": 0.87,
+      "roofSurfaceReadability": 0.85,
+      "roofAndAnnexAttachments": 0.9,
+      "masonrySurfaceContinuity": 0.9,
+      "doorAndWindowHardware": 0.89,
+      "propAttachmentAndDoorClearance": 0.89,
+      "crossViewCoherence": 0.89
+    }
+  },
+  "assembly": {
+    "action": "approve",
+    "criticalScores": {
+      "mainBodyAndRoofSeparation": 0.91,
+      "cottage08Separation": 0.9,
+      "continuousCoastalFooting": 0.9,
+      "terrainToTerraceSurfaceContact": 0.9,
+      "annexPortalNeighborClearance": 0.89,
+      "villageStreetToFrontTerraceApproach": 0.9
+    },
+    "correctionDelta": {
+      "criterion": "villageStreetToFrontTerraceApproach",
+      "before": 0.78,
+      "after": 0.9,
+      "gain": 0.12,
+      "maxOtherRegression": 0
+    },
+    "observations": [
+      "World135 and270 now clearly show a continuous short stone landing from village street across rocky slope to main terrace. Landing surface is clear and meets terrace edge; the shared terrace reaches both main and annex portals.",
+      "World0/90 show continuous stepped masonry support descending to water without the former visible unsupported lower termination.",
+      "World45/135 retain clear hatchery/roof and cottage08 separation. No accepted neighbor shape is modified in these images.",
+      "World180 still has a foreground conifer occluding part of main entry; other two angles independently prove landing, so occlusion is not used as approval evidence."
+    ],
+    "viewScores": {
+      "0": 0.9,
+      "45": 0.9,
+      "90": 0.89,
+      "135": 0.9,
+      "180": 0.87,
+      "270": 0.9
+    },
+    "familyLedger": {
+      "placement": {
+        "family": 2,
+        "reviewWithinFamily": 2,
+        "boundedCorrectionsUsed": 1,
+        "accepted": true,
+        "unchangedSincePrior": true
+      },
+      "streetConnection": {
+        "family": "supported-street-to-terrace-connection",
+        "reviewWithinFamily": 2,
+        "boundedCorrectionsUsed": 1,
+        "accepted": true
+      }
+    },
+    "limitations": [
+      "Landing material remains simple/coarse relative to finished cottage; geometry and access are now coherent.",
+      "Static context proves visible connection/contact, not simulated pedestrian locomotion or dynamic ocean states."
+    ]
+  },
+  "phone": {
+    "action": "pending-final-island-gate",
+    "reason": "No production phone-camera packet in this assembly correction; whole-island final gate remains separate."
+  },
+  "overallAction": "approve",
+  "notes": "Accept this house's finish and static assembly, without inflating it to full-island or phone acceptance."
+}

@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-11-keeper",
+  "stage": "macro",
+  "review": "r01",
+  "reviewer": "independent-visual-review",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "referenceAuthority": "secondary-inferred",
+  "evidence": {
+    "target": "goals/target-v001.png",
+    "baseline": "baseline/v001/front-right.png",
+    "studio": "blockout-v001",
+    "studioViews": 11,
+    "world": "world-blockout-v001",
+    "worldViews": 6
+  },
+  "macro": {
+    "action": "one-bounded-correction",
+    "finishMayProceed": false,
+    "criticalScores": {
+      "ridgeXSweptRoofSilhouette": 0.9,
+      "twoStoreyLeftAnnexProportion": 0.9,
+      "closedGableAndRoofEnclosure": 0.9,
+      "annexWallBoundary": 0.89,
+      "openingClearance": 0.89,
+      "timberFrameJunctionContinuity": 0.8,
+      "terraceAndStep": 0.88,
+      "crossViewCoherence": 0.88
+    },
+    "viewScores": {
+      "front": 0.88,
+      "front-right": 0.81,
+      "right": 0.8,
+      "rear-right": 0.81,
+      "rear": 0.89,
+      "rear-left": 0.8,
+      "left": 0.8,
+      "front-left": 0.81,
+      "top": 0.9,
+      "clay-front": 0.81,
+      "clay-rear": 0.8
+    },
+    "observations": [
+      "Ridge-X swept main roof and lower left annex form coherent volumes; wall silhouette follows roof underside with no disappearing slab or gable hole.",
+      "Both side gables visibly have short corner posts detached below/inboard of horizontal gable tie. Most evident right/left, rear-left and clay-rear. Plaster remains behind the joint: this is frame-contact failure, not absent enclosure.",
+      "Openings, chimney and wall-clipped annex roof are otherwise clear."
+    ],
+    "diagnosticAfterPixels": {
+      "source": "Island22KeeperCottageV2.ts",
+      "upperCornerPostTop": 1.995,
+      "sideGableTieBottom": 2.0825,
+      "sideTieHalfSpan": 0.6,
+      "cornerPostZ": 0.673
+    },
+    "correction": {
+      "family": "gable-timber-junction-continuity",
+      "hypothesis": "Ridge-X roof conversion retained short corner posts and a tie too narrow to meet them.",
+      "request": "Join gable tie and corner-post timber perimeter below the accepted roof, preserving roof silhouette, continuous shell and all openings. Avoid new post tips through roof.",
+      "requiredAfter": 0.9,
+      "minimumGain": 0.1,
+      "maxOtherRegression": 0.05
+    },
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0
+    }
+  },
+  "assembly": {
+    "action": "retire-family",
+    "hardVeto": true,
+    "criticalScores": {
+      "boatwrightSeparation": 0.48,
+      "rearThresholdTerrainClearance": 0.63,
+      "frontFoliageClearance": 0.69,
+      "mainEntryApproach": 0.76,
+      "routeVisibility": 0.86
+    },
+    "observations": [
+      "World270 shows boatwright quay crossing keeper annex/rear terrace, while annex eave enters the hull/cradle region; elevated45/135 confirm the shared footprint.",
+      "A large angular coastal rock rises into rear service threshold/apron in world270.",
+      "World90/180 show conifer occupying front-right facade/terrace, and grass crossing front approach.",
+      "Do not reshape or move frozen boatwright to conceal this overlap."
+    ],
+    "viewAssessments": {
+      "0": {
+        "score": null,
+        "scope": "Gantry/hull heavily occlude lower keeper; no independent contact evidence."
+      },
+      "45": {
+        "score": 0.48,
+        "scope": "Elevated footprint confirms keeper annex in boatwright hull/quay area."
+      },
+      "90": {
+        "score": 0.69,
+        "scope": "Front conifer and grasses intersect new footprint; boatwright post crowds annex approach."
+      },
+      "135": {
+        "score": 0.48,
+        "scope": "Overlap confirmed from opposite elevated angle."
+      },
+      "180": {
+        "score": 0.69,
+        "scope": "Conifer on front-right terrace and tight neighbor relationship."
+      },
+      "270": {
+        "score": 0.48,
+        "scope": "Definitive quay/annex overlap plus rear-door rock intrusion."
+      }
+    },
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0,
+      "retired": true,
+      "reason": "Hard neighbor collision; below .50 separation."
+    },
+    "nextRepresentation": "Measured cottage-only alternative placement with continuous ground/footing and explicit front/rear approaches. Preserve frozen boatwright and all accepted neighbor geometry; clear only local foliage/terrain conflicts. One new placement family remains, with one baseline and at most one bounded correction."
+  },
+  "overallAction": "retire-family",
+  "notes": "Assembly original placement retired. Studio has one bounded timber-junction correction; finish withheld until studio macro passes. Assembly acceptance remains independent."
+}

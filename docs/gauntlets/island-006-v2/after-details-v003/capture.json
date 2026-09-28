@@ -1,0 +1,66 @@
+{
+  "captures": [
+    {
+      "name": "calm",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=overview&weatherTime=4"
+    },
+    {
+      "name": "squall",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=overview&weatherTime=50"
+    },
+    {
+      "name": "clearing",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=overview&weatherTime=80"
+    },
+    {
+      "name": "guild",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=boss&isolate=1&azimuth=30&weatherTime=4"
+    },
+    {
+      "name": "lighthouse",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=wisdom&isolate=1&weatherTime=4"
+    },
+    {
+      "name": "boatwright",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=habit&isolate=1&weatherTime=4"
+    },
+    {
+      "name": "tavern",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=event&isolate=1&weatherTime=4"
+    },
+    {
+      "name": "hatchery",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=hatchery&isolate=1&weatherTime=4"
+    },
+    {
+      "name": "fisherman",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?phase=reeling&landmarks=1&weatherTime=4"
+    },
+    {
+      "name": "dragon-erupt",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=7&weatherTime=4"
+    },
+    {
+      "name": "dragon-flight",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=12&weatherTime=4"
+    },
+    {
+      "name": "dragon-dive",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=18.5&weatherTime=4"
+    },
+    {
+      "name": "eruption-8s",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=8.8&weatherTime=4"
+    },
+    {
+      "name": "flight-15s",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=15&weatherTime=4"
+    },
+    {
+      "name": "dive-20s",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=dragon&dragonTime=20.5&weatherTime=4"
+    }
+  ],
+  "errors": [],
+  "scope": "Actual world factory and mission in evidence lab; no gameplay board in lab. 900x900, DPR1, medium tier, locked weather/mission phase."
+}

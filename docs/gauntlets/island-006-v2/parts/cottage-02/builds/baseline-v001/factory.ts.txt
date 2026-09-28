@@ -1,0 +1,19 @@
+/** Individually reviewable second cottage, including the original supplementary windows. */
+export function createIsland22NetMenderCottage(quality: Island3DQuality, materials: Island22FishermansVillageMaterials) {
+  const root = new THREE.Group(); root.name = 'ISLAND_22_NET_MENDER_COTTAGE';
+  const plinth = cylinder(1.12, 1.28, .32, materials.stone, 10);
+  plinth.position.y = -.13; plinth.scale.z = .76; root.add(plinth);
+  root.add(createAuthoredHarborHouse('ISLAND_22_NET_MENDER_COTTAGE_MAIN',1.42,1.22,1,'slate',materials));
+  const crate = box(.34,.28,.3,materials.timber); crate.position.set(.92,.14,.72);
+  const brace = box(.035,.32,.32,materials.timberDark); brace.position.copy(crate.position); brace.rotation.z=.66;root.add(crate,brace);
+  const y=.58+(.57+.012-.65)/.88;
+  for (const side of [-1,1]) {
+    const frame=box(.075,.45,.4,materials.timberDark); frame.position.set(side*.755,y,0);
+    const pane=box(.085,.31,.27,materials.window); pane.position.set(side*.773,y,0);
+    const ef=box(.4,.45,.075,materials.timberDark); ef.position.set(.22*1.42,y,side*.655);
+    const ep=box(.27,.31,.085,materials.window); ep.position.set(.22*1.42,y,side*.673);
+    root.add(frame,pane,ef,ep);
+  }
+  setShadow(root);compactStaticGeometry(root,root.name);return root;
+}
+

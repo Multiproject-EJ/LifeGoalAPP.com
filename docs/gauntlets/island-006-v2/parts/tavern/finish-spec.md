@@ -1,0 +1,2 @@
+# Tavern finish
+Frozen octagonal shell and cupola proportions; continuous rounded bell roof approved in macro v002. Finish: surface-following slate tile bands, copper cap seams and mullions, stone quay courses and coping, framed arched openings, two entry lanterns, fish sign with attached hangers, table and stools on supported terrace, rear barrels and supply crate. Keep steps/door accessible. Remove redundant hidden roof geometry if budget requires; preserve visible silhouette.

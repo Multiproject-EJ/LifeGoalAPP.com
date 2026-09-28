@@ -1,0 +1,40 @@
+import * as THREE from 'three';
+const V=(x:number,y:number,z:number)=>new THREE.Vector3(x,y,z);
+/** Continuous longitudinal cross-sections: skull, cheek and tapered long snout share one skin. */
+export function seaDragonHeadGeometry(){
+ const sections=[[-1.15,.43,.44,0],[-.85,.47,.49,.035],[-.52,.56,.56,.10],[-.12,.61,.57,.13],[.27,.55,.48,.095],[.62,.43,.32,-.015],[1.06,.38,.235,-.09],[1.44,.29,.19,-.075],[1.62,.10,.105,-.07],[1.66,.006,.012,-.065]],n=24,p:number[]=[],idx:number[]=[];
+ for(const[z,rx,ry,cy]of sections)for(let j=0;j<n;j++){const a=j/n*Math.PI*2;p.push(Math.cos(a)*rx,cy+Math.sin(a)*ry,z);}
+ for(let i=0;i<sections.length-1;i++)for(let j=0;j<n;j++){const a=i*n+j,b=i*n+(j+1)%n,c=(i+1)*n+j,d=(i+1)*n+(j+1)%n;idx.push(a,b,c,b,d,c);}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setIndex(idx);g.computeVertexNormals();return g;
+}
+export function taperedOrganicTube(points:THREE.Vector3[],base:number,tip:number,segments=18,sides=8){
+ const curve=new THREE.CatmullRomCurve3(points),frames=curve.computeFrenetFrames(segments,false),p:number[]=[],idx:number[]=[];
+ for(let i=0;i<=segments;i++){const t=i/segments,c=curve.getPointAt(t),r=THREE.MathUtils.lerp(base,tip,Math.pow(t,.72));for(let j=0;j<sides;j++){const a=j/sides*Math.PI*2,v=c.clone().addScaledVector(frames.normals[i],Math.cos(a)*r).addScaledVector(frames.binormals[i],Math.sin(a)*r);p.push(v.x,v.y,v.z);}}
+ for(let i=0;i<segments;i++)for(let j=0;j<sides;j++){const a=i*sides+j,b=i*sides+(j+1)%sides,c=(i+1)*sides+j,d=(i+1)*sides+(j+1)%sides;idx.push(a,b,c,b,d,c);}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setIndex(idx);g.computeVertexNormals();return g;
+}
+/** Shoulder → elbow → wrist, then three finger rays: the membrane is not rooted at the body. */
+export function addSeaDragonArticulatedWing(group:THREE.Group,side:-1|1,skin:THREE.Material,membrane:THREE.Material,ivory:THREE.Material){
+ const shoulder=V(0,0,side*.58),elbow=V(-.32,.14,side*1.46),wrist=V(.93,.56,side*2.16);
+ const mesh=(n:string,g:THREE.BufferGeometry,m:THREE.Material)=>{const o=new THREE.Mesh(g,m);o.name=group.name+'_'+n;o.castShadow=true;o.receiveShadow=true;group.add(o);return o;};
+ mesh('MUSCULAR_UPPER_ARM',taperedOrganicTube([shoulder,V(-.18,.07,side*1.0),elbow],.22,.13,12),skin);
+ mesh('FOREARM',taperedOrganicTube([elbow,V(.28,.35,side*1.78),wrist],.145,.09,12),skin);
+ for(const[p,r]of [[shoulder,.23],[elbow,.15],[wrist,.11]] as const){const o=mesh('ARTICULATED_JOINT',new THREE.SphereGeometry(r,10,7),skin);o.position.copy(p);}
+ const tips=[V(2.45,.35,side*4.95),V(-.48,-.12,side*4.35),V(-1.72,-.17,side*3.05)];
+ const curves=tips.map((tip,i)=>new THREE.CatmullRomCurve3([wrist,V((wrist.x+tip.x)/2+.18,.46-i*.15,side*(Math.abs(wrist.z+tip.z)/2+.12)),tip]));
+ const inner=new THREE.CatmullRomCurve3([wrist,V(-.15,.08,side*1.40),V(-1.0,-.12,side*.60)]);
+ const boundaries=[...curves,inner];
+ for(let i=0;i<3;i++){
+  mesh('WING_FINGER_'+i,taperedOrganicTube(curves[i].getPoints(5),.079,.016,16,7),skin);
+  mesh('FINGER_CLAW_'+i,taperedOrganicTube([tips[i],tips[i].clone().add(V(-.065,-.02,side*.08)),tips[i].clone().add(V(-.14,-.12,side*.10))],.034,.002,7,6),ivory);
+  const p:number[]=[],idx:number[]=[],rows=12,cols=8;
+  for(let r=0;r<=rows;r++)for(let c=0;c<=cols;c++){const t=r/rows,u=c/cols,scalloped=t*(1-.19*Math.sin(Math.PI*u)*t*t),a=boundaries[i].getPoint(scalloped),b=boundaries[i+1].getPoint(scalloped),v=a.lerp(b,u);v.y+=Math.sin(Math.PI*u)*Math.sin(Math.PI*t)*.13;p.push(v.x,v.y,v.z);}
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const a=r*(cols+1)+c,b=a+cols+1;idx.push(a,b,a+1,a+1,b,b+1);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));g.setIndex(idx);g.computeVertexNormals();mesh('SCALLOPED_MEMBRANE_PANEL_'+i,g,membrane);
+ }
+ const forearmPivot=new THREE.Group();forearmPivot.name=group.name+'_ELBOW_PIVOT';forearmPivot.position.copy(elbow);group.add(forearmPivot);
+ const wristPivot=new THREE.Group();wristPivot.name=group.name+'_WRIST_PIVOT';wristPivot.position.copy(wrist);group.add(wristPivot);group.updateMatrixWorld(true);forearmPivot.attach(wristPivot);
+ for(const child of [...group.children]){if(!(child instanceof THREE.Mesh))continue;if(child.name.includes('FOREARM'))forearmPivot.attach(child);else if(child.name.includes('WING_FINGER')||child.name.includes('FINGER_CLAW')||child.name.includes('SCALLOPED_MEMBRANE')||child.position.distanceTo(wrist)<.001)wristPivot.attach(child);}
+ group.userData.setAnatomicalFold=(fold:number)=>{forearmPivot.rotation.y=side*fold*.65;wristPivot.rotation.y=-side*fold*1.0;};
+
+}

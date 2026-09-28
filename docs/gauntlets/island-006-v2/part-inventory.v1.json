@@ -1,0 +1,137 @@
+{
+  "status": "local iteration authorized by explicit current instruction",
+  "parts": [
+    {
+      "id": "roof-shells",
+      "parent": "world / village houses",
+      "acceptance": "continuous pitched roofs + slate rows",
+      "attachment": "foundation/house walls",
+      "views": "all four views",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "guild-hall",
+      "parent": "world / boss",
+      "acceptance": "existing swept mansard with readable portal, restrained windows",
+      "attachment": "existing boss root",
+      "views": "front/rear/focus",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "lighthouse",
+      "parent": "world / wisdom",
+      "acceptance": "stone bands and copper lantern",
+      "attachment": "existing wisdom root",
+      "views": "front/rear/focus",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "boatwright",
+      "parent": "world / habit",
+      "acceptance": "complete supported roof and shipyard silhouette",
+      "attachment": "existing habit root",
+      "views": "front/rear/focus",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred",
+      "status": "individual macro and finish visual gates passed; user review pending",
+      "packet": "parts/boatwright/review/index.html"
+    },
+    {
+      "id": "tavern",
+      "parent": "world / event",
+      "acceptance": "continuous round slate cap",
+      "attachment": "existing event root",
+      "views": "front/rear/focus",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "hatchery",
+      "parent": "world / hatchery",
+      "acceptance": "net canopy and intact gables",
+      "attachment": "existing hatchery root",
+      "views": "front/rear/focus",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "shore-rock",
+      "parent": "world / terrain",
+      "acceptance": "embedded irregular cliff stratification",
+      "attachment": "existing terrain; outside route",
+      "views": "four orbits",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "sea-pond",
+      "parent": "world / environment",
+      "acceptance": "wave normals, color depth, shore contact",
+      "attachment": "existing water surfaces",
+      "views": "calm/wind/ease",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "cloud-rain",
+      "parent": "world / environment",
+      "acceptance": "coherent shaded cloud mass and rain",
+      "attachment": "existing weather elapsed clock",
+      "views": "calm/wind/ease",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "fisher-crowd",
+      "parent": "world / actors",
+      "acceptance": "clothed volume, bent arms, rod lines",
+      "attachment": "existing platform roots and escape logic",
+      "views": "overview/focus",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "hero-fisher",
+      "parent": "world / actors",
+      "acceptance": "oilskin, beard, mitten/hand pose",
+      "attachment": "existing actor rig",
+      "views": "fishing close-up",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "dragon-head",
+      "parent": "world / dragon",
+      "acceptance": "aquatic crown, joined jaw and expressive eyes",
+      "attachment": "existing head pivot",
+      "views": "erupt/flight/dive",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    },
+    {
+      "id": "dragon-body-wings",
+      "parent": "world / dragon",
+      "acceptance": "continuous fins/skin/membranes",
+      "attachment": "existing animated body/wing pivots",
+      "views": "erupt/flight/dive",
+      "owner": "root",
+      "excludes": "gameplay, route, camera, mission timeline",
+      "confidence": "visible forms high; unseen sides inferred"
+    }
+  ]
+}

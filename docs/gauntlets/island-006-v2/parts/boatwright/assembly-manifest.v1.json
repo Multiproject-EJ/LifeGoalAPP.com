@@ -1,0 +1,14 @@
+{
+  "part": "boatwright-yard",
+  "status": "visual gates approved; user review and phone performance pending",
+  "module": "src/features/gamification/level-worlds/dev/Island22BoatwrightV2.ts",
+  "sha256": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+  "scope": "Root transform supplied by unchanged source022 landmark position; new quay owns built habit foundation",
+  "capture": "qa/finish-v002/capture.json",
+  "reviews": [
+    "qa/macro-review-r02.json",
+    "qa/finish-review-r02.json",
+    "qa/assembly-review-v001.json"
+  ],
+  "otherBuildings": "frozen"
+}

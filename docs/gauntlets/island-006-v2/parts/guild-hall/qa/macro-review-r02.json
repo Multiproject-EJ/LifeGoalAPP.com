@@ -1,0 +1,35 @@
+{
+  "reviewer": "visual_review",
+  "reviewRound": 2,
+  "macroPacket": "blockout-v002",
+  "macroAction": "approve",
+  "assemblyPacket": "world-blockout-v002",
+  "assemblyAction": "approve",
+  "scoresAreSubjectiveVisualJudgments": true,
+  "reviewedViews": ["front", "rear", "left", "right", "front-right", "front-left", "rear-left", "rear-right", "top", "clay-front", "clay-rear"],
+  "reviewedAssemblyAzimuths": [0, 90, 180, 270],
+  "macroScores": {
+    "openingStructureClearance": 0.89,
+    "sweptRoofAndCrownSilhouette": 0.88,
+    "wingAndEntryVolumeCoherence": 0.87,
+    "roofWallConnections": 0.86,
+    "isolatedFoundationAndSteps": 0.89
+  },
+  "boundedCorrectionDelta": {"openingStructureClearance": {"before": 0.78, "after": 0.89, "delta": 0.11}},
+  "maximumObservedMacroRegression": 0.0,
+  "assemblyScores": {"stairApproachClearance": 0.90, "neighborSeparation": 0.88, "coastalSupportContinuity": 0.87},
+  "observations": [
+    "Inner barge ends no longer cross tall-window glazing or arches.",
+    "Lowered outer side-wing windows now clear their roof edge.",
+    "Main roof, entry, wings and crown retain their prior volumes.",
+    "Staircase is clear of the prior intersecting conifers in world azimuth 0 and 270.",
+    "Moved decorative cottages separate from the precinct and have visible rock support shoulders.",
+    "Rear precinct now continues downward with a tapered footing, eliminating the prior unsupported overhang reading.",
+    "No obvious new route obstruction or neighboring landmark intersection is visible in these four views."
+  ],
+  "limits": [
+    "Macro and visible assembly approval only; finish remains unreviewed.",
+    "The rectangular coastal foundation remains visually heavy; this is not an exact match to the inferred target's low terrace.",
+    "Runtime tests and exact collision calculations are not part of this visual approval."
+  ]
+}

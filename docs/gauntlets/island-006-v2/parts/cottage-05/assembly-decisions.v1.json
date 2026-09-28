@@ -1,0 +1,8 @@
+{
+  "transform": "unchanged",
+  "supportShoulder": "preserved",
+  "change": "Clear local tree/grass/shrub centers inside cooper plot + modest margins; no frozen neighbor moved",
+  "status": "pending bounded correction review",
+  "terrainDiagnosis": "Ray scan found strata83 and accent19 above paving after foliage removal",
+  "terrainCorrection": "Postconstruction bound fitting within cooper terrace, all quality tiers; retain shoulder and allhouse transforms"
+}

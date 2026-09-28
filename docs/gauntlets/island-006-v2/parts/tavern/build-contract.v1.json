@@ -1,0 +1,37 @@
+{
+  "part": "round-lantern-tavern",
+  "runtimeIsland": 6,
+  "worldSource": 22,
+  "allowlist": [
+    "Island22TavernV2.ts",
+    "createIsland22PremiumRoundLanternTavern",
+    "event built foundation ownership",
+    "local foliage clearance if assembly requires"
+  ],
+  "rootPosition": [
+    7.45,
+    0.38,
+    2.15
+  ],
+  "architectureScale": 0.72,
+  "canonicalConstructionParts": [
+    "round-macro",
+    "roof-lantern-terrace",
+    "occupied-detail-system"
+  ],
+  "gateThreshold": 0.85,
+  "budget": {
+    "triangles": 14000,
+    "batches": 45,
+    "tier": "medium"
+  },
+  "reviewer": "/root/visual_review",
+  "validation": [
+    "11 matched camera views",
+    "macro and finish gates",
+    "assembled scene including close-up",
+    "construction levels and quality tiers",
+    "TypeScript/build",
+    "portrait freshness"
+  ]
+}

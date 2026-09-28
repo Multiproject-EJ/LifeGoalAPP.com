@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-08-harbor-cook",
+  "stage": "finish-and-assembly",
+  "review": "r01",
+  "reviewer": "independent-reference-curator",
+  "referenceAuthority": "secondary-inferred",
+  "pixelsFirst": true,
+  "threshold": 0.85,
+  "evidence": {
+    "studio": "finish-v001",
+    "studioViewsInspected": 11,
+    "assembly": "world-context-v001",
+    "assemblyViewsInspected": 6,
+    "target": "../goals/target-v001.png",
+    "baseline": "../baseline/v001/front-right.png",
+    "macro": "macro-review-r01.json"
+  },
+  "finish": {
+    "action": "approve",
+    "criticalScores": {
+      "singleStoreySweptRoofIdentity": 0.9,
+      "roofEnclosureAndContacts": 0.9,
+      "slateRelief": 0.88,
+      "shuttersAndWindowReadability": 0.89,
+      "masonryAndTimberFinish": 0.88,
+      "copperPanAndHerbBundle": 0.88,
+      "frontRearDoorClearance": 0.91,
+      "rearSideCompleteness": 0.88
+    },
+    "viewScores": {
+      "front": 0.9,
+      "front-right": 0.89,
+      "right": 0.89,
+      "rear-right": 0.89,
+      "rear": 0.89,
+      "rear-left": 0.88,
+      "left": 0.88,
+      "front-left": 0.89,
+      "top": 0.89,
+      "clay-front": 0.89,
+      "clay-rear": 0.88
+    },
+    "observations": [
+      "Continuous slate courses, ridge terminals, clean gable framing, slightly proud stone courses and blue shutters form coherent cottage finish.",
+      "Copper pan and tied herbs read as a small wall-mounted cooking cue without obstructing the arched door in isolation.",
+      "Rear service door and side openings remain complete. Left side has simple unshuttered window, consistent with restrained secondary elevation.",
+      "Texture/weathering remains simpler than inferred target; no exact pixel likeness claim."
+    ]
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "criticalScores": {
+      "neighborClearance": 0.88,
+      "groundSupport": 0.88,
+      "frontRearApproach": 0.87,
+      "foliageClearanceAtCookingCue": 0.81,
+      "routeClearance": 0.89,
+      "terrainSurfaceContacts": 0.88
+    },
+    "viewAssessments": {
+      "0": {
+        "score": 0.88,
+        "note": "Rear doorway and terrace clear; conifers close beside shell but no demonstrated penetration."
+      },
+      "45": {
+        "score": 0.88,
+        "note": "Elevated separation from currently relocated cottage07 visible."
+      },
+      "90": {
+        "score": null,
+        "note": "Conifer/landmark occludes side-window area; not full side-clearance evidence."
+      },
+      "135": {
+        "score": 0.87,
+        "note": "Front terrace and approach visible but shrub remains immediately against front."
+      },
+      "180": {
+        "score": 0.81,
+        "note": "Legacy green shrub abuts masonry directly beneath new pan/herbs, orange flowers merge visually with hanging herb bundle."
+      },
+      "270": {
+        "score": null,
+        "note": "Neighbor roofs and conifer obscure side; no hidden-clearance inference."
+      }
+    },
+    "correction": {
+      "family": "local-cooking-cue-foliage-clearance",
+      "before": 0.81,
+      "requiredAfter": 0.91,
+      "maxOtherRegression": 0.05,
+      "pixelLocation": "world180 approximately x397–451,y620–669 shrub and x442,y594 orange blossom",
+      "request": "Move or omit only legacy shrub and associated flowers at front window/door gap so cooking cue and masonry remain unobscured. Keep cottage transform, pan/herbs, other terrain and neighbor buildings unchanged. Recapture six world views after final cottage07 placement."
+    },
+    "notes": [
+      "Macro foliage .85 acceptance predated visible cooking cue; new finish makes this front shrub conflict concrete.",
+      "Front central threshold remains open; issue is cue/masonry collision rather than total door blockage.",
+      "Further cottage07 relocation requires final shared-context recheck."
+    ]
+  },
+  "overallAction": "assembly-correction-required",
+  "limitations": [
+    "Phone and final island review pending.",
+    "Occluded side views not proof of collision or clearance.",
+    "Read-only review; only this JSON written."
+  ]
+}

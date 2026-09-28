@@ -1,0 +1,22 @@
+/** Baseline extraction of the third cottage and its original left annex. */
+export function createIsland22SmokehouseCottage(quality: Island3DQuality, materials: Island22FishermansVillageMaterials) {
+  const root = new THREE.Group(); root.name = 'ISLAND_22_SMOKEHOUSE_COTTAGE';
+  const plinth = cylinder(1.12, 1.28, .32, materials.stone, 10);
+  plinth.position.y = -.13; plinth.scale.z = .76; root.add(plinth);
+  root.add(createAuthoredHarborHouse('ISLAND_22_SMOKEHOUSE_COTTAGE_MAIN',1.55,1.22,2,'slate',materials));
+  if (quality !== 'low') { const annex = createAuthoredHarborHouse('ISLAND_22_SMOKEHOUSE_COTTAGE_ANNEX',.92,.82,1,'warm',materials); annex.position.set(-1.02,.03,.18);annex.rotation.y=.18;root.add(annex); }
+  const barrel=cylinder(.13,.15,.34,materials.timber,8);barrel.position.set(-.9,.18,.76);root.add(barrel);
+  const hoop=new THREE.Mesh(new THREE.TorusGeometry(.145,.018,4,8),materials.brass);hoop.rotation.x=Math.PI/2;hoop.position.set(-.9,.22,.76);root.add(hoop);
+  for(let floor=0;floor<2;floor++) {
+    const y=.58+floor*.76+(.57+((6+floor*2)%3)*.012-.73)/.9;
+    for(const side of [-1,1]) {
+      const frame=box(.075,.45,.4,materials.timberDark);frame.position.set(side*.82,y,0);
+      const pane=box(.085,.31,.27,materials.window);pane.position.set(side*.838,y,0);
+      const ef=box(.4,.45,.075,materials.timberDark);ef.position.set((floor%2===0?.22:-.22)*1.55,y,side*.655);
+      const ep=box(.27,.31,.085,materials.window);ep.position.set(ef.position.x,y,side*.673);
+      root.add(frame,pane,ef,ep);
+    }
+  }
+  setShadow(root);compactStaticGeometry(root,root.name);return root;
+}
+

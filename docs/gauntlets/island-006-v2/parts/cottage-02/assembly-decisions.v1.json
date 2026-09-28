@@ -1,0 +1,42 @@
+{
+  "part": "cottage-02",
+  "transform": {
+    "position": [
+      -1.35,
+      0.65,
+      -7.35
+    ],
+    "yaw": -0.06,
+    "scale": 0.88,
+    "changed": false
+  },
+  "dressingCorrections": [
+    {
+      "type": "local foliage",
+      "reason": "Baseline conifer intersects roof and right wall",
+      "action": "Tree and grass footprint exclusion for this cottage only"
+    },
+    {
+      "type": "single fishing barrel",
+      "before": [
+        -1.62,
+        0.78,
+        -6.53
+      ],
+      "after": [
+        -0.54,
+        0.78,
+        -6.5
+      ],
+      "reason": "Clear left edge of central front step; original crate remains outside lane"
+    }
+  ],
+  "frozen": "All seven prior modules and neighboring building transforms",
+  "evidenceBefore": "baseline/world-v001 and qa/world-blockout-v001",
+  "status": "corrected assembly r02 approved; final finished geometry context pending",
+  "evidenceAfter": "qa/world-blockout-v002",
+  "entryClearanceDelta": [
+    0.76,
+    0.89
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "reviewer": "visual_review",
+  "action": "approve",
+  "input": "qa/island-fit-v001/overview.png",
+  "scope": "single wider diagnostic view",
+  "observations": "Full quay grounded on shoreline, no obvious board-route intrusion or major neighbor collision. Adjacent turquoise shed is close but no clear intersection in view. Individual finish approval retained."
+}

@@ -1,0 +1,16 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "blockout-v001",
+  "decision": "one-bounded-correction",
+  "family": "architectural surface/contact continuity",
+  "scores": {
+    "silhouette": 0.88,
+    "roofBodyContinuity": 0.76,
+    "doorContact": 0.81,
+    "foundationPileContact": 0.83,
+    "poolBridge": 0.88,
+    "net": 0.9,
+    "crossView": 0.87
+  },
+  "action": "Fit gables to roof underside; close door gap; eliminate coplanar pile exposure. Preserve proportions."
+}

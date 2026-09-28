@@ -1,0 +1,7 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "island-fit-v001/overview.png",
+  "decision": "approve-visible-integration",
+  "findings": "Grounded along shoreline; board route unobstructed. Neighbor roofs close in projection; no obvious collision visible from overview.",
+  "scope": "Overview-based visual integration, not physical device acceptance."
+}

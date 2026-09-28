@@ -1,0 +1,2 @@
+# Round lantern tavern
+User approved continuation after hatchery. One coupled round building: continuous octagonal shell, curved roof/cupola, foundation and terrace. Preserve root transforms, event scale .72, canonical 3 construction groups and sockets. Other accepted buildings frozen. Generated target is secondary inferred. Independent structural then finish and assembly gates, threshold .85, one bounded correction per family. Medium budget 14k triangles/45 batches; physical device timing separate.

@@ -1,0 +1,35 @@
+{
+  "part": "net-house-hatchery",
+  "authority": "secondary-inferred-generated-target",
+  "tool": "built-in ImageGen",
+  "target": {
+    "path": "goals/target-v001.png",
+    "sha256": "0c07759fe8f528ffa946bdcf880f398e9ce9b6f1f0c358d69ad90e4f7be6239b",
+    "pixelMode": "RGBA",
+    "dimensions": [
+      1254,
+      1254
+    ],
+    "alphaRange": [
+      0,
+      255
+    ]
+  },
+  "prompt": {
+    "path": "prompts/target-v001.txt",
+    "sha256": "3a2fd458ca2b22e9da3bfa3d60cd0d6daf6efdbfb0e9897afebf10fe27fb387f"
+  },
+  "interpretations": [
+    "Four views not perfectly orthographic; rear accessories inferred.",
+    "Two basins split front/rear by a service bridge in runtime to preserve compact footprint.",
+    "No failed runtime render used as generation identity."
+  ],
+  "baseline": "baseline/v001/capture.json",
+  "frozen": [
+    "boatwright",
+    "other landmark factories",
+    "gameplay",
+    "world landmark transforms"
+  ],
+  "approval": "User: good, proceed, after boatwright before/after."
+}

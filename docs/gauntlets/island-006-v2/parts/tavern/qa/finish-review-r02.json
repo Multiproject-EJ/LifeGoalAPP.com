@@ -1,0 +1,13 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "finish-v002",
+  "decision": "one-bounded-correction",
+  "family": "roof shadow coverage",
+  "scores": {
+    "attachments": 0.89,
+    "shadowIntegrity": 0.76,
+    "otherCategories": ".86\u2013.90"
+  },
+  "regression": "Optimization exposed single-sided backing shadow gaps.",
+  "action": "Restore continuous backing shadow; preserve visible geometry."
+}

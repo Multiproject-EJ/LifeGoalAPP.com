@@ -1,0 +1,32 @@
+{
+  "part": "fish-market",
+  "authorization": "User good, continue after guildhall; established building-by-building workflow",
+  "reference": "secondary-inferred goals/target-v001.png",
+  "allowlist": [
+    "Island22FishMarketV2.ts",
+    "createIsland22PremiumFishMarketHall factory",
+    "market-only integration if necessary"
+  ],
+  "frozen": [
+    "five completed landmark modules",
+    "canonical gameplay",
+    "market dock transform"
+  ],
+  "groups": [
+    "compact-hall-loading-dock",
+    "awning-crane-fish-stalls",
+    "restored-loading-detail"
+  ],
+  "budget": {
+    "triangles": 14000,
+    "materialBatches": 45
+  },
+  "gates": {
+    "macro": 0.85,
+    "finish": 0.85,
+    "correction": "One per construction family, +.10 weakest, no>.05 regression; twofamilies/fourreviews max"
+  },
+  "cameras": "baseline/v001/capture.json",
+  "ownership": "builder newmodule only; root integration; independent read-only review",
+  "assemblyException": "World baseline exposed market/lighthouse overlap and boats under pier. Root may move market factory outboard within unchanged dock root, add small access spur and reposition two decorative boats. Frozen lighthouse geometry unchanged."
+}

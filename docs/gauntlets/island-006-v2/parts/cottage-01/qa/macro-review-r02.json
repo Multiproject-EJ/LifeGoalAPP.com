@@ -1,0 +1,54 @@
+{
+  "part": "cottage-01",
+  "stage": "macro",
+  "review": 2,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/blockout-v002",
+  "baseline": "baseline/v002",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "Original pixels of all 11 corrected views inspected against the prior packet. Scores are subjective visual judgments for the compact game asset.",
+  "action": "approve",
+  "threshold": 0.85,
+  "categoryScores": {
+    "mainSilhouetteVolume": 0.88,
+    "twoStoreyJettyProportions": 0.87,
+    "cottageAndLeanToIdentity": 0.88,
+    "roofSurfaceContinuity": 0.90,
+    "annexRoofPostContact": 0.90,
+    "dormerMassAndPlacement": 0.86,
+    "openingClearance": 0.87,
+    "terraceAndSteps": 0.89,
+    "crossViewCoherence": 0.89
+  },
+  "viewScores": {
+    "front-right": 0.88,
+    "front-left": 0.88,
+    "rear-left": 0.88,
+    "rear-right": 0.88,
+    "front": 0.87,
+    "rear": 0.87,
+    "left": 0.86,
+    "right": 0.86,
+    "top": 0.88,
+    "clay-front": 0.88,
+    "clay-rear": 0.89
+  },
+  "correctionAssessment": {
+    "family": "roof enclosure integrity",
+    "roofSurfaceContinuity": {"before": 0.72, "after": 0.90, "delta": 0.18},
+    "annexRoofPostContact": {"before": 0.80, "after": 0.90, "delta": 0.10},
+    "findings": [
+      "Clay-rear now preserves the complete rear roof sheet; prior exposed shell/trim bands disappear.",
+      "Main, dormer and lean-to roofs retain coherent surfaces in beauty, clay and opposite views.",
+      "Annex corner posts meet the roof underside in the former gap views without protruding above its surface.",
+      "Main proportions, dormer placement, openings, terrace and steps remain visually stable."
+    ],
+    "criticalRegression": "None observed; no category decreases over 0.05."
+  },
+  "assembly": {
+    "status": "pending",
+    "note": "Do not infer assembly approval from macro acceptance. Rear doorway terrain intrusion and annex-to-neighbor clearance still require independent final evidence; root is correcting these separately."
+  },
+  "scope": "Macro accepted and finish may proceed. Not exact inferred-reference identity or whole-island V2 approval."
+}

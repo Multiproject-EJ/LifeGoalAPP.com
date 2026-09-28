@@ -1,0 +1,17 @@
+{
+  "reviewer": "visual_review",
+  "action": "one-bounded-correction",
+  "input": "finish-v001",
+  "minimumSurface": 0.77,
+  "requiredAfter": 0.87,
+  "defects": [
+    "coplanar quay backing",
+    "hull exterior winding exposed in clay",
+    "eave brace tips through slate"
+  ],
+  "preserve": [
+    "house/hull silhouettes",
+    "footprint",
+    "identity"
+  ]
+}

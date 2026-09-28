@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-12-retired-skipper",
+  "stage": "finish-and-assembly",
+  "review": "r01",
+  "reviewer": "independent-reference-curator",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "referenceAuthority": "secondary-inferred",
+  "evidence": {
+    "studio": "finish-v001",
+    "studioViewsInspected": 11,
+    "assembly": "world-context-v001",
+    "assemblyViewsInspected": 6,
+    "previous": "macro-review-r01.json"
+  },
+  "finish": {
+    "action": "approve",
+    "criticalScores": {
+      "silhouette": 0.9,
+      "roofReliefAndEnclosure": 0.9,
+      "stoneAndTimberFinish": 0.88,
+      "shuttersAndOpenings": 0.88,
+      "wheelAndRopeCue": 0.89,
+      "doorClearance": 0.91,
+      "rearSideCompleteness": 0.88
+    },
+    "viewScores": {
+      "front": 0.9,
+      "front-right": 0.89,
+      "right": 0.89,
+      "rear-right": 0.89,
+      "rear": 0.89,
+      "rear-left": 0.88,
+      "left": 0.88,
+      "front-left": 0.89,
+      "top": 0.89,
+      "clay-front": 0.89,
+      "clay-rear": 0.88
+    },
+    "observations": [
+      "Clean slate courses and pale stone relief; loft shutters fit arch silhouette.",
+      "Small wheel and rope coil are distinct and wall-mounted beside clear entrance.",
+      "Target offset door simplified to centered entry; inferred goal not exact pixels."
+    ]
+  },
+  "assembly": {
+    "action": "approve",
+    "criticalScores": {
+      "neighborClearance": 0.89,
+      "groundSupport": 0.87,
+      "rearApproach": 0.87,
+      "frontFoliageClearance": 0.93,
+      "terraceVegetationClearance": 0.91,
+      "routePreservation": 0.89
+    },
+    "correctionDeltas": [
+      {
+        "criterion": "frontFoliageClearance",
+        "before": 0.58,
+        "after": 0.93,
+        "gain": 0.35
+      },
+      {
+        "criterion": "terraceVegetationClearance",
+        "before": 0.75,
+        "after": 0.91,
+        "gain": 0.16
+      }
+    ],
+    "maxObservedOtherRegression": 0,
+    "viewScores": {
+      "0": 0.87,
+      "45": 0.9,
+      "90": 0.93,
+      "135": 0.89,
+      "180": null,
+      "270": 0.87
+    },
+    "observations": [
+      "Front conifer gone; door, wheel/rope and step clear in world90.",
+      "Terrace grass cleared; external coastal vegetation retained.",
+      "Rear rocks remain beneath apron; lighthouse separation readable from elevated views.",
+      "World180 lighthouse occlusion not clearance evidence."
+    ]
+  },
+  "overallAction": "approve",
+  "limitations": [
+    "Phone not reviewed.",
+    "All originals inspected; no geometry edited."
+  ]
+}

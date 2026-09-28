@@ -1,0 +1,27 @@
+{
+  "part": "fish-market",
+  "runtimeIsland": 6,
+  "worldSource": 22,
+  "approvedBuild": "qa/finish-v001",
+  "moduleSha256": "20d3f3076e6feba45114f2a12877de2af6da3e167df7245d6cfc9fd57c1f6cd7",
+  "parentDockPosition": [
+    -8.15,
+    -0.15,
+    -5.55
+  ],
+  "parentDockYaw": -0.78,
+  "factoryOffset": [
+    -2.5,
+    0.28,
+    -0.5
+  ],
+  "groups": [
+    "compact-hall-loading-dock",
+    "awning-crane-fish-stalls",
+    "restored-loading-detail"
+  ],
+  "sockets": "Existing IDs retained; crane, fish-display, cargo and mooring positions updated to new geometry",
+  "context": "qa/world-context-v001",
+  "assemblyChanges": "assembly-decisions.v1.json",
+  "invalidation": "Source changes require new captures and portrait fingerprint"
+}

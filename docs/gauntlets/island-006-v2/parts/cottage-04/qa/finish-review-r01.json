@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-04-sailmaker",
+  "stage": "finish-and-assembly",
+  "review": "r01",
+  "reviewer": "independent-reference-curator",
+  "independence": "Created inferred goal but did not author model or integration",
+  "referenceAuthority": "secondary-inferred",
+  "threshold": 0.85,
+  "evidence": {
+    "target": "../goals/target-v001.png",
+    "baseline": "../baseline/v001/front-right.png",
+    "studio": "finish-v001",
+    "assembly": "world-context-v001",
+    "previousAssembly": "world-blockout-v001",
+    "studioViewsInspected": 11,
+    "assemblyViewsInspected": 6
+  },
+  "finish": {
+    "action": "approve",
+    "criticalScores": {
+      "silhouetteAndSweptProfile": 0.9,
+      "roofEnclosureAndNormals": 0.91,
+      "roofTileRelief": 0.87,
+      "stoneReliefAndContacts": 0.87,
+      "shuttersAndWindows": 0.88,
+      "timberAndHardware": 0.87,
+      "foldedSailAndSpoolIdentity": 0.87,
+      "doorwayClearance": 0.9,
+      "rearAndSideCompleteness": 0.87
+    },
+    "viewScores": {
+      "front": 0.88,
+      "front-right": 0.89,
+      "right": 0.88,
+      "rear-right": 0.88,
+      "rear": 0.88,
+      "rear-left": 0.87,
+      "left": 0.87,
+      "front-left": 0.89,
+      "top": 0.87,
+      "clay-front": 0.88,
+      "clay-rear": 0.87
+    },
+    "observations": [
+      "Physically raised tile courses follow swept closed roof; ridge and barge silhouette maintained.",
+      "Blue shutters, timber grain, door iron straps/rings, lantern and masonry joints provide readable V2 detail.",
+      "Folded sail bundle with ties and separate small spool sit beside front entry without blocking threshold.",
+      "Rear service entrance and side windows are complete. Left side lacks paired shutters but is cleanly finished.",
+      "Target weathering and irregular masonry are substantially simplified; scores measure coherent procedural production translation, not photoreal likeness."
+    ]
+  },
+  "assembly": {
+    "action": "correction-incomplete",
+    "criticalScores": {
+      "neighborRoofAndWallClearance": 0.88,
+      "retainedCoastalSupport": 0.9,
+      "frontApproachReadability": 0.88,
+      "terrainToTerraceSurfaceContinuity": 0.84,
+      "routeAndFrozenSiblingPreservation": 0.88
+    },
+    "viewAssessments": {
+      "0": {
+        "score": 0.84,
+        "evidence": "Prior rock intrusion reduced, but gray angular peak remains on terrace beside spool/sail, x327–348,y582–602."
+      },
+      "45": {
+        "score": 0.88,
+        "evidence": "Elevated separation readable; terrace contact partly obscured."
+      },
+      "90": {
+        "score": null,
+        "evidence": "Guild occludes most subject; unsuitable for full clearance claim."
+      },
+      "135": {
+        "score": 0.89,
+        "evidence": "Coastal shoulder retained, rear terrace supported, neighboring roofs distinct."
+      },
+      "180": {
+        "score": 0.89,
+        "evidence": "Rear support continuous; no new frozen-sibling collision apparent."
+      },
+      "270": {
+        "score": 0.84,
+        "evidence": "Gray triangular intrusion remains along front apron beside sail, x551–571,y600–627."
+      }
+    },
+    "correction": {
+      "family": "local-terrain-surface-contact",
+      "previousScore": 0.8,
+      "currentScore": 0.84,
+      "requiredScoreAfter": 0.9,
+      "requiredDelta": 0.1,
+      "observedDelta": 0.04,
+      "passed": false,
+      "request": "Identify remaining terrace-piercing rock face and lower its actual highest transformed vertices below the terrace cap, or use a materially different local clipping/reconstruction family if first family exhausted. Preserve shoulder support and all cottage transforms. Supply matching world0/270 plus full context recapture.",
+      "maxOtherRegression": 0.05
+    },
+    "remainingLimitations": [
+      "No phone-scale acceptance in this packet.",
+      "Occluded world90 is not hidden-clearance evidence.",
+      "Screenshot evidence overrides intended terrain lowering."
+    ]
+  },
+  "overallAction": "assembly-correction-required",
+  "familyLedger": {
+    "finishConstructionFamily": 1,
+    "finishReviewWithinFamily": 1,
+    "assemblyCorrectionFamily": 1,
+    "assemblyBoundedCorrectionCompletedButFailedThreshold": true
+  },
+  "notes": "Read-only review; wrote only this artifact. All seventeen originals inspected, previous world0/270 compared."
+}

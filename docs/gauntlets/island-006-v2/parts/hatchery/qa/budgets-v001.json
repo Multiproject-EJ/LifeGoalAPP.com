@@ -1,0 +1,74 @@
+[
+  {
+    "landmark": "hatchery",
+    "level": 1,
+    "quality": "low",
+    "vertices": 8267,
+    "triangles": 4640,
+    "draws": 13
+  },
+  {
+    "landmark": "hatchery",
+    "level": 2,
+    "quality": "low",
+    "vertices": 10817,
+    "triangles": 7620,
+    "draws": 17
+  },
+  {
+    "landmark": "hatchery",
+    "level": 3,
+    "quality": "low",
+    "vertices": 18164,
+    "triangles": 12564,
+    "draws": 33
+  },
+  {
+    "landmark": "hatchery",
+    "level": 1,
+    "quality": "medium",
+    "vertices": 8807,
+    "triangles": 5408,
+    "draws": 13
+  },
+  {
+    "landmark": "hatchery",
+    "level": 2,
+    "quality": "medium",
+    "vertices": 11357,
+    "triangles": 8388,
+    "draws": 17
+  },
+  {
+    "landmark": "hatchery",
+    "level": 3,
+    "quality": "medium",
+    "vertices": 18842,
+    "triangles": 13472,
+    "draws": 33
+  },
+  {
+    "landmark": "hatchery",
+    "level": 1,
+    "quality": "high",
+    "vertices": 8807,
+    "triangles": 5408,
+    "draws": 13
+  },
+  {
+    "landmark": "hatchery",
+    "level": 2,
+    "quality": "high",
+    "vertices": 11357,
+    "triangles": 8388,
+    "draws": 17
+  },
+  {
+    "landmark": "hatchery",
+    "level": 3,
+    "quality": "high",
+    "vertices": 18842,
+    "triangles": 13472,
+    "draws": 33
+  }
+]

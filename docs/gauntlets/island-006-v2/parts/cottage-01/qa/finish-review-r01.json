@@ -1,0 +1,62 @@
+{
+  "part": "cottage-01",
+  "stage": "finish",
+  "review": 1,
+  "reviewer": "independent-visual-review",
+  "evidence": "qa/finish-v001",
+  "approvedMacro": "qa/blockout-v002",
+  "reference": "goals/target-v001.png",
+  "referenceAuthority": "secondary-inferred",
+  "method": "Original pixels of all 11 finish views and six world-context frames inspected before clearance metadata. Scores are subjective judgments for the compact game asset.",
+  "action": "one-bounded-correction",
+  "threshold": 0.85,
+  "categoryScores": {
+    "preservedSilhouetteVolume": 0.88,
+    "architecturalIdentity": 0.87,
+    "roofMaterialReadability": 0.76,
+    "roofCourseRelief": 0.79,
+    "surfaceCoverage": 0.88,
+    "roofAttachmentIntegrity": 0.90,
+    "doorShutterFlowerboxAttachments": 0.88,
+    "barrelSignPlacement": 0.87,
+    "openingAndEntryClearance": 0.88,
+    "crossViewCoherence": 0.87
+  },
+  "viewScores": {
+    "front-right": 0.77,
+    "front-left": 0.77,
+    "rear-left": 0.77,
+    "rear-right": 0.77,
+    "front": 0.76,
+    "rear": 0.76,
+    "left": 0.79,
+    "right": 0.78,
+    "top": 0.76,
+    "clay-front": 0.79,
+    "clay-rear": 0.79
+  },
+  "boundedCorrection": {
+    "family": "roof course finish readability",
+    "pixelFinding": "Strong alternating clay and slate colors produce a regular checkerboard. In clay the course relief is almost absent, so the major roof reads as a printed grid rather than layered roofing. This dominates the front, rear, top and both obliques.",
+    "hypothesis": "Reduce adjacent hue/value contrast, break parity repetition, and use staggered courses with a subtle visible lower lip/shadow. Apply consistently to main, dormer and annex roofing.",
+    "controls": "Keep approved roof silhouette/envelope, attachments, house proportions and assembly transform frozen. No unrelated finish expansion.",
+    "requiredDelta": "Roof material/readability at least 0.86 (+0.10); every critical view/category at least 0.85; no critical regression above 0.05."
+  },
+  "assembly": {
+    "evidence": "qa/world-context-v001",
+    "action": "approve",
+    "categoryScores": {"foliageAndEntryClearance": 0.89, "rearThresholdClearance": 0.90, "lighthouseClearance": 0.87, "adjacentCottageClearance": 0.86, "terrainSupport": 0.86},
+    "views": {
+      "cottage-world-azimuth-0": {"score": 0.89, "finding": "Conifer removed from annex/terrace. Main and annex doors are unobstructed; furniture stays outside door panels and approach."},
+      "cottage-world-azimuth-90": {"score": 0.86, "limitation": "Neighbor partially occludes annex; projected overlap alone is not collision proof."},
+      "cottage-world-azimuth-180": {"score": 0.89, "finding": "Rear service-door threshold visibly clear of prior rock intrusion; terrace remains supported by coastline."},
+      "cottage-world-azimuth-270": {"score": 0.86, "limitation": "Lighthouse obscures lower cottage; evaluated only exposed upper contacts."},
+      "cottage-world-azimuth-45": {"score": 0.87, "finding": "Elevated view supplies visible lighthouse gap and separate annex/neighbor volumes."},
+      "cottage-world-azimuth-135": {"score": 0.86, "finding": "Opposite elevated view corroborates neighboring roof separation and supported rear terrace."}
+    },
+    "diagnosticMetadata": "clearance-after.json reports no rear terrain ray hits and annex eave at neighbor-local x about -0.853, y about 1.138 versus wall x -0.71. Actual neighbor gutter lies above the annex eave. The approximate neighborRoofMinX value is not acceptance authority; original elevated and cardinal pixels govern this gate.",
+    "scope": "Assembly accepted separately. Roof finish remains unapproved. Recheck assembly if the roof envelope or placement changes."
+  },
+  "boundedCorrectionCounter": {"macroReviews": 2, "finishReviews": 1, "finishCorrectionsUsed": 0},
+  "remainingTargetGaps": "Beyond the failed roof course reading, timber and plaster remain regular with limited weathering. Target is inferred; exact cinematic parity is not claimed."
+}

@@ -1,0 +1,34 @@
+{
+  "part": "net-house-hatchery",
+  "runtimeIsland": 6,
+  "worldSource": 22,
+  "approvedBuild": "qa/finish-v002",
+  "sha256": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+  "position": [
+    5.75,
+    0.35,
+    6.2
+  ],
+  "rootTransform": "unchanged; canonical radial rotation and architecture y=.3",
+  "parts": [
+    "net-canopy-house-trough",
+    "drying-frames-baskets",
+    "restored-hatchery-detail"
+  ],
+  "constructionLevels": [
+    1,
+    2,
+    3
+  ],
+  "frozen": [
+    "boatwright",
+    "other buildings",
+    "weather and actors",
+    "gameplay"
+  ],
+  "invalidation": "Recheck screenshots and portrait fingerprint if Island22 source changes.",
+  "finalWorldSourceSha256": "027060064d34e7040696b16dde66898c82a1304102801833520fc68a1eb51e54",
+  "environmentCorrection": "Exclude conifer placements in rotated hatchery footprint; other placements preserved.",
+  "finalContext": "qa/island-context-v002/capture.json",
+  "finalOverview": "qa/island-fit-v002/capture.json"
+}

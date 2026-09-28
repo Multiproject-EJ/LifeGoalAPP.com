@@ -1,0 +1,34 @@
+{
+  "part": "cottage-01",
+  "previousTransform": {
+    "position": [
+      -3.65,
+      0.57,
+      -7.65
+    ],
+    "yaw": 0.12,
+    "scale": 1.02
+  },
+  "finalTransform": {
+    "position": [
+      -3.77,
+      0.57,
+      -7.65
+    ],
+    "yaw": -0.06,
+    "scale": 1.02
+  },
+  "reason": "Align with adjacent cottage and clear annex outer eave without changing either building shape. Neighbor remains frozen.",
+  "dressing": "Clear trees and grass in current cottage plot. Lower only coastal strata whose bounds cross the rear doorway corridor, beneath terrace top.",
+  "geometryEvidence": "qa/clearance-before.json and qa/clearance-after.json",
+  "visualEvidence": "qa/world-context-v001 with four cardinals and elevated45/135",
+  "scope": "Visual placement only; no gameplay mutations",
+  "evidence": "qa/world-context-v002",
+  "status": "approved: macro-r02, finish-r02, assembly and wide phone overview",
+  "budget": {
+    "mediumHighTriangles": 8859,
+    "lowTriangles": 7491,
+    "draws": 29
+  },
+  "frozenSiblings": "qa/frozen-sibling-hashes.json"
+}

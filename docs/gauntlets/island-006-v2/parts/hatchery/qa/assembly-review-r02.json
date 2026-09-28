@@ -1,0 +1,16 @@
+{
+  "reviewer": "/root/visual_review",
+  "decision": "approve",
+  "evidence": [
+    "island-context-v002/hatchery.png",
+    "island-context-v002/overview.png",
+    "island-context-v002/rear.png"
+  ],
+  "supersedes": "assembly-review-r01.json",
+  "findings": [
+    "Conifer intrusion visibly removed; pool, bridge and net clear.",
+    "Cottage and quay grounded.",
+    "No obvious board-route obstruction or neighbor collision in overview and rear."
+  ],
+  "action": "present before/after to user"
+}

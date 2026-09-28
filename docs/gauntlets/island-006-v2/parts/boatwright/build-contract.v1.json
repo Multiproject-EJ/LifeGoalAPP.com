@@ -1,0 +1,44 @@
+{
+  "part": "boatwright-yard",
+  "authorization": "User explicitly requests element-by-element, house-by-house continuation of existing authorized local V2 work. Representative first building; no second admission request.",
+  "owner": "root",
+  "reviewer": "visual_review",
+  "allowlist": [
+    "Island22BoatwrightV2.ts",
+    "Island22PremiumLandmarkFamilies.ts::createIsland22PremiumBoatwrightYard",
+    "Island22FishermansVillageThreeWorld.ts::habit foundation only",
+    "src/dev/Island006BuildingStudy.ts",
+    "island-006-building-study.html"
+  ],
+  "frozen": "All other buildings, environment, actors, gameplay, global scale and production cameras",
+  "hierarchy": [
+    "stone-quay",
+    "workshop-continuous-shell",
+    "roof-with-eaves",
+    "doors-windows-timber",
+    "open-hull-and-cradle",
+    "gantry-rigging",
+    "tools-yard"
+  ],
+  "levels": "Keep L1 macro / L2 rigging / L3 restored details and all existing sockets",
+  "budgets": {
+    "blockoutFamilies": 2,
+    "reviewsMax": 4,
+    "correctionsPerFamily": 1,
+    "targetDrawCalls": 90,
+    "targetTriangles": 14000
+  },
+  "views": [
+    0,
+    45,
+    90,
+    135,
+    180,
+    225,
+    270,
+    315,
+    360
+  ],
+  "authority": "Existing game footprint and nodes; isolated generated target secondary-inferred. User has not approved final art.",
+  "notes": "Habit base ownership transfers from overlapping generic round foundation to new continuous quay. Other landmark foundations unchanged."
+}

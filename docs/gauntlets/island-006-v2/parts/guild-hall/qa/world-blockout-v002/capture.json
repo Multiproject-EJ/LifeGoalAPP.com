@@ -1,0 +1,57 @@
+{
+  "captures": [
+    {
+      "name": "guild-world-azimuth-0",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=boss&context=1&azimuth=0&weatherTime=4"
+    },
+    {
+      "name": "guild-world-azimuth-90",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=boss&context=1&azimuth=90&weatherTime=4"
+    },
+    {
+      "name": "guild-world-azimuth-180",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=boss&context=1&azimuth=180&weatherTime=4"
+    },
+    {
+      "name": "guild-world-azimuth-270",
+      "url": "http://127.0.0.1:5186/island-016-fishing-interaction-lab.html?view=boss&context=1&azimuth=270&weatherTime=4"
+    }
+  ],
+  "errors": [],
+  "sourceStart": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "082d85aee48e37bf49f781e90c3489f8050cf894349e1b7e613b518460244653",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "e3925cfe59eeb52c358627024d2efbb0a977eb1582a61f8abb42c8e39a5365a8",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "d0c5267426052bcc0e47999c65524f423c786d03e9610d77976a6b5404e19dee",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "4fbe3beb7ba0b3bd2062e97efc67b592f1b2c87b3e5e5852d88a878aaa6e1eb6",
+    "Island6MoonveilThreeWorld.ts": "260350d7c8b1d8f510de79e49383b587e335bd55a2a21f1a69b639ba67467f58"
+  },
+  "sourceEnd": {
+    "Island22BoatwrightV2.ts": "37cc9e20650bc1e4a38d3f64553b3b607f88b997acc6b00702da11673dfe5f77",
+    "Island22DragonV2.ts": "7b4a3b870af86bd13d3a3cec69be6236df9f5a85b114ae04bee39cab2cf65b71",
+    "Island22FisherCrowdV2.ts": "86883f2b175b84b01ae80d116e3238b8068eaa0190131364369dd430bab8da6d",
+    "Island22FishermansVillageThreeWorld.ts": "082d85aee48e37bf49f781e90c3489f8050cf894349e1b7e613b518460244653",
+    "Island22FishingMissionPrototype.ts": "ddae66275613c5a95157731d3d9b09feed2558c38f7db6ab6b90fd58e21ca2e1",
+    "Island22GuildHallV2.ts": "e3925cfe59eeb52c358627024d2efbb0a977eb1582a61f8abb42c8e39a5365a8",
+    "Island22HarborV2.ts": "dbecfd593730c22119b6b03c7c5beaba5a4abf7eb049e34bbc852b49ae64bd71",
+    "Island22HatcheryV2.ts": "5b7a7568475b4b30982d4e9638a185044b5d778290f23b7afe0bb8da5d9ebe23",
+    "Island22IconicWaterDragonParts.ts": "540d912e599fee9e26cda774f20b3148b0235d0ac943101c1d7468fe25445703",
+    "Island22LighthouseV2.ts": "670acd939bc7ff16d74a2bb554af151574208ec8dc78e270ad28eba023db88ab",
+    "Island22PremiumFishingActors.ts": "e83beb0d57e673271565177c17e3ebd12cddd3082a98e5250362ee343317b180",
+    "Island22PremiumLandmarkFamilies.ts": "d0c5267426052bcc0e47999c65524f423c786d03e9610d77976a6b5404e19dee",
+    "Island22TavernV2.ts": "4ca9199d1d4bfc99567aadd264fbe6d8bf2623726dfaf80b76c33e11731d32fa",
+    "Island22WaterDragonMission.ts": "4fbe3beb7ba0b3bd2062e97efc67b592f1b2c87b3e5e5852d88a878aaa6e1eb6",
+    "Island6MoonveilThreeWorld.ts": "260350d7c8b1d8f510de79e49383b587e335bd55a2a21f1a69b639ba67467f58"
+  },
+  "changedDuringCapture": false,
+  "scope": "Actual world factory and mission in evidence lab; no gameplay board in lab. 900x900, DPR1, medium tier, locked weather/mission phase."
+}

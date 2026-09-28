@@ -1,0 +1,15 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "finish-v001",
+  "decision": "one-bounded-correction",
+  "family": "functional prop placement",
+  "scores": {
+    "macro": 0.88,
+    "surfaceCoverage": 0.88,
+    "netPool": 0.89,
+    "materials": 0.85,
+    "doorwayAccess": 0.74,
+    "lifeRingPlacement": 0.78
+  },
+  "action": "Narrow and move table beneath front window, move baskets clear of access, shrink ring into side window gap."
+}

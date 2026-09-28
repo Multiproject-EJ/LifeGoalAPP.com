@@ -1,0 +1,33 @@
+{
+  "part": "fisherfolk-guild-hall",
+  "authorization": "User approved continue after lighthouse, established one-house gauntlet cadence.",
+  "owner": "root; one bounded module builder, independent visual reviewer",
+  "allowlist": [
+    "Island22GuildHallV2.ts",
+    "guild factory and precinct only in Island22FishermansVillageThreeWorld.ts"
+  ],
+  "frozen": [
+    "lighthouse",
+    "tavern",
+    "hatchery",
+    "boatwright",
+    "gameplay",
+    "world landmark transforms"
+  ],
+  "groups": [
+    "coastal-apron-occupied-shell",
+    "wings-dormers-crown",
+    "restored-detail-system",
+    "runtime-sockets"
+  ],
+  "levelSemantics": "L1 core mass, L2 wings and crown, L3 finish; sockets retained",
+  "macroGate": 0.85,
+  "finishGate": 0.85,
+  "correctionLimit": "One correction per family, two families/four reviews per gate",
+  "budget": {
+    "triangles": 18000,
+    "materialBatches": 50
+  },
+  "baseline": "baseline/v001",
+  "referenceAuthority": "secondary-inferred; retain swept-mansard identity and canonical placement"
+}

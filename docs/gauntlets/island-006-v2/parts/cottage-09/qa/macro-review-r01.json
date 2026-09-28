@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "part": "cottage-09-chartmaker",
+  "stage": "macro",
+  "review": "r01",
+  "reviewer": "independent-visual-review",
+  "threshold": 0.85,
+  "pixelsFirst": true,
+  "referenceAuthority": "secondary-inferred",
+  "evidence": {
+    "target": "goals/target-v001.png",
+    "baseline": "baseline/v001/front-right.png",
+    "studio": "blockout-v001",
+    "studioViews": 11,
+    "world": "world-blockout-v001",
+    "worldViews": 6
+  },
+  "macro": {
+    "action": "approve",
+    "finishMayProceed": true,
+    "criticalScores": {
+      "twoStoreyRightAnnexSilhouette": 0.9,
+      "sweptSlateRoof": 0.9,
+      "roofEnclosureAndChimneyContact": 0.9,
+      "annexWallTermination": 0.9,
+      "openingClearance": 0.9,
+      "doorAndStepProportions": 0.88,
+      "rearCompleteness": 0.89,
+      "crossViewCoherence": 0.9
+    },
+    "viewScores": {
+      "front": 0.89,
+      "front-right": 0.9,
+      "right": 0.89,
+      "rear-right": 0.9,
+      "rear": 0.89,
+      "rear-left": 0.9,
+      "left": 0.89,
+      "front-left": 0.9,
+      "top": 0.9,
+      "clay-front": 0.89,
+      "clay-rear": 0.9
+    },
+    "observations": [
+      "Continuous swept roof, two-storey main and lower right workroom match the inferred target's major relationship within compact footprint.",
+      "Roof-to-gable and annex wall termination are continuous across front/rear/clay. No tight window has been added into the narrow strip between roofs.",
+      "Chimney enters roof cleanly. Entry, rear service portal and windows remain visibly clear of structural trim.",
+      "Finish and trade props deliberately absent; their identity and containment require later gate."
+    ],
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0,
+      "accepted": true
+    }
+  },
+  "assembly": {
+    "action": "one-bounded-correction",
+    "criticalScores": {
+      "neighborBodySeparation": 0.86,
+      "roofSeparation": 0.86,
+      "terrainAndFoundationContact": 0.85,
+      "frontEntryPropClearance": 0.73,
+      "foliageToWallAndPortalClearance": 0.76,
+      "routeTileVisibility": 0.88
+    },
+    "viewAssessments": {
+      "0": {
+        "score": 0.85,
+        "scope": "Rear base follows coastal shoulder; large rock very close to rear/right corner, no definite above-cap penetration established."
+      },
+      "45": {
+        "score": 0.85,
+        "scope": "Separates roofs and shows coastal position; front lane partly hidden by roof."
+      },
+      "90": {
+        "score": 0.76,
+        "scope": "Side foliage crowds facade; front barrel/crate visible across apron."
+      },
+      "135": {
+        "score": 0.73,
+        "scope": "Elevated plan confirms barrel/crate across front terrace approach; annex close to cyan legacy neighbor."
+      },
+      "180": {
+        "score": 0.73,
+        "scope": "Barrel/crate crowd main/front apron; green foliage crosses window/door area and annex threshold."
+      },
+      "270": {
+        "score": null,
+        "scope": "Neighbor boatwright/legacy house heavily occludes lower subject; not independent entry or support proof."
+      }
+    },
+    "correction": {
+      "family": "local-plot-and-entry-clearance",
+      "hypothesis": "Existing scene props and vegetation occupy the new building footprint and approach; house macro does not need reshaping.",
+      "request": "Move only offending local barrel/crate off both door approaches and exclude foliage from facade/portal/terrace volume. Preserve accepted house and frozen neighbors. Recapture all six world views and confirm close rear rock remains below/outside terrace cap.",
+      "requiredScores": {
+        "frontEntryPropClearance": 0.85,
+        "foliageToWallAndPortalClearance": 0.86
+      },
+      "minimumGain": 0.1,
+      "maxOtherRegression": 0.05
+    },
+    "familyLedger": {
+      "constructionFamily": 1,
+      "reviewWithinFamily": 1,
+      "boundedCorrectionsUsed": 0
+    },
+    "limitations": [
+      "Cyan legacy neighbor is close in projection; supplied views do not establish a roof/body interpenetration, so no relocation demanded from that alone.",
+      "World270 is occluded and cannot be scored as positive evidence.",
+      "Rear base support is visually plausible but original pixels do not prove an engineering load path. Any numeric contact test remains supplementary to new pixels."
+    ]
+  },
+  "overallAction": "one-bounded-correction",
+  "notes": "Macro accepted and finish released; assembly held for one bounded local clearance correction."
+}

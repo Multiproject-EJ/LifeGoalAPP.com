@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "asset": "island-006 sea-dragon",
+  "stage": "phone-vfx",
+  "review": 1,
+  "reviewer": "independent reference_curator",
+  "verdict": "bounded-camera-correction-required",
+  "approved": false,
+  "threshold": 0.85,
+  "evidence": {
+    "phoneDirectory": "qa/motion-phone-v003",
+    "phoneOriginalFramesInspected": 24,
+    "phoneDimensions": [
+      430,
+      932
+    ],
+    "contactDirectory": "qa/contact-frames-v002",
+    "contactOriginalFramesInspected": 10,
+    "replay": "qa/motion-phone-v003/replay.webm exists; continuous video not directly reviewed by this reviewer",
+    "desktopSequence": "Main reviewer owns desktop temporal/camera gate; no claim of my inspection of all motion-sequence-v004 frames."
+  },
+  "categories": {
+    "phoneAnatomyReadability": 0.86,
+    "fullWingTailFraming": 0.74,
+    "phoneMembraneReadability": 0.85,
+    "phoneFaceReadability": 0.85,
+    "eruptionVfxReadability": 0.86,
+    "waterImpactAndTailExit": 0.87,
+    "housePayoffReadability": 0.88
+  },
+  "views": [
+    {
+      "view": "sequence-0.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-3.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-6.5.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": null,
+      "notes": "Intentional aperture close-up; not scored as dragon framing."
+    },
+    {
+      "view": "sequence-7.15.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-7.4.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": 0.87,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-7.8.png",
+      "framing": 0.74,
+      "anatomyReadability": 0.86,
+      "vfxReadability": 0.87,
+      "notes": "Right wing crosses right viewport boundary; distal membrane and tip cropped."
+    },
+    {
+      "view": "sequence-8.4.png",
+      "framing": 0.78,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "Upper right wing tip/membrane still clipped by right viewport."
+    },
+    {
+      "view": "sequence-9.2.png",
+      "framing": 0.85,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "Tip barely inside right edge; preserve additional margin across moving wingbeat."
+    },
+    {
+      "view": "sequence-10.2.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-11.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-12.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-13.4.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-15.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-16.5.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-18.3.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-19.2.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-20.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-20.8.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-21.3.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": null,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-21.5.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": 0.87,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-21.8.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": 0.87,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-22.2.png",
+      "framing": 0.87,
+      "anatomyReadability": 0.86,
+      "vfxReadability": 0.87,
+      "notes": "Tail-last water exit and splash clearly legible."
+    },
+    {
+      "view": "sequence-22.6.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": 0.87,
+      "notes": "No critical still-frame phone issue observed."
+    },
+    {
+      "view": "sequence-23.5.png",
+      "framing": 0.87,
+      "anatomyReadability": null,
+      "vfxReadability": 0.87,
+      "notes": "Damaged house large and clearly identifiable, with exposed wall and debris."
+    }
+  ],
+  "requiredCorrection": {
+    "id": "early-eruption-phone-envelope",
+    "scoreBefore": 0.74,
+    "scoreRequiredAfter": 0.85,
+    "minimumGain": 0.1,
+    "maximumRegression": 0.05,
+    "rootCause": "Early eruption camera envelope fails to include the moving outer right wing at 7.8–8.4 seconds. Later framing succeeds, so this is a camera fit/transition defect rather than a frozen-anatomy defect.",
+    "hypothesis": "Fit the complete current posed world-space wing/body/tail envelope with portrait horizontal padding throughout emergence and blend into the already-clear later shot. Check intermediate wingbeat extrema rather than only phase endpoints.",
+    "controls": [
+      "Freeze approved anatomy, finish, mission timing and later successful contact/house payoff.",
+      "Keep face/underside readable; avoid pulling so far away that phone detail is lost.",
+      "Recapture same 24 phone frames plus intermediate 7.6–9.4 samples at wingbeat extremes.",
+      "Verify full wing tips remain inside with visible margin; natural water-submerged body is not a framing failure."
+    ]
+  },
+  "waterContactObservations": [
+    "Phone 21.5 shows initial nose-contact splash, 21.8 body descent, 22.2 tail-last exit and broad splash, 22.6 residual wake.",
+    "Dense desktop contact stills 21.35–22.68 corroborate progressive tail-last submergence with persistent foam; no cutoff pop apparent between inspected samples, but continuous temporal certification remains separate.",
+    "Final 23.5 phone close-up makes the damaged cottage payoff clear."
+  ],
+  "limits": [
+    "Phone wing clipping is an assembly camera issue; it does not reopen the approved macro construction family or authorize geometry changes.",
+    "Continuous replay was not directly inspected here; main temporal reviewer must certify motion.",
+    "No production files changed and no acceptance threshold lowered."
+  ]
+}

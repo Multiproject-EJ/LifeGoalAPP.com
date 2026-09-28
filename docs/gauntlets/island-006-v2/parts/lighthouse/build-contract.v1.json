@@ -1,0 +1,35 @@
+{
+  "part": "lighthouse-library",
+  "runtimeIsland": 6,
+  "worldSource": 22,
+  "allowlist": [
+    "Island22LighthouseV2.ts",
+    "createIsland22PremiumLighthouseLibrary",
+    "wisdom foundation ownership",
+    "lighthouse footprint conifer exclusion",
+    "small shift of neighboring decorative cluster0 and matching windows"
+  ],
+  "rootPosition": [
+    -6.35,
+    0.38,
+    -5.75
+  ],
+  "architectureY": 0.3,
+  "constructionParts": [
+    "macro-tower-annex",
+    "gallery-lantern-library",
+    "restored-detail-system"
+  ],
+  "reviewer": "/root/visual_review",
+  "threshold": 0.85,
+  "budget": {
+    "triangles": 14000,
+    "batches": 45,
+    "quality": "medium"
+  },
+  "camera": {
+    "targetY": 2.6,
+    "orthographicHalfHeight": 4,
+    "note": "Same fixed lighthouse framing in baseline and after; other building captures unchanged."
+  }
+}

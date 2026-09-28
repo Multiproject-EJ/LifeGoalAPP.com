@@ -1,0 +1,12 @@
+{
+  "reviewer": "visual_review",
+  "action": "approve",
+  "scope": "boatwright finish gate only",
+  "input": "finish-v002",
+  "minimumSurface": 0.88,
+  "gain": 0.11,
+  "minimumSilhouette": 0.87,
+  "minimumIdentity": 0.86,
+  "minimumReadability": 0.86,
+  "remaining": "Material aging and irregular craftsmanship below concept; no exact visual parity. Wider footprint image still pending review."
+}

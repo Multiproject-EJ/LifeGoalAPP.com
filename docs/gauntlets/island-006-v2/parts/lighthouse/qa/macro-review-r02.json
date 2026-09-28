@@ -1,0 +1,18 @@
+{
+  "reviewer": "/root/visual_review",
+  "evidence": "blockout-v002",
+  "decision": "approve",
+  "scores": {
+    "doorClearance": 0.9,
+    "beaconRim": 0.9,
+    "silhouette": 0.87,
+    "towerCottageConnection": 0.88,
+    "quayApproach": 0.89
+  },
+  "gain": {
+    "door": 0.17,
+    "rim": 0.11
+  },
+  "regression": "none visible",
+  "action": "proceed finish; clear quay conifers during assembly"
+}
