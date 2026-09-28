@@ -176,7 +176,7 @@ export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorat
   },
   19: {
     islandNumber: 19, missionId: 'restart-wonder-circuit', pickupKind: 'golden_ride_ticket',
-    pickupLabel: 'Golden Ride Ticket', actionLabel: 'Power Next Circuit System', stageLabel: 'Circuit Systems Online',
+    pickupLabel: 'Coaster Section Order', actionLabel: 'Install Coaster Section', stageLabel: 'Coaster Sections Installed',
     stageCount: 3, chargeCostPerStage: 2,
     preferredPickupFractions: [2 / 36, 8 / 36, 14 / 36, 20 / 36, 27 / 36, 34 / 36],
   },
@@ -206,9 +206,70 @@ export function getStagedRestorationPickupTileIndices(
   ledger: IslandRunSignatureMissionProgressByIsland = {},
 ): number[] {
   const descriptor = getStagedRestorationMissionDescriptor(islandNumber, ledger);
+  // Island 019 no longer scatters ride tickets: the Director sells the coaster.
+  if (descriptor?.islandNumber === WONDER_CIRCUIT_ISLAND_NUMBER) return [];
   return descriptor
     ? resolveCollisionFreeTileIndices({ tileCount, preferredFractions: descriptor.preferredPickupFractions })
     : [];
+}
+
+/**
+ * Island 019 — the Theme Park Director commissions a coaster. The player earns
+ * Money (essence) and orders the coaster in three sections; each order grants
+ * one stage worth of Wonder Circuit charges, so stage activation, merge and
+ * completion keep using the shared staged-restoration ledger.
+ */
+export const WONDER_CIRCUIT_ISLAND_NUMBER = 19;
+export const COASTER_SECTION_COUNT = 3;
+export const COASTER_SECTION_BASE_PRICES = Object.freeze([700, 1_000, 1_600] as const);
+export const COASTER_SECTION_NAMES = Object.freeze(['Lift hill & station', 'Super-speed drop', 'Double spiral'] as const);
+/** Two Director kiosks around the route, clear of landmark-door clusters. */
+export const COASTER_DIRECTOR_TILE_FRACTIONS = Object.freeze([8 / 36, 27 / 36] as const);
+
+export function getCoasterDirectorTileIndices(tileCount: number): number[] {
+  return resolveCollisionFreeTileIndices({ tileCount, preferredFractions: COASTER_DIRECTOR_TILE_FRACTIONS });
+}
+
+export function isCoasterDirectorTile(islandNumber: number, tileIndex: number, tileCount: number): boolean {
+  return Math.floor(islandNumber) === WONDER_CIRCUIT_ISLAND_NUMBER
+    && getCoasterDirectorTileIndices(tileCount).includes(tileIndex);
+}
+
+export function getCoasterSectionPrice(cycleIndex: number, sectionIndex: number): number {
+  const index = Math.max(0, Math.min(COASTER_SECTION_COUNT - 1, Math.floor(sectionIndex)));
+  const effectiveIsland = getEffectiveIslandNumber(WONDER_CIRCUIT_ISLAND_NUMBER, cycleIndex);
+  return Math.round(COASTER_SECTION_BASE_PRICES[index] * getIslandEssenceMultiplier(effectiveIsland));
+}
+
+export interface CoasterOrderStatus {
+  /** Sections the Director has already been paid for (0–3). */
+  sectionsOrdered: number;
+  /** Sections powered on the circuit (0–3). */
+  sectionsInstalled: number;
+  /** A paid section is waiting to be installed. */
+  sectionReady: boolean;
+  allOrdered: boolean;
+  /** Price of the next section, or null when every section is ordered. */
+  nextPrice: number | null;
+  nextSectionName: string | null;
+}
+
+export function resolveCoasterOrderStatus(
+  progress: StagedRestorationMissionProgress | null,
+  cycleIndex: number,
+): CoasterOrderStatus {
+  const cost = STAGED_RESTORATION_MISSIONS[WONDER_CIRCUIT_ISLAND_NUMBER].chargeCostPerStage;
+  const sectionsOrdered = Math.min(COASTER_SECTION_COUNT, Math.floor((progress?.chargesEarned ?? 0) / cost));
+  const sectionsInstalled = Math.min(COASTER_SECTION_COUNT, progress?.activatedStages ?? 0);
+  const allOrdered = sectionsOrdered >= COASTER_SECTION_COUNT;
+  return {
+    sectionsOrdered,
+    sectionsInstalled,
+    sectionReady: progress ? getStagedRestorationAvailableCharges(progress) >= cost : false,
+    allOrdered,
+    nextPrice: allOrdered ? null : getCoasterSectionPrice(cycleIndex, sectionsOrdered),
+    nextSectionName: allOrdered ? null : COASTER_SECTION_NAMES[sectionsOrdered],
+  };
 }
 
 export function getStagedRestorationPickupForTile(

@@ -3,6 +3,7 @@ import { landmarkAttentionTests } from './landmarkAttention.test';
 import {islandRunFirstArrivalTests} from './islandRunFirstArrival.test';
 import { islandRunFastBuildTests } from './islandRunFastBuild.test';
 import { crystalMinersTests } from './crystalMiners.test';
+import { coasterDirectorTests } from './coasterDirector.test';
 import { buildStylesTests } from './buildStyles.test';
 import { precisionBuildJuiceTests } from './precisionBuildJuice.test';
 import { companionPairingSurpriseTests } from './companionPairingSurprise.test';
@@ -310,6 +311,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunFirstArrival', tests: islandRunFirstArrivalTests },
   { label: 'islandRunFastBuild', tests: islandRunFastBuildTests },
   { label: 'crystalMiners', tests: crystalMinersTests },
+  { label: 'coasterDirector', tests: coasterDirectorTests },
   { label: 'buildStyles', tests: buildStylesTests },
   { label: 'precisionBuildJuice', tests: precisionBuildJuiceTests },
   { label: 'companionPairingSurprise', tests: companionPairingSurpriseTests },

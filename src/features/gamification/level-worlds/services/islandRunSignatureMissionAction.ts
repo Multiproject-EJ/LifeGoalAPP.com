@@ -50,6 +50,8 @@ import {
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
   resolveStagedRestorationMissionProgress,
+  resolveCoasterOrderStatus,
+  WONDER_CIRCUIT_ISLAND_NUMBER,
 } from './islandRunSignatureMissions';
 
 export type ActivateStagedRestorationMissionResult =
@@ -220,6 +222,67 @@ export function activateStagedRestorationMissionStage(options: {
       activatedStages,
       chargesRemaining: getStagedRestorationAvailableCharges(nextProgress),
       completedAtMs,
+    };
+  });
+}
+
+export type OrderCoasterSectionResult =
+  | { status: 'ok'; sectionsOrdered: number; price: number; essenceRemaining: number }
+  | { status: 'insufficient_money'; price: number; essence: number }
+  | { status: 'wrong_island' | 'all_ordered' | 'awaiting_install' };
+
+/**
+ * Island 019: pay the Theme Park Director for the next coaster section. The
+ * order converts Money into one stage of Wonder Circuit charges; installing it
+ * still goes through `activateStagedRestorationMissionStage`.
+ */
+export function orderCoasterSectionFromDirector(options: {
+  session: Session;
+  client: SupabaseClient | null;
+}): Promise<OrderCoasterSectionResult> {
+  return withIslandRunActionLock(options.session.user.id, async () => {
+    const state = getIslandRunStateSnapshot(options.session);
+    if (state.currentIslandNumber !== WONDER_CIRCUIT_ISLAND_NUMBER) return { status: 'wrong_island' };
+    const descriptor = getStagedRestorationMissionDescriptor(WONDER_CIRCUIT_ISLAND_NUMBER);
+    const progress = resolveStagedRestorationMissionProgress({
+      ledger: state.signatureMissionProgressByIsland,
+      cycleIndex: state.cycleIndex,
+      islandNumber: WONDER_CIRCUIT_ISLAND_NUMBER,
+    });
+    if (!descriptor || !progress) return { status: 'wrong_island' };
+    const order = resolveCoasterOrderStatus(progress, state.cycleIndex);
+    if (order.allOrdered || order.nextPrice === null) return { status: 'all_ordered' };
+    if (order.sectionReady) return { status: 'awaiting_install' };
+    const price = order.nextPrice;
+    if (state.essence < price) return { status: 'insufficient_money', price, essence: state.essence };
+
+    const nowMs = Date.now();
+    const pickupTarget = descriptor.stageCount * descriptor.chargeCostPerStage;
+    const key = getIslandRunSignatureMissionKey(state.cycleIndex, WONDER_CIRCUIT_ISLAND_NUMBER);
+    await commitIslandRunState({
+      session: options.session,
+      client: options.client,
+      record: {
+        ...state,
+        runtimeVersion: state.runtimeVersion + 1,
+        essence: state.essence - price,
+        essenceLifetimeSpent: state.essenceLifetimeSpent + price,
+        signatureMissionProgressByIsland: {
+          ...state.signatureMissionProgressByIsland,
+          [key]: {
+            ...progress,
+            chargesEarned: Math.min(pickupTarget, progress.chargesEarned + descriptor.chargeCostPerStage),
+            updatedAtMs: nowMs,
+          },
+        },
+      },
+      triggerSource: 'order_coaster_section_from_director',
+    });
+    return {
+      status: 'ok',
+      sectionsOrdered: order.sectionsOrdered + 1,
+      price,
+      essenceRemaining: state.essence - price,
     };
   });
 }

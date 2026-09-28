@@ -260,6 +260,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = '🔥';
   } else if (signatureMissionKind === 'golden_ride_ticket') {
     iconContent = '🎟️';
+  } else if (signatureMissionKind === 'coaster_director') {
+    iconContent = '🎩';
   } else if (signatureMissionKind === 'titan_soul_bolt') {
     iconContent = '🔩';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
@@ -310,7 +312,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         signatureMissionKind?.includes('causeway_') || signatureMissionKind?.includes('moon_mirror_')
           || signatureMissionKind?.includes('breathline_') || signatureMissionKind?.includes('pollination_')
           || signatureMissionKind === 'ignition_core' || signatureMissionKind === 'golden_ride_ticket'
-          || signatureMissionKind === 'titan_soul_bolt'
+          || signatureMissionKind === 'titan_soul_bolt' || signatureMissionKind === 'coaster_director'
           ? 'island-tile--staged-restoration-pickup' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
@@ -346,6 +348,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
               ? `Tile ${index + 1}. Ignition Core for the forge chain`
             : signatureMissionKind === 'golden_ride_ticket'
               ? `Tile ${index + 1}. Golden Ride Ticket for the Wonder Circuit`
+            : signatureMissionKind === 'coaster_director'
+              ? `Tile ${index + 1}. Theme Park Director. Landing opens the coaster order desk`
             : signatureMissionKind === 'titan_soul_bolt'
               ? `Tile ${index + 1}. Titan Bone for the Titan's Spine`
             : isDormant

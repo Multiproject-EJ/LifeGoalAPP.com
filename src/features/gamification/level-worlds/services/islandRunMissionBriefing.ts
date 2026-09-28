@@ -245,11 +245,11 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   },
   19: {
     progressKind: 'staged_restoration',
-    headline: 'Restart the Wonder Circuit',
-    missionStatement: 'Coaster Carnival still has every ride, but its shared power circuit has gone quiet. Recover six Golden Ride Tickets, recommission the station, lift hill and loop launch, then prove the circuit in the Wonder Express victory lap—from your choice of front or middle wagon, through the gold-and-diamond caverns and out over the open ocean.',
-    primaryObjective: 'Power all three Wonder Circuit systems and complete the underground-to-ocean victory ride.',
-    supportingObjective: 'Restore the five carnival landmarks while keeping the canonical route and ride clearances open.',
-    fieldProtocol: 'Spend tickets in pairs. Commit each build stage, choose a front or middle wagon, then keep your eyes open through the plunge, treasure galleries and sea-cave reveal.',
+    headline: 'Gift the Wonder Coaster',
+    missionStatement: 'Coaster Carnival has every stall and lantern, but no coaster. The Theme Park Director waits at the 🎩 kiosk with a request: build and gift the park its Wonder Express. The coaster is expensive, so earn Money around the island, then order it section by section from the Director or your phone.',
+    primaryObjective: 'Order and install all three coaster sections, then take the first ride.',
+    supportingObjective: 'Restore the five carnival landmarks while you raise the coaster fund.',
+    fieldProtocol: 'Land on a 🎩 Director tile to talk. Each order spends Money; install the delivered section before ordering the next. Choose a front or middle wagon, and keep your eyes open. The Director is hiding something below the park.',
     caretakerSignal: 'Courage is not the absence of the drop. It is choosing to ride again with your eyes open.',
   },
   15: {
