@@ -103,7 +103,9 @@ export type IslandRunHapticEvent =
   // Mission phone: a tiny latch tick as the pack unlocks, a firmer dock click.
   | 'mission_phone_latch'
   | 'mission_phone_dock'
-  | 'tech_item_poof';
+  | 'tech_item_poof'
+  // Mission items popping onto the board after the first mission message.
+  | 'mission_item_pop';
 
 export type IslandRunSoundPlaybackStatus =
   | 'idle'
@@ -255,6 +257,7 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   // Traffic light coin reveal: a celebratory triple buzz on landing.
   coin_reveal: [25, 35, 25, 45, 30],
   tech_item_poof: [12, 18, 12],
+  mission_item_pop: [9],
   // Deliberately asymmetric: arming is the lightest pulse in the whole map so
   // it reads as "held, not yet committed"; engaging lands harder so the player
   // can lift their eyes off the button once it fires.
@@ -361,6 +364,40 @@ export function playIslandRunSound(eventId: IslandRunSoundEvent): void {
     recordIslandRunSoundDiagnostics(eventId, 'play_failed');
     // Browser autoplay policy, missing files, and decode failures are non-fatal.
   });
+}
+
+let bubblePopContext: AudioContext | null = null;
+
+/**
+ * Original synthesized bubble pop (no recording, so no licence to track): a
+ * short sine chirp that sweeps upward with a fast pluck envelope. `step`
+ * nudges the pitch so a run of pops sounds like popcorn, not a loop.
+ */
+export function playIslandRunBubblePop(step = 0): void {
+  if (!getIslandRunAudioEnabled() || typeof window === 'undefined') return;
+  const Context = window.AudioContext
+    ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Context) return;
+  try {
+    bubblePopContext ??= new Context();
+    const context = bubblePopContext;
+    if (context.state === 'suspended') void context.resume();
+    const now = context.currentTime;
+    const base = 420 + ((step * 97) % 260);
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(base, now);
+    oscillator.frequency.exponentialRampToValueAtTime(base * 2.6, now + 0.07);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(ISLAND_RUN_SFX_VOLUME * 0.55, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.12);
+  } catch {
+    // Audio unavailable: the pop stays visual.
+  }
 }
 
 /**

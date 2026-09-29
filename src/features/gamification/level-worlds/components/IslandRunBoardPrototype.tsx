@@ -678,6 +678,7 @@ import {
   resolveCoasterOrderStatus,
   WONDER_CIRCUIT_ISLAND_NUMBER,
   FISHERMANS_VILLAGE_ISLAND_NUMBER,
+  getIslandRunSignatureMissionKey,
 } from '../services/islandRunSignatureMissions';
 import {
   getIslandMissionBriefingPresentation,
@@ -14527,6 +14528,29 @@ export function IslandRunBoardPrototype({
   const handleMissionMessageRead = useCallback((messageId: string) => {
     updateMissionInbox((inbox) => markMissionPhoneMessageRead(inbox, messageId, Date.now()));
   }, [updateMissionInbox]);
+  // The island's signature mission items (Island 001 dynamite etc.) stay off
+  // the board until its first mission message has been read and the phone is
+  // closed; then they pop in. Saves that already have mission progress, or no
+  // message at all, keep their items visible.
+  // Dev visual preview: ?missionItemPopPreview=1 hides the items, then pops them in.
+  const [missionItemPopPreviewRevealed, setMissionItemPopPreviewRevealed] = useState(() => !(
+    isIslandVisualPreview && typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('missionItemPopPreview') === '1'));
+  useEffect(() => {
+    if (missionItemPopPreviewRevealed) return undefined;
+    const timer = window.setTimeout(() => setMissionItemPopPreviewRevealed(true), 20_000);
+    return () => window.clearTimeout(timer);
+  }, [missionItemPopPreviewRevealed]);
+  const missionItemsAwaitingFirstMessage = (() => {
+    const isThisIsland = (trigger: IslandMissionBriefingTrigger | null) => Boolean(trigger
+      && trigger.islandNumber === islandNumber && trigger.cycleIndex === cycleIndex);
+    if (__storeState.signatureMissionProgressByIsland[getIslandRunSignatureMissionKey(cycleIndex, islandNumber)]) return false;
+    if (isThisIsland(pendingMissionBriefing) || isThisIsland(incomingMissionBriefing) || isThisIsland(activeMissionBriefing)) return true;
+    const firstMessage = missionInbox
+      .filter((message) => message.islandNumber === islandNumber && message.cycleIndex === cycleIndex)
+      .sort((a, b) => a.receivedAtMs - b.receivedAtMs)[0];
+    return Boolean(firstMessage && firstMessage.readAtMs === null);
+  })();
   const openIncomingMissionBriefing = useCallback(() => {
     if (!incomingMissionBriefing) return false;
     setOpenMissionMessageId(incomingMissionMessageId);
@@ -17184,6 +17208,7 @@ export function IslandRunBoardPrototype({
                 onIsland20SkiffRunComplete={handleLavaSkiffRunComplete}
                 onAssemblyMeetingComplete={isIslandVisualPreview ? undefined : openAssemblyMandate}
                 onExplorePointChange={(id) => setExploreViewActive(id !== null)}
+                missionItemsRevealed={isIslandVisualPreview ? missionItemPopPreviewRevealed : !missionItemsAwaitingFirstMessage}
                 fishermansFishingPresentation={{
                   fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
                     ? FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG

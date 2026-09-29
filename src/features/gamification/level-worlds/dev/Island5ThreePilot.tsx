@@ -348,6 +348,7 @@ import {
   ISLAND_17_TITANS_REST_WORLD_NAME,
 } from './Island17TitansRestThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
+import { playIslandRunBubblePop, triggerIslandRunHaptic } from '../services/islandRunAudio';
 import {
   createIslandStagedRestorationThreePresentation,
   type IslandStagedRestorationPresentation,
@@ -470,6 +471,12 @@ interface Island5ThreePilotProps {
   onAssemblyMeetingComplete?: () => void;
   /** An explore point view opened (id) or closed (null). */
   onExplorePointChange?: (id: string | null) => void;
+  /**
+   * False hides this island's signature mission items (e.g. Island 001
+   * dynamite) until the first mission message is read. Turning it true while
+   * the scene is live plays the popcorn reveal with a close-up. Default true.
+   */
+  missionItemsRevealed?: boolean;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
   interactionPaused?: boolean;
@@ -3664,6 +3671,7 @@ export default function Island5ThreePilot({
   onSignatureMissionClick,
   onAssemblyMeetingComplete,
   onExplorePointChange,
+  missionItemsRevealed = true,
   caretakerEncounterOpen = false,
   onCaretakerClick,
   interactionPaused = false,
@@ -3930,6 +3938,13 @@ export default function Island5ThreePilot({
   const exploreDotRefs = useRef(new Map<IslandExplorePointId, HTMLButtonElement>());
   const exploreRequestRef = useRef<{ kind: 'enter'; id: IslandExplorePointId } | { kind: 'exit' } | null>(null);
   const [activeExplorePointId, setActiveExplorePointId] = useState<IslandExplorePointId | null>(null);
+  // Mission items: hidden until the first mission message is read, then popped in.
+  const missionItemsRevealedRef = useRef(missionItemsRevealed);
+  const missionItemRevealRequestRef = useRef(false);
+  useEffect(() => {
+    if (missionItemsRevealed && !missionItemsRevealedRef.current) missionItemRevealRequestRef.current = true;
+    missionItemsRevealedRef.current = missionItemsRevealed;
+  }, [missionItemsRevealed]);
   const onExplorePointChangeRef = useRef(onExplorePointChange);
   onExplorePointChangeRef.current = onExplorePointChange;
   useEffect(() => { onExplorePointChangeRef.current?.(activeExplorePointId); }, [activeExplorePointId]);
@@ -5973,6 +5988,7 @@ export default function Island5ThreePilot({
     tileRewardObjects.setStagedRestorationClaimedTiles(
       stagedRestorationPresentationRef.current?.claimedPickupTileIndices ?? [],
     );
+    tileRewardObjects.setMissionItemsHidden(!missionItemsRevealedRef.current);
     if (isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled) tileRewardObjects.root.scale.setScalar(0.62);
     if (isLavaLabyrinth) {
       tileRewardObjects.root.children.forEach((reward) => {
@@ -11085,6 +11101,56 @@ export default function Island5ThreePilot({
           canvas.dataset.plantingMicroscope = JSON.stringify({ width, height, x, y, fraction,
             cameraPosition: camera.position.toArray(), cameraQuaternion: camera.quaternion.toArray() });
           renderCamera = plantingMicroscopeCamera;
+        }
+      }
+      // Mission items pop in (after the first mission message is read): a
+      // close-up on the first item while they burst out of their tiles.
+      if (missionItemRevealRequestRef.current) {
+        missionItemRevealRequestRef.current = false;
+        if (isReducedMotion) {
+          tileRewardObjects.setMissionItemsHidden(false);
+        } else {
+          const reveal = tileRewardObjects.startMissionItemReveal(timer.getElapsed(), tokenIndexRef.current);
+          canvas.dataset.missionItemReveal = String(reveal.popOffsets.length);
+          reveal.popOffsets.forEach((offset, index) => {
+            window.setTimeout(() => {
+              playIslandRunBubblePop(index);
+              triggerIslandRunHaptic('mission_item_pop');
+            }, offset * 1000 + 60);
+          });
+          // Takes over from ambient drift; never from an explore view or a build lock.
+          if (reveal.focus && !exploreActive && ambientCameraEligibleAt !== Number.POSITIVE_INFINITY) {
+            idleOverviewAt = null;
+            ambientCameraEligibleAt = Number.POSITIVE_INFINITY;
+            // Loosen the orbit clamps for the close-up (applyPreset restores them).
+            marinaInspectionActive = true;
+            controls.minDistance = 0.5;
+            controls.minPolarAngle = 0;
+            controls.maxPolarAngle = Math.PI;
+            controls.enabled = false;
+            const toTarget = reveal.focus.clone();
+            const toPosition = toTarget.clone().add(new THREE.Vector3(0, 3.4, 5.4));
+            const controlPosition = camera.position.clone().lerp(toPosition, 0.5);
+            controlPosition.y += 2;
+            const holdMs = Math.min(3200, 900 + reveal.popOffsets.length * 140);
+            transition = {
+              startedAt: performance.now(),
+              durationMs: 900,
+              fromPosition: camera.position.clone(),
+              fromTarget: controls.target.clone(),
+              controlPosition,
+              toPosition,
+              toTarget,
+              onComplete: () => {
+                window.setTimeout(() => {
+                  if (exploreActive) return;
+                  controls.enabled = true;
+                  applyPreset('overview', 0.9);
+                  ambientCameraEligibleAt = performance.now() + ISLAND_3D_BOARD_POV_IDLE_DELAY_MS;
+                }, holdMs);
+              },
+            };
+          }
         }
       }
       // Explore points: enter/exit requests from the dots and the Back button.

@@ -10,6 +10,9 @@ export interface LivingControllerProps {
  arrivalKey?:string;
  islandNumber?:number; preferredTheme?:string; surface?:'island'|'treasure';
  multiplierFeedbackKey?:number;
+ /** Tutorial-only: flash the "×N · cost per roll · maximum" explainer over the
+  * multiplier pill. Off in normal play; the pill's aria-label still explains it. */
+ explainMultiplier?:boolean;
  onArrivalImpact?:()=>void;
  onThemeChange?:(theme:string)=>void;
  creatureRewardReady?:boolean; rolling:boolean; autoRolling:boolean; jackpot:boolean; buildReady:boolean; tutorial:boolean;
@@ -31,9 +34,10 @@ export function LivingController(p:LivingControllerProps){
  const previousMultiplier=useRef(p.multiplier);
  const previousFeedback=useRef(p.multiplierFeedbackKey);
  useEffect(()=>{if(previousMultiplier.current===p.multiplier&&previousFeedback.current===p.multiplierFeedbackKey)return;previousMultiplier.current=p.multiplier;previousFeedback.current=p.multiplierFeedbackKey;
+  if(!p.explainMultiplier)return;
   setPowerFeedback(p.multiplier===p.maximum&&p.maximum>1?`MAX ×${p.multiplier} · ${p.cost} dice per roll`:`×${p.multiplier} · ${p.cost} dice per roll · maximum ×${p.maximum}`);
   const timer=window.setTimeout(()=>setPowerFeedback(''),1600);return()=>window.clearTimeout(timer);
- },[p.multiplier,p.maximum,p.cost,p.multiplierFeedbackKey]);
+ },[p.multiplier,p.maximum,p.cost,p.multiplierFeedbackKey,p.explainMultiplier]);
  const activity=useRef(0);
  useEffect(()=>{const touch=()=>{activity.current++;};document.addEventListener('pointerdown',touch,true);document.addEventListener('keydown',touch,true);document.addEventListener('visibilitychange',touch);return()=>{document.removeEventListener('pointerdown',touch,true);document.removeEventListener('keydown',touch,true);document.removeEventListener('visibilitychange',touch);};},[]);
  const host=useRef<HTMLDivElement>(null),controls=useRef<Record<string,HTMLButtonElement>>({});
