@@ -12,6 +12,7 @@ export type WorldEventName =
   | 'waitlist_submit'
   | 'waitlist_success'
   | 'waitlist_error'
+  | 'waitlist_sticky_click'
   | 'install_view'
   | 'install_click'
   | 'install_dismiss'
