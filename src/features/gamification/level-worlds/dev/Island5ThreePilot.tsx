@@ -6724,7 +6724,7 @@ export default function Island5ThreePilot({
         ? landmarkRootsById.get(mappedStopId as Island5LandmarkId)
         : undefined;
       const nextKey = next
-        ? [next.active, next.working, next.phase, next.progress.toFixed(4), next.sequence, next.sourceLevel, next.commissioning, next.cloudCover.toFixed(3), mappedStopId, next.targetLevel, next.completionCelebration, next.reducedMotion].join(':')
+        ? [next.active, next.working, next.phase, next.progress.toFixed(4), next.sequence, next.sourceLevel, next.commissioning, next.cloudCover.toFixed(3), mappedStopId, next.targetLevel, next.completionCelebration, next.quietLevelUp, next.reducedMotion].join(':')
         : 'inactive';
       if (nextKey === appliedConstructionKey) return;
       appliedConstructionKey = nextKey;
@@ -6736,10 +6736,11 @@ export default function Island5ThreePilot({
         )
         : null;
       constructionAnchor.visible = isActive;
-      constructionFamily.root.visible = isActive && !next?.commissioning && !next?.completionCelebration && !next?.fastBuild;
+      constructionFamily.root.visible = isActive && !next?.commissioning && !next?.completionCelebration && !next?.fastBuild && !next?.quietLevelUp;
       constructionStageBuilding.visible = isActive;
       constructionTheatre.setPresentation({
-        active: isActive,
+        // Level 1/2: the building is the reward; the robot crew stays off stage.
+        active: isActive && !next?.quietLevelUp,
         working: next?.working ?? false,
         completionCelebration: next?.completionCelebration ?? false,
         phase: next?.phase ?? 'arrive',

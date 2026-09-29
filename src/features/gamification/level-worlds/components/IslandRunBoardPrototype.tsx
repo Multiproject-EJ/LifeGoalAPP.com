@@ -3248,9 +3248,12 @@ export function IslandRunBoardPrototype({
       buildLevelCompletionRef.current = ready;
       setBuildLevelCompletion(ready);
     }, Math.max(0, buildLevelCompletion.minAdvanceAtMs - Date.now()));
-    const autoAdvanceTimeoutId = window.setTimeout(() => {
-      clearBuildLevelReview(reviewId);
-    }, Math.max(0, buildLevelCompletion.autoAdvanceAtMs - Date.now()));
+    // setTimeout overflows past ~24.8 days, so an open-ended review sets no timer.
+    const autoAdvanceTimeoutId = Number.isFinite(buildLevelCompletion.autoAdvanceAtMs)
+      ? window.setTimeout(() => {
+        clearBuildLevelReview(reviewId);
+      }, Math.max(0, buildLevelCompletion.autoAdvanceAtMs - Date.now()))
+      : undefined;
     return () => {
       window.clearTimeout(markReadyTimeoutId);
       window.clearTimeout(autoAdvanceTimeoutId);
@@ -12126,8 +12129,10 @@ export function IslandRunBoardPrototype({
       const stopEntry = islandStopPlan[stopIndex];
       const stopLabel = stopEntry?.title ?? stopEntry?.stopId ?? `Stop ${stopIndex + 1}`;
       const leveledUp = nextBuildState.buildLevel > currentBuildState.buildLevel;
-      if (leveledUp) playIslandRunSound('reward_bar_claim_burst');
-      triggerIslandRunHaptic(leveledUp ? 'build_level_complete' : 'build_part');
+      // Level 1/2 stay quiet (the build sound already played); Level 3 is the milestone.
+      const reachedMaxLevel = leveledUp && nextBuildState.buildLevel >= MAX_BUILD_LEVEL;
+      if (reachedMaxLevel) playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic(reachedMaxLevel ? 'build_level_complete' : 'build_part');
 
       const completionPresentation = resolveBuildLevelCompletionPresentation({
         title: stopLabel,
@@ -12144,7 +12149,12 @@ export function IslandRunBoardPrototype({
           stopIndex,
           stopId: stopEntry?.stopId ?? '',
           minAdvanceAtMs: startedAtMs + BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
-          autoAdvanceAtMs: startedAtMs + BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS,
+          // No automatic jump to the next target: after the ~1 s beat the
+          // player continues (tap, or hold to keep building). The first
+          // Hatchery tutorial keeps its guided automatic flow.
+          autoAdvanceAtMs: isBuildModalHatcheryGuidanceActive
+            ? startedAtMs + BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS
+            : Number.POSITIVE_INFINITY,
           isAdvanceReady: false,
           isAdvanceQueued: false,
         };
@@ -12173,7 +12183,7 @@ export function IslandRunBoardPrototype({
     } finally {
       isBuildSpendInFlightRef.current = false;
     }
-  }, [islandNumber, activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
+  }, [islandNumber, activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, isBuildModalHatcheryGuidanceActive, playIslandRunSound, session]);
 
   const resolveQueuedBuildPartSteps = useCallback((stopIndex: number, targetPartNumber: 1 | 2 | 3 | 4 | 5): number => {
     const latestRuntimeState = getIslandRunStateSnapshot(session);

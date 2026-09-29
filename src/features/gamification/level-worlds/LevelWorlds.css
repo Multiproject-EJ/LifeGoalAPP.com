@@ -28631,3 +28631,32 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   .island-mission-tracker__message,
   .island-mission-tracker__inbox { animation: none; }
 }
+
+/* Level 1/2 quiet level-up: the building is the reward. A small warm chip
+   rises and fades over the island; the dock keeps a calm Continue. */
+.bm2-quiet-level-up {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  z-index: 4;
+  padding: .42rem .9rem;
+  border: 1px solid rgba(255, 223, 150, .55);
+  border-radius: 999px;
+  color: #fff4cf;
+  background: rgba(22, 30, 44, .52);
+  box-shadow: 0 0 22px rgba(255, 196, 102, .45);
+  font-size: .86rem;
+  font-weight: 750;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: bm2-quiet-level-up 1.6s ease-out both;
+}
+.bm2-quiet-level-up span { color: #ffd776; }
+@keyframes bm2-quiet-level-up {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(.94); }
+  18% { opacity: 1; transform: translate(-50%, 0) scale(1); box-shadow: 0 0 34px rgba(255, 206, 120, .7); }
+  75% { opacity: 1; }
+  100% { opacity: .0; transform: translate(-50%, -10px); box-shadow: 0 0 12px rgba(255, 196, 102, .2); }
+}
+@media (prefers-reduced-motion: reduce) { .bm2-quiet-level-up { animation: none; } }

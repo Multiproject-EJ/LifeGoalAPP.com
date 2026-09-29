@@ -119,10 +119,14 @@ function BuildModalV2LevelRail({ viewModel }: { viewModel: BuildModalV2ViewModel
 function BuildModalV2LevelReviewState({
   review,
   onAdvance,
+  onContinueHold,
 }: {
   review: BuildModalV2LevelReview;
   onAdvance: () => void;
+  /** Press-and-hold on Continue carries straight on into hold-to-build. */
+  onContinueHold?: () => void;
 }) {
+  const quiet = review.level < 3;
   const actionLabel = review.isAdvanceQueued
     ? 'Next build queued'
     : review.hasNextBuild
@@ -132,11 +136,13 @@ function BuildModalV2LevelReviewState({
   return (
     <div className="bm2-level-review" role="group" aria-label={`${review.title} level ${review.level} review`}>
       <div className="bm2-level-review__copy" role="status" aria-live="polite">
-        <span className="bm2-level-review__eyebrow">Construction milestone</span>
+        <span className="bm2-level-review__eyebrow">{quiet ? 'Level up' : 'Construction milestone'}</span>
         <h3>{review.title} · Level {review.level} complete</h3>
         <p>{review.isFullyBuilt
           ? 'Landmark restored. Ready at full strength.'
-          : 'Take in the finished level. The next build opens automatically.'}</p>
+          : review.hasNextBuild
+            ? 'Hold Continue to keep building.'
+            : 'Take in the finished level.'}</p>
         <div className="bm2-level-review__rail" aria-label={`${review.title} completed levels`}>
           {([1, 2, 3] as const).map((level) => (
             <span
@@ -155,11 +161,15 @@ function BuildModalV2LevelReviewState({
         aria-label={actionLabel}
         disabled={!review.isAdvanceReady}
         aria-disabled={!review.isAdvanceReady}
+        onPointerDown={(event) => {
+          if (!review.isAdvanceReady || event.button !== 0 || !review.hasNextBuild) return;
+          onContinueHold?.();
+        }}
         onClick={onAdvance}
       >
         <span aria-hidden="true">{review.isAdvanceQueued ? '✓' : '🔨'}</span>
         <strong>{actionLabel}</strong>
-        <small>{review.isAdvanceReady ? 'Continue now' : 'Robots and reveal still moving'}</small>
+        <small>{review.isAdvanceReady ? (review.hasNextBuild ? 'Tap, or hold to keep building' : 'Continue now') : quiet ? 'Settling in…' : 'Robots and reveal still moving'}</small>
       </button>
       <span className="bm2-level-review__timer" aria-hidden="true" />
     </div>
@@ -318,18 +328,59 @@ export function BuildModalV2({
     if (!isOpen) return;
     return lockPageScroll(['body', 'documentElement']);
   }, [isOpen]);
+
+  // Continue-and-hold: pressing Continue after a level-up and keeping the
+  // finger down resumes hold-to-build on the next target once it is shown.
+  const continueHoldRef = useRef<{ pressed: boolean; started: boolean }>({ pressed: false, started: false });
+  const startContinueHold = () => {
+    continueHoldRef.current = { pressed: true, started: false };
+    onAdvanceLevelReview();
+  };
+  useEffect(() => {
+    const release = () => {
+      const state = continueHoldRef.current;
+      if (state.started) onStopBuildHold();
+      continueHoldRef.current = { pressed: false, started: false };
+    };
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    return () => {
+      window.removeEventListener('pointerup', release);
+      window.removeEventListener('pointercancel', release);
+    };
+  }, [onStopBuildHold]);
+  const nextHoldStopIndex = !levelReview && active && active.canAffordNextTap && !isAutoBuildActive
+    && !isBuildInteractionLocked ? active.stopIndex : null;
+  useEffect(() => {
+    const state = continueHoldRef.current;
+    if (!state.pressed || state.started || nextHoldStopIndex === null) return undefined;
+    // A short tap only continues; a held press becomes a build hold.
+    const timer = window.setTimeout(() => {
+      if (!continueHoldRef.current.pressed || continueHoldRef.current.started) return;
+      continueHoldRef.current.started = true;
+      onStartBuildHold(nextHoldStopIndex);
+    }, 220);
+    return () => window.clearTimeout(timer);
+  }, [nextHoldStopIndex, onStartBuildHold]);
   if (!isOpen) return null;
+  const quietLevelUp = Boolean(levelReview && levelReview.level < 3);
 
   const statusLine = active
     ? `${active.spentEssence}/${active.requiredEssence} Money funded`
     : 'Construction complete';
 
   return createPortal(
-    <div className={`island-run-overlay-root bm2-build-mode${isBuildHoldActive ? ' bm2-build-mode--rapid' : ''}${isComplete && !levelReview ? ' bm2-build-mode--complete' : ''}${!fastBuildMode && (levelReview || isComplete) ? ' bm2-build-mode--celebrating' : ''}`} role="presentation">
+    <div className={`island-run-overlay-root bm2-build-mode${isBuildHoldActive ? ' bm2-build-mode--rapid' : ''}${isComplete && !levelReview ? ' bm2-build-mode--complete' : ''}${!fastBuildMode && ((levelReview && !quietLevelUp) || isComplete) ? ' bm2-build-mode--celebrating' : ''}${quietLevelUp ? ' bm2-build-mode--quiet-level-up' : ''}`} role="presentation">
       <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} construction mode`}>
-        <Suspense fallback={null}><BuildCelebrationCrew active={Boolean(levelReview || isComplete || fastBuildMode)} orbit={Boolean(fastBuildMode)} crew={isComplete || fastBuildMode ? 'all' : 'random'} /></Suspense>
+        <Suspense fallback={null}><BuildCelebrationCrew active={Boolean((levelReview && !quietLevelUp) || isComplete || fastBuildMode)} orbit={Boolean(fastBuildMode)} crew={isComplete || fastBuildMode ? 'all' : 'random'} /></Suspense>
         {!fastBuildMode && (levelReview ? levelReview.level === 3 : isComplete) && <CelebrationFireworks key={levelReview?.presentationSequence ?? 'complete'} active variant="rapid" backdrop="none" placement="local" />}
-        {!fastBuildMode && levelReview && <div className="bm2-celebration-title" role="status">
+        {!fastBuildMode && quietLevelUp && levelReview && (
+          <div key={levelReview.presentationSequence} className="bm2-quiet-level-up" role="status">
+            <span aria-hidden="true">✦</span> {levelReview.title} · Level {levelReview.level}
+            {Boolean(levelReview.diceAward) && <strong> · 🎲 +{levelReview.diceAward}</strong>}
+          </div>
+        )}
+        {!fastBuildMode && levelReview && !quietLevelUp && <div className="bm2-celebration-title" role="status">
           <span>{levelReview?.fastMode ? 'POW! Beautifully built.' : 'Beautifully built!'}</span>
           <h2>{levelReview ? levelReview.title : 'All landmarks built'}</h2>
           <p>{levelReview ? `Level ${levelReview.level} complete` : 'Construction complete'}</p>
@@ -377,7 +428,7 @@ export function BuildModalV2({
 
         <div className={`bm2-dock ${isComplete && !levelReview ? 'bm2-dock--complete' : ''}${levelReview ? ' bm2-dock--level-review' : ''}`}>
           {fastBuildMode ? <p className="bm2-fast-status">Your construction is saved. Enjoy the reveal…</p> : levelReview ? (
-            <BuildModalV2LevelReviewState review={levelReview} onAdvance={onAdvanceLevelReview} />
+            <BuildModalV2LevelReviewState review={levelReview} onAdvance={onAdvanceLevelReview} onContinueHold={startContinueHold} />
           ) : isComplete ? (
             <button type="button" className="bm2-back-to-island" onClick={onClose}>
               <span className="bm2-back-to-island__icon" aria-hidden="true">🏝️</span>

@@ -102,6 +102,17 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assertEqual(review.targetStopId, 'hatchery', 'Review should remain on the landmark that just completed');
       assertEqual(review.targetLevel, 1, 'Review should show the completed level instead of the next target level');
       assertEqual(review.phase, 'reveal', 'Review should preserve the authored reveal phase');
+      assertEqual(review.quietLevelUp, true, 'Level 1 is a quiet level-up without the robot crew');
+      const levelThree = deriveIslandRunConstructionPresentation({
+        isOpen: true,
+        isBuildHoldActive: false,
+        viewModel: vm([build(3), build(0), build(0), build(0), build(0)]),
+        levelReview: {
+          title: 'Hatchery', stopId: 'hatchery', previousLevel: 2, level: 3, presentationSequence: 3,
+          isFullyBuilt: false, isAdvanceReady: false, isAdvanceQueued: false, hasNextBuild: true,
+        },
+      });
+      assertEqual(levelThree.quietLevelUp, false, 'Level 3 keeps the full milestone celebration');
 
       const complete = deriveIslandRunConstructionPresentation({
         isOpen: true,

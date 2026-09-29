@@ -31,6 +31,11 @@ export type IslandRunConstructionPresentation = {
   targetLevel: number | null;
   /** Final 15/15 state: park the crew in a front-facing celebration lineup. */
   completionCelebration: boolean;
+  /**
+   * Level 1/2 finished: a quiet beat (light pulse, settle, sparkles) with no
+   * robot crew line-up. Level 3 keeps the full milestone celebration.
+   */
+  quietLevelUp?: boolean;
   reducedMotion: boolean;
 };
 
@@ -104,6 +109,7 @@ export function deriveIslandRunConstructionPresentation(options: {
       targetStopId,
       targetLevel,
       completionCelebration: false,
+      quietLevelUp: (targetLevel ?? 3) < 3,
       reducedMotion: Boolean(options.reducedMotion),
     };
   }
