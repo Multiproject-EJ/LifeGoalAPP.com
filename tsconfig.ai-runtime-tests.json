@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "lib": ["DOM", "ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-ai-runtime-tests",
+    "noEmit": false,
+    "types": ["node"]
+  },
+  "include": [
+    "src/services/aiTaskKeys.ts",
+    "src/services/ai/aiRuntimeCore.ts",
+    "src/services/ai/__tests__/aiRuntimeCore.test.ts"
+  ]
+}

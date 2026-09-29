@@ -202,7 +202,7 @@ Set these in `.env.local` (local dev) or in your deployment platform's environme
 |---|---|---|
 | `VITE_AI_GOAL_SUGGEST_URL` | — | URL for `suggest-goal` edge function (enables AI goal suggestions) |
 | `VITE_AI_GOAL_COACH_CHAT_URL` | — | URL for `goal-coach-chat` edge function (enables goal coach chat) |
-| `VITE_OPENAI_API_KEY` | — | OpenAI key on the client side (not recommended for production; prefer server-side edge functions) |
+| `VITE_OPENAI_API_KEY` | — | **Must not be set** (the build fails if it is). AI keys live in Supabase function secrets (`OPENAI_API_KEY`, used by `ai-task`). |
 | `VITE_GOAL_COACH_CONTEXT_EXPERIMENT` | `false` | Feature flag — enables experimental goal coach context in AI coach (set to `"true"` to enable) |
 
 ---
@@ -237,7 +237,7 @@ See [`docs/game-of-life-2.0/DEMO_MODE_SETUP.md`](./game-of-life-2.0/DEMO_MODE_SE
 | Push notifications (preview) | ✅ Schedule preview | Demo schedule list shown; no actual pushes sent |
 | Telemetry events | ✅ localStorage mock | `addDemoTelemetryEvent()` stores in demo state |
 | Scheduled reminders | ✅ Full mock | `getDemoMockScheduledReminders()` |
-| AI Coach | ✅ Prompts work | Requires `VITE_OPENAI_API_KEY` or edge function URL for real responses |
+| AI Coach | ✅ Prompts work | Requires the edge function URL for real responses |
 | Achievements | ⚠️ Supabase required | No demo fallback in `achievements.ts` |
 | Meditation reminders | ⚠️ Supabase required | |
 | Push notification delivery | ❌ Not in demo | Demo mode never sends actual pushes |

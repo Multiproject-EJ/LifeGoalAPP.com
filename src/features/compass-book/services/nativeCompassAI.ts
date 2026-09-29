@@ -15,6 +15,15 @@ type NativeCompassAIPlugin = {
     text: string;
     model: string;
   }>;
+  generate: (input: {
+    instructions: string;
+    prompt: string;
+    temperature?: number;
+    maxTokens?: number;
+  }) => Promise<{
+    text: string;
+    model: string;
+  }>;
 };
 
 const NativeCompassAI = registerPlugin<NativeCompassAIPlugin>('NativeCompassAI');
@@ -53,5 +62,22 @@ export async function suggestPrivateCompassNextStep(input: {
   const response = await NativeCompassAI.suggestNextStep(input);
   const text = response.text.trim();
   if (!text) throw new Error('The on-device suggestion was empty.');
+  return text;
+}
+
+/**
+ * General on-device generation with Apple's Foundation Models (iOS 26+,
+ * Apple Intelligence enabled). Throws when unavailable or when generation
+ * fails; the shared AI runtime then falls back to the server.
+ */
+export async function generateOnDevice(input: {
+  instructions: string;
+  prompt: string;
+  temperature?: number;
+  maxTokens?: number;
+}): Promise<string> {
+  const response = await NativeCompassAI.generate(input);
+  const text = response.text.trim();
+  if (!text) throw new Error('The on-device response was empty.');
   return text;
 }
