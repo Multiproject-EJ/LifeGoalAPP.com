@@ -348,6 +348,15 @@ import {
   ISLAND_17_TITANS_REST_WORLD_NAME,
 } from './Island17TitansRestThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
+import { createIsland001AtmosphereThree } from './Island001AtmosphereThree';
+import {
+  resolveIsland001DayPosition,
+  resolveIsland001Lighting,
+  resolveIsland001PathGlow,
+  resolveIsland001StreetlightCount,
+  stepIsland001DayPosition,
+  type Island001AtmosphereProgress,
+} from '../services/island001Atmosphere';
 import { playIslandRunBubblePop, triggerIslandRunHaptic } from '../services/islandRunAudio';
 import {
   createIslandStagedRestorationThreePresentation,
@@ -477,6 +486,12 @@ interface Island5ThreePilotProps {
    * the scene is live plays the popcorn reveal with a close-up. Default true.
    */
   missionItemsRevealed?: boolean;
+  /**
+   * Island 001 only: progress that drives time of day (sunrise → daylight →
+   * golden hour → night), street lamps and the route glow. `dayPositionOverride`
+   * (0..3) is a dev/evidence seam.
+   */
+  island001Atmosphere?: Island001AtmosphereProgress & { dayPositionOverride?: number | null };
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
   interactionPaused?: boolean;
@@ -3672,6 +3687,7 @@ export default function Island5ThreePilot({
   onAssemblyMeetingComplete,
   onExplorePointChange,
   missionItemsRevealed = true,
+  island001Atmosphere,
   caretakerEncounterOpen = false,
   onCaretakerClick,
   interactionPaused = false,
@@ -3938,6 +3954,8 @@ export default function Island5ThreePilot({
   const exploreDotRefs = useRef(new Map<IslandExplorePointId, HTMLButtonElement>());
   const exploreRequestRef = useRef<{ kind: 'enter'; id: IslandExplorePointId } | { kind: 'exit' } | null>(null);
   const [activeExplorePointId, setActiveExplorePointId] = useState<IslandExplorePointId | null>(null);
+  const island001AtmosphereRef = useRef(island001Atmosphere);
+  island001AtmosphereRef.current = island001Atmosphere;
   // Mission items: hidden until the first mission message is read, then popped in.
   const missionItemsRevealedRef = useRef(missionItemsRevealed);
   const missionItemRevealRequestRef = useRef(false);
@@ -5997,6 +6015,22 @@ export default function Island5ThreePilot({
       });
     }
     scene.add(tileRewardObjects.root);
+
+    // Island 001: time of day, street lamps and route glow follow progress.
+    const island001AtmosphereRuntime = isAssemblyCraterFirstLight
+      ? createIsland001AtmosphereThree({ tileTransforms, quality: qualityProfile.id })
+      : null;
+    const island001DayTarget = () => {
+      const progress = island001AtmosphereRef.current;
+      if (!progress) return 1;
+      return progress.dayPositionOverride ?? resolveIsland001DayPosition(progress);
+    };
+    // The scene opens at its current time of day; later progress moves the sun.
+    let island001PresentedDay = island001DayTarget();
+    if (island001AtmosphereRuntime) {
+      scene.add(island001AtmosphereRuntime.root);
+      if (island001AtmosphereRuntime.backdrop) scene.background = island001AtmosphereRuntime.backdrop;
+    }
 
     const playerPiece = createIslandPlayerPiece(qualityProfile.id);
     if (isLavaLabyrinth) {
@@ -11103,6 +11137,30 @@ export default function Island5ThreePilot({
           renderCamera = plantingMicroscopeCamera;
         }
       }
+      if (island001AtmosphereRuntime) {
+        const progress = island001AtmosphereRef.current ?? { buildLevels: [], assemblyComplete: false };
+        island001PresentedDay = isReducedMotion
+          ? island001DayTarget()
+          : stepIsland001DayPosition(island001PresentedDay, island001DayTarget(), frameDeltaSeconds);
+        const lighting = resolveIsland001Lighting(island001PresentedDay);
+        hemisphere.color.setHex(lighting.hemisphereSky);
+        hemisphere.groundColor.setHex(lighting.hemisphereGround);
+        hemisphere.intensity = lighting.hemisphereIntensity;
+        sunlight.color.setHex(lighting.sunColor);
+        sunlight.intensity = lighting.sunIntensity;
+        sunlight.position.set(...lighting.sunPosition);
+        renderer.toneMappingExposure = lighting.exposure;
+        if (scene.environment) scene.environmentIntensity = lighting.environment;
+        if (scene.fog instanceof THREE.FogExp2) scene.fog.color.setHex(lighting.fogColor);
+        island001AtmosphereRuntime.update({
+          lighting,
+          streetlights: resolveIsland001StreetlightCount(progress, island001AtmosphereRuntime.lampCapacity),
+          pathGlow: resolveIsland001PathGlow(progress, lighting.lampGlow),
+          elapsed: timer.getElapsed(),
+          reducedMotion: isReducedMotion,
+        });
+        canvas.dataset.island001DayPosition = island001PresentedDay.toFixed(2);
+      }
       // Mission items pop in (after the first mission message is read): a
       // close-up on the first item while they burst out of their tiles.
       if (missionItemRevealRequestRef.current) {
@@ -11503,6 +11561,7 @@ export default function Island5ThreePilot({
       departureCinematic?.dispose();
       livingAmbience.root.userData.disposeAwakening?.();
       tileRewardObjects.disposeFragments();
+      island001AtmosphereRuntime?.dispose();
       pawnTileTrail.dispose();
       moonwellThermalAnimator?.dispose();
       applyEvidenceOrbitRef.current = () => undefined;

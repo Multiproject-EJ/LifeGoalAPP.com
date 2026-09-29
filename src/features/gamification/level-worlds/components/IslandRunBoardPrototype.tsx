@@ -14532,6 +14532,16 @@ export function IslandRunBoardPrototype({
   // the board until its first mission message has been read and the phone is
   // closed; then they pop in. Saves that already have mission progress, or no
   // message at all, keep their items visible.
+  // Dev: ?timeOfDay=sunrise|daylight|golden|night (or 0..3) pins Island 001's time of day.
+  const island001TimeOfDayOverride = useMemo(() => {
+    if (!import.meta.env.DEV || typeof window === 'undefined') return null;
+    const requested = new URLSearchParams(window.location.search).get('timeOfDay');
+    if (!requested) return null;
+    const named = ['sunrise', 'daylight', 'golden', 'night'].indexOf(requested);
+    if (named >= 0) return named;
+    const numeric = Number(requested);
+    return Number.isFinite(numeric) ? Math.max(0, Math.min(3, numeric)) : null;
+  }, []);
   // Dev visual preview: ?missionItemPopPreview=1 hides the items, then pops them in.
   const [missionItemPopPreviewRevealed, setMissionItemPopPreviewRevealed] = useState(() => !(
     isIslandVisualPreview && typeof window !== 'undefined'
@@ -17208,6 +17218,14 @@ export function IslandRunBoardPrototype({
                 onIsland20SkiffRunComplete={handleLavaSkiffRunComplete}
                 onAssemblyMeetingComplete={isIslandVisualPreview ? undefined : openAssemblyMandate}
                 onExplorePointChange={(id) => setExploreViewActive(id !== null)}
+                island001Atmosphere={islandNumber === 1 ? {
+                  buildLevels: isIslandVisualPreview
+                    ? [0, 1, 2, 3].map(() => island5ThreePreviewLevel)
+                    : [0, 1, 2, 3].map((index) => __storeState.stopBuildStateByIndex[index]?.buildLevel ?? 0),
+                  assemblyComplete: isIslandVisualPreview ? island5ThreePreviewLevel >= 3 : firstLightAssemblyCompleted,
+                  // Previews keep today's daylight look unless ?timeOfDay= asks otherwise.
+                  dayPositionOverride: island001TimeOfDayOverride ?? (isIslandVisualPreview ? 1 : null),
+                } : undefined}
                 missionItemsRevealed={isIslandVisualPreview ? missionItemPopPreviewRevealed : !missionItemsAwaitingFirstMessage}
                 fishermansFishingPresentation={{
                   fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
