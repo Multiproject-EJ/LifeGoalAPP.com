@@ -3933,6 +3933,17 @@ export default function Island5ThreePilot({
   const onExplorePointChangeRef = useRef(onExplorePointChange);
   onExplorePointChangeRef.current = onExplorePointChange;
   useEffect(() => { onExplorePointChangeRef.current?.(activeExplorePointId); }, [activeExplorePointId]);
+  // The parent hides the controller while a view is open. Always hand it back
+  // when the scene unmounts mid-view (leaving the island, reload, quality swap).
+  useEffect(() => () => { onExplorePointChangeRef.current?.(null); }, []);
+  // A view whose point disappeared (point set changed) has no Back button;
+  // return to the island instead of leaving the player without a controller.
+  useEffect(() => {
+    if (activeExplorePointId && !explorePoints.some((point) => point.id === activeExplorePointId)) {
+      exploreRequestRef.current = { kind: 'exit' };
+      setActiveExplorePointId(null);
+    }
+  }, [activeExplorePointId, explorePoints]);
   useEffect(() => {
     if (!activeExplorePointId) return undefined;
     const onKey = (event: KeyboardEvent) => {

@@ -1,10 +1,24 @@
 # Pre-Island-001 "Departure Day": garage send-off and piece picker
 
-Status: **brief, user-directed — awaiting reference intake and answers to open questions**
+Status: **brief, user-directed — story answers captured 2026-09-29; awaiting reference intake**
 Date: 2026-09-29
 Parent contracts: `2026-08-23-expedition-ship-and-garage-visual-production.md`,
 `docs/design/expedition-ship/README.md`, `AGENTS.md` Island Run rules,
 `docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md`.
+
+## Story (Eivind, 2026-09-29)
+
+- The travellers are **the crew and their robots**. They are leaving on a
+  long, noble **diplomatic mission** to the islands, and the whole garage
+  applauds them for it.
+- **The player is one of the crew**, a new member who will rise through the
+  crew ranks over the journey (see the rank system in
+  `2026-09-26-ranks-and-island40-portal.md`).
+- **The caretaker is never here.** Caretakers live on (or appear on) the
+  islands and are unknown to the crew at the start; the Island 001 first-arrival
+  contract already moves the caretaker introduction to Island 008. No
+  caretaker may appear in, be mentioned by, or supply anything in the
+  departure, the ship naming or the first-run gifts.
 
 ## Mission
 
@@ -55,7 +69,12 @@ Players with a guest-funnel ship name skip `ship-name` today; they still get
 `departure`. Returning players never see it again automatically, but can
 replay it from the garage later.
 
-## Sequence (≈25 s, skippable after the first beat)
+## Sequence (≈15 s total, first viewing is required, then skippable)
+
+It must be short: the first session is where players drop off. Target the
+whole send-off at about 15 seconds after the piece is confirmed. It plays in
+full the first time; any replay (garage "Relive departure") is skippable at
+once.
 
 1. **Piece picker (modal, 0–N s).** Opens the moment the ship is named, over
    a still of the hangar. Three starter pieces (Explorer Ship, Ancient Egg,
@@ -63,20 +82,20 @@ replay it from the garage later.
    While it is open, the heavy scene loads in the background (see Loading).
    Confirm stays enabled; if loading is not done yet, confirm turns into a
    short "Preparing the hangar…" progress state instead of blocking the choice.
-2. **Reveal (3 s).** Lights come up across the balconies; banners carry the
+2. **Reveal (2 s).** Lights come up across the balconies; banners carry the
    player's ship name. The ship stands in its closed controller shell.
-3. **Transformation (6–8 s).** The heavy controller → expanded-living
+3. **Transformation (4 s).** The heavy controller → expanded-living
    transform plays: shells lift, terraces deploy, the atrium glass reveals the
    Great Tree. The crowd noise swells on the tree reveal.
-4. **The crew walk (5 s).** A small group of travellers (the caretaker plus
-   the crew; the player's chosen piece is carried by the lead traveller, like
-   a relic) walks the causeway through two lines of marshals. The crowd waves
-   flags as they pass.
-5. **Boarding (3 s).** The crew steps onto the landing-keel lift; the keel
-   telescopes up into the belly cassette (it never rises into the tree volume).
-6. **Departure (4 s).** Terraces retract, the rolling door opens, the ship
-   lifts and leaves through it. Hard cut is not allowed: the last frame
-   hands off to the existing Island 001 descent/briefing.
+4. **The crew walk (4 s, overlaps the transform's end).** The crew and their
+   robots walk the causeway through two lines of marshals while the crowd
+   applauds and waves flags. The player walks among them as the newest crew
+   member, carrying their chosen piece like a relic.
+5. **Boarding (2 s).** The crew and robots step onto the landing-keel lift;
+   the keel telescopes up into the belly cassette (never into the tree volume).
+6. **Departure (3 s).** Terraces retract, the rolling door opens, the ship
+   lifts and leaves through it. No hard cut: the last frame hands off to the
+   existing Island 001 descent/briefing.
 
 Reduced motion: four held stills (reveal, living mode, crew at the keel, door
 open) with crossfades; no camera moves, no crowd animation.
@@ -141,14 +160,21 @@ contract. Auto / Smooth / Ultra quality tiers reuse
 5. Evidence: iPhone-sized capture of the full sequence at Smooth and Ultra,
    frame-time profile during the transform, reduced-motion stills.
 
+## Copy that must change (caretaker is unknown at the start)
+
+- `IslandRunBoardPrototype.tsx` first-run step `ship-name`: "The caretaker is
+  ready to hand over your ship" → the ship is handed over by the crew/garage.
+- First-run `mission` step: "The caretaker has loaded three emergency dice
+  packs" and the gifts line "three 500-dice caretaker packs" → crew/garage
+  supply packs.
+
 ## Open questions for Eivind
 
-1. Who are the travellers? Caretaker + player avatar + three crew, or
-   something else?
+1. ~~Who are the travellers?~~ The crew and robots; the player is one of them.
 2. Should the ship start in the closed controller shell and transform in
    front of the crowd (as sequenced above), or already stand in living mode
    and transform only on departure?
-3. Skippable on first viewing, or only after the reveal beat?
+3. ~~Skippable on first viewing?~~ No: required once, kept to about 15 s.
 4. Banner emblem: reuse the gold star-in-circle from the concepts as the
    HabitGame fleet crest, or design a new one?
 5. Replay: add a "Relive departure" button in the garage?

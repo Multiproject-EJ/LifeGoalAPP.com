@@ -2657,6 +2657,12 @@ export function IslandRunBoardPrototype({
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   // An island explore-point view is open: the controller steps aside.
   const [exploreViewActive, setExploreViewActive] = useState(false);
+  // An explore view never outlives its 3D scene or island; otherwise the
+  // controller stays hidden with no Back button to restore it.
+  useEffect(() => {
+    if (!shouldRenderIsland5Three) setExploreViewActive(false);
+  }, [shouldRenderIsland5Three]);
+  useEffect(() => { setExploreViewActive(false); }, [islandNumber]);
   // In-game Scoreboard (Adventure League, archetype quiz first).
   const [showScoreboard, setShowScoreboard] = useState(false);
   // Island departure cinematic (Island Complete, part B): ship folds, lifts
