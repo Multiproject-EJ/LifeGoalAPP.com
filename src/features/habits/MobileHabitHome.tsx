@@ -42,6 +42,7 @@ type MobileHabitHomeProps = {
   deferDailyLifeUpgradeModal?: boolean;
   deferYesterdayTodoCleanupModal?: boolean;
   dayOneFocusMode?: boolean;
+  showTodayPet?: boolean;
 };
 
 export function MobileHabitHome({
@@ -79,6 +80,7 @@ export function MobileHabitHome({
   deferDailyLifeUpgradeModal = false,
   deferYesterdayTodoCleanupModal = false,
   dayOneFocusMode = false,
+  showTodayPet = true,
 }: MobileHabitHomeProps) {
   void onHideStandaloneHabitsChange;
   return (
@@ -119,6 +121,7 @@ export function MobileHabitHome({
         deferDailyLifeUpgradeModal={deferDailyLifeUpgradeModal}
         deferYesterdayTodoCleanupModal={deferYesterdayTodoCleanupModal}
         dayOneFocusMode={dayOneFocusMode}
+        showTodayPet={showTodayPet}
       />
     </div>
   );

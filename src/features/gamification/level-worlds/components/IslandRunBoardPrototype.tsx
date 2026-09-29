@@ -483,6 +483,7 @@ import {
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
+import { EventArenaLandmarkModal } from './EventArenaLandmarkModal';
 import { CompassBookIcon } from './CompassBookIcon';
 import { resolveIslandBuildStyle } from '../services/buildStyles';
 import { CompassPairingTip } from './CompassPairingTip';
@@ -18065,6 +18066,66 @@ export function IslandRunBoardPrototype({
           return <IslandRunArenaOrientationModal key={`${cycleIndex}:${islandNumber}`} session={session} client={client}
             onClose={() => setActiveStopId(null)} />;
         }
+        if (activeStop.stopId === 'mystery' && openedStopIsPlayable && typeof document !== 'undefined') {
+          return createPortal((
+            <EventArenaLandmarkModal
+              championship={championshipPresentation}
+              onOpenCeremony={openCurrentChampionshipCeremony}
+              boostStatus={arenaBoostStatus}
+              ordinaryEvents={featureAccess.ordinaryEvents}
+              doorRequired={activeStopId === requiredDoorStopId && isDoorLandmarkCompletionRequired}
+              canClose={!isActiveBehaviorStopNonDismissable}
+              onClose={() => setActiveStopId(null)}
+              onFinishOrientation={() => {
+                setArenaSoftSaveValueMomentReached(true);
+                handleCompleteActiveStop('🎪 Arena orientation complete! Wisdom landmark unlocked.');
+              }}
+              onJoinOpeningGames={featureAccess.inauguralRound || (featureAccess.gradual && islandNumber === 2)
+                ? () => setShowOpeningGamesCeremony(true) : undefined}
+            >
+              {featureAccess.ordinaryEvents ? (
+                  <ArenaStadiumActivity key={`${session.user.id}:${arenaStadiumVisitKey(__storeState)}`}
+                    session={session} client={client} gameOpen={!!activeLaunchedMinigameId}
+                    onComplete={() => {
+                      if (arenaLaunchOwnerRef.current !== session.user.id
+                        || arenaStadiumVisitKey(getIslandRunStateSnapshot(session)) !== arenaStadiumVisitKey(__storeState)) return;
+                      setArenaSoftSaveValueMomentReached(true);
+                      setLandingText('Stadium activity complete — your round and any required comparisons are saved.');
+                      setActiveStopId(null);
+                    }}
+                    onEarnTickets={() => {
+                      setRequiredDoorStopId(null);
+                      setActiveStopId(null);
+                      setLandingText('Earn event tickets on the board, then return to finish the stadium.');
+                    }}>
+                  {effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType) ? (
+                  <IslandRunArenaChoice
+                    key={session.user.id}
+                    compact
+                    allowedGameIds={introducedArenaGameIds}
+                    playerKey={session.user.id}
+                    islandNumber={islandNumber}
+                    activeEventId={effectiveActiveTimedEvent.eventType}
+                    activeEventRuntimeId={effectiveActiveTimedEvent.eventId}
+                    preferences={{ ...arenaPreferences, disabledEventIds: [] }}
+                    tickets={activeEventTickets}
+                    activeEventName={activeEventSurfaceMeta?.displayName ?? 'Active event'}
+                    activeEventIcon={activeEventSurfaceMeta?.icon ?? '✦'}
+                    eventTicketIcon={eventSurfaceTicketIcon}
+                    rewardProgress={rewardBarProgress}
+                    rewardThreshold={rewardBarThreshold}
+                    nextRewardIcon={nextRewardIcon}
+                    nextRewardLabel={nextRewardKind.replace(/_/g, ' ')}
+                    onLaunch={handleLaunchArenaGame}
+                    finishedGameIds={arenaFinishedGameIds}
+                    nextEventLabel={timedEventRemainingLabel}
+                    onDevSkipEvent={isDevModeEnabled ? handleDevSkipToNextTimedEvent : undefined}
+                  />) : <p role="status">Waiting for the shared event channel.</p>}
+                  </ArenaStadiumActivity>
+              ) : null}
+            </EventArenaLandmarkModal>
+          ), document.body);
+        }
         const stopModal = (
         <div className={`island-run-overlay-root island-stop-modal-backdrop${isFocusedBehaviorEncounter ? ' island-stop-modal-backdrop--world-visible' : ''}`} role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy${isFocusedBehaviorEncounter ? ' island-stop-modal--behavior-focus' : ''}`} role="dialog" aria-modal="true" aria-label={activeStop.title}>
@@ -18350,109 +18411,6 @@ export function IslandRunBoardPrototype({
                 )}
                 </div>
               </>
-            )}
-
-            {/* ── Stop 3: Event Arena (timed-event mini-game launcher) ── */}
-            {activeStopId === 'mystery' && openedStopIsPlayable && (
-              <div className="island-hatchery-card island-event-arena-card">
-                {championshipPresentation ? (
-                  <IslandChampionshipBanner
-                    championship={championshipPresentation}
-                    onOpenCeremony={openCurrentChampionshipCeremony}
-                  />
-                ) : null}
-                <div className="island-event-arena-card__visual" aria-hidden="true">
-                  <img src="/assets/island-run/tickets/event-arena-pass-emblem.webp" alt="" />
-                  <span>🎪</span>
-                  <i>→</i>
-                  <span>🔓</span>
-                </div>
-                {arenaBoostStatus === 'claimed' ? (
-                  <>
-                    <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena opened</strong></p>
-                    <p>The host invites every visiting crew to participate. Accepting one challenge is part of the Reconstruction Accord.</p>
-                    <div className="island-event-arena-card__ticket-row" aria-live="polite">
-                      <span>Reward</span>
-                      <strong>+3 Event Tickets</strong>
-                    </div>
-                  </>
-                ) : arenaBoostStatus === 'no_active_event' ? (
-                  <>
-                    <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
-                    <p>{featureAccess.ordinaryEvents ? 'The event channel is reconnecting. Your stadium activity remains saved.' : 'Finish the quick orientation to unlock Wisdom.'}</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
-                    <p>Spend one ticket. Your island build waits for you.</p>
-                  </>
-                )}
-                {arenaBoostStatus === 'no_active_event' ? (
-                  <div className="island-event-arena-card__ticket-row" aria-live="polite">
-                    <span>Timed event</span>
-                    <strong>Orientation</strong>
-                  </div>
-                ) : null}
-                {!featureAccess.ordinaryEvents && arenaBoostStatus === 'no_active_event' ? (
-                  <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                    <button
-                      type="button"
-                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                      onClick={() => {
-                        setArenaSoftSaveValueMomentReached(true);
-                        handleCompleteActiveStop('🎪 Arena orientation complete! Wisdom landmark unlocked.');
-                      }}
-                    >
-                      Finish orientation
-                    </button>
-                  </div>
-                ) : featureAccess.ordinaryEvents ? (
-                  <ArenaStadiumActivity key={`${session.user.id}:${arenaStadiumVisitKey(__storeState)}`}
-                    session={session} client={client} gameOpen={!!activeLaunchedMinigameId}
-                    onComplete={() => {
-                      if (arenaLaunchOwnerRef.current !== session.user.id
-                        || arenaStadiumVisitKey(getIslandRunStateSnapshot(session)) !== arenaStadiumVisitKey(__storeState)) return;
-                      setArenaSoftSaveValueMomentReached(true);
-                      setLandingText('Stadium activity complete — your round and any required comparisons are saved.');
-                      setActiveStopId(null);
-                    }}
-                    onEarnTickets={() => {
-                      setRequiredDoorStopId(null);
-                      setActiveStopId(null);
-                      setLandingText('Earn event tickets on the board, then return to finish the stadium.');
-                    }}>
-                  {effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType) ? (
-                  <IslandRunArenaChoice
-                    key={session.user.id}
-                    allowedGameIds={introducedArenaGameIds}
-                    playerKey={session.user.id}
-                    islandNumber={islandNumber}
-                    activeEventId={effectiveActiveTimedEvent.eventType}
-                    activeEventRuntimeId={effectiveActiveTimedEvent.eventId}
-                    preferences={{ ...arenaPreferences, disabledEventIds: [] }}
-                    tickets={activeEventTickets}
-                    activeEventName={activeEventSurfaceMeta?.displayName ?? 'Active event'}
-                    activeEventIcon={activeEventSurfaceMeta?.icon ?? '✦'}
-                    eventTicketIcon={eventSurfaceTicketIcon}
-                    rewardProgress={rewardBarProgress}
-                    rewardThreshold={rewardBarThreshold}
-                    nextRewardIcon={nextRewardIcon}
-                    nextRewardLabel={nextRewardKind.replace(/_/g, ' ')}
-                    onLaunch={handleLaunchArenaGame}
-                    finishedGameIds={arenaFinishedGameIds}
-                    nextEventLabel={timedEventRemainingLabel}
-                    onDevSkipEvent={isDevModeEnabled ? handleDevSkipToNextTimedEvent : undefined}
-                  />) : <p role="status">Waiting for the shared event channel.</p>}
-                  </ArenaStadiumActivity>
-                ) : featureAccess.inauguralRound || (featureAccess.gradual && islandNumber === 2) ? (
-                  <button type="button" onClick={() => setShowOpeningGamesCeremony(true)}>Join the opening games</button>
-                ) : null}
-                <div className="island-event-arena-card__outcome" aria-label="Finish one Arena challenge to unlock Wisdom. Live games also add event-bar progress.">
-                  <span><b aria-hidden="true">🎪</b> Finish</span>
-                  <i aria-hidden="true">→</i>
-                  <span><b aria-hidden="true">🔓</b> Wisdom</span>
-                </div>
-              </div>
             )}
 
             {/* ── Stop 2: Habit (deterministic no-AI intake MVP) ── */}

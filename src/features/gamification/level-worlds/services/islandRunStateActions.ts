@@ -1,5 +1,6 @@
 import { resolveIslandRunContractV2Stops } from './islandRunContractV2StopResolver';
 import { withIslandRunActionLock } from './islandRunActionMutex';
+import { isPlayerPieceId, isPlayerPieceOwned } from './islandRunPlayerPieces';
 import { resolveIslandRunRestorationDiceReward } from './islandRunRestorationReward';
 import { applyLandmarkCompletionReward } from './islandRunLandmarkReward';
 import { arenaStadiumComplete, currentArenaStadium } from './arenaStadium';
@@ -3912,6 +3913,34 @@ export function setActiveCompanionId(options: ApplyActiveCompanionOptions): Isla
     record: next,
     triggerSource: triggerSource ?? 'apply_active_companion',
   });
+  return next;
+}
+
+export interface SelectPlayerPieceOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  pieceId: string;
+  /** Earned/premium piece ids from `user_cosmetic_entitlements`; starters need none. */
+  entitledPieceIds?: Iterable<string>;
+  triggerSource?: string;
+}
+
+/**
+ * Canonical write for the cosmetic board piece (e.g. the pre-departure piece
+ * picker). Unknown or unowned pieces are rejected without touching state; the
+ * piece never changes movement, rewards or stop progression.
+ */
+export function selectPlayerPiece(options: SelectPlayerPieceOptions): IslandRunGameStateRecord {
+  const { session, client, pieceId, entitledPieceIds = [], triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (!isPlayerPieceId(pieceId) || !isPlayerPieceOwned(pieceId, entitledPieceIds)) return current;
+  if (current.selectedPlayerPieceId === pieceId) return current;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    selectedPlayerPieceId: pieceId,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'select_player_piece' });
   return next;
 }
 

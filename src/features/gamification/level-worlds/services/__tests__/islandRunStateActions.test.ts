@@ -101,6 +101,7 @@ import {
   applyTokenHopRewards,
   clearActiveCompanionId,
   setActiveCompanionId,
+  selectPlayerPiece,
   shouldGrantIsland120ThemeEntitlementOnTravel,
   travelToNextIsland,
 } from '../islandRunStateActions';
@@ -3029,6 +3030,26 @@ export const islandRunStateActionsTests: TestCase[] = [
         'common-sproutling',
         'active companion id should persist through IslandRunGameStateRecord',
       );
+    },
+  },
+
+  {
+    name: 'selectPlayerPiece stores owned pieces and rejects unknown or unowned ones',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 5, selectedPlayerPieceId: null });
+      const starter = selectPlayerPiece({ session, client: null, pieceId: 'world_seed' });
+      assertEqual(starter.selectedPlayerPieceId, 'world_seed', 'starter pieces need no entitlement');
+      assertEqual(starter.runtimeVersion, 6, 'a selection bumps runtimeVersion once');
+      const premium = selectPlayerPiece({ session, client: null, pieceId: 'fallen_star' });
+      assertEqual(premium.selectedPlayerPieceId, 'world_seed', 'unowned premium piece is rejected');
+      const unknown = selectPlayerPiece({ session, client: null, pieceId: 'not_a_piece' });
+      assertEqual(unknown.selectedPlayerPieceId, 'world_seed', 'unknown piece is rejected');
+      const entitled = selectPlayerPiece({ session, client: null, pieceId: 'fallen_star', entitledPieceIds: ['fallen_star'] });
+      assertEqual(entitled.selectedPlayerPieceId, 'fallen_star', 'entitled premium piece is accepted');
+      const same = selectPlayerPiece({ session, client: null, pieceId: 'fallen_star', entitledPieceIds: ['fallen_star'] });
+      assertEqual(same.runtimeVersion, entitled.runtimeVersion, 'reselecting is a no-op');
     },
   },
 

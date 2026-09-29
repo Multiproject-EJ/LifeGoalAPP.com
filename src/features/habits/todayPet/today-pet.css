@@ -165,3 +165,16 @@
 /* Keep the bubbles on screen when the pet stands near an edge. */
 .today-pet__bubbles--from-left { left: 0; translate: 0 0; }
 .today-pet__bubbles--from-right { left: auto; right: 0; translate: 0 0; }
+
+/* Real 3D pet: the rig animates itself, so the 2D wrapper motions stay off. */
+.today-pet--3d .today-pet__body { animation: none; }
+.today-pet__canvas {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  z-index: 1;
+  width: calc(var(--pet-size) * 1.5);
+  height: calc(var(--pet-size) * 1.5);
+  transform: translateX(-50%);
+  pointer-events: none;
+}

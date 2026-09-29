@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getCreatureById } from '../../gamification/level-worlds/services/creatureCatalog';
 import { resolveCreatureArtManifest } from '../../gamification/level-worlds/services/creatureImageManifest';
 import {
+  hasTodayPet3dModel,
   planTodayPetAction,
   todayPetBubbles,
   TODAY_PET_SIZE_PX,
   type TodayPetAction,
   type TodayPetBubble,
   type TodayPetCompanion,
+  type TodayPetMood,
 } from './todayPetBehaviour';
 import './today-pet.css';
 
@@ -20,7 +22,21 @@ type Props = {
   onPair: (creatureId: string) => void;
 };
 
-type Mood = 'walk' | 'idle' | 'sleep' | 'play' | 'away' | 'happy' | 'eat' | 'chase';
+type Mood = TodayPetMood;
+
+// three.js stays out of the Today bundle until a 3D pet actually renders.
+const TodayPetThreeStage = lazy(() => import('./TodayPetThreeStage'));
+/** The 3D canvas is a little larger than the tap target so leaves and hops are not clipped. */
+const TODAY_PET_3D_CANVAS_PX = Math.round(TODAY_PET_SIZE_PX * 1.5);
+
+function supportsWebGl(): boolean {
+  try {
+    const probe = document.createElement('canvas');
+    return Boolean(probe.getContext('webgl2') ?? probe.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
 
 /**
  * A small living pet on the Today screen. Walks, idles, naps, plays, wanders
@@ -40,6 +56,7 @@ export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props
   const [ball, setBall] = useState<{ id: number; x: number } | null>(null);
   // webp cutout → png cutout → emoji fallback.
   const [artStep, setArtStep] = useState(0);
+  const [use3d, setUse3d] = useState(() => hasTodayPet3dModel(companion.creatureId) && typeof document !== 'undefined' && supportsWebGl());
   const xRef = useRef(x);
   xRef.current = x;
   const timer = useRef(0);
@@ -131,7 +148,7 @@ export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props
     <div className="today-pet-yard" aria-live="polite">
       {ball ? <span key={ball.id} className="today-pet__ball" style={{ left: `${ball.x * 100}%` }} aria-hidden="true" /> : null}
       <div
-        className={`today-pet today-pet--${mood}`}
+        className={`today-pet today-pet--${mood}${use3d ? ' today-pet--3d' : ''}`}
         style={{ left: `${x * 100}%`, transitionDuration: `${mood === 'walk' || mood === 'chase' ? walkMs : 0}ms`, ['--pet-size' as string]: `${TODAY_PET_SIZE_PX}px` }}
       >
         {bubbles ? (
@@ -153,7 +170,18 @@ export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props
           onClick={() => setBubbles((open) => !open)}
         >
           <span className="today-pet__shadow" aria-hidden="true" />
-          {artStep < 2 ? (
+          {use3d ? (
+            <Suspense fallback={art ? <img src={art.cutoutSrc} alt="" draggable={false} /> : null}>
+              <TodayPetThreeStage
+                creatureId={companion.creatureId}
+                mood={mood}
+                facing={facing}
+                sizePx={TODAY_PET_3D_CANVAS_PX}
+                reduced={Boolean(reduced)}
+                onFail={() => setUse3d(false)}
+              />
+            </Suspense>
+          ) : artStep < 2 ? (
             <img
               src={artStep === 0 ? art.cutoutSrc : art.cutoutPngSrc}
               alt=""

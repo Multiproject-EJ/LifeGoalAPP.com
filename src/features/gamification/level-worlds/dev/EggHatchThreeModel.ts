@@ -1776,3 +1776,46 @@ export function createEggHatchThreeModel(options: CreateEggHatchThreeModelOption
     },
   };
 }
+
+export interface SproutlingPetThreeModel {
+  root: THREE.Group;
+  head: THREE.Group;
+  leafPivots: THREE.Group[];
+  armPivots: THREE.Group[];
+  eyePivots: THREE.Group[];
+  dispose: () => void;
+}
+
+/**
+ * The hatch-reveal Sproutling on its own, without egg, nest or shell, so the
+ * same canonical 3D creature can live on other surfaces (the Today pet).
+ * Presentation only; callers own the scene, lights and animation.
+ */
+export function createSproutlingPetThreeModel(
+  quality: EggHatchQuality = 'low',
+  paletteId: EggHatchPaletteId = 'verdant',
+): SproutlingPetThreeModel {
+  const sproutling = createSproutling(quality, getEggHatchPalette(paletteId).leaf);
+  return {
+    ...sproutling,
+    dispose: () => {
+      const geometries = new Set<THREE.BufferGeometry>();
+      const materials = new Set<THREE.Material>();
+      const textures = new Set<THREE.Texture>();
+      sproutling.root.traverse((object) => {
+        if (!(object instanceof THREE.Mesh)) return;
+        geometries.add(object.geometry);
+        (Array.isArray(object.material) ? object.material : [object.material]).forEach((material) => {
+          materials.add(material);
+          Object.values(material).forEach((value) => {
+            if (value instanceof THREE.Texture) textures.add(value);
+          });
+        });
+      });
+      geometries.forEach((geometry) => geometry.dispose());
+      textures.forEach((texture) => texture.dispose());
+      materials.forEach((material) => material.dispose());
+      sproutling.root.clear();
+    },
+  };
+}

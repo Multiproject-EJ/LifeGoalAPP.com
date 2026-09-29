@@ -1383,6 +1383,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
     ?? undefined;
   const isGameModeActive = gamificationEnabled && isMobileMenuImageActive;
   const isFooterControllerLayoutActive = isMobileMenuImageActive && showGameBoardOverlay;
+  // The Today pet lives only on the visible Today screen. Full-screen layers
+  // (Two Tracks · one climb, Island Run, Zen garden, menus, Compass Book, AI
+  // coach) keep the Today tree mounted underneath, so hide the pet explicitly.
+  const isTodayPetSurfaceVisible = !showGameBoardOverlay
+    && !showLevelWorldsFromEntry
+    && !showZenGardenFullScreen
+    && !isConflictResolverFullscreen
+    && !isMobileMenuOpen
+    && !isCompassBookOpen
+    && !showAiCoachModal;
   const shouldShowPointsBadges = isGameModeActive && isMobileExperience;
   
   // Micro-test badge state for identity tab — real foundation/completion state.
@@ -4632,6 +4642,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onOpenFeaturePreview={openFeaturePreviewOverlay}
               deferDailyLifeUpgradeModal={shouldDeferDailyLifeUpgradeModal}
               deferYesterdayTodoCleanupModal={shouldDeferYesterdayTodoCleanupModal}
+              showTodayPet={isTodayPetSurfaceVisible}
             />
             <HabitsModule
               session={activeSession}
@@ -6194,6 +6205,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onOpenFeaturePreview={openFeaturePreviewOverlay}
               deferDailyLifeUpgradeModal={shouldDeferDailyLifeUpgradeModal}
               deferYesterdayTodoCleanupModal={shouldDeferYesterdayTodoCleanupModal}
+              showTodayPet={isTodayPetSurfaceVisible}
             />
           </div>
         {!showGameBoardOverlay && !showZenGardenFullScreen && !isConflictResolverFullscreen && (
