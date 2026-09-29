@@ -353,11 +353,15 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
 }
 
-.lp-phone img {
+.lp-phone img,
+.lp-phone video {
+  display: block;
   width: 100%;
+  max-width: 100%;
   height: auto;
   aspect-ratio: 390 / 700;
   border-radius: 24px;
+  background: #0b1a33;
   object-fit: cover;
   object-position: top;
 }
@@ -378,6 +382,11 @@
   background: var(--lp-gold);
   color: var(--lp-navy-900);
   font-weight: 700;
+}
+
+.lp-step-num--island {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
 }
 
 .lp-step-label strong {
