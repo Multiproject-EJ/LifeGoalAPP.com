@@ -28654,3 +28654,9 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   100% { opacity: .0; transform: translate(-50%, -10px); box-shadow: 0 0 12px rgba(255, 196, 102, .2); }
 }
 @media (prefers-reduced-motion: reduce) { .bm2-quiet-level-up { animation: none; } }
+
+/* Top-bar wallet opens the wallet mini modal; the dice chip replaces essence. */
+.island-run-board__topbar-wallet--button { cursor: pointer; }
+.island-run-board__topbar-wallet--button:focus-visible { outline: 3px solid rgba(255, 224, 150, .85); outline-offset: 2px; border-radius: 999px; }
+.island-run-board__topbar-wallet--button:active { transform: scale(.97); }
+.island-run-board__topbar-dice-icon { display: inline-grid; place-items: center; font-size: 1.05rem; line-height: 1; }

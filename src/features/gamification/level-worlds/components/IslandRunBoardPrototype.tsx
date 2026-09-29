@@ -486,6 +486,8 @@ import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { EventArenaLandmarkModal } from './EventArenaLandmarkModal';
 import { AssemblyInvitationPhone } from './AssemblyInvitationPhone';
 import { IslandRunLoadingScreen } from './IslandRunLoadingScreen';
+import { IslandRunWalletPanel } from './IslandRunWalletPanel';
+import { getVaultIslandTotalInvested } from '../services/islandRunVaultProgress';
 import {
   readIsland001AssemblyInvitationsSent,
   resolveIsland001AssemblyInvitationState,
@@ -3109,6 +3111,13 @@ export function IslandRunBoardPrototype({
   const compassBookCeremonyTimerRef = useRef<number | null>(null);
   const compassBookCeremonyGenerationRef = useRef(0);
   const [walletStoreModalKind, setWalletStoreModalKind] = useState<WalletStoreModalKind | null>(null);
+  // Top-bar wallet mini modal (non-null while open; the rect is where it grows from).
+  const [walletPanelOriginRect, setWalletPanelOriginRect] = useState<DOMRect | null>(null);
+  const openWalletPanel = useCallback(() => {
+    setShowTopbarMenu(false);
+    setShowAudioMenu(false);
+    setWalletPanelOriginRect(moneyWalletRef.current?.getBoundingClientRect() ?? new DOMRect());
+  }, []);
   const [isRewardBarDetailsExpanded, setIsRewardBarDetailsExpanded] = useState(false);
   const [selectedEventInfoEventId, setSelectedEventInfoEventId] = useState<EventId | null>(null);
   const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
@@ -14276,7 +14285,8 @@ export function IslandRunBoardPrototype({
       showJourneyDiscConcourseInvitation ||
       showTravelOverlay ||
       showIsland20Arrival ||
-      walletStoreModalKind !== null,
+      walletStoreModalKind !== null ||
+      walletPanelOriginRect !== null,
   );
   // Island 001 Assembly blast/build beat: everything stays visible but inert
   // (controller, floating buttons, top bar, explore dots) so it plays through.
@@ -16373,7 +16383,20 @@ export function IslandRunBoardPrototype({
                 (session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()
               )}
             </button>
-            <div ref={moneyWalletRef} className="island-run-board__topbar-wallet" aria-label="Money wallet">
+            <div
+              ref={moneyWalletRef}
+              className="island-run-board__topbar-wallet island-run-board__topbar-wallet--button"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="dialog"
+              aria-label={`Open wallet. Money ${formatFullWalletValue(runtimeState.essence)}`}
+              onClick={openWalletPanel}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                openWalletPanel();
+              }}
+            >
               <IslandMoneyNote
                 islandNumber={islandNumber}
                 tone={2}
@@ -16381,14 +16404,10 @@ export function IslandRunBoardPrototype({
               />
               <strong title={formatFullWalletValue(runtimeState.essence)}>{formatFullWalletValue(runtimeState.essence)}</strong>
             </div>
-            <div className="island-run-board__topbar-chip island-run-board__topbar-chip--shards" aria-label="Shard wallet">
-              <img
-                className="island-run-board__topbar-currency-icon"
-                src="/assets/spin-wheel/daily-momentum/prizes/prize-shards-orb-transparent.png"
-                alt=""
-                aria-hidden="true"
-              />
-              <span className="island-run-themed-topbar__amount" title={formatFullWalletValue(shards)}>{formatFullWalletValue(shards)}</span>
+            {/* Essence lives in the wallet now; this slot shows the dice you can roll. */}
+            <div className="island-run-board__topbar-chip island-run-board__topbar-chip--shards island-run-board__topbar-chip--dice" aria-label={`Dice ${formatFullWalletValue(dicePool)}`}>
+              <span className="island-run-board__topbar-currency-icon island-run-board__topbar-dice-icon" aria-hidden="true">🎲</span>
+              <span className="island-run-themed-topbar__amount" title={formatFullWalletValue(dicePool)}>{formatFullWalletValue(dicePool)}</span>
             </div>
             <button
               type="button"
@@ -17876,6 +17895,25 @@ export function IslandRunBoardPrototype({
           visitedIslandNumbers={orbitProgress.visitedIslandNumbers}
           onClose={() => setShowSolarMapOverlay(false)} />,
         document.body,
+      ) : null}
+
+      {walletPanelOriginRect !== null ? (
+        <IslandRunWalletPanel
+          userId={session.user.id}
+          money={runtimeState.essence}
+          essence={runtimeState.shards ?? 0}
+          dice={dicePool}
+          treasures={{
+            unlocked: isVaultIslandUnlocked,
+            relics: vaultIslandCollection.unlockedCount,
+            relicTotal: vaultIslandCollection.collectionSize,
+            invested: getVaultIslandTotalInvested(runtimeState.vaultIslandProgress),
+          }}
+          originRect={walletPanelOriginRect}
+          onClose={() => setWalletPanelOriginRect(null)}
+          onGetMoney={() => { setWalletPanelOriginRect(null); setWalletStoreModalKind('essence'); }}
+          onGetEssence={() => { setWalletPanelOriginRect(null); setWalletStoreModalKind('shards'); }}
+        />
       ) : null}
 
       {assemblyInvitationPhoneOpen && assemblyInvitationState === 'ready_to_send' ? (

@@ -57,3 +57,25 @@ export async function initiateThemeCheckout(options: {
     missingUrlMessage: 'Theme checkout did not return a checkout URL.',
   });
 }
+
+export type OwnedCosmeticRow = {
+  cosmetic_type: string;
+  cosmetic_id: string;
+  granted_at: string;
+};
+
+/** Every real-money cosmetic the player owns (themes, player pieces, …), newest first. */
+export async function fetchOwnedCosmetics(userId: string): Promise<{ items: OwnedCosmeticRow[]; error: Error | null }> {
+  try {
+    const supabase = getSupabaseClient() as any;
+    const { data, error } = await supabase
+      .from('user_cosmetic_entitlements')
+      .select('cosmetic_type, cosmetic_id, granted_at')
+      .eq('user_id', userId)
+      .order('granted_at', { ascending: false });
+    if (error) throw new Error(error.message || 'Failed to load purchases.');
+    return { items: (data ?? []) as OwnedCosmeticRow[], error: null };
+  } catch (error) {
+    return { items: [], error: error instanceof Error ? error : new Error('Failed to load purchases.') };
+  }
+}
