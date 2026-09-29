@@ -1,0 +1,316 @@
+/* Admin hub — a full-screen, admin-only operations surface.
+   Deliberately one light, neutral look so the existing account-panel
+   cards (player insights, telemetry, inbox, dev tools) sit inside it. */
+
+.admin-hub {
+  --admin-bg: #f3f5f9;
+  --admin-surface: #ffffff;
+  --admin-ink: #14213d;
+  --admin-ink-soft: #52607a;
+  --admin-line: #dde3ee;
+  --admin-accent: #2456c7;
+  --admin-accent-soft: #e8eefc;
+  --admin-danger: #b42318;
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.admin-hub__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 18, 36, 0.55);
+}
+
+.admin-hub__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 880px);
+  height: 100%;
+  max-height: 100dvh;
+  background: var(--admin-bg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+@media (min-width: 900px) {
+  .admin-hub__panel {
+    height: calc(100dvh - 48px);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+}
+
+.admin-hub__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 8px;
+  background: var(--admin-surface);
+}
+
+.admin-hub__header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.admin-hub__close {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 999px;
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-hub__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 12px;
+  overflow-x: auto;
+  background: var(--admin-surface);
+  border-bottom: 1px solid var(--admin-line);
+  scrollbar-width: none;
+}
+
+.admin-hub__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-hub__tab {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--admin-ink-soft);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-hub__tab.is-active {
+  border-bottom-color: var(--admin-accent);
+  color: var(--admin-ink);
+}
+
+.admin-hub__body {
+  flex: 1;
+  min-height: 0;
+  padding: 16px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.admin-hub__stack,
+.admin-hub__legacy {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-hub__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 700px) {
+  .admin-hub__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.admin-hub__stat {
+  display: grid;
+  gap: 2px;
+  padding: 14px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+  font-family: inherit;
+  text-align: left;
+}
+
+button.admin-hub__stat {
+  cursor: pointer;
+}
+
+button.admin-hub__stat:hover {
+  border-color: var(--admin-accent);
+}
+
+.admin-hub__stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.admin-hub__stat-label {
+  color: var(--admin-ink-soft);
+  font-size: 14px;
+}
+
+.admin-hub__stat-delta {
+  color: var(--admin-accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-hub__card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-surface);
+}
+
+.admin-hub__card h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.admin-hub__card p {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-size: 15px;
+}
+
+.admin-hub__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-hub__phone {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  background: var(--admin-accent-soft);
+  border-color: transparent;
+}
+
+.admin-hub__count {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--admin-accent-soft);
+  color: var(--admin-accent);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-hub__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-hub__list li {
+  display: grid;
+  gap: 2px;
+  padding: 10px 0;
+  border-top: 1px solid var(--admin-line);
+}
+
+.admin-hub__list li:first-child {
+  border-top: 0;
+}
+
+.admin-hub__email {
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.admin-hub__meta {
+  color: var(--admin-ink-soft);
+  font-size: 13px;
+}
+
+.admin-hub__button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--admin-accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-hub__button--quiet {
+  border: 1px solid var(--admin-line);
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+}
+
+.admin-hub__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.admin-hub__link {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--admin-accent);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-hub__intro,
+.admin-hub__note {
+  margin: 0;
+  color: var(--admin-ink-soft);
+  font-size: 14px;
+}
+
+.admin-hub__error {
+  margin: 0;
+  color: var(--admin-danger);
+  font-size: 14px;
+}
+
+.admin-hub a:focus-visible,
+.admin-hub button:focus-visible {
+  outline: 2px solid var(--admin-accent);
+  outline-offset: 2px;
+}
+
+/* Existing admin panels keep their markup; give them the hub's card look. */
+.admin-hub__legacy > section,
+.admin-hub__legacy .account-panel__card {
+  padding: 16px;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+}
+
+.admin-hub__legacy .account-panel__card .account-panel__card {
+  padding: 0;
+  border: 0;
+}

@@ -1,3 +1,4 @@
+import { getSupabaseUrl } from '../lib/supabaseClient';
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -45,11 +46,27 @@ export async function getExistingSubscription(): Promise<PushSubscription | null
   }
 }
 
-async function subscribeInternal(registration: ServiceWorkerRegistration): Promise<PushSubscription> {
-  if (!VAPID_PUBLIC_KEY) {
-    throw new Error('VITE_VAPID_PUBLIC_KEY is not configured.');
+// Builds without VITE_VAPID_PUBLIC_KEY fetch the public key from the
+// notify-admin-alerts edge function instead.
+async function resolveVapidPublicKey(): Promise<string> {
+  if (VAPID_PUBLIC_KEY) return VAPID_PUBLIC_KEY;
+  const supabaseUrl = getSupabaseUrl();
+  if (supabaseUrl) {
+    try {
+      const response = await fetch(`${supabaseUrl}/functions/v1/notify-admin-alerts/vapid-public-key`);
+      if (response.ok) {
+        const body = (await response.json()) as { publicKey?: string };
+        if (body.publicKey) return body.publicKey;
+      }
+    } catch (error) {
+      console.error('Failed to fetch the VAPID public key.', error);
+    }
   }
-  const key = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+  throw new Error('Push notifications are not set up yet (missing VAPID public key).');
+}
+
+async function subscribeInternal(registration: ServiceWorkerRegistration): Promise<PushSubscription> {
+  const key = urlBase64ToUint8Array(await resolveVapidPublicKey());
   return registration.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: key as unknown as BufferSource,

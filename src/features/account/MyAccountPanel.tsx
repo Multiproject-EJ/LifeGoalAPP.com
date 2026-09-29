@@ -25,10 +25,7 @@ import { ExperimentsModal } from '../../components/ExperimentsModal';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { MyCasesPanel } from '../cases/MyCasesPanel';
-import { AdminInboxPanel } from '../admin/AdminInboxPanel';
-import { AdminTelemetryPanel } from '../admin/AdminTelemetryPanel';
-import { PlayerInsightsPanel } from '../admin/PlayerInsightsPanel';
-import { AdminAlertsPanel } from '../admin/AdminAlertsPanel';
+import { AdminHub } from '../admin/AdminHub';
 import { FutureFeatureVotingPanel } from './FutureFeatureVotingPanel';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { resolveFeatureAccess } from '../../services/featureAccess';
@@ -92,7 +89,7 @@ type MyAccountPanelProps = {
    * panel clears it through `onInitialFolderOpened` so returning to settings
    * later lands on the normal index.
    */
-  initialFolder?: 'personalization' | 'appearance' | null;
+  initialFolder?: 'personalization' | 'appearance' | 'admin' | null;
   onInitialFolderOpened?: () => void;
 };
 
@@ -134,6 +131,7 @@ export function MyAccountPanel({
   onInitialFolderOpened,
 }: MyAccountPanelProps) {
   const [folder1Open, setFolder1Open] = useState(false);
+  const [adminHubOpen, setAdminHubOpen] = useState(initialFolder === 'admin');
   const [folder2Open, setFolder2Open] = useState(false);
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
   const [remindersFolderOpen, setRemindersFolderOpen] = useState(false);
@@ -177,6 +175,7 @@ export function MyAccountPanel({
     if (!initialFolder) return;
     if (initialFolder === 'personalization') setPersonalizationModalOpen(true);
     if (initialFolder === 'appearance') setAppearanceFolderOpen(true);
+    if (initialFolder === 'admin') setAdminHubOpen(true);
     onInitialFolderOpened?.();
   }, [initialFolder, onInitialFolderOpened]);
   const [activeFutureFeatureId, setActiveFutureFeatureId] = useState<FeatureAvailabilityId | null>(null);
@@ -736,6 +735,269 @@ export function MyAccountPanel({
     }, 900);
   };
 
+  // Developer and QA tools; shown in the Admin screen's "Dev tools" tab.
+  const adminDevTools = showAdminTools ? (
+    <>
+      <section className="account-panel__card" aria-labelledby="account-cache">
+        <p className="account-panel__eyebrow">PWA Tools</p>
+        <h3 id="account-cache">Clear PWA asset cache</h3>
+        <p className="account-panel__hint">
+          Remove cached PWA assets and unregister the service worker so you can verify a fresh build.
+        </p>
+        <div className="account-panel__actions-row">
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={handleClearPwaCache}
+            disabled={cacheClearing}
+          >
+            {cacheAction === 'pwa' ? 'Clearing…' : 'Clear PWA assets & refresh'}
+          </button>
+          {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
+        </div>
+        <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
+          Active mode: {hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Balanced'}
+        </p>
+        <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}
+          >
+            Test vibration
+          </button>
+        </div>
+      </section>
+
+      <section className="account-panel__card" aria-labelledby="account-legacy-alias-readiness">
+        <p className="account-panel__eyebrow">Migration diagnostics</p>
+        <h3 id="account-legacy-alias-readiness">Legacy alias sunset readiness</h3>
+        <p className="account-panel__hint">
+          Scan local reward/session history for remaining <code>pomodoro_sprint</code> rows before removing legacy aliases.
+        </p>
+        <div className="account-panel__actions-row">
+          <button
+            type="button"
+            className="btn"
+            onClick={handleRunLegacyAliasScan}
+          >
+            Run legacy alias scan
+          </button>
+        </div>
+        {legacyAliasReadiness ? (
+          <dl className="account-panel__details" style={{ marginTop: '0.75rem' }}>
+            <div>
+              <dt>Legacy reward rows</dt>
+              <dd>{legacyAliasReadiness.legacyRewardSourceRows}</dd>
+            </div>
+            <div>
+              <dt>Legacy session rows</dt>
+              <dd>{legacyAliasReadiness.legacySessionGameIdRows}</dd>
+            </div>
+            <div>
+              <dt>Ready to sunset</dt>
+              <dd>{legacyAliasReadiness.hasLegacyAliases ? 'No' : 'Yes'}</dd>
+            </div>
+            <div>
+              <dt>Scanned at</dt>
+              <dd>{formatDate(legacyAliasReadiness.scannedAt, { dateStyle: 'medium', timeStyle: 'short' })}</dd>
+            </div>
+          </dl>
+        ) : null}
+      </section>
+      {onRunDeveloperDayLoop ? (
+        <section className="account-panel__card developer-day-loop" aria-labelledby="advanced-developer-day-loop">
+          <p className="account-panel__eyebrow">Admin-only development</p>
+          <h3 id="advanced-developer-day-loop">Day Loop controller</h3>
+          <p className="account-panel__hint">
+            Rehearse the player journey one day at a time without changing the phone date. Day 1 is a clean replay; later days keep the progress you actually earned.
+          </p>
+          <label className="developer-day-loop__field">
+            <span>Journey day</span>
+            <select
+              value={developerDayLoopDay}
+              onChange={(event) => {
+                setDeveloperDayLoopDay(Number(event.target.value));
+                setDeveloperDayLoopConfirmOpen(false);
+                setDeveloperDayLoopStatus(null);
+              }}
+              disabled={developerDayLoopPending}
+            >
+              {Array.from({ length: DEVELOPER_DAY_LOOP_MAX_DAY }, (_, index) => index + 1).map((day) => (
+                <option key={day} value={day}>Day {day}</option>
+              ))}
+            </select>
+          </label>
+          <div className="developer-day-loop__scenario">
+            <strong>{developerDayLoopScenario.title}</strong>
+            <span>{developerDayLoopScenario.description}</span>
+          </div>
+
+          {developerDayLoopScenario.resetIslandRunProgress && developerDayLoopConfirmOpen ? (
+            <div className="developer-day-loop__confirm" role="alert">
+              <strong>Reset and replay Day 1?</strong>
+              <p>
+                Island Run, creatures, eggs, rewards, XP, and level will return to their fresh-start state.
+                Habits, todos, journals, achievements, identity, and the real date stay untouched.
+              </p>
+              <div className="account-panel__actions-row developer-day-loop__actions">
+                <button
+                  type="button"
+                  className="btn btn--danger"
+                  onClick={() => void runDeveloperDayLoop()}
+                  disabled={developerDayLoopPending}
+                >
+                  {developerDayLoopPending ? 'Preparing Day 1…' : 'Yes, reset & start Day 1'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => setDeveloperDayLoopConfirmOpen(false)}
+                  disabled={developerDayLoopPending}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="account-panel__actions-row developer-day-loop__actions">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  if (developerDayLoopScenario.resetIslandRunProgress) {
+                    setDeveloperDayLoopConfirmOpen(true);
+                    return;
+                  }
+                  void runDeveloperDayLoop();
+                }}
+                disabled={developerDayLoopPending}
+              >
+                {developerDayLoopPending
+                  ? `Preparing Day ${developerDayLoopDay}…`
+                  : developerDayLoopScenario.resetIslandRunProgress
+                    ? 'Reset & start Day 1'
+                    : `Set Day ${developerDayLoopDay} & open Today`}
+              </button>
+              {onLaunchFirstRunOnboarding ? (
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => {
+                    setFolder1Open(false);
+                    onLaunchFirstRunOnboarding();
+                  }}
+                  disabled={developerDayLoopPending}
+                >
+                  Preview intro without reset
+                </button>
+              ) : null}
+            </div>
+          )}
+          {developerDayLoopStatus ? (
+            <p className={`account-panel__message account-panel__message--${developerDayLoopStatus.type}`}>
+              {developerDayLoopStatus.text}
+            </p>
+          ) : null}
+          <p className="developer-day-loop__note">
+            Day 2–30 are non-destructive journey markers. They reopen Today and preserve the state created by your previous testing.
+          </p>
+        </section>
+      ) : onLaunchFirstRunOnboarding ? (
+        <section className="account-panel__card" aria-labelledby="advanced-first-run-onboarding-launcher">
+          <p className="account-panel__eyebrow">Admin-only development</p>
+          <h3 id="advanced-first-run-onboarding-launcher">First-start onboarding</h3>
+          <p className="account-panel__hint">
+            Manually launch the first-start founder panels and guided game handoff for development review. This control only renders for admins.
+          </p>
+          <div className="account-panel__actions-row">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setFolder1Open(false);
+                onLaunchFirstRunOnboarding();
+              }}
+            >
+              Launch first-start onboarding
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="account-panel__card" aria-labelledby="advanced-weekly-habit-review-launcher">
+        <p className="account-panel__eyebrow">Habits</p>
+        <h3 id="advanced-weekly-habit-review-launcher">Weekly habit review</h3>
+        <p className="account-panel__hint">
+          Open your weekly 30-day stage mix and stalled/on-track habit snapshot at any time.
+        </p>
+        <div className="account-panel__actions-row">
+          <button
+            type="button"
+            className="btn"
+            onClick={handleLaunchWeeklyHabitReview}
+          >
+            Launch weekly habit review
+          </button>
+        </div>
+      </section>
+
+      <section className="account-panel__card" aria-labelledby="advanced-yesterday-todo-cleanup-launcher">
+        <p className="account-panel__eyebrow">Todo schedule</p>
+        <h3 id="advanced-yesterday-todo-cleanup-launcher">Undone todo schedule popup</h3>
+        <p className="account-panel__hint">
+          Open the cleanup popup that helps schedule unfinished todos from yesterday.
+        </p>
+        <div className="account-panel__actions-row">
+          <button
+            type="button"
+            className="btn"
+            onClick={handleLaunchYesterdayTodoCleanup}
+            disabled={!onLaunchYesterdayTodoCleanup}
+          >
+            Launch undone todo schedule popup
+          </button>
+        </div>
+      </section>
+
+      <GameDebugLogSection />
+
+      <ViewportDiagnosticsSection />
+
+      <ReminderAnalyticsDashboard session={session} />
+
+      <PushNotificationTestPanel session={session} />
+
+      <ReminderActionDebugPanel session={session} />
+
+      <SupabaseConnectionTest
+        session={session}
+        isDemoExperience={isDemoExperience}
+      />
+      {onLaunchDailyTreatCalendar && (
+        <section className="account-panel__card" aria-labelledby="dev-daily-treat-calendar">
+          <p className="account-panel__eyebrow">Daily Treats</p>
+          <h3 id="dev-daily-treat-calendar">Daily Treat Calendar</h3>
+          <p className="account-panel__hint">
+            Open the Daily Treat Calendar (Personal Quest) directly for development and preview.
+          </p>
+          <div className="account-panel__actions-row">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setFolder1Open(false);
+                onLaunchDailyTreatCalendar();
+              }}
+            >
+              Launch Daily Treat Calendar
+            </button>
+          </div>
+        </section>
+      )}
+    </>
+  ) : null;
+
   return (
     <div className="account-panel">
       {showDemoNotice ? (
@@ -743,6 +1005,19 @@ export function MyAccountPanel({
           You’re exploring demo data. Sign in to sync with your Supabase project.
         </p>
       ) : null}
+      {showAdminTools ? (
+        <button type="button" className="account-panel__admin-entry" onClick={() => setAdminHubOpen(true)}>
+          <span className="account-panel__admin-entry-title">Admin</span>
+          <span className="account-panel__admin-entry-hint">Waitlist, players, alerts and dev tools</span>
+          <span aria-hidden="true">›</span>
+        </button>
+      ) : null}
+      <AdminHub
+        session={session}
+        isOpen={showAdminTools && adminHubOpen}
+        onClose={() => setAdminHubOpen(false)}
+        devTools={adminDevTools}
+      />
       <div className="account-panel__summary-grid">
         <section className="account-panel__card" aria-labelledby="account-subscription">
           <div className="account-panel__subscription-header">
@@ -1133,295 +1408,6 @@ export function MyAccountPanel({
           ) : null}
         </section>
 
-        {showAdminTools ? (
-          <>
-            <section className="account-panel__card" aria-labelledby="account-cache">
-              <p className="account-panel__eyebrow">PWA Tools</p>
-              <h3 id="account-cache">Clear PWA asset cache</h3>
-              <p className="account-panel__hint">
-                Remove cached PWA assets and unregister the service worker so you can verify a fresh build.
-              </p>
-              <div className="account-panel__actions-row">
-                <button
-                  type="button"
-                  className="btn btn--primary"
-                  onClick={handleClearPwaCache}
-                  disabled={cacheClearing}
-                >
-                  {cacheAction === 'pwa' ? 'Clearing…' : 'Clear PWA assets & refresh'}
-                </button>
-                {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
-              </div>
-              <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
-                Active mode: {hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Balanced'}
-              </p>
-              <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}
-                >
-                  Test vibration
-                </button>
-              </div>
-            </section>
-
-            <section className="account-panel__card" aria-labelledby="account-legacy-alias-readiness">
-              <p className="account-panel__eyebrow">Migration diagnostics</p>
-              <h3 id="account-legacy-alias-readiness">Legacy alias sunset readiness</h3>
-              <p className="account-panel__hint">
-                Scan local reward/session history for remaining <code>pomodoro_sprint</code> rows before removing legacy aliases.
-              </p>
-              <div className="account-panel__actions-row">
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleRunLegacyAliasScan}
-                >
-                  Run legacy alias scan
-                </button>
-              </div>
-              {legacyAliasReadiness ? (
-                <dl className="account-panel__details" style={{ marginTop: '0.75rem' }}>
-                  <div>
-                    <dt>Legacy reward rows</dt>
-                    <dd>{legacyAliasReadiness.legacyRewardSourceRows}</dd>
-                  </div>
-                  <div>
-                    <dt>Legacy session rows</dt>
-                    <dd>{legacyAliasReadiness.legacySessionGameIdRows}</dd>
-                  </div>
-                  <div>
-                    <dt>Ready to sunset</dt>
-                    <dd>{legacyAliasReadiness.hasLegacyAliases ? 'No' : 'Yes'}</dd>
-                  </div>
-                  <div>
-                    <dt>Scanned at</dt>
-                    <dd>{formatDate(legacyAliasReadiness.scannedAt, { dateStyle: 'medium', timeStyle: 'short' })}</dd>
-                  </div>
-                </dl>
-              ) : null}
-            </section>
-            {onRunDeveloperDayLoop ? (
-              <section className="account-panel__card developer-day-loop" aria-labelledby="advanced-developer-day-loop">
-                <p className="account-panel__eyebrow">Admin-only development</p>
-                <h3 id="advanced-developer-day-loop">Day Loop controller</h3>
-                <p className="account-panel__hint">
-                  Rehearse the player journey one day at a time without changing the phone date. Day 1 is a clean replay; later days keep the progress you actually earned.
-                </p>
-                <label className="developer-day-loop__field">
-                  <span>Journey day</span>
-                  <select
-                    value={developerDayLoopDay}
-                    onChange={(event) => {
-                      setDeveloperDayLoopDay(Number(event.target.value));
-                      setDeveloperDayLoopConfirmOpen(false);
-                      setDeveloperDayLoopStatus(null);
-                    }}
-                    disabled={developerDayLoopPending}
-                  >
-                    {Array.from({ length: DEVELOPER_DAY_LOOP_MAX_DAY }, (_, index) => index + 1).map((day) => (
-                      <option key={day} value={day}>Day {day}</option>
-                    ))}
-                  </select>
-                </label>
-                <div className="developer-day-loop__scenario">
-                  <strong>{developerDayLoopScenario.title}</strong>
-                  <span>{developerDayLoopScenario.description}</span>
-                </div>
-
-                {developerDayLoopScenario.resetIslandRunProgress && developerDayLoopConfirmOpen ? (
-                  <div className="developer-day-loop__confirm" role="alert">
-                    <strong>Reset and replay Day 1?</strong>
-                    <p>
-                      Island Run, creatures, eggs, rewards, XP, and level will return to their fresh-start state.
-                      Habits, todos, journals, achievements, identity, and the real date stay untouched.
-                    </p>
-                    <div className="account-panel__actions-row developer-day-loop__actions">
-                      <button
-                        type="button"
-                        className="btn btn--danger"
-                        onClick={() => void runDeveloperDayLoop()}
-                        disabled={developerDayLoopPending}
-                      >
-                        {developerDayLoopPending ? 'Preparing Day 1…' : 'Yes, reset & start Day 1'}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn--secondary"
-                        onClick={() => setDeveloperDayLoopConfirmOpen(false)}
-                        disabled={developerDayLoopPending}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="account-panel__actions-row developer-day-loop__actions">
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={() => {
-                        if (developerDayLoopScenario.resetIslandRunProgress) {
-                          setDeveloperDayLoopConfirmOpen(true);
-                          return;
-                        }
-                        void runDeveloperDayLoop();
-                      }}
-                      disabled={developerDayLoopPending}
-                    >
-                      {developerDayLoopPending
-                        ? `Preparing Day ${developerDayLoopDay}…`
-                        : developerDayLoopScenario.resetIslandRunProgress
-                          ? 'Reset & start Day 1'
-                          : `Set Day ${developerDayLoopDay} & open Today`}
-                    </button>
-                    {onLaunchFirstRunOnboarding ? (
-                      <button
-                        type="button"
-                        className="btn btn--secondary"
-                        onClick={() => {
-                          setFolder1Open(false);
-                          onLaunchFirstRunOnboarding();
-                        }}
-                        disabled={developerDayLoopPending}
-                      >
-                        Preview intro without reset
-                      </button>
-                    ) : null}
-                  </div>
-                )}
-                {developerDayLoopStatus ? (
-                  <p className={`account-panel__message account-panel__message--${developerDayLoopStatus.type}`}>
-                    {developerDayLoopStatus.text}
-                  </p>
-                ) : null}
-                <p className="developer-day-loop__note">
-                  Day 2–30 are non-destructive journey markers. They reopen Today and preserve the state created by your previous testing.
-                </p>
-              </section>
-            ) : onLaunchFirstRunOnboarding ? (
-              <section className="account-panel__card" aria-labelledby="advanced-first-run-onboarding-launcher">
-                <p className="account-panel__eyebrow">Admin-only development</p>
-                <h3 id="advanced-first-run-onboarding-launcher">First-start onboarding</h3>
-                <p className="account-panel__hint">
-                  Manually launch the first-start founder panels and guided game handoff for development review. This control only renders for admins.
-                </p>
-                <div className="account-panel__actions-row">
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={() => {
-                      setFolder1Open(false);
-                      onLaunchFirstRunOnboarding();
-                    }}
-                  >
-                    Launch first-start onboarding
-                  </button>
-                </div>
-              </section>
-            ) : null}
-
-            <section className="account-panel__card" aria-labelledby="advanced-weekly-habit-review-launcher">
-              <p className="account-panel__eyebrow">Habits</p>
-              <h3 id="advanced-weekly-habit-review-launcher">Weekly habit review</h3>
-              <p className="account-panel__hint">
-                Open your weekly 30-day stage mix and stalled/on-track habit snapshot at any time.
-              </p>
-              <div className="account-panel__actions-row">
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleLaunchWeeklyHabitReview}
-                >
-                  Launch weekly habit review
-                </button>
-              </div>
-            </section>
-
-            <section className="account-panel__card" aria-labelledby="advanced-yesterday-todo-cleanup-launcher">
-              <p className="account-panel__eyebrow">Todo schedule</p>
-              <h3 id="advanced-yesterday-todo-cleanup-launcher">Undone todo schedule popup</h3>
-              <p className="account-panel__hint">
-                Open the cleanup popup that helps schedule unfinished todos from yesterday.
-              </p>
-              <div className="account-panel__actions-row">
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={handleLaunchYesterdayTodoCleanup}
-                  disabled={!onLaunchYesterdayTodoCleanup}
-                >
-                  Launch undone todo schedule popup
-                </button>
-              </div>
-            </section>
-
-            <GameDebugLogSection />
-
-            <ViewportDiagnosticsSection />
-
-            <ReminderAnalyticsDashboard session={session} />
-
-            <PushNotificationTestPanel session={session} />
-
-            <ReminderActionDebugPanel session={session} />
-
-            <SupabaseConnectionTest
-              session={session}
-              isDemoExperience={isDemoExperience}
-            />
-
-            <section className="account-panel__card" aria-labelledby="admin-tools-inbox">
-              <p className="account-panel__eyebrow">Admin inbox / support ops</p>
-              <h3 id="admin-tools-inbox">Admin inbox / support ops</h3>
-              <AdminInboxPanel session={session} />
-            </section>
-
-            <AdminAlertsPanel session={session} />
-
-            <section className="account-panel__card" aria-labelledby="admin-tools-player-insights">
-              <p className="account-panel__eyebrow">Player insights</p>
-              <h3 id="admin-tools-player-insights">Where players stop, and where the fun drops</h3>
-              <p className="account-panel__hint">
-                Island funnel, play time per island, and retention by first-play week, from each
-                player&apos;s daily play counts. Admin-only.
-              </p>
-              <PlayerInsightsPanel session={session} />
-            </section>
-
-            <section className="account-panel__card" aria-labelledby="admin-tools-telemetry">
-              <p className="account-panel__eyebrow">Admin telemetry</p>
-              <h3 id="admin-tools-telemetry">Telemetry overview</h3>
-              <p className="account-panel__hint">
-                Aggregated usage statistics rolled up nightly from telemetry events. Raw events are pruned
-                after 30 days; these rollups keep the stats forever. Admin-only.
-              </p>
-              <AdminTelemetryPanel session={session} />
-            </section>
-            {onLaunchDailyTreatCalendar && (
-              <section className="account-panel__card" aria-labelledby="dev-daily-treat-calendar">
-                <p className="account-panel__eyebrow">Daily Treats</p>
-                <h3 id="dev-daily-treat-calendar">Daily Treat Calendar</h3>
-                <p className="account-panel__hint">
-                  Open the Daily Treat Calendar (Personal Quest) directly for development and preview.
-                </p>
-                <div className="account-panel__actions-row">
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={() => {
-                      setFolder1Open(false);
-                      onLaunchDailyTreatCalendar();
-                    }}
-                  >
-                    Launch Daily Treat Calendar
-                  </button>
-                </div>
-              </section>
-            )}
-          </>
-        ) : null}
       </SettingsFolderPopup>
 
       {/* Folder 2 Popup */}

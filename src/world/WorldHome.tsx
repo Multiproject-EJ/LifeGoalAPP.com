@@ -42,24 +42,32 @@ const COMPASS_GAME_LOOP = [
   },
 ] as const;
 
-const LOOP_STEPS = [
+// Real in-game footage: slow orbits of three islands, rendered from the
+// Island Run 3D scenes (see public/landing-page-assets/islands/README.md).
+const ISLAND_REELS = [
   {
-    src: '/landing-page-assets/showcase/today-current.png',
-    alt: 'HabitGame Today screen with habits, events and rewards',
-    title: 'Live your day',
-    desc: 'Check off habits and events in Today.',
+    island: 2,
+    name: 'Celestial Sky Kingdom',
+    desc: 'Build castles above the clouds.',
+    video: '/landing-page-assets/islands/island-002.mp4',
+    videoWebm: '/landing-page-assets/islands/island-002.webm',
+    poster: '/landing-page-assets/islands/island-002.webp',
   },
   {
-    src: '/landing-page-assets/showcase/island-build-current.png',
-    alt: 'HabitGame island build screen with a landmark under construction',
-    title: 'Grow your island',
-    desc: 'Rewards turn into landmarks you build.',
+    island: 7,
+    name: 'Abyssal Pearl Kingdom',
+    desc: 'Explore a kingdom under the sea.',
+    video: '/landing-page-assets/islands/island-007.mp4',
+    videoWebm: '/landing-page-assets/islands/island-007.webm',
+    poster: '/landing-page-assets/islands/island-007.webp',
   },
   {
-    src: '/landing-page-assets/showcase/daily-momentum.webp',
-    alt: 'HabitGame Daily Momentum seven-day reward journey',
-    title: 'Come back tomorrow',
-    desc: 'A new reward is waiting every day.',
+    island: 19,
+    name: 'Circuit F Wonder Express',
+    desc: 'Ride the rails around a theme-park island.',
+    video: '/landing-page-assets/islands/island-019.mp4',
+    videoWebm: '/landing-page-assets/islands/island-019.webm',
+    poster: '/landing-page-assets/islands/island-019.webp',
   },
 ] as const;
 
@@ -96,6 +104,9 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
   const [activeStep, setActiveStep] = useState(0);
   const [showStickyCta, setShowStickyCta] = useState(false);
   const loopRef = useRef<HTMLOListElement>(null);
+  const reelSectionRef = useRef<HTMLElement>(null);
+  const reelVideoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const [reelsInView, setReelsInView] = useState(false);
   const finalRef = useRef<HTMLElement>(null);
   const installState = useInstallState(beforeInstallPromptEvent ?? null);
 
@@ -125,13 +136,41 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
     };
   }, [waitlistStatus]);
 
+  useEffect(() => {
+    const section = reelSectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') return undefined;
+    const observer = new IntersectionObserver(([entry]) => setReelsInView(entry.isIntersecting), {
+      threshold: 0.35,
+    });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  // Play only the island reel in view: the centred card on phones, all three
+  // side by side on desktop. Reduced-motion users keep the still poster.
+  useEffect(() => {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const showsAllReels = typeof window !== 'undefined' && window.matchMedia?.('(min-width: 900px)').matches;
+    reelVideoRefs.current.forEach((video, index) => {
+      if (!video) return;
+      const shouldPlay = reelsInView && !prefersReducedMotion && (showsAllReels || index === activeStep);
+      if (shouldPlay) {
+        if (video.preload === 'none') video.preload = 'auto';
+        void video.play().catch(() => undefined);
+      } else if (!video.paused) {
+        video.pause();
+      }
+    });
+  }, [activeStep, reelsInView]);
+
   const handleLoopScroll = () => {
     const loop = loopRef.current;
     if (!loop || loop.children.length === 0) return;
     const stepWidth = (loop.children[0] as HTMLElement).offsetWidth;
     if (!stepWidth) return;
     const index = Math.round(loop.scrollLeft / stepWidth);
-    setActiveStep(Math.max(0, Math.min(LOOP_STEPS.length - 1, index)));
+    setActiveStep(Math.max(0, Math.min(ISLAND_REELS.length - 1, index)));
   };
 
   const handleStickyCta = () => {
@@ -308,36 +347,42 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
       </header>
 
       <main className="lp-main">
-        <section className="lp-section" aria-labelledby="lp-how-title">
-          <p className="lp-kicker">How it works</p>
-          <h2 className="lp-h2" id="lp-how-title">Your day powers your adventure.</h2>
-          <p className="lp-sub">Three steps you'll repeat every day.</p>
+        <section className="lp-section" ref={reelSectionRef} aria-labelledby="lp-how-title">
+          <p className="lp-kicker">Your voyage</p>
+          <h2 className="lp-h2" id="lp-how-title">Every habit builds a new world.</h2>
+          <p className="lp-sub">Finish real-life habits, earn rewards, and build your way across the islands.</p>
           <ol className="lp-loop" ref={loopRef} onScroll={handleLoopScroll}>
-            {LOOP_STEPS.map((step, index) => (
-              <li className="lp-step" key={step.title}>
+            {ISLAND_REELS.map((reel, index) => (
+              <li className="lp-step" key={reel.island}>
                 <div className="lp-phone">
-                  <img
-                    src={step.src}
-                    alt={step.alt}
+                  <video
+                    ref={(element) => { reelVideoRefs.current[index] = element; }}
+                    poster={reel.poster}
                     width="390"
                     height="700"
-                    loading="lazy"
-                    decoding="async"
-                  />
+                    muted
+                    loop
+                    playsInline
+                    preload="none"
+                    aria-label={`Island ${reel.island}, ${reel.name}: in-game footage`}
+                  >
+                    <source src={reel.video} type="video/mp4" />
+                    <source src={reel.videoWebm} type="video/webm" />
+                  </video>
                 </div>
                 <div className="lp-step-label">
-                  <span className="lp-step-num" aria-hidden="true">{index + 1}</span>
+                  <span className="lp-step-num lp-step-num--island" aria-hidden="true">{reel.island}</span>
                   <div>
-                    <strong>{step.title}</strong>
-                    <span>{step.desc}</span>
+                    <strong>Island {reel.island} · {reel.name}</strong>
+                    <span>{reel.desc}</span>
                   </div>
                 </div>
               </li>
             ))}
           </ol>
           <div className="lp-dots" aria-hidden="true">
-            {LOOP_STEPS.map((step, index) => (
-              <i key={step.title} className={index === activeStep ? 'is-active' : undefined} />
+            {ISLAND_REELS.map((reel, index) => (
+              <i key={reel.island} className={index === activeStep ? 'is-active' : undefined} />
             ))}
           </div>
         </section>
