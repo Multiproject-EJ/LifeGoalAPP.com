@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { RecoverableErrorBoundary } from '../../components/RecoverableErrorBoundary';
 import { lockFullscreenPageScroll } from '../../utils/scrollLock';
+import { IslandRunLoadingScreen } from '../gamification/level-worlds/components/IslandRunLoadingScreen';
 import './GameFirstShell.css';
 
 /** This replaces the full-app render tree, rather than covering a live Today page. */
@@ -26,6 +27,11 @@ export function GameFirstShell({ phase, offline, developerError, renderGame, acc
   return <div className="game-first-shell" data-world-portal-gate="game-first">
     <div hidden={panel !== null}>
       {phase === 'ready' ? <RecoverableErrorBoundary fallback={failure}>{renderGame(help)}</RecoverableErrorBoundary>
+        : phase === 'loading' && !guestTransferPending ? <div className="game-first-loading">
+          <IslandRunLoadingScreen title="Opening your saved journey" detail="Checking your save and access…" />
+          {/* Help stays reachable even while loading. */}
+          <button type="button" className="game-first-loading__help" onClick={help}>Account &amp; help</button>
+        </div>
         : <section className="game-first-status" aria-live="polite">
           <p className="game-first-eyebrow">Your island journey</p>
           <h1>{guestTransferPending ? 'Securing your guest journey' : phase === 'loading' ? 'Opening your saved journey…' : 'We couldn’t load your journey'}</h1>

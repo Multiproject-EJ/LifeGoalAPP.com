@@ -25404,13 +25404,7 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 .island-run-board__three-preview-loading {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  color: #fff7d6;
-  font: 700 0.78rem/1.2 ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: linear-gradient(180deg, #65bdd2 0%, #318ca7 100%);
+  background: #060d22;
 }
 
 .island-run-board__three-preview-badge {

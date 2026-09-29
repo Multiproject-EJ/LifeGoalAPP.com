@@ -485,6 +485,7 @@ import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { EventArenaLandmarkModal } from './EventArenaLandmarkModal';
 import { AssemblyInvitationPhone } from './AssemblyInvitationPhone';
+import { IslandRunLoadingScreen } from './IslandRunLoadingScreen';
 import {
   readIsland001AssemblyInvitationsSent,
   resolveIsland001AssemblyInvitationState,
@@ -17113,8 +17114,8 @@ export function IslandRunBoardPrototype({
           <div className={`island-run-board__three-preview${firstArrivalActive || islandDeparture ? " island-run-board__three-preview--arrival" : ""}${islandDeparture ? " island-run-board__three-preview--departure" : ""}`}>
             <Suspense
               fallback={(
-                <div className="island-run-board__three-preview-loading" role="status">
-                  Loading Island {islandArtPreviewNumber} in 3D…
+                <div className="island-run-board__three-preview-loading">
+                  <IslandRunLoadingScreen title={`Island ${islandArtPreviewNumber}`} detail="Building the 3D world…" />
                 </div>
               )}
             >

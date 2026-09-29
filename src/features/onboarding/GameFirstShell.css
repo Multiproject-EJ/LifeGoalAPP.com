@@ -14,3 +14,9 @@
 .game-first-help nav { display: flex; gap: 18px; flex-wrap: wrap; margin: 22px 0; }
 .game-first-help a { color: #83dce9; text-decoration: underline; }
 .game-first-shell button:focus-visible, .game-first-shell a:focus-visible { outline: 3px solid #b5a5ff; outline-offset: 3px; }
+.game-first-loading { position: fixed; inset: 0; }
+.game-first-loading__help {
+  position: absolute; z-index: 9; top: max(14px, env(safe-area-inset-top, 0px)); right: 14px;
+  min-height: 36px; padding: 6px 12px; border: 1px solid #84c3d855; border-radius: 999px;
+  color: #eaf4ff; background: rgba(9, 20, 35, .55); font: 600 12px/1.2 system-ui; cursor: pointer;
+}

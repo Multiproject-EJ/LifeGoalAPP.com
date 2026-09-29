@@ -348,6 +348,7 @@ import {
   ISLAND_17_TITANS_REST_WORLD_NAME,
 } from './Island17TitansRestThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
+import { IslandRunLoadingScreen, markIslandRunLoadingScreenDone } from '../components/IslandRunLoadingScreen';
 import { createIsland001AtmosphereThree } from './Island001AtmosphereThree';
 import {
   resolveIsland001DayPosition,
@@ -11417,6 +11418,7 @@ export default function Island5ThreePilot({
       if (!firstFrameRendered && renderer.info.render.calls > 0) {
         firstFrameRendered = true;
         setHasRenderedFrame(true);
+        markIslandRunLoadingScreenDone();
       }
 
       if (activeTour && now >= activeTour.nextStepAt) {
@@ -11826,10 +11828,8 @@ export default function Island5ThreePilot({
         return typeof document === 'undefined' ? layer : createPortal(layer, document.body);
       })() : null}
       {!hasRenderedFrame ? (
-        <div className="island-5-three-pilot__loading" role="status" aria-live="polite">
-          <span aria-hidden="true" />
-          <strong>Entering {worldName}</strong>
-          <small>Awakening the living world…</small>
+        <div className="island-5-three-pilot__loading">
+          <IslandRunLoadingScreen title={`Entering ${worldName}`} detail="Awakening the living world…" />
         </div>
       ) : null}
       {isCactusCanyon && hasRenderedFrame && trainRidePhase === 'idle' && !isEvidenceCapture ? (
