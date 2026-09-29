@@ -6,6 +6,8 @@ import {
 import { DicePackOfferGrid } from './DicePackOfferGrid';
 import { ShopItemCostLine } from './ShopItemCostLine';
 import './IslandRunSupplyDock.css';
+import { DiceSkinShelf } from './DiceSkinShelf';
+import type { DiceSkinId, DiceSkinProgress } from '../services/islandRunDiceSkins';
 import {ControllerThemeShop,CONTROLLER_DESIGNS} from './living-controller/ControllerThemeShop';
 import {useControllerShopScrollLock} from './living-controller/useControllerShopScrollLock';
 
@@ -31,6 +33,9 @@ type IslandRunSupplyDockProps = {
   onSelectDicePack: (packId: DicePackSkuId) => void;
   onStartCreaturePackCheckout: () => void;
   onBuyEarnedDiceBundle: () => void;
+  diceSkinProgress?: DiceSkinProgress;
+  pendingDiceSkinId?: DiceSkinId | null;
+  onDiceSkinChoice?: (skinId: DiceSkinId, mode: 'buy' | 'equip') => void;
   onClose: () => void;
 };
 
@@ -88,6 +93,9 @@ export function IslandRunSupplyDock({
   onSelectDicePack,
   onStartCreaturePackCheckout,
   onBuyEarnedDiceBundle,
+  diceSkinProgress,
+  pendingDiceSkinId = null,
+  onDiceSkinChoice,
   onClose,
 }: IslandRunSupplyDockProps) {
   const [activeSection, setActiveSection] = useState<SupplyDockSection>('free');
@@ -349,6 +357,15 @@ export function IslandRunSupplyDock({
                   </button>
                 )}
               </article>
+
+              {diceSkinProgress && onDiceSkinChoice ? (
+                <DiceSkinShelf
+                  progress={diceSkinProgress}
+                  money={essence}
+                  pendingSkinId={pendingDiceSkinId}
+                  onChoose={onDiceSkinChoice}
+                />
+              ) : null}
 
               <section className="island-run-supply-dock__paid-refills" aria-labelledby="supply-dock-paid-refills">
                 <div className="island-run-supply-dock__subheading">

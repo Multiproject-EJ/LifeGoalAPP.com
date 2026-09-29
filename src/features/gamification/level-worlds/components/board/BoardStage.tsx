@@ -27,6 +27,7 @@ import {
   getShotPreset,
   landingEventForTile,
 } from './cameraDirector';
+import type { DiceSkinId } from '../../services/islandRunDiceSkins';
 
 const PHONE_OVERVIEW_VERTICAL_BIAS_RATIO = 0.055;
 const BOARD_TILT_X_DEG = 47;
@@ -146,6 +147,7 @@ export interface BoardStageProps {
   isRolling?: boolean;
   diceFaces?: [number, number];
   onDiceRollComplete?: () => void;
+  diceSkin?: DiceSkinId;
 }
 
 export interface BoardStageCameraControls {
@@ -204,6 +206,7 @@ export function BoardStage(props: BoardStageProps) {
     isRolling = false,
     diceFaces = [1, 1],
     onDiceRollComplete,
+    diceSkin,
   } = props;
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -856,6 +859,7 @@ export function BoardStage(props: BoardStageProps) {
         isRolling={isRolling}
         style={diceOverlayStyle}
         onRollComplete={onDiceRollComplete}
+        skin={diceSkin}
       />
       {/*
         Orbit stops HUD — visually shares the board's 3D plane (applies the

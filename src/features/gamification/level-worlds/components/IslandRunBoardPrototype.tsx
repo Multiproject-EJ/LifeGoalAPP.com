@@ -237,6 +237,8 @@ import { isIslandFragmentAnsweredForUser } from '../../../compass-book/services/
 import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
 import { useIslandRunState } from '../hooks/useIslandRunState';
+import { purchaseDiceSkin, resolveDiceSkinProgress, selectDiceSkin } from '../services/islandRunDiceSkinActions';
+import { resolveDiceSkin, type DiceSkinId } from '../services/islandRunDiceSkins';
 import { WorldPortalCouncilControl } from './WorldPortalCouncil';
 import { canAttendWorldPortalCouncil, resolveWorldPortalProgress } from '../services/worldPortalProgress';
 import {
@@ -11582,6 +11584,37 @@ export function IslandRunBoardPrototype({
     setLandingText(message);
   };
 
+  const diceSkinProgress = useMemo(
+    () => resolveDiceSkinProgress(__storeState),
+    [__storeState.signatureMissionProgressByIsland],
+  );
+  const [pendingDiceSkinId, setPendingDiceSkinId] = useState<DiceSkinId | null>(null);
+  const handleDiceSkinChoice = async (skinId: DiceSkinId, mode: 'buy' | 'equip') => {
+    if (pendingDiceSkinId) return;
+    setPendingDiceSkinId(skinId);
+    const skin = resolveDiceSkin(skinId);
+    try {
+      if (mode === 'buy') {
+        playIslandRunSound('market_purchase_attempt');
+        const result = await purchaseDiceSkin({ session, client, skinId });
+        if (result.applied) {
+          playIslandRunSound('market_purchase_success');
+          setMarketPurchaseFeedback(`${skin.name} dice unlocked and equipped.`);
+        } else {
+          if (result.reason === 'insufficient_money') playIslandRunSound('market_insufficient_coins');
+          setMarketPurchaseFeedback(result.reason === 'insufficient_money'
+            ? `Not enough money for ${skin.name} (${skin.price.toLocaleString()} needed).`
+            : `${skin.name} is already yours.`);
+        }
+      } else {
+        const result = await selectDiceSkin({ session, client, skinId });
+        if (result.applied) setMarketPurchaseFeedback(`Rolling with ${skin.name} dice.`);
+      }
+    } finally {
+      setPendingDiceSkinId(null);
+    }
+  };
+
   const handleMarketPrototypePurchase = (bundle: 'dice_bundle') => {
     if (marketOwnedBundles[bundle]) {
       emitMarketPurchaseMarker({
@@ -17123,6 +17156,7 @@ export function IslandRunBoardPrototype({
           }}
           isRolling={shouldRenderIsland5Three ? false : isRolling}
           diceFaces={rollingDiceFaces}
+          diceSkin={diceSkinProgress.selectedSkinId}
           onDiceRollComplete={shouldRenderIsland5Three ? undefined : () => {
             diceRollCompleteAlreadyFiredRef.current = true;
             diceRollCompleteResolverRef.current?.();
@@ -17483,6 +17517,7 @@ export function IslandRunBoardPrototype({
           isRolling={isRolling}
           throwStrength={diceThrowStrength}
           landingVariant={rollIndexRef.current}
+          skin={diceSkinProgress.selectedSkinId}
           onTopBarImpact={() => {
             triggerImpactHaptic('strong', {
               channel: 'gamification',
@@ -19896,6 +19931,9 @@ export function IslandRunBoardPrototype({
             onSelectDicePack={(packId) => void handleStartDiceCheckout('market_panel', packId)}
             onStartCreaturePackCheckout={() => void handleStartCreaturePackCheckout()}
             onBuyEarnedDiceBundle={() => handleMarketPrototypePurchase('dice_bundle')}
+            diceSkinProgress={diceSkinProgress}
+            pendingDiceSkinId={pendingDiceSkinId}
+            onDiceSkinChoice={(skinId, mode) => void handleDiceSkinChoice(skinId, mode)}
             onClose={() => {
               setShowShopPanel(false);
               setMarketPurchaseFeedback(null);

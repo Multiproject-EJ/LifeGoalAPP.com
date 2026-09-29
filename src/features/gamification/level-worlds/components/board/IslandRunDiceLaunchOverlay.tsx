@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 import type { IslandRunDiceThrowStrength } from '../../services/islandRunDiceThrowPresentation';
 import { BoardDice3D } from './BoardDice3D';
+import type { DiceSkinId } from '../../services/islandRunDiceSkins';
 
 /**
  * Visual-only dice choreography for authored 3D islands.
@@ -17,6 +18,7 @@ export interface IslandRunDiceLaunchOverlayProps {
   landingVariant?: number;
   onRollComplete?: () => void;
   onTopBarImpact?: () => void;
+  skin?: DiceSkinId;
 }
 
 const FULL_MOTION_DURATION_MS = 1_600;
@@ -50,6 +52,7 @@ export function IslandRunDiceLaunchOverlay({
   landingVariant = 0,
   onRollComplete,
   onTopBarImpact,
+  skin,
 }: IslandRunDiceLaunchOverlayProps) {
   const onRollCompleteRef = useRef(onRollComplete);
   const onTopBarImpactRef = useRef(onTopBarImpact);
@@ -108,6 +111,7 @@ export function IslandRunDiceLaunchOverlay({
         value1={faces[0]}
         value2={faces[1]}
         isRolling
+        skin={skin}
       />
     </div>
   );

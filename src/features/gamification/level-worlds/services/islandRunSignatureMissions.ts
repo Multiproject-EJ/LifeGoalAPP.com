@@ -2,6 +2,7 @@ import { sanitizeTitanAwakening, mergeTitanAwakening, type TitanAwakening } from
 import { WORLD_PORTAL_KEY, sanitizeWorldPortalProgress, mergeWorldPortalProgress, type WorldPortalProgress } from './worldPortalProgress';
 import { ARENA_JOURNEY_KEY, sanitizeArenaJourney, mergeArenaJourney, type ArenaJourneyProgress } from './arenaJourney';
 import { ARCHETYPE_CUP_KEY, mergeArchetypeCupProgress, sanitizeArchetypeCupProgress, type ArchetypeCupProgress } from './archetypeCup';
+import { DICE_SKINS_KEY, mergeDiceSkinProgress, sanitizeDiceSkinProgress, type DiceSkinProgress } from './islandRunDiceSkins';
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import {
   OPENING_GAMES_CAMPAIGN_KEY, OPENING_GAMES_CEREMONY_KEY,
@@ -427,6 +428,7 @@ export type IslandRunSignatureMissionProgress =
   | WorldPortalProgress
   | ArenaJourneyProgress
   | ArchetypeCupProgress
+  | DiceSkinProgress
   | OpeningGamesCampaignMarker
   | OpeningGamesCeremonyProgress
   | MoonwellThermalProgress
@@ -491,6 +493,10 @@ export function sanitizeIslandRunSignatureMissionProgress(
     }
     if (record.missionId === 'archetype-cup') {
       if (key === ARCHETYPE_CUP_KEY && record.version === 1) result[key] = sanitizeArchetypeCupProgress(record);
+      return;
+    }
+    if (record.missionId === 'dice-skins') {
+      if (key === DICE_SKINS_KEY && record.version === 1) result[key] = sanitizeDiceSkinProgress(record);
       return;
     }
     if (record.missionId === 'opening-games-campaign') {
@@ -1699,6 +1705,10 @@ export function mergeIslandRunSignatureMissionProgress(
     }
     if (a.missionId === 'archetype-cup' || b.missionId === 'archetype-cup') {
       merged[key] = mergeArchetypeCupProgress(sanitizeArchetypeCupProgress(a), sanitizeArchetypeCupProgress(b));
+      return;
+    }
+    if (a.missionId === 'dice-skins' || b.missionId === 'dice-skins') {
+      merged[key] = mergeDiceSkinProgress(sanitizeDiceSkinProgress(a), sanitizeDiceSkinProgress(b));
       return;
     }
     if (a.missionId === 'opening-games-campaign' || b.missionId === 'opening-games-campaign') {

@@ -1,0 +1,57 @@
+.dice-skin-shelf { display: grid; gap: .6rem; }
+.dice-skin-shelf__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dice-skin-shelf__card {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 4px;
+  padding: .7rem .4rem .55rem;
+  border: 1px solid rgba(120, 88, 40, .22);
+  border-radius: 14px;
+  text-align: center;
+  background: rgba(255, 250, 236, .75);
+}
+.dice-skin-shelf__card--equipped { border-color: rgba(46, 150, 96, .8); box-shadow: 0 0 0 2px rgba(46, 150, 96, .25); }
+.dice-skin-shelf__card strong { font-size: .8rem; line-height: 1.15; color: #3c2a12; }
+.dice-skin-shelf__card small { font-size: .66rem; line-height: 1.25; color: #6d5a3d; }
+
+/* A still, three-quarter view of the real board die with its skin. */
+.dice-skin-shelf__preview.board-dice-3d {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  perspective: 300px;
+  opacity: 1;
+}
+.dice-skin-shelf__cube.board-dice-3d__die {
+  transform: rotateX(-24deg) rotateY(-34deg);
+  animation: dice-skin-shelf-turn 7s ease-in-out infinite;
+}
+@keyframes dice-skin-shelf-turn { 50% { transform: rotateX(-30deg) rotateY(-56deg); } }
+
+.dice-skin-shelf__btn {
+  min-height: 32px;
+  width: 100%;
+  margin-top: 2px;
+  border: 1px solid rgba(60, 42, 18, .25);
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: .76rem;
+  color: #3c2a12;
+  background: #fff;
+  cursor: pointer;
+}
+.dice-skin-shelf__btn--buy { border: 0; background: linear-gradient(180deg, #ffe08a, #f0b43c); }
+.dice-skin-shelf__btn--equipped { color: #1f6b44; background: rgba(46, 150, 96, .14); }
+.dice-skin-shelf__btn:disabled { cursor: default; opacity: .6; }
+.dice-skin-shelf__btn--equipped:disabled { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) { .dice-skin-shelf__cube.board-dice-3d__die { animation: none; } }

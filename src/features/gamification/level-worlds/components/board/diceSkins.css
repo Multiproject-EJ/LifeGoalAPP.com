@@ -1,0 +1,49 @@
+/* Dice skins (see services/islandRunDiceSkins.ts). Each skin sets tokens; one
+   rule applies them. The doubled class outranks the board and launch-overlay
+   face rules (including the hard-throw glow), so a skin looks the same
+   everywhere. `classic` keeps the existing ivory styling untouched. */
+.board-dice-3d[data-dice-skin='jade'] {
+  --die-face: radial-gradient(circle at 28% 20%, rgba(214, 255, 226, .7), transparent 38%), linear-gradient(145deg, #5fbf8a 0%, #1f7a55 62%, #0e4a34 100%);
+  --die-edge: rgba(255, 214, 120, .75);
+  --die-pip: radial-gradient(circle at 35% 35%, #fff2b8 0%, #e2a93b 70%, #9a6415 100%);
+  --die-glow: 0 0 10px rgba(92, 214, 150, .45);
+}
+.board-dice-3d[data-dice-skin='moonstone'] {
+  --die-face: radial-gradient(circle at 28% 20%, rgba(255, 255, 255, .95), transparent 36%), linear-gradient(145deg, #f3f6fb 0%, #b9c4d6 55%, #7f8ca6 100%);
+  --die-edge: rgba(170, 210, 255, .85);
+  --die-pip: radial-gradient(circle at 35% 35%, #4d6ea8 0%, #1d2f55 100%);
+  --die-glow: 0 0 12px rgba(160, 205, 255, .55);
+}
+.board-dice-3d[data-dice-skin='tide-crystal'] {
+  --die-face: radial-gradient(circle at 26% 18%, rgba(255, 255, 255, .95), transparent 30%), linear-gradient(145deg, rgba(210, 250, 255, .92) 0%, rgba(96, 205, 235, .8) 55%, rgba(34, 130, 190, .88) 100%);
+  --die-edge: rgba(230, 255, 255, .95);
+  --die-pip: radial-gradient(circle at 35% 35%, #ffffff 0%, #9ef3ff 45%, #1b7fb0 100%);
+  --die-glow: 0 0 14px rgba(110, 230, 255, .7);
+}
+.board-dice-3d[data-dice-skin='ember'] {
+  --die-face: radial-gradient(circle at 28% 20%, rgba(150, 140, 160, .45), transparent 34%), linear-gradient(145deg, #3a3340 0%, #1a161e 60%, #0a080c 100%);
+  --die-edge: rgba(255, 120, 50, .75);
+  --die-pip: radial-gradient(circle at 40% 40%, #fff1a8 0%, #ff9a2e 45%, #d8350f 100%);
+  --die-pip-glow: 0 0 5px rgba(255, 130, 40, .95);
+  --die-glow: 0 0 12px rgba(255, 96, 32, .5);
+}
+.board-dice-3d[data-dice-skin='gold'] {
+  --die-face: radial-gradient(circle at 26% 18%, rgba(255, 252, 220, .98), transparent 32%), linear-gradient(145deg, #ffe58a 0%, #e8b334 48%, #b07a12 100%);
+  --die-edge: rgba(255, 244, 196, .95);
+  --die-pip: radial-gradient(circle at 60% 60%, #fff0b0 0%, #a86d0c 55%, #5c3804 100%);
+  --die-glow: 0 0 16px rgba(255, 206, 84, .75);
+}
+
+.board-dice-3d.board-dice-3d[data-dice-skin]:not([data-dice-skin='classic']) .board-dice-3d__face {
+  border-color: var(--die-edge);
+  background: var(--die-face);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, .55),
+    inset 0 -4px 8px rgba(0, 0, 0, .22),
+    var(--die-glow),
+    0 3px 8px rgba(0, 0, 0, .32);
+}
+.board-dice-3d.board-dice-3d[data-dice-skin]:not([data-dice-skin='classic']) .board-dice-3d__dot {
+  background: var(--die-pip);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .3), var(--die-pip-glow, 0 0 0 transparent);
+}
