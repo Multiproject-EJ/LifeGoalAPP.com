@@ -11,7 +11,8 @@ public final class NativeCompassAIPlugin: CAPPlugin, CAPBridgedPlugin {
     public let jsName = "NativeCompassAI"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "availability", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "suggestNextStep", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "suggestNextStep", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "generate", returnType: CAPPluginReturnPromise)
     ]
 
     @objc public func availability(_ call: CAPPluginCall) {
@@ -79,6 +80,54 @@ public final class NativeCompassAIPlugin: CAPPlugin, CAPBridgedPlugin {
         #endif
 
         call.reject("On-device language support requires an eligible iPhone with Apple Intelligence enabled.")
+    }
+
+    /// General on-device generation used by the app's shared AI runtime
+    /// (src/services/ai/aiRuntime.ts). Rejects with code "UNAVAILABLE" or
+    /// "GENERATION_FAILED" so the caller can fall back to the server.
+    @objc public func generate(_ call: CAPPluginCall) {
+        guard let instructions = call.getString("instructions"),
+              let prompt = call.getString("prompt") else {
+            call.reject("Missing instructions or prompt.", "INVALID_INPUT")
+            return
+        }
+        let temperature = call.getDouble("temperature")
+        let maxTokens = call.getInt("maxTokens")
+
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            guard SystemLanguageModel.default.isAvailable else {
+                call.reject("Apple Intelligence is not available on this device.", "UNAVAILABLE")
+                return
+            }
+
+            Task {
+                do {
+                    // The on-device context window is small (about 4k tokens in
+                    // total), so inputs are clipped; an oversized request fails
+                    // and the caller falls back to the server.
+                    let session = LanguageModelSession(instructions: clipped(instructions, limit: 3000))
+                    let options = GenerationOptions(
+                        temperature: temperature.map { min(max($0, 0), 1) },
+                        maximumResponseTokens: maxTokens.map { min(max($0, 16), 800) }
+                    )
+                    let response = try await session.respond(
+                        to: clipped(prompt, limit: 6000),
+                        options: options
+                    )
+                    call.resolve([
+                        "text": response.content.trimmingCharacters(in: .whitespacesAndNewlines),
+                        "model": "apple-foundation-models"
+                    ])
+                } catch {
+                    call.reject("On-device generation failed.", "GENERATION_FAILED")
+                }
+            }
+            return
+        }
+        #endif
+
+        call.reject("On-device language support requires an eligible iPhone with Apple Intelligence enabled.", "UNAVAILABLE")
     }
 
     private func clipped(_ value: String, limit: Int) -> String {

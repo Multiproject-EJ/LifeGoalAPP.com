@@ -216,37 +216,39 @@ Deno.serve(async (req) => {
     // MUST come BEFORE auth check to avoid requiring Authorization header
     // ========================================================
     if (pathname.endsWith('/cron')) {
-      // Verify CRON secret using custom header (not Authorization)
-      const cronSecret = req.headers.get('x-cron-secret');
+      // Create Supabase client for CRON operations (using service role key, no user auth)
+      const cronSupabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const cronSupabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY')!;
+      const supabase = createClient(cronSupabaseUrl, cronSupabaseKey);
+
+      // Two accepted callers, both via custom headers (not Authorization):
+      // - pg_cron: x-reminders-token, a Vault secret checked by a
+      //   service-role-only RPC (migration 20260929210000_habit_reminders_dispatch.sql)
+      // - an external scheduler: x-cron-secret matching CRON_SECRET
       const expectedSecret = Deno.env.get('CRON_SECRET');
-      
-      if (!expectedSecret) {
-        console.error('CRON_SECRET not configured in Edge Function secrets');
-        return new Response(JSON.stringify({ 
-          error: 'CRON endpoint not configured. Set CRON_SECRET in Edge Function secrets.' 
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      const cronSecretValid = Boolean(expectedSecret) && req.headers.get('x-cron-secret') === expectedSecret;
+      let authorized = cronSecretValid;
+      if (!authorized) {
+        const remindersToken = req.headers.get('x-reminders-token');
+        if (remindersToken) {
+          const { data: tokenValid, error: tokenError } = await supabase
+            .rpc('verify_send_reminders_token', { p_token: remindersToken });
+          authorized = !tokenError && tokenValid === true;
+        }
       }
-      
-      if (cronSecret !== expectedSecret) {
-        console.error('Invalid CRON secret provided');
-        return new Response(JSON.stringify({ 
-          error: 'Unauthorized: Invalid CRON secret' 
+
+      if (!authorized) {
+        console.error('Invalid CRON credentials provided');
+        return new Response(JSON.stringify({
+          error: 'Unauthorized: Invalid CRON credentials'
         }), {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      
+
       console.log('CRON: Send reminders job triggered');
-      
-      // Create Supabase client for CRON operations (using service role key, no user auth)
-      const cronSupabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const cronSupabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY')!;
-      const supabase = createClient(cronSupabaseUrl, cronSupabaseKey);
-      
+
       try {
         const now = new Date();
         console.log('Server time (UTC):', now.toISOString());

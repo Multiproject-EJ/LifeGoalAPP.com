@@ -2,17 +2,18 @@
  * AI Rationale Enrichment Module
  * 
  * Provides optional AI-powered enhancement of habit suggestion rationale text.
- * Uses OpenAI (gpt-4o-mini) when OPENAI_API_KEY is available; otherwise falls back
- * to the baseline rationale from the classification engine.
+ * Uses the shared AI runtime (on-device Apple Intelligence first, then the
+ * server); otherwise falls back to the baseline rationale from the
+ * classification engine.
  * 
  * Features:
- * - 3-second timeout for AI calls to ensure UI responsiveness
+ * - Short timeouts for AI calls to keep the UI responsive
  * - Per-session caching to avoid repeated API calls for the same inputs
  * - Graceful fallback when AI is unavailable or fails
  */
 
 import type { HabitSchedule } from './scheduleInterpreter';
-import { resolveAiEntitlement } from '../../services/aiEntitlementService';
+import { runAiTask } from '../../services/ai/aiRuntime';
 
 /**
  * Input parameters for building enhanced rationale
@@ -64,15 +65,6 @@ function getCacheKey(input: EnhanceRationaleInput): string {
 }
 
 /**
- * Checks if the OpenAI API key is available via environment variable
- */
-function hasOpenAIKey(): boolean {
-  // Check for Vite environment variable
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
-  return typeof apiKey === 'string' && apiKey.length > 0;
-}
-
-/**
  * Builds a prompt for the AI to enhance the rationale
  */
 function buildPrompt(input: EnhanceRationaleInput): string {
@@ -95,89 +87,21 @@ function buildPrompt(input: EnhanceRationaleInput): string {
     }
   }
 
-  return `You are a supportive habit coach. Based on this habit performance data, provide a brief 2-3 sentence rationale explaining the recommendation in an encouraging, actionable way.
-
-Classification: ${input.classification}
+  return `Classification: ${input.classification}
 7-day adherence: ${input.adherence7}%
 30-day adherence: ${input.adherence30}%
-Current streak: ${input.streak} days${previewContext}
+Current streak: ${input.streak} days${previewContext}`;
+}
 
+const RATIONALE_INSTRUCTIONS = `You are a supportive habit coach. Based on the habit performance data, provide a brief 2-3 sentence rationale explaining the recommendation in an encouraging, actionable way.
 Keep the response concise, positive, and focused on helping the user succeed. Do not use markdown formatting.`;
-}
-
-/**
- * Calls the OpenAI API to generate an enhanced rationale.
- * Returns null if the call fails or times out.
- */
-async function callOpenAI(prompt: string, timeoutMs: number = 3000): Promise<string | null> {
-  try {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    if (!apiKey) {
-      return null;
-    }
-    const decision = resolveAiEntitlement('habit_rationale_rewrite', Boolean(apiKey));
-    if (!decision.allowed || !decision.model) {
-      return null;
-    }
-
-    // Create an AbortController for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: decision.model,
-          messages: [
-            { role: 'user', content: prompt },
-          ],
-          max_tokens: 150,
-          temperature: 0.7,
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        console.warn('OpenAI API returned non-OK status:', response.status);
-        return null;
-      }
-
-      const data = await response.json();
-      const content = data?.choices?.[0]?.message?.content;
-      
-      if (typeof content === 'string' && content.trim().length > 0) {
-        return content.trim();
-      }
-      
-      return null;
-    } catch (err) {
-      clearTimeout(timeoutId);
-      if (err instanceof Error && err.name === 'AbortError') {
-        console.warn('OpenAI API call timed out');
-      } else {
-        console.warn('OpenAI API call failed:', err);
-      }
-      return null;
-    }
-  } catch (err) {
-    console.warn('Unexpected error calling OpenAI:', err);
-    return null;
-  }
-}
 
 /**
  * Builds an enhanced rationale for a habit suggestion.
  * 
- * If OPENAI_API_KEY is available, calls gpt-4o-mini to generate a 2-3 sentence
- * explanation. Uses a 3-second timeout and falls back to baseline rationale
- * on failure. Results are cached per session.
+ * Asks the shared AI runtime (on-device first, then the server) for a 2-3
+ * sentence explanation, and falls back to the baseline rationale when no AI
+ * source is available or it fails. Results are cached per session.
  * 
  * @param input - Parameters including classification, adherence, streak, and preview
  * @returns Promise with enhanced rationale and metadata
@@ -192,20 +116,15 @@ export async function buildEnhancedRationale(
     return { ...cached, source: 'cache' };
   }
 
-  // If no API key, return baseline immediately
-  if (!hasOpenAIKey()) {
-    const result: EnhancedRationaleResult = {
-      rationale: input.baselineRationale,
-      isAiEnhanced: false,
-      source: 'baseline',
-    };
-    rationaleCache.set(cacheKey, result);
-    return result;
-  }
-
-  // Build prompt and call OpenAI
-  const prompt = buildPrompt(input);
-  const aiResponse = await callOpenAI(prompt, 3000);
+  const ai = await runAiTask({
+    task: 'habit_rationale_rewrite',
+    instructions: RATIONALE_INSTRUCTIONS,
+    prompt: buildPrompt(input),
+    maxTokens: 150,
+    temperature: 0.7,
+    timeoutMs: 5000,
+  });
+  const aiResponse = ai?.text ?? null;
 
   if (aiResponse) {
     const result: EnhancedRationaleResult = {

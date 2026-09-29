@@ -70,6 +70,7 @@ import {
   isPlayersHandSparkComparisonEnabled,
   isPlayersHandSparkResultEnabled,
 } from '../players_hand/playersHandFeatureFlags';
+import { isServerAiAvailable } from '../../services/ai/aiRuntime';
 import './deck/deck.css';
 
 type TestStep = 'hub' | 'quiz' | 'results';
@@ -339,10 +340,9 @@ const HISTORY_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 });
 
-const hasOpenAiKey = (): boolean => {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  return typeof apiKey === 'string' && apiKey.trim().length > 0;
-};
+// The narrative itself is built locally (buildAiNarrative); this keeps the
+// earlier gate of only offering it where AI features are enabled.
+const isAiNarrativeAvailable = (): boolean => isServerAiAvailable();
 
 const getTraitBucket = (value: number) => {
   if (value >= HIGH_THRESHOLD) return 'high';
@@ -1161,7 +1161,7 @@ export default function PersonalityTest({
       return;
     }
 
-    if (!hasOpenAiKey()) {
+    if (!isAiNarrativeAvailable()) {
       setAiNarrativeStatus('unavailable');
       setAiNarrative([]);
       return;

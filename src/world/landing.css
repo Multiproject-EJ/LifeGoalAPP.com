@@ -682,6 +682,16 @@
     display: none;
   }
 
+  /* All three reels are visible side by side; they play in turn. */
+  .lp-step {
+    opacity: 0.55;
+    transition: opacity 400ms ease;
+  }
+
+  .lp-step.is-active {
+    opacity: 1;
+  }
+
   .lp-promises {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

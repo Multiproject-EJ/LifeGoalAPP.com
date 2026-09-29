@@ -17,7 +17,6 @@ try {
     format: 'esm',
     target: 'node20',
     define: {
-      'import.meta.env.VITE_OPENAI_API_KEY': 'undefined',
       'import.meta.env.VITE_SUPABASE_URL': 'undefined',
       'import.meta.env.VITE_SUPABASE_ANON_KEY': 'undefined',
       'import.meta.env.DEV': 'false',

@@ -146,23 +146,40 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
     return () => observer.disconnect();
   }, []);
 
-  // Play only the island reel in view: the centred card on phones, all three
-  // side by side on desktop. Reduced-motion users keep the still poster.
+  // Play one island reel at a time from the start: the active card only.
+  // Other cards rest on their poster, rewound for their turn. Reduced-motion
+  // users keep the still posters.
   useEffect(() => {
     const prefersReducedMotion =
       typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const showsAllReels = typeof window !== 'undefined' && window.matchMedia?.('(min-width: 900px)').matches;
     reelVideoRefs.current.forEach((video, index) => {
       if (!video) return;
-      const shouldPlay = reelsInView && !prefersReducedMotion && (showsAllReels || index === activeStep);
+      const shouldPlay = reelsInView && !prefersReducedMotion && index === activeStep;
       if (shouldPlay) {
         if (video.preload === 'none') video.preload = 'auto';
+        if (video.ended) video.currentTime = 0;
         void video.play().catch(() => undefined);
-      } else if (!video.paused) {
-        video.pause();
+      } else {
+        if (!video.paused) video.pause();
+        if (index !== activeStep && video.currentTime > 0) video.currentTime = 0;
       }
     });
   }, [activeStep, reelsInView]);
+
+  // When a reel finishes, move on to the next island (and back to the first).
+  const handleReelEnded = (index: number) => {
+    if (index !== activeStep) return;
+    const next = (index + 1) % ISLAND_REELS.length;
+    const loop = loopRef.current;
+    const card = loop?.children[next] as HTMLElement | undefined;
+    const isCarousel = Boolean(loop && loop.scrollWidth > loop.clientWidth + 1);
+    if (loop && card && isCarousel) {
+      // Phones: slide the carousel; the scroll handler then sets the active card.
+      loop.scrollTo({ left: card.offsetLeft - (loop.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' });
+    } else {
+      setActiveStep(next);
+    }
+  };
 
   const handleLoopScroll = () => {
     const loop = loopRef.current;
@@ -353,7 +370,7 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
           <p className="lp-sub">Finish real-life habits, earn rewards, and build your way across the islands.</p>
           <ol className="lp-loop" ref={loopRef} onScroll={handleLoopScroll}>
             {ISLAND_REELS.map((reel, index) => (
-              <li className="lp-step" key={reel.island}>
+              <li className={`lp-step${index === activeStep ? ' is-active' : ''}`} key={reel.island}>
                 <div className="lp-phone">
                   <video
                     ref={(element) => { reelVideoRefs.current[index] = element; }}
@@ -361,8 +378,8 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
                     width="390"
                     height="700"
                     muted
-                    loop
                     playsInline
+                    onEnded={() => handleReelEnded(index)}
                     preload="none"
                     aria-label={`Island ${reel.island}, ${reel.name}: in-game footage`}
                   >

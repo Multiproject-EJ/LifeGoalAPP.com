@@ -2,8 +2,9 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 // Sends new admin_alerts rows (waitlist joins, new accounts, ...) as a phone
-// push to every device an active admin has registered. Called every minute by
-// the "Send Habit Reminders" GitHub workflow with the shared x-cron-secret.
+// push to every device an active admin has registered. The database calls it
+// on every new alert (pg_net trigger) plus a 10-minute retry sweep; see
+// migration 20260929200000_admin_alert_push_dispatch.sql.
 // Each alert is pushed at most once (admin_alerts.pushed_at).
 
 type AdminAlert = { id: string; alert_type: string; title: string; summary: string; created_at: string };
@@ -54,11 +55,18 @@ Deno.serve(async (request) => {
     });
   }
 
-  const expectedSecret = Deno.env.get('CRON_SECRET');
-  if (!expectedSecret) return json({ error: 'CRON_SECRET not configured' }, 500);
-  if (request.headers.get('x-cron-secret') !== expectedSecret) return json({ error: 'Unauthorized' }, 401);
-
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
+  // Callers: the database itself (x-admin-alerts-token, a Vault secret checked
+  // by a service-role-only RPC) or a scheduler holding CRON_SECRET.
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  const cronAuthorized = Boolean(cronSecret) && request.headers.get('x-cron-secret') === cronSecret;
+  if (!cronAuthorized) {
+    const token = request.headers.get('x-admin-alerts-token');
+    if (!token) return json({ error: 'Unauthorized' }, 401);
+    const { data: tokenValid, error: tokenError } = await supabase.rpc('verify_notify_admin_alerts_token', { p_token: token });
+    if (tokenError || tokenValid !== true) return json({ error: 'Unauthorized' }, 401);
+  }
 
   const { data: pending, error: pendingError } = await supabase
     .from('admin_alerts')

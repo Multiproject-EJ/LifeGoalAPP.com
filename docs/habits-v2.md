@@ -274,8 +274,8 @@ The habits system supports AI-enhanced rationale text for suggestions. When enab
 
 ### Requirements
 
-1. **Environment Variable:** Set `VITE_OPENAI_API_KEY` with a valid OpenAI API key.
-2. **Model:** Uses `gpt-4o-mini` for fast, cost-effective responses.
+1. **AI source:** On eligible iPhones the on-device model (Apple Intelligence) writes the rationale; otherwise the `ai-task` edge function does, using the `OPENAI_API_KEY` function secret. There is no client-side key.
+2. **Model (server):** `gpt-4o-mini` by default for fast, cost-effective responses.
 
 ### How It Works
 
@@ -287,8 +287,7 @@ The habits system supports AI-enhanced rationale text for suggestions. When enab
 ### Configuration
 
 ```bash
-# Add to .env or environment
-VITE_OPENAI_API_KEY=sk-your-openai-api-key
+# Add to .env or environment (AI needs a signed-in user or an eligible iPhone)
 VITE_ENABLE_HABIT_SUGGESTIONS=1
 ```
 
@@ -300,7 +299,7 @@ VITE_ENABLE_HABIT_SUGGESTIONS=1
 
 ### Testing AI Rationale
 
-1. Set the `VITE_OPENAI_API_KEY` environment variable.
+1. Sign in (the server AI path needs a session), or use an iPhone with Apple Intelligence.
 2. Enable suggestions with `VITE_ENABLE_HABIT_SUGGESTIONS=1`.
 3. Open the Adherence metrics section.
 4. Click "View rationale" next to a suggestion.

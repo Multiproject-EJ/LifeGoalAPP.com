@@ -42,11 +42,11 @@ The following features require real infrastructure even in demo mode:
 
 | Feature | What is real | Requirement |
 |---|---|---|
-| **AI Coach responses** | Actual OpenAI API call | `VITE_OPENAI_API_KEY` or `VITE_AI_GOAL_COACH_CHAT_URL` must be set |
+| **AI Coach responses** | Actual OpenAI API call | `VITE_AI_GOAL_COACH_CHAT_URL` must be set |
 | **Supabase Auth** | Auth state management is Supabase-backed when credentials are configured | `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` |
 | **Vision board file upload** | Actual Supabase Storage upload | Supabase configured + storage bucket `vision-images-v2` created |
 
-> **Note**: In pure demo mode (no `.env.local` configured), the AI Coach will render the input UI but API calls will fail or return an error. Set `VITE_OPENAI_API_KEY` (or deploy the `goal-coach-chat` edge function) to enable real AI responses.
+> **Note**: In pure demo mode (no `.env.local` configured), the AI Coach will render the input UI but API calls will fail or return an error. Deploy the `goal-coach-chat` edge function to enable real AI responses.
 
 ---
 
@@ -109,7 +109,6 @@ The `canUseSupabaseData()` function in `src/lib/supabaseClient.ts` combines the 
    VITE_SUPABASE_ANON_KEY="your-anon-key"
    VITE_SUPABASE_REDIRECT_URL="https://localhost:5173/auth/callback.html"
    VITE_VAPID_PUBLIC_KEY="your-vapid-public-key"
-   VITE_OPENAI_API_KEY="your-openai-api-key"   # optional
    ```
 2. Run all Supabase migrations: `supabase db push`.
 3. Start the dev server: `npm run dev`.
