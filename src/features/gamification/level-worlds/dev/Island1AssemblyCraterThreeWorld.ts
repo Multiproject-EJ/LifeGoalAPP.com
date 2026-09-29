@@ -1120,7 +1120,10 @@ export function createIsland1AssemblyCraterRuntime(
         ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS * (0.3 + excavationSpread * 0.42),
         internalDigProgress,
       );
-      const intensity = act === 2 ? 2.4 : act === 1 ? 1.35 : 1.1;
+      // Charge 8 is the shockwave that tears the HUD top bar loose: the
+      // biggest blast of the island, with the tallest smoke column.
+      const topbarShock = act === 2 && currentPresentation.chargesDetonated === 8 ? 1.3 : 1;
+      const intensity = (act === 2 ? 2.4 : act === 1 ? 1.35 : 1.1) * topbarShock;
       const progress = Math.min(1, blastAge / ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS);
       const excavationBeat = THREE.MathUtils.smoothstep(
         THREE.MathUtils.clamp((progress - 0.1) / 0.76, 0, 1),
@@ -1210,11 +1213,11 @@ export function createIsland1AssemblyCraterRuntime(
         const spread = head ? (.55 + dustProgress * 3.2) * Math.sqrt(((index * 17) % 37 + .5)/37) : .15 + dustProgress * .5;
         if (act === 2) {
           dummy.position.set(Math.sin(dustAngle) * spread,
-            0.3 + rise * (head ? 4.8 + (index % 3) * 0.35 : 1 + (index % 5) * 0.6),
+            0.3 + rise * (head ? (4.8 + (index % 3) * 0.35) * topbarShock : 1 + (index % 5) * 0.6),
             Math.cos(dustAngle) * spread);
-          dummy.scale.set(head ? 1.9 + dustProgress * 2.8 : 1 + dustProgress,
-            head ? 1.25 + dustProgress * 1.8 : 1.8 + dustProgress,
-            head ? 1.9 + dustProgress * 2.8 : 1 + dustProgress);
+          dummy.scale.set(head ? (1.9 + dustProgress * 2.8) * topbarShock : 1 + dustProgress,
+            head ? (1.25 + dustProgress * 1.8) * topbarShock : 1.8 + dustProgress,
+            head ? (1.9 + dustProgress * 2.8) * topbarShock : 1 + dustProgress);
         } else {
           const travel = dustProgress * (0.72 + (index % 4) * 0.32) * intensity;
           dummy.position.set(THREE.MathUtils.lerp(impactPosition.x,ventPosition.x,THREE.MathUtils.smoothstep(dustProgress,0,.6)) + Math.sin(dustAngle) * travel,
@@ -1226,7 +1229,7 @@ export function createIsland1AssemblyCraterRuntime(
         dummy.updateMatrix();
         blastDust.setMatrixAt(index, dummy.matrix);
       }
-      dustMaterial.opacity = Math.max(0, Math.pow(1-dustProgress,.65)*(act===2?.78:.48));
+      dustMaterial.opacity = Math.max(0, Math.pow(1-dustProgress,topbarShock>1?.45:.65)*(act===2?(topbarShock>1?.9:.78):.48));
       blastDust.instanceMatrix.needsUpdate = true;
       for (let index = 0; index < blastSparks.count; index += 1) {
         const sparkAngle = angle + index * 2.399963;

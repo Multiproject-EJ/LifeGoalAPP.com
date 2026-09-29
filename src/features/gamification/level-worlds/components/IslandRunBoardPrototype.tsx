@@ -526,8 +526,8 @@ import { resolvePairingUpgradeSuggestion, rollCompanionPairingPerk } from '../se
 import { FishermansDragonPrelude } from './FishermansDragonPrelude';
 import { FishermansEggRumour } from './FishermansEggRumour';
 import { isDragonPreludeActive } from '../services/fishermansDragonPrelude';
-import { AssemblyTopbarBlast } from './AssemblyTopbarBlast';
-import { ASSEMBLY_TOPBAR_BLAST_MS, shouldAssemblyBlastHitTopbar } from '../services/assemblyTopbarBlast';
+import { AssemblyTopbarBlast, prefetchAssemblyTopbarCrew } from './AssemblyTopbarBlast';
+import { ASSEMBLY_TOPBAR_BLAST_MS, resolveAssemblyBlastBoardWaitMs, shouldAssemblyBlastHitTopbar } from '../services/assemblyTopbarBlast';
 import { FishingCastMeter } from './FishingCastMeter';
 import { isFishingCastHit } from '../services/fishingCastSkill';
 import { compassIslandKey, hasUnseenCompassInsight, readSeenCompassIsland, writeSeenCompassIsland } from '../services/compassBookIconCue';
@@ -14280,6 +14280,13 @@ export function IslandRunBoardPrototype({
   // Island 001 Assembly blast/build beat: everything stays visible but inert
   // (controller, floating buttons, top bar, explore dots) so it plays through.
   const firstLightAssemblyAnimating = firstLightAssemblyPendingSector !== null;
+  // Load the top-bar repair crew ahead of the charge-8 shockwave so the robots
+  // are on time (prefetch only; nothing renders until the blast).
+  const shouldPrefetchTopbarCrew = islandNumber === 1 && !isIslandVisualPreview
+    && firstLightAssemblyProgress.chargesDetonated >= 3 && firstLightAssemblyProgress.chargesDetonated < 8;
+  useEffect(() => {
+    if (shouldPrefetchTopbarCrew) prefetchAssemblyTopbarCrew();
+  }, [shouldPrefetchTopbarCrew]);
   useEffect(() => {
     if (!firstLightAssemblyAnimating) return;
     stopAutoRoll();
@@ -14985,16 +14992,19 @@ export function IslandRunBoardPrototype({
       setFirstLightAssemblyConstructionSequence((value) => value + 1);
       setBuildCameraFocusRequest({ preset: result.sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 'boss' : 'overview', transition: 'quick' });
       playIslandRunSound('boss_trial_resolve');
-      triggerIslandRunHaptic('boss_trial_resolve');
       const prefersReducedMotion = typeof window !== 'undefined'
         && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!prefersReducedMotion && shouldAssemblyBlastHitTopbar(result.sectorAfter)) {
+      const topbarHit = !prefersReducedMotion && shouldAssemblyBlastHitTopbar(result.sectorAfter);
+      // The shockwave that tears the top bar loose gets its own haptic shape.
+      triggerIslandRunHaptic(topbarHit ? 'assembly_topbar_blast' : 'boss_trial_resolve');
+      if (topbarHit) {
         const blastId = Date.now();
         setAssemblyTopbarBlastId(blastId);
         window.setTimeout(() => setAssemblyTopbarBlastId((current) => (current === blastId ? null : current)), ASSEMBLY_TOPBAR_BLAST_MS);
       }
-      if (!prefersReducedMotion) {
-        await new Promise<void>((resolve) => window.setTimeout(resolve, result.sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 13_400 : 5_400));
+      const boardWaitMs = resolveAssemblyBlastBoardWaitMs(result.sectorAfter, prefersReducedMotion);
+      if (boardWaitMs > 0) {
+        await new Promise<void>((resolve) => window.setTimeout(resolve, boardWaitMs));
       }
       refreshIslandRunStateFromLocal(session);
       const fresh = getIslandRunStateSnapshot(session);

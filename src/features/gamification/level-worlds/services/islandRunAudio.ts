@@ -23,6 +23,7 @@ import { getHapticMode } from '../../../../utils/completionHaptics';
 import audioAssetManifest from './islandRunAudioAssets.json';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { ASSEMBLY_TOPBAR_BLAST_HAPTIC_PATTERN } from './assemblyTopbarBlast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -105,7 +106,10 @@ export type IslandRunHapticEvent =
   | 'mission_phone_dock'
   | 'tech_item_poof'
   // Mission items popping onto the board after the first mission message.
-  | 'mission_item_pop';
+  | 'mission_item_pop'
+  // Island 001 shockwave tearing the top bar loose: rattle series, one long
+  // hard buzz, one small tick.
+  | 'assembly_topbar_blast';
 
 export type IslandRunSoundPlaybackStatus =
   | 'idle'
@@ -258,6 +262,7 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   coin_reveal: [25, 35, 25, 45, 30],
   tech_item_poof: [12, 18, 12],
   mission_item_pop: [9],
+  assembly_topbar_blast: [...ASSEMBLY_TOPBAR_BLAST_HAPTIC_PATTERN],
   // Deliberately asymmetric: arming is the lightest pulse in the whole map so
   // it reads as "held, not yet committed"; engaging lands harder so the player
   // can lift their eyes off the button once it fires.
@@ -511,7 +516,8 @@ export function triggerIslandRunHaptic(eventId: IslandRunHapticEvent): void {
 
   if (typeof window === 'undefined') return;
   const nativeControllerLanding = eventId === 'controller_land' && Capacitor.isNativePlatform();
-  if (!nativeControllerLanding && !navigator.vibrate) return;
+  const nativeTopbarBlast = eventId === 'assembly_topbar_blast' && Capacitor.isNativePlatform();
+  if (!nativeControllerLanding && !nativeTopbarBlast && !navigator.vibrate) return;
 
   // Accessibility: skip haptics when user prefers reduced motion.
   if (typeof window.matchMedia === 'function'
@@ -532,6 +538,26 @@ export function triggerIslandRunHaptic(eventId: IslandRunHapticEvent): void {
 
   const rawPattern = HAPTIC_PATTERNS[eventId];
   const pattern = mode === 'subtle' ? attenuatePattern(rawPattern) : rawPattern;
+
+  if (nativeTopbarBlast) {
+    // iOS has no Vibration API: the same shape as impacts. Rattle, one heavy
+    // hit, then a light settle. Subtle mode keeps only the heavy hit.
+    void (async () => {
+      const wait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms));
+      if (mode === 'subtle') { await Haptics.impact({ style: ImpactStyle.Medium }); return; }
+      for (let pulse = 0; pulse < 6; pulse += 1) {
+        await Haptics.impact({ style: ImpactStyle.Light });
+        await wait(66);
+      }
+      for (let pulse = 0; pulse < 3; pulse += 1) {
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+        await wait(120);
+      }
+      await wait(260);
+      await Haptics.impact({ style: ImpactStyle.Light });
+    })().catch(() => { /* Unsupported device: presentation remains usable. */ });
+    return;
+  }
 
   if (nativeControllerLanding) {
     // iOS has no Vibration API. Keep the native landing feedback inside the
