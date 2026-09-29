@@ -484,6 +484,12 @@ import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { EventArenaLandmarkModal } from './EventArenaLandmarkModal';
+import { AssemblyInvitationPhone } from './AssemblyInvitationPhone';
+import {
+  readIsland001AssemblyInvitationsSent,
+  resolveIsland001AssemblyInvitationState,
+  writeIsland001AssemblyInvitationsSent,
+} from '../services/island001AssemblyInvitations';
 import { CompassBookIcon } from './CompassBookIcon';
 import { resolveIslandBuildStyle } from '../services/buildStyles';
 import { CompassPairingTip } from './CompassPairingTip';
@@ -14281,10 +14287,50 @@ export function IslandRunBoardPrototype({
     setShowAudioMenu(false);
     if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) document.activeElement.blur();
   }, [firstLightAssemblyAnimating, stopAutoRoll]);
+  // Island 001 finale: marina built + every building Level 3 → Mission Phone
+  // invitations → "ETA… NOW." → the delegates arrive for the night meeting.
+  const [assemblyInvitationsSent, setAssemblyInvitationsSent] = useState(
+    () => readIsland001AssemblyInvitationsSent(session.user.id, cycleIndex),
+  );
+  useEffect(() => {
+    setAssemblyInvitationsSent(readIsland001AssemblyInvitationsSent(session.user.id, cycleIndex));
+  }, [cycleIndex, session.user.id]);
+  const assemblyInvitationState = islandNumber === 1 && !isIslandVisualPreview
+    ? resolveIsland001AssemblyInvitationState({
+      assemblyComplete: firstLightAssemblyCompleted,
+      buildLevels: [0, 1, 2, 3].map((index) => __storeState.stopBuildStateByIndex[index]?.buildLevel ?? 0),
+      invitationsSent: assemblyInvitationsSent,
+      maxLevel: MAX_BUILD_LEVEL,
+    })
+    : 'not_ready';
   const missionOwnsController = worldMissionPresentationActive || firstArrivalActive || islandDeparture !== null || exploreViewActive
     || openingCeremonyPlayback !== null || isCompassBookCeremonyPlaying
     || moonwellThawActive || frostwellSequence.phase === 'drilling'
     || frostwellSequence.phase === 'commissioning' || isBuildSequenceActive;
+  // The phone opens a moment after everything is ready (and nothing else is
+  // on screen), so night has settled over the island first.
+  const [assemblyInvitationPhoneOpen, setAssemblyInvitationPhoneOpen] = useState(false);
+  const assemblyInvitationScreenBusy = doesModalOwnAttention || missionOwnsController || isRolling || pendingHopSequence !== null;
+  useEffect(() => {
+    if (assemblyInvitationState !== 'ready_to_send' || assemblyInvitationScreenBusy || assemblyInvitationPhoneOpen) return undefined;
+    const timer = window.setTimeout(() => {
+      stopAutoRoll();
+      setAssemblyInvitationPhoneOpen(true);
+    }, 2_400);
+    return () => window.clearTimeout(timer);
+  }, [assemblyInvitationPhoneOpen, assemblyInvitationScreenBusy, assemblyInvitationState, stopAutoRoll]);
+  const assemblyNeedsBuildingsHintShownRef = useRef(false);
+  useEffect(() => {
+    if (assemblyInvitationState !== 'needs_buildings' || assemblyNeedsBuildingsHintShownRef.current || assemblyInvitationScreenBusy) return;
+    assemblyNeedsBuildingsHintShownRef.current = true;
+    setLandingText('🏛️ The Assembly and marina are ready. Bring every building to Level 3 to send the invitations.');
+  }, [assemblyInvitationScreenBusy, assemblyInvitationState]);
+  const handleAssemblyInvitationsSent = useCallback(() => {
+    writeIsland001AssemblyInvitationsSent(session.user.id, cycleIndex, Date.now());
+    setAssemblyInvitationsSent(true);
+    setAssemblyInvitationPhoneOpen(false);
+    setLandingText('🚀 Invitations sent. The delegates are arriving for tonight\'s Assembly.');
+  }, [cycleIndex, session.user.id]);
   // Egg Mania announces itself once per island visit while its triple set is unused.
   const eggManiaPopupSeenKey = getEggManiaPopupSeenKey(session.user.id, cycleIndex, islandNumber);
   const eggManiaScreenBusy = doesModalOwnAttention || missionOwnsController || isRolling
@@ -17204,6 +17250,7 @@ export function IslandRunBoardPrototype({
                     : firstLightAssemblyCompleted || firstLightAssemblyPendingSector === FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
                   claimedDynamiteTileIndices: visibleClaimedDynamiteTilesRef.current,
                   constructionSequence: firstLightAssemblyConstructionSequence,
+                  invitationsSent: isIslandVisualPreview || assemblyInvitationsSent,
                 }}
                 greatHoneyfallPresentation={{
                   activatedReservoirs: isIslandVisualPreview && islandArtPreviewNumber === 14
@@ -17818,6 +17865,10 @@ export function IslandRunBoardPrototype({
           visitedIslandNumbers={orbitProgress.visitedIslandNumbers}
           onClose={() => setShowSolarMapOverlay(false)} />,
         document.body,
+      ) : null}
+
+      {assemblyInvitationPhoneOpen && assemblyInvitationState === 'ready_to_send' ? (
+        <AssemblyInvitationPhone onSent={handleAssemblyInvitationsSent} />
       ) : null}
 
       {techCompletionCelebration ? (

@@ -9370,6 +9370,7 @@ export default function Island5ThreePilot({
           assemblyPresentation.chargesDetonated,
           assemblyPresentation.completed ? 1 : 0,
           assemblyPresentation.constructionSequence ?? 0,
+          assemblyPresentation.invitationsSent === false ? 0 : 1,
           ...(assemblyPresentation.claimedDynamiteTileIndices ?? []),
         ].join(':');
         if (presentationKey !== firstLightAssemblyPresentationKey) {
@@ -9772,7 +9773,14 @@ export default function Island5ThreePilot({
             idleOverviewAt = null;
             applyPreset('boss', 0.55);
           }
-          if (marina.active && !activeTour && !activeProfiler) {
+          const marinaAwaitingInvitations = Boolean(firstLightAssemblyCrater.root.userData.marinaAwaitingInvitations);
+          if (marinaAwaitingInvitations && wasMarinaArrivalActive) {
+            // The marina is built; hand the island back while it waits for invitations.
+            wasMarinaArrivalActive = false;
+            controls.enabled = true;
+            applyPreset('overview', 0.8);
+          }
+          if (marina.active && !marinaAwaitingInvitations && !activeTour && !activeProfiler) {
             if (!wasMarinaArrivalActive) {
               setBoardActorsVisibleForPreset('manual');
               marinaInspectionActive = true;

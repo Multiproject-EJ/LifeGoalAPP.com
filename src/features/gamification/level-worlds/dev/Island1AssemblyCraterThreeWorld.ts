@@ -37,7 +37,16 @@ export interface Island1AssemblyCraterPresentation {
   completed: boolean;
   claimedDynamiteTileIndices?: readonly number[];
   constructionSequence?: number;
+  /**
+   * The Assembly invitations have been sent from the Mission Phone. Until
+   * then the marina is built but no delegates arrive (default true so older
+   * saves and previews keep the full film).
+   */
+  invitationsSent?: boolean;
 }
+
+/** Marina progress where construction ends and the delegates' arrival begins. */
+export const ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS = 0.18;
 
 export interface Island1AssemblyCraterRuntime {
   root: THREE.Group;
@@ -686,6 +695,9 @@ export function createIsland1AssemblyCraterRuntime(
   let marinaBuildQueued = false;
   let marinaProgress = 0;
   let marinaManualProgress: number | null = null;
+  // True while the finished marina waits for the Mission Phone invitations.
+  let marinaAwaitingInvitations = false;
+  const invitationsSent = () => currentPresentation.invitationsSent !== false;
   let excavationVisualProgress = 0;
   let excavationAnimationFromProgress = 0;
   let excavationAnimationToProgress = 0;
@@ -919,8 +931,11 @@ export function createIsland1AssemblyCraterRuntime(
       assemblyBuildProgress = currentPresentation.completed ? 1 : 0;
       marinaBuildQueued = false;
       marinaStartedAt = Number.NEGATIVE_INFINITY;
-      marinaManualProgress = currentPresentation.completed ? 1 : 0;
-      marinaProgress = currentPresentation.completed ? 1 : 0;
+      const settledMarina = currentPresentation.completed
+        ? invitationsSent() ? 1 : ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS
+        : 0;
+      marinaManualProgress = settledMarina;
+      marinaProgress = settledMarina;
       excavationVisualProgress = nextExcavationTarget;
       excavationAnimationFromProgress = nextExcavationTarget;
       excavationAnimationToProgress = nextExcavationTarget;
@@ -982,13 +997,28 @@ export function createIsland1AssemblyCraterRuntime(
         updateInstances();
       }
     }
+    // Invitations sent after a reload that settled the marina at its hold:
+    // resume the film from the hold point on the live clock.
+    if (invitationsSent() && marinaManualProgress === ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS && currentPresentation.completed) {
+      marinaManualProgress = null;
+      marinaStartedAt = elapsed - ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS * ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS;
+    }
     if (currentPresentation.completed && marinaManualProgress === null && Number.isFinite(marinaStartedAt)) {
       marinaProgress = THREE.MathUtils.clamp(
         (elapsed - marinaStartedAt) / ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS,
         0,
         1,
       );
+      if (!invitationsSent() && marinaProgress >= ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS) {
+        // Hold the finished marina; keep the start pinned so the film resumes
+        // exactly here once the invitations go out.
+        marinaProgress = ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS;
+        marinaStartedAt = elapsed - ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS * ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS;
+      }
     }
+    marinaAwaitingInvitations = currentPresentation.completed && !invitationsSent()
+      && (marinaManualProgress ?? marinaProgress) >= ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS;
+    root.userData.marinaAwaitingInvitations = marinaAwaitingInvitations;
     materials.warmGlow.emissiveIntensity = 1.02 + Math.sin(elapsed * 1.8) * 0.18;
     speakingLight.rotation.y = elapsed * 0.45;
     const blastAge = elapsed - blastStartedAt;
@@ -996,7 +1026,7 @@ export function createIsland1AssemblyCraterRuntime(
     root.userData.missionPresentationActive = activeBlast
       || (Number.isFinite(assemblyBuildStartedAt) && elapsed >= assemblyBuildStartedAt
         && elapsed < assemblyBuildStartedAt + ISLAND_1_ASSEMBLY_BUILD_DURATION_SECONDS)
-      || (Number.isFinite(marinaStartedAt) && elapsed >= marinaStartedAt
+      || (!marinaAwaitingInvitations && Number.isFinite(marinaStartedAt) && elapsed >= marinaStartedAt
         && elapsed < marinaStartedAt + ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS);
     waterImpacts.visible = activeBlast && currentPresentation.chargesDetonated === 8;
     if (waterImpacts.visible) {
