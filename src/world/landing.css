@@ -1,0 +1,710 @@
+/* ============================================================
+   HabitGame public landing — mobile-first conversion layout
+   One job per screen: explain the game, then collect the email.
+   Scoped to `.world-home.lp` so it overrides the older world.css
+   landing rules without touching the "More" previews below it.
+   ============================================================ */
+
+.world-home.lp {
+  --lp-navy-900: #06142b;
+  --lp-navy-800: #0a1f40;
+  --lp-ink: #f4efe2;
+  --lp-ink-soft: #c9d3e6;
+  --lp-ink-muted: #9fb0cc;
+  --lp-gold: #e6c47a;
+  --lp-gold-light: #f6dc97;
+  --lp-gold-deep: #b8913f;
+  --lp-sky: #8fd0ff;
+  --lp-line: rgba(255, 255, 255, 0.12);
+  --lp-display: Georgia, 'Times New Roman', serif;
+  --lp-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  min-height: 100dvh;
+  color: var(--lp-ink);
+  background: var(--lp-navy-900);
+  font-family: var(--lp-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.lp img {
+  display: block;
+  max-width: 100%;
+}
+
+.lp-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.lp a:focus-visible,
+.lp button:focus-visible,
+.lp input:focus-visible {
+  outline: 2px solid var(--lp-gold);
+  outline-offset: 2px;
+}
+
+/* ---------- Hero ---------- */
+
+.lp-hero {
+  position: relative;
+  padding-top: env(safe-area-inset-top, 0px);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(6, 20, 43, 0.15) 0%,
+      rgba(6, 20, 43, 0.35) 35%,
+      rgba(6, 20, 43, 0.92) 68%,
+      var(--lp-navy-900) 100%
+    ),
+    url('/landing-page-assets/landingpage_top.webp') center top / cover no-repeat;
+}
+
+.lp-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 14px 20px;
+}
+
+.lp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: #fff;
+  font: 700 20px/1 var(--lp-display);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+
+.lp-brand img {
+  width: 30px;
+  height: 30px;
+}
+
+.lp-signin {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(6, 20, 43, 0.4);
+  color: #fff;
+  font: 600 15px var(--lp-body);
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.lp-hero-inner {
+  display: grid;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 20px 28px;
+}
+
+.lp-hero-art {
+  position: relative;
+  height: 250px;
+  margin-top: 4px;
+}
+
+.lp-hero-caretaker {
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 200px;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.45));
+  animation: lp-bob 5s ease-in-out infinite;
+}
+
+.lp-hero-compass {
+  position: absolute;
+  right: 12%;
+  top: 20px;
+  width: 78px;
+  filter: drop-shadow(0 0 18px rgba(143, 208, 255, 0.8));
+  animation: lp-bob 4s ease-in-out infinite reverse;
+}
+
+@keyframes lp-bob {
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+.lp-hero-copy {
+  min-width: 0;
+}
+
+.lp-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  color: var(--lp-gold);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.lp-h1 {
+  margin: 0 0 12px;
+  color: var(--lp-ink);
+  font: 600 36px/1.08 var(--lp-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.lp-h1 em {
+  color: var(--lp-gold);
+  font-style: normal;
+}
+
+.lp-lede {
+  margin: 0 0 20px;
+  color: var(--lp-ink-soft);
+  font-size: 17px;
+}
+
+/* ---------- Waitlist form ---------- */
+
+.lp-form {
+  display: grid;
+  gap: 10px;
+}
+
+.lp-input {
+  width: 100%;
+  height: 54px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: 500 17px var(--lp-body);
+}
+
+.lp-input::placeholder {
+  color: #8ea0bf;
+}
+
+.lp-btn-gold {
+  min-height: 56px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--lp-gold-light), var(--lp-gold) 55%, var(--lp-gold-deep));
+  color: #231a06;
+  font: 700 17px var(--lp-body);
+  box-shadow: 0 10px 28px rgba(230, 196, 122, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.lp-btn-gold:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.lp-form-error {
+  margin: 0;
+  color: #ffb4a8;
+  font-size: 15px;
+}
+
+.lp-waitlist-success {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid rgba(230, 196, 122, 0.45);
+  border-radius: 14px;
+  background: rgba(230, 196, 122, 0.1);
+  text-align: center;
+}
+
+.lp-waitlist-success span {
+  color: var(--lp-gold);
+  font-size: 20px;
+}
+
+.lp-waitlist-success strong {
+  font-size: 18px;
+}
+
+.lp-waitlist-success p {
+  margin: 0;
+  color: var(--lp-ink-soft);
+  font-size: 15px;
+}
+
+.lp-fineprint {
+  margin: 10px 0 0;
+  color: var(--lp-ink-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.lp-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 12px;
+  margin-top: 16px;
+  color: var(--lp-ink-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.lp-platforms b {
+  color: var(--lp-ink-soft);
+  font-weight: 600;
+}
+
+.lp-install {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--lp-sky);
+  font: 600 14px var(--lp-body);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.lp-install:disabled {
+  color: var(--lp-ink-muted);
+  text-decoration: none;
+  cursor: default;
+}
+
+/* ---------- Sections ---------- */
+
+.lp-main {
+  display: grid;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.lp-section {
+  min-width: 0;
+  padding: 56px 0 8px;
+}
+
+.lp-kicker {
+  margin: 0 0 8px;
+  color: var(--lp-sky);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lp-h2 {
+  margin: 0 0 10px;
+  color: var(--lp-ink);
+  font: 600 30px/1.12 var(--lp-display);
+  text-wrap: balance;
+}
+
+.lp-sub {
+  margin: 0 0 22px;
+  color: var(--lp-ink-soft);
+  font-size: 16px;
+}
+
+/* How it works — swipeable phones on mobile, a row on desktop */
+.lp-loop {
+  display: flex;
+  gap: 14px;
+  margin: 0 -20px;
+  padding: 4px 20px 16px;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.lp-loop::-webkit-scrollbar {
+  display: none;
+}
+
+.lp-step {
+  flex: 0 0 70%;
+  scroll-snap-align: center;
+}
+
+.lp-phone {
+  padding: 7px;
+  border-radius: 30px;
+  background: linear-gradient(160deg, #2a4a7c, #0b1a33);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+}
+
+.lp-phone img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 390 / 700;
+  border-radius: 24px;
+  object-fit: cover;
+  object-position: top;
+}
+
+.lp-step-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.lp-step-num {
+  display: grid;
+  flex: 0 0 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--lp-gold);
+  color: var(--lp-navy-900);
+  font-weight: 700;
+}
+
+.lp-step-label strong {
+  display: block;
+  font-size: 18px;
+}
+
+.lp-step-label div > span {
+  color: var(--lp-ink-soft);
+  font-size: 15px;
+}
+
+.lp-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lp-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.25);
+  transition: width 200ms ease, background 200ms ease;
+}
+
+.lp-dots i.is-active {
+  width: 22px;
+  background: var(--lp-gold);
+}
+
+/* Why it feels different */
+.lp-promises {
+  display: grid;
+  gap: 12px;
+}
+
+.lp-promise {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--lp-line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lp-promise-art {
+  width: 88px;
+  height: 88px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 40%, #2c5390, #0d2143);
+}
+
+.lp-promise-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lp-promise-art--contain img {
+  padding: 6px;
+  object-fit: contain;
+}
+
+.lp-promise h3 {
+  margin: 0 0 4px;
+  color: var(--lp-ink);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.lp-promise p {
+  margin: 0;
+  color: var(--lp-ink-soft);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* Closing waitlist */
+.lp-final {
+  margin-top: 48px;
+  padding: 28px 20px;
+  border: 1px solid rgba(230, 196, 122, 0.35);
+  border-radius: 24px;
+  background: radial-gradient(120% 90% at 50% 0%, #1f3f73, #0b1b38 70%);
+  text-align: center;
+}
+
+.lp-final-crest {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 10px;
+}
+
+.lp-final-title {
+  margin: 0 0 8px;
+  color: var(--lp-ink);
+  font: 700 26px/1.15 var(--lp-display);
+}
+
+.lp-perks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-perks li {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--lp-ink-soft);
+  font-size: 14px;
+}
+
+/* The older "More" previews keep their own styles; just give them room. */
+.lp .world-home__more {
+  margin-top: 40px;
+}
+
+/* ---------- Footer ---------- */
+
+.lp-footer {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin-top: 48px;
+  padding: 140px 20px calc(110px + env(safe-area-inset-bottom, 0px));
+  background:
+    linear-gradient(
+      180deg,
+      var(--lp-navy-900) 0%,
+      rgba(6, 20, 43, 0.55) 35%,
+      rgba(6, 20, 43, 0.85) 100%
+    ),
+    url('/landing-page-assets/landingpage_bottom.webp') center bottom / cover no-repeat;
+  text-align: center;
+}
+
+.lp-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 6px;
+}
+
+.lp-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  color: var(--lp-ink-soft);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.lp-copyright {
+  margin: 4px 0 0;
+  color: var(--lp-ink-muted);
+  font-size: 13px;
+}
+
+.lp-dev-login {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: #6f81a3;
+  font: 500 13px var(--lp-body);
+  cursor: pointer;
+}
+
+/* ---------- Sticky waitlist bar ---------- */
+
+.lp-sticky {
+  position: fixed;
+  z-index: 40;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 456px;
+  margin: 0 auto;
+  padding: 10px 10px 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  background: rgba(8, 24, 52, 0.9);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  transform: translateY(160%);
+  transition: transform 300ms ease;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.lp-sticky.is-visible {
+  transform: none;
+}
+
+.lp-sticky p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--lp-ink-soft);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.lp-sticky p b {
+  display: block;
+  color: #fff;
+  font-size: 15px;
+}
+
+.lp-sticky .lp-btn-gold {
+  min-height: 46px;
+  padding: 0 18px;
+  font-size: 15px;
+}
+
+/* ---------- Larger screens ---------- */
+
+@media (min-width: 900px) {
+  .lp-hero-inner {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: center;
+    gap: 48px;
+    max-width: 1080px;
+    padding: 40px 20px 72px;
+  }
+
+  .lp-hero-art {
+    order: 2;
+    height: 420px;
+  }
+
+  .lp-hero-caretaker {
+    width: 300px;
+  }
+
+  .lp-hero-compass {
+    width: 110px;
+  }
+
+  .lp-h1 {
+    font-size: 54px;
+  }
+
+  .lp-lede {
+    max-width: 34em;
+    font-size: 19px;
+  }
+
+  .lp-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .lp-form-error {
+    grid-column: 1 / -1;
+  }
+
+  .lp-fineprint,
+  .lp-platforms {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .lp-main {
+    max-width: 1080px;
+  }
+
+  .lp-section {
+    padding-top: 80px;
+  }
+
+  .lp-loop {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+    margin: 0;
+    padding: 4px 0 0;
+    overflow: visible;
+  }
+
+  .lp-dots {
+    display: none;
+  }
+
+  .lp-promises {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lp-promise {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .lp-final {
+    width: min(100%, 560px);
+    justify-self: center;
+    margin-top: 80px;
+  }
+
+  .lp-final .lp-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lp-sticky {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero-caretaker,
+  .lp-hero-compass {
+    animation: none;
+  }
+
+  .lp-sticky,
+  .lp-dots i {
+    transition: none;
+  }
+}
