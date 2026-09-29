@@ -42793,3 +42793,40 @@ body.habit-wizard-open .mobile-footer-nav {
     transparent
   );
 }
+
+/* Admin-only entry at the top of Settings; opens the Admin screen. */
+.account-panel__admin-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  margin-bottom: 1rem;
+  padding: 12px 16px;
+  border: 1px solid #2456c7;
+  border-radius: 14px;
+  background: #e8eefc;
+  color: #14213d;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.account-panel__admin-entry-title {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.account-panel__admin-entry-hint {
+  grid-row: 2;
+  color: #52607a;
+  font-size: 14px;
+}
+
+.account-panel__admin-entry > span[aria-hidden] {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: #2456c7;
+  font-size: 24px;
+}

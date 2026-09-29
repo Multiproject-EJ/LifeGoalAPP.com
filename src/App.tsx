@@ -979,8 +979,27 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // A settings surface the account panel should open itself on, set by launchers
   // that deep-link into one (e.g. Personalisation → the ✨ Personalize modal).
   const [pendingSettingsFolder, setPendingSettingsFolder] = useState<
-    'personalization' | 'appearance' | null
+    'personalization' | 'appearance' | 'admin' | null
   >(null);
+
+  // `#admin` (used by admin phone alerts) opens Settings on the Admin screen.
+  // The Admin screen itself only renders for active admins.
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const openAdminFromHash = () => {
+      if (window.location.hash !== '#admin') return;
+      setActiveWorkspaceNav('account');
+      setPendingSettingsFolder('admin');
+      window.history.replaceState(
+        window.history.state,
+        '',
+        `${window.location.pathname}${window.location.search}`,
+      );
+    };
+    openAdminFromHash();
+    window.addEventListener('hashchange', openAdminFromHash);
+    return () => window.removeEventListener('hashchange', openAdminFromHash);
+  }, []);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
     task: NextTask | null;
