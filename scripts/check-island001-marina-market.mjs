@@ -5,7 +5,8 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 const require = createRequire(import.meta.url);
-const esbuild = require('../node_modules/.pnpm/esbuild@0.21.5/node_modules/esbuild');
+// Resolve Vite's own dependency with either npm or pnpm installation layouts.
+const esbuild = createRequire(require.resolve('vite/package.json'))('esbuild');
 mkdirSync('tmp', { recursive: true });
 await esbuild.build({ stdin: { contents: `export * from './src/features/gamification/level-worlds/dev/Island1AssemblyMarina'; export * from './src/features/gamification/level-worlds/dev/Island1MarinaMarketLayout'; export {createIsland1WorldMaterials} from './src/features/gamification/level-worlds/dev/Island1ThreeWorld';`, resolveDir: process.cwd() }, outfile: 'tmp/island001-market-check.mjs', bundle: true, platform: 'node', format: 'esm', packages: 'external', define: {'import.meta.env':'{}'}, logLevel:'warning' });
 const api = await import(pathToFileURL(path.resolve('tmp/island001-market-check.mjs')).href);

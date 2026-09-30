@@ -1,10 +1,10 @@
 {
   "date": "2026-09-30",
   "revision": 2,
-  "status": "draft-awaiting-user-review",
+  "status": "user-approved-direction-implemented",
   "generator": "built-in image_gen",
-  "scope": "Concept revision only; no runtime code modifications.",
-  "conceptFile": "06-concept-venetian-market-v2.png",
+  "scope": "Approved art direction for the implemented Island 001 marina extension.",
+  "conceptFile": "001-source.png",
   "inputFiles": [
     "04-concept-market-ring.png",
     "05-concept-market-closeup.png"
@@ -16,7 +16,7 @@
     "Move spacecraft farther out beyond the enlarged market.",
     "Update the existing first-spacecraft landing and passenger disembarkation animation with the new marina."
   ],
-  "designInterpretation": "Venetian stairs are depicted as low stepped stone arch bridges over small water channels between market sections; this interpretation and exact bridge/terrace layout remain subject to user review.",
+  "designInterpretation": "Venetian stairs are depicted as low stepped stone arch bridges over small water channels between market sections; the user approved this visual direction; the exact connected bridge/terrace topology is resolved in runtime geometry.",
   "requiredImplementationWork": [
     "Resolve new ring/terrace/bridge geometry and berth positions as one coherent layout, preserving Island 001 landmarks, gameplay route and Assembly.",
     "Relocate first hero spacecraft landing position, approach/descent, docking effects, hatch exit and gangway endpoints to the new outer berth.",
@@ -42,6 +42,15 @@
     }
   ],
   "reviewCaveat": "Concept establishes mood and spatial intent, not exact construction topology. Validate all bridge endpoints and stair landings as connected walkable surfaces; correct any decorative image geometry that terminates in water.",
-  "nextStep": "Agree revised visual direction before runtime implementation.",
-  "sha256": "a1d957bf9d90bb61df9d80804417ac19ba6547f74fde41717f8ceb0baab2769d"
+  "nextStep": "Review the implementation and validation packet in docs/gauntlets/island-001-venetian-marina/REVIEW.md.",
+  "sha256": "a1d957bf9d90bb61df9d80804417ac19ba6547f74fde41717f8ceb0baab2769d",
+  "generationStatus": "draft-awaiting-user-review",
+  "generationScope": "Concept revision only; no runtime code modifications.",
+  "originalConceptFile": "06-concept-venetian-market-v2.png",
+  "approval": {
+    "date": "2026-09-30",
+    "userReply": "yes thats much better,",
+    "followup": "good continue",
+    "interpretation": "Approved visual direction and continued implementation/integration preparation."
+  }
 }
