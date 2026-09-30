@@ -24,3 +24,21 @@ export const missionMessageDeliveryTests: TestCase[] = [
     },
   },
 ];
+
+export const compassCeremonyFullscreenTests: TestCase[] = [
+  {
+    name: 'Living Compass awakening (and its replay) plays fullscreen without board chrome',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const css = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      const rule = css.slice(css.indexOf(".island-run-prototype[data-compass-book-ceremony='playing'] :is("));
+      assert(rule.length > 0, 'ceremony fullscreen rule exists');
+      for (const chrome of ['.island-run-board__topbar', '.island-run-prototype__compass-floating', '.island-run-board__mission-phone-floating', '.island-run-prototype__footer']) {
+        assert(rule.slice(0, rule.indexOf('{')).includes(chrome), `${chrome} hidden during the ceremony`);
+      }
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes("if (isLivingCompass) presentCompassBookCeremony(false);"), 'Replay the awakening replays the ceremony state');
+    },
+  },
+];

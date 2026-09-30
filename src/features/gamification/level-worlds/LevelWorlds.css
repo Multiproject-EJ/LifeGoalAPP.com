@@ -29304,3 +29304,21 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 @media (prefers-reduced-motion: reduce) {
   .island-run-board__sticker-album-btn.is-new { animation: none; }
 }
+
+/* Living Compass awakening (first play and "Replay the awakening"): true
+   fullscreen — the scene alone, no top bar, compass, phone or controller. */
+.island-run-prototype[data-compass-book-ceremony='playing'] :is(
+  .island-run-board__topbar,
+  .island-run-board__topbar-menu-panel,
+  .island-run-board__mission-phone-floating,
+  .island-run-board__mission-phone-rail,
+  .island-run-prototype__camera-reset-floating,
+  .island-run-prototype__compass-floating,
+  .island-run-prototype__footer,
+  .island-landmark-progress-layer
+) {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 280ms ease, visibility 0s linear 280ms;
+}

@@ -4123,6 +4123,13 @@ export function IslandRunBoardPrototype({
     }, (reducedMotion ? JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS : JUNGLE_COMPASS_CEREMONY_DURATION_MS) + 300);
   }, []);
 
+  // Dev visual preview: ?compassCeremonyPreview=1 replays the Living Compass awakening every 20 s.
+  useEffect(() => {
+    if (!isIslandVisualPreview || new URLSearchParams(window.location.search).get('compassCeremonyPreview') !== '1') return undefined;
+    const timer = window.setInterval(() => presentCompassBookCeremony(false), 20_000);
+    return () => window.clearInterval(timer);
+  }, [isIslandVisualPreview, presentCompassBookCeremony]);
+
   const handleContinueFirstProgressRecapAfterArena = useCallback(() => {
     const next = markIslandRunGuestFirstProgressRecapSeen();
     setGuestFunnelState(next);
