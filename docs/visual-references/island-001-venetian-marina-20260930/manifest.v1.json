@@ -1,0 +1,8 @@
+{
+  "source": "001-source.png",
+  "sha256": "a1d957bf9d90bb61df9d80804417ac19ba6547f74fde41717f8ceb0baab2769d",
+  "authority": "user-approved direction 2026-09-30",
+  "scope": "marina extension",
+  "gauntlet": "docs/gauntlets/2026-09-30-island-001-venetian-marina.md",
+  "state": ".img2threejs/island-001-venetian-marina/state.json"
+}

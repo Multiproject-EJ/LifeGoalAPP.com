@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import type { Island3DQuality } from './island5ThreePilotContract';
 import type { Island1WorldMaterials } from './Island1ThreeWorld';
 import { MarinaGeometry, createMarinaCraftGeometry, MARINA_SPACECRAFT_ARCHETYPES } from './Island1MarinaGeometry';
+import { createMarinaMarket } from './Island1MarinaMarket';
+import { MARINA_BERTH_START, MARINA_BERTH_PITCH, MARINA_MARKET_OUTER } from './Island1MarinaMarketLayout';
 import { createMarinaDelegates } from './Island1MarinaDelegates';
 import {craftArrival,MARINA_FILM_SECONDS,MARINA_INTERIOR_START,MARINA_PODIUM_START} from './Island1MarinaChoreography';
 
@@ -21,7 +23,7 @@ export interface Island1MarinaPresentation {
   meetingState: 'waiting' | 'admitting' | 'in-session' | 'ended';
 }
 export interface Island1AssemblyMarinaRuntime { root: THREE.Group; update: (progress: number, elapsed: number)=>void; endMeeting: (elapsed:number)=>void; getPresentation: ()=>Island1MarinaPresentation; }
-const DECK=-2.38, SPOKES=10, PAIRS=11, START=13.8, SPACING=5.2;
+const DECK=-2.38, SPOKES=10, PAIRS=11, START=MARINA_BERTH_START, SPACING=MARINA_BERTH_PITCH;
 const clamp=(v:number)=>THREE.MathUtils.clamp(Number.isFinite(v)?v:0,0,1);
 const ease=(v:number)=>THREE.MathUtils.smoothstep(clamp(v),0,1);
 const phase=(p:number,a:number,b:number)=>ease((p-a)/(b-a));
@@ -43,6 +45,7 @@ export function createIsland1AssemblyMarina(quality:Island3DQuality,materials:Is
   const root=new THREE.Group();root.name='ISLAND_1_ASSEMBLY_DIPLOMATIC_MARINA';
   Object.assign(root.userData,{presentationOnly:true,berthCount:220,designFamilyCount:50,fleetMix:{spacecraft:.95,yachts:.05},lodStrategy:'sculpted near/mid fleet, low-cost soft distant arrivals',archetypes:MARINA_SPACECRAFT_ARCHETYPES});
   const counts=resolveIsland1MarinaCounts(quality),dummy=new THREE.Object3D();
+  const market=createMarinaMarket(quality);root.add(market.root);
   const stone=0xe6ddc9,navy=0x172f45,gold=0xbc934e,wood=0xa88762,cyan=0x9ae7ee;
   const surface=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.46,metalness:.28});
   const shipMaterial=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.25,metalness:.56,emissive:0x7ca0b3,emissiveIntensity:.035});
@@ -143,7 +146,7 @@ export function createIsland1AssemblyMarina(quality:Island3DQuality,materials:Is
   arrivalFlash.castShadow=arrivalPuffs.castShadow=false;
   // Beyond the occupied marina only soft engine sprites are used.
   const farArray=new Float32Array(counts.farArrivalCount*3);
-  for(let i=0;i<counts.farArrivalCount;i++){const a=i*2.39996,r=58+i%19*2.3;farArray.set([Math.sin(a)*r,DECK+2+i%7*.38,Math.cos(a)*r],i*3);}
+  for(let i=0;i<counts.farArrivalCount;i++){const a=i*2.39996,r=(58+2*SPACING)+i%19*2.3;farArray.set([Math.sin(a)*r,DECK+2+i%7*.38,Math.cos(a)*r],i*3);}
   const farGeo=new THREE.BufferGeometry();farGeo.setAttribute('position',new THREE.BufferAttribute(farArray,3));
   const tex=softTexture(),far=new THREE.Points(farGeo,new THREE.PointsMaterial({color:0xaee6ff,size:1.6,...(tex?{map:tex}:{}),transparent:true,opacity:.34,depthWrite:false,blending:THREE.AdditiveBlending}));
   far.name='ISLAND_1_MARINA_SOFT_FAR_FLEET';far.frustumCulled=false;root.add(far);
@@ -172,17 +175,17 @@ export function createIsland1AssemblyMarina(quality:Island3DQuality,materials:Is
   let previousProgress=0,lastElapsed=0;
   let lastConstruction=-1;
   const cameraKeys=[
-    {p:0,pos:[25,16,32],aim:[0,-1.5,5],fov:48},
-    {p:.17,pos:[11,5.6,24],aim:[4,2.1,17],fov:42},
-    {p:.22,pos:[10,1.4,20],aim:[4.1,-.1,15],fov:43},
-    {p:.275,pos:[1,.15,22],aim:[3.8,-1.3,13.9],fov:50},
-    {p:.305,pos:[-.6,-.55,17.0],aim:[2.6,-1.55,13.8],fov:44},
-    {p:.345,pos:[-1.35,-1.15,16.05],aim:[.75,-1.73,13.65],fov:48},
-    {p:.39,pos:[-1.45,-1.20,15.25],aim:[.22,-1.72,12.6],fov:48},
-    {p:.46,pos:[8,3.8,27],aim:[0,-.8,16],fov:55},
-    {p:.54,pos:[27,19,43],aim:[0,-1.1,8],fov:62},
-    {p:.63,pos:[38,24,34],aim:[0,-1.1,0],fov:68},
-    {p:.70,pos:[27,19,38],aim:[0,-1.1,3],fov:64},
+    {p:0,pos:[28,23,35],aim:[0,-1.5,5],fov:48},
+    {p:.17,pos:[11,5.6,34.4],aim:[4,2.1,27.4],fov:42},
+    {p:.22,pos:[10,1.4,30.4],aim:[4.1,-.1,25.4],fov:43},
+    {p:.275,pos:[1,.15,32.4],aim:[3.8,-1.3,24.3],fov:50},
+    {p:.305,pos:[-.6,-.55,27.4],aim:[2.6,-1.55,24.2],fov:44},
+    {p:.345,pos:[-1.35,-.85,26.45],aim:[.75,-1.73,24.05],fov:48},
+    {p:.39,pos:[-1.45,-.8,25.65],aim:[.22,-1.72,23],fov:48},
+    {p:.46,pos:[8,5.8,32],aim:[0,-.8,21],fov:55},
+    {p:.54,pos:[34,23,48],aim:[0,-1.1,8],fov:62},
+    {p:.63,pos:[42,28,40],aim:[0,-1.1,0],fov:68},
+    {p:.70,pos:[32,24,44],aim:[0,-1.1,3],fov:64},
     {p:.755,pos:[1.4,-.6,11.3],aim:[0,-2.1,7],fov:56},
     {p:MARINA_INTERIOR_START,pos:[.35,-1.65,8.0],aim:[0,-3.5,5.8],fov:62},
     {p:.805,pos:[.22,-2.68,6.4],aim:[0,-4.4,2.6],fov:62},
@@ -196,16 +199,16 @@ export function createIsland1AssemblyMarina(quality:Island3DQuality,materials:Is
     if(p<previousProgress||p===0)meetingEndedAt=null;
     previousProgress=p;lastElapsed=t;
     root.visible=p>0;
+    market.update(p,t);
     if(constructionProgress!==lastConstruction){
       const h=phase(buildP,.002,.115);entryHall.visible=h>0;entryHall.scale.set(1,Math.max(.001,h),1);entryHall.position.y=DECK-(1-h)*.6;
       ring.visible=buildP>.06;ring.scale.setScalar(Math.max(.001,phase(buildP,.035,.13)));stairs.visible=buildP>.1;
       for(let spoke=0;spoke<SPOKES;spoke++){
         const a=spoke/SPOKES*Math.PI*2,radial=vec(Math.sin(a),0,Math.cos(a)),tangent=vec(Math.cos(a),0,-Math.sin(a));
         for(let j=0;j<PAIRS+2;j++){
-          const entranceSegment=spoke===0&&j===0;
-          const r=entranceSegment?11.30:9.6+j*SPACING,g=phase(buildP,.045+j*.012+spoke*.001,.095+j*.012+spoke*.001);
+          const r=MARINA_MARKET_OUTER+SPACING*.5+j*SPACING,g=phase(buildP,.045+j*.012+spoke*.001,.095+j*.012+spoke*.001);
           const pos=radial.clone().multiplyScalar(r).setY(DECK-(1-g)*.7);
-          put(promenade,spoke*(PAIRS+2)+j,pos,a,g>0?vec(1,g,entranceSegment?1.8/SPACING:1):small);
+          put(promenade,spoke*(PAIRS+2)+j,pos,a,g>0?vec(1,g,1):small);
         }
         for(let pair=0;pair<PAIRS;pair++)for(let sideIndex=0;sideIndex<2;sideIndex++){
           const side=sideIndex?-1:1,g=phase(buildP,.075+pair*.013+spoke*.001,.125+pair*.013+spoke*.001);
@@ -214,7 +217,7 @@ export function createIsland1AssemblyMarina(quality:Island3DQuality,materials:Is
           const pos=radial.clone().multiplyScalar(r+2.25).addScaledVector(tangent,side*2.7).setY(DECK);
           put(fingers,spoke*22+pair*2+sideIndex,pos,a,g>0?vec(g,1,1):small);
         }
-        for(let j=0;j<3;j++){const g=phase(buildP,.06+j*.065,.14+j*.065);put(nodes,spoke*3+j,radial.clone().multiplyScalar(10+j*23.4).setY(DECK),a,g>0&&!(spoke===0&&j===0)?vec(1,g,1):small);}
+        for(let j=0;j<3;j++){const g=phase(buildP,.06+j*.065,.14+j*.065);put(nodes,spoke*3+j,radial.clone().multiplyScalar(MARINA_MARKET_OUTER+7+j*23.4).setY(DECK),a,g>0&&!(spoke===0&&j===0)?vec(1,g,1):small);}
       }
       [promenade,fingers,nodes].forEach(m=>m.instanceMatrix.needsUpdate=true);lastConstruction=constructionProgress;
     }
@@ -259,6 +262,18 @@ export function createIsland1AssemblyMarina(quality:Island3DQuality,materials:Is
     const a=cameraKeys[k],b=cameraKeys[k+1],blend=a.p===.835?0:phase(p,a.p,b.p);
     const cameraPosition=a.pos.map((v,i)=>THREE.MathUtils.lerp(v,b.pos[i],blend)) as [number,number,number];
     const cameraTarget=a.aim.map((v,i)=>THREE.MathUtils.lerp(v,b.aim[i],blend)) as [number,number,number];
+    // Follow the real moved passenger route, including the stair elevation. Ease out
+    // to the fleet panorama after the delegation has crossed the market bridge.
+    const follow=phase(p,.325,.345)*(1-phase(p,.55,.63));
+    if(follow>0){
+      const hero=delegates.getHeroPosition(),pullback=phase(p,.40,.55);
+      const offset=[-3-pullback*3,1.6+pullback*7,4.3+pullback*6];
+      for(let i=0;i<3;i++){
+        const v=hero.getComponent(i);
+        cameraPosition[i]=THREE.MathUtils.lerp(cameraPosition[i],v+offset[i],follow);
+        cameraTarget[i]=THREE.MathUtils.lerp(cameraTarget[i],v+(i===1?.4:0),follow);
+      }
+    }
     const closing=phase(p,delegates.lastEntryProgress+.008,delegates.lastEntryProgress+.043);
     const openingStart=delegates.firstEntryProgress-.085,openingEnd=delegates.firstEntryProgress-.025;
     const admissionFlow=1-phase(p,openingStart,openingEnd)+closing;

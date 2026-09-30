@@ -3,8 +3,9 @@ import { getAssemblyDelegateSeatSockets } from './Island1AssemblyDiplomaticHall'
 import type { Island3DQuality } from './island5ThreePilotContract';
 import {crowdClock,progressFromCrowdClock,type MarinaDeparture} from './Island1MarinaChoreography';
 import {MarinaGeometry} from './Island1MarinaGeometry';
+import { MARINA_WALK_Y, MARINA_MARKET_WALK_RADIUS, MARINA_SPOKE_ANGLE, marinaMarketArc } from './Island1MarinaMarketLayout';
 
-const FLOOR = -6.18, DECK = -2.25;
+const FLOOR = -6.18, DECK = MARINA_WALK_Y;
 const smooth = (p: number) => THREE.MathUtils.smoothstep(p, 0, 1);
 export function createMarinaDelegates(quality: Island3DQuality,departures:MarinaDeparture[]) {
   const root = new THREE.Group(); root.name = 'ISLAND_1_MARINA_ARTICULATED_DELEGATES';
@@ -103,8 +104,16 @@ export function createMarinaDelegates(quality: Island3DQuality,departures:Marina
     const radial=vec(Math.sin(a),0,Math.cos(a)),tangent=vec(Math.cos(a),0,-Math.sin(a));
     const radius=ship.position.dot(radial),lane=(i%2?1:-1)*(.18+(i%3)*.035);
     const hatch=ship.position.clone().add(vec(-Math.sin(ship.angle)*2.60,0,-Math.cos(ship.angle)*2.60)).setY(DECK+.10);
-    const points=[hatch,radial.clone().multiplyScalar(radius).addScaledVector(tangent,lane).setY(DECK),radial.clone().multiplyScalar(9.6).addScaledVector(tangent,lane).setY(DECK)];
-    const ringAngle=Math.atan2(Math.sin(a),Math.cos(a));
+    const points=[hatch,radial.clone().multiplyScalar(radius).addScaledVector(tangent,lane).setY(DECK)];
+    let entryAngle=a;
+    if(i<3){
+      // The first delegation tours the first bridge before reaching the inner promenade.
+      points.push(radial.clone().multiplyScalar(MARINA_MARKET_WALK_RADIUS).setY(DECK));
+      points.push(...marinaMarketArc(0,MARINA_SPOKE_ANGLE).slice(1).map(p=>vec(...p)));
+      entryAngle=MARINA_SPOKE_ANGLE;
+    }
+    points.push(vec(Math.sin(entryAngle)*9.6+lane,DECK,Math.cos(entryAngle)*9.6));
+    const ringAngle=Math.atan2(Math.sin(entryAngle),Math.cos(entryAngle));
     for(let n=1;n<=Math.max(1,Math.ceil(Math.abs(ringAngle)/.12));n++){
       const steps=Math.max(1,Math.ceil(Math.abs(ringAngle)/.12)),angle=ringAngle*(1-n/steps);
       points.push(vec(Math.sin(angle)*9.6+lane,DECK,Math.cos(angle)*9.6));
@@ -115,7 +124,7 @@ export function createMarinaDelegates(quality: Island3DQuality,departures:Marina
     for(let n=1;n<=12;n++){const angle=seat.angle*n/12;points.push(vec(Math.sin(angle)*(seat.radius+.28),seat.floorY,Math.cos(angle)*(seat.radius+.28)));}
     points.push(vec(Math.sin(seat.angle)*seat.radius,seat.floorY,Math.cos(seat.angle)*seat.radius));
     const lengths=[0];for(let n=1;n<points.length;n++)lengths.push(lengths[n-1]+points[n].distanceTo(points[n-1]));
-    const start=ship.end+(i<3?.012+i*.014:.018),duration=i<3?.76:.58+(i%4)*.02;
+    const start=ship.end+(i<3?.027+i*.014:.027),duration=i<3?.84:.58+(i%4)*.02;
     const entryTravel=lengths[entryIndex]/lengths[lengths.length-1]*.94;
     const entryProgress=progressFromCrowdClock(crowdClock(start)+duration*entryTravel);
     return {points,lengths,start,duration,entryTravel,entryProgress,shipIndex};
@@ -185,7 +194,7 @@ export function createMarinaDelegates(quality: Island3DQuality,departures:Marina
     }
     batches.forEach(m=>m.instanceMatrix.needsUpdate=true);
   }
-  root.userData.routes=routes.map(r=>({start:r.start,shipIndex:r.shipIndex,entryProgress:r.entryProgress,points:r.points.map(p=>p.toArray())}));
+  root.userData.routes=routes.map(r=>({start:r.start,duration:r.duration,shipIndex:r.shipIndex,entryProgress:r.entryProgress,points:r.points.map(p=>p.toArray())}));
   root.userData.delegation={nation:'Aurelian Tide',roles:['Ambassador','Scholar','Navigator'],shipIndex:0};
   return {root,update,count,firstEntryProgress,lastEntryProgress,getHeroPosition:()=>heroPosition,getEnteredCount:()=>enteredCount,getSeatedCount:()=>seatedCount};
 }

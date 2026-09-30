@@ -1,0 +1,56 @@
+{
+  "date": "2026-09-30",
+  "revision": 2,
+  "status": "user-approved-direction-implemented",
+  "generator": "built-in image_gen",
+  "scope": "Approved art direction for the implemented Island 001 marina extension.",
+  "conceptFile": "001-source.png",
+  "inputFiles": [
+    "04-concept-market-ring.png",
+    "05-concept-market-closeup.png"
+  ],
+  "prompt": "Use case: precise-object-edit. Asset type: revised approval-only HabitGame Island 001 marina concept.\nInput image 1 is the prior market-ring overview to revise. Input image 2 is its close-up design reference. Preserve the original central white circular island, the open Assembly hole, the exact blue/gold fantasy landmarks, tree, large arched entrance, water and spacecraft style. Keep the island the same size. Retain ivory canvas/navy kiosks, brass lanterns, teak floors, white stone, lush planters and friendly stylized visitors. Keep the existing 95% spacecraft and 5% yachts.\nUSER REVISION: Make the market zone approximately TWO former parking/berth rows deep, clearly wider and roomier than the reference. Move the entire first line of docked spacecraft conspicuously farther outward beyond the expanded market's outer boundary. The new area should have generous open strolling space, planted cafe/seating terraces and curated food/drink/snack and exhibitor stalls.\nAdd occasional beautiful VENETIAN-STYLE STAIR BRIDGES between sections of the market: elegant low arched white/ivory stone pedestrian bridges with visible broad shallow steps up and down, classical stone balustrades with restrained brass accents, warm lamps at their ends. Have 3 or 4 of these easily visible, crossing narrow short turquoise canal cuts between market terrace sections, all within the expanded ring. Do not put stairs between every stall. Step bridges should be a recognizable new feature in the foreground and at each side; distinct curved stone rails, arch opening over real visible water below, safe generous walkway on top, pedestrians actually crossing. They connect one market section to the next, not end at water. Keep bridges low and intimate, not giant high city bridges. Preserve an uninterrupted usable passenger route through level connections and clear radial entries as well.\nLayout: central island unchanged; spacious inner market terrace, planted water-channel intervals with occasional stone stepped bridges, outer cafe promenade; radial docking piers begin beyond the market ring with spacecraft parked farther away. Do not replace the island with Venice city architecture or introduce gondolas. Markets remain a high-end futuristic boat-show hospitality space. Maintain visibly generous separation among stalls, seating and walking routes; no busy clutter.\nARRIVAL STORY REQUIREMENT: At one outer foreground/right dock, feature the first elegant visiting spacecraft with its boarding ramp lowered onto the newly positioned quay. Show a small welcoming group of 5-7 passengers emerging and walking inward along a clear route toward the market and original island entry, giving a spatial reference for the later arrival animation. No ship may intersect a bridge, market terrace, rail or person. Do not park the hero ship in the market. Keep ships off all walkways.\nComposition: one landscape elevated three-quarter overview, slightly higher/wider than image 1 so the new two-berth-deep market area, Venetian stair bridges, moved outer ships, and central island all read clearly. Foreground step bridge prominent and beautifully modeled. Polished stylized 3D game concept matching the reference, warm late afternoon with gentle warm lamps, turquoise seawater. No UI, no labels, no text, no diagram arrows, no watermark.",
+  "userRequirements": [
+    "Occasional Venetian-style stairs between market areas.",
+    "Allow roughly two existing parking/berth rows for the market if needed; final dimensions still to be validated.",
+    "Move spacecraft farther out beyond the enlarged market.",
+    "Update the existing first-spacecraft landing and passenger disembarkation animation with the new marina."
+  ],
+  "designInterpretation": "Venetian stairs are depicted as low stepped stone arch bridges over small water channels between market sections; the user approved this visual direction; the exact connected bridge/terrace topology is resolved in runtime geometry.",
+  "requiredImplementationWork": [
+    "Resolve new ring/terrace/bridge geometry and berth positions as one coherent layout, preserving Island 001 landmarks, gameplay route and Assembly.",
+    "Relocate first hero spacecraft landing position, approach/descent, docking effects, hatch exit and gangway endpoints to the new outer berth.",
+    "Rebuild passenger waypoints across actual connected dock/market/bridge surfaces. Support heights of stairs and landings; avoid passing through water, stalls, planters, railings or other craft.",
+    "Retarget/reframe landing, first-delegation, fleet and entry camera keyframes around the new first ship position and market scenery.",
+    "Adjust walk duration and camera timing for increased route length; preserve believable walking speeds and synchronization of landing, ramp deployment, exiting passengers, Assembly entrance/waterfall and seating.",
+    "Keep an unobstructed connected route from every used berth through the market to the original Assembly entrance.",
+    "Verify the complete arrival replay, deterministic scrub states, reduced-motion finished state and meeting reopen/return paths, plus existing performance constraints.",
+    "Produce actual rendered wide and close evidence for first landing, ramp exit, stair/bridge traversal and Assembly entry; generated concept is not runtime proof."
+  ],
+  "inspectedCode": [
+    {
+      "path": "worktrees/island-007-v2-20260929/src/features/gamification/level-worlds/dev/Island1AssemblyMarina.ts",
+      "facts": "Current berth START=13.8, SPACING=5.2; coordinates feed craft/fingers; gangways follow craft; cameraKeys use fixed existing coordinates."
+    },
+    {
+      "path": "worktrees/island-007-v2-20260929/src/features/gamification/level-worlds/dev/Island1MarinaDelegates.ts",
+      "facts": "Passenger routes use ship radius and fixed 9.6 inner ring waypoints; entry travel/progress derived from routes."
+    },
+    {
+      "path": "worktrees/island-007-v2-20260929/src/features/gamification/level-worlds/dev/Island1MarinaChoreography.ts",
+      "facts": "Shared arrival choreography and cinematic phase timing must stay synchronized with revised spatial routes."
+    }
+  ],
+  "reviewCaveat": "Concept establishes mood and spatial intent, not exact construction topology. Validate all bridge endpoints and stair landings as connected walkable surfaces; correct any decorative image geometry that terminates in water.",
+  "nextStep": "Review the implementation and validation packet in docs/gauntlets/island-001-venetian-marina/REVIEW.md.",
+  "sha256": "a1d957bf9d90bb61df9d80804417ac19ba6547f74fde41717f8ceb0baab2769d",
+  "generationStatus": "draft-awaiting-user-review",
+  "generationScope": "Concept revision only; no runtime code modifications.",
+  "originalConceptFile": "06-concept-venetian-market-v2.png",
+  "approval": {
+    "date": "2026-09-30",
+    "userReply": "yes thats much better,",
+    "followup": "good continue",
+    "interpretation": "Approved visual direction and continued implementation/integration preparation."
+  }
+}
