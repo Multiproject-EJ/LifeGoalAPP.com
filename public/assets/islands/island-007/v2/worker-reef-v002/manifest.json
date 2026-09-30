@@ -1,0 +1,57 @@
+{
+  "family": "asymmetric-welded-closed-geological-scan-buttresses",
+  "revision": "worker-reef-v002",
+  "status": "one-bounded-crown-correction-awaiting-independent-runtime-QC",
+  "correction": {
+    "scope": "upper crown transition only; lower vertex positions preserved before LOD decimation",
+    "hypothesis": "Removing the discontinuous upper mapping eliminates the artificial extruded belt in all views.",
+    "method": "C1 continuous monotonic Hermite mapping anchored to v001 threshold coordinates and crown=0",
+    "frozen": "source scan, all ten rock transforms, fusion resolution, lower mapping, materials, cameras, LOD targets"
+  },
+  "source": {
+    "url": "https://polyhaven.com/a/boulder_01",
+    "author": "Rico Cilliers",
+    "license": "CC0",
+    "licenseURL": "https://polyhaven.com/license",
+    "fileSha256": "8f8004fb52ebd00c4702a50873ac799e7bd7a0bea3415f2d8bc9986e1c58e371",
+    "verifiedClosedTopology": {
+      "vertices": 33063,
+      "faces": 66122,
+      "boundaryEdges": 0,
+      "nonManifoldEdges": 0
+    }
+  },
+  "axis": "runtime Y-up, crown y=0, bottom y=-8, front +Z",
+  "dimensions": [
+    7.7,
+    8,
+    5.4
+  ],
+  "models": [
+    {
+      "quality": "high",
+      "triangles": 12000,
+      "nonManifoldEdges": 0,
+      "bytes": 217352,
+      "sha256": "b5479b1ba893d1342e7ed9915aafb69a82323d543777658f9f96bacf99bc051a",
+      "url": "/assets/islands/island-007/v2/worker-reef-v002/reef-shelf-high.glb"
+    },
+    {
+      "quality": "medium",
+      "triangles": 6000,
+      "nonManifoldEdges": 0,
+      "bytes": 109352,
+      "sha256": "27307e120f02034f09eae6a12b1365cd1f12dfc301ae6d6a1116a2ce791d34ea",
+      "url": "/assets/islands/island-007/v2/worker-reef-v002/reef-shelf-medium.glb"
+    },
+    {
+      "quality": "low",
+      "triangles": 3000,
+      "nonManifoldEdges": 0,
+      "bytes": 55352,
+      "sha256": "fb15e6dd84512933b13ce5a291b1fe46543cd36a78a4524089fa7fa12dd053d4",
+      "url": "/assets/islands/island-007/v2/worker-reef-v002/reef-shelf-low.glb"
+    }
+  ],
+  "blendSha256": "974a0773f7498bd6fe149669fa507a883b07ff3ccecabdc4147e13b1e6c4bdd3"
+}

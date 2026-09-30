@@ -202,6 +202,13 @@ import {
   ISLAND_7_UNDERWATER_LANDMARK_LABELS,
   ISLAND_7_UNDERWATER_WORLD_NAME,
 } from './Island7UnderwaterThreeWorld';
+import { createIsland7UnderwaterEnvironmentV2 } from './Island7UnderwaterEnvironmentV2';
+import { createIsland7MantaV2 } from './Island7MantaV2';
+import { applyIsland7TileEnamelV2 } from './Island7TileEnamelV2';
+import { createIsland7NightGlowV2 } from './Island7NightGlowV2';
+import { createIsland7OuterLandmarkV2 } from './Island7OuterLandmarksV2';
+import { createIsland7NautilusHatcheryV2 } from './Island7NautilusHatcheryV2';
+import { createIsland7PearlPalaceV2 } from './Island7PearlPalaceV2';
 import {
   buildIsland8EverblossomLandmark,
   collectIsland8RuntimePartManifest,
@@ -4548,6 +4555,12 @@ export default function Island5ThreePilot({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || (isAssemblyCraterFirstLight && !assemblyAssetsReady)) return undefined;
+    // Unaccepted V2 macro studies stay in the local workbench until their
+    // independent visual gate passes. Ordinary gameplay retains V1.
+    const island7EnvironmentV2Enabled = import.meta.env.DEV && isAbyssalPearlKingdom
+      && new URLSearchParams(window.location.search).get('island7EnvironmentV2') === '1';
+    const island7PalaceV2Enabled = import.meta.env.DEV && isAbyssalPearlKingdom
+      && new URLSearchParams(window.location.search).get('island7PalaceV2') === '1';
     setHasRenderedFrame(false);
     setError(null);
     setTourStatus('idle');
@@ -4703,7 +4716,7 @@ export default function Island5ThreePilot({
       moonveilSky.wrapS = THREE.ClampToEdgeWrapping;
       moonveilSky.wrapT = THREE.ClampToEdgeWrapping;
       scene.background = moonveilSky;
-    } else if (isAbyssalPearlKingdom) {
+    } else if (isAbyssalPearlKingdom && !island7EnvironmentV2Enabled) {
       const abyssalCavern = new THREE.TextureLoader().load('/assets/islands/island-007/background/abyssal-cavern-backdrop-v1.webp');
       abyssalCavern.colorSpace = THREE.SRGBColorSpace;
       abyssalCavern.wrapS = THREE.ClampToEdgeWrapping;
@@ -4959,7 +4972,7 @@ export default function Island5ThreePilot({
     // ruin structures keep readable stair and balcony depth without shadowing
     // every leaf, tile reward, controller prop or ambient effect.
     const sceneUsesRealtimeShadows = qualityProfile.shadows
-      && !isAbyssalPearlKingdom
+      && (!isAbyssalPearlKingdom || (island7EnvironmentV2Enabled && qualityProfile.id === 'high'))
       && !isLavaLabyrinth
       && !(isCoasterCarnival && isCircuitFPreviewEnabled);
     renderer.shadowMap.enabled = sceneUsesRealtimeShadows;
@@ -5262,7 +5275,7 @@ export default function Island5ThreePilot({
     sunlight.shadow.camera.near = 1;
     sunlight.shadow.camera.far = 34;
     sunlight.shadow.bias = isSunkenSands ? -0.00035 : -0.0006;
-    sunlight.shadow.normalBias = isSunkenSands ? 0.025 : isJungleExpedition || isSunshoreAtoll ? 0.018 : 0;
+    sunlight.shadow.normalBias = isSunkenSands || island7EnvironmentV2Enabled ? 0.025 : isJungleExpedition || isSunshoreAtoll ? 0.018 : 0;
     scene.add(sunlight);
     const wonderRideKeyLight = new THREE.PointLight(0xffc36d, 0, 7.5, 1.7);
     wonderRideKeyLight.name = 'ISLAND_19_WONDER_EXPRESS_PHASE_KEY_LIGHT';
@@ -5755,6 +5768,75 @@ export default function Island5ThreePilot({
             : isTitansRest && island17TitansRestMaterials
               ? createIsland17TitansRestLivingAmbience(scene, qualityProfile, island17TitansRestMaterials, water)
             : createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water);
+    const island7PreviewParams = import.meta.env.DEV ? new URLSearchParams(window.location.search) : null;
+    const island7NightMix = island7PreviewParams?.get('island7TimeOfDay') === 'night' ? 1 : 0;
+    const requestedIsland7Time = island7PreviewParams?.has('island7EnvironmentTime')
+      ? Number(island7PreviewParams.get('island7EnvironmentTime')) : null;
+    const island7EnvironmentTime = requestedIsland7Time !== null && Number.isFinite(requestedIsland7Time)
+      ? Math.max(0, requestedIsland7Time) : null;
+    const island7Environment = island7EnvironmentV2Enabled
+      ? createIsland7UnderwaterEnvironmentV2({ quality: qualityProfile.id, clay: island7PreviewParams?.get('island7EnvironmentClay') === '1', neutral: island7PreviewParams?.get('island7EnvironmentClay') === 'neutral' })
+      : null;
+    let island7ReflectionTarget: THREE.WebGLRenderTarget | null = null;
+    if (island7Environment) {
+      if (!island7PreviewParams?.get('island7EnvironmentClay')) {
+        const reflectionScene = new RoomEnvironment();
+        const reflectionGenerator = new THREE.PMREMGenerator(renderer);
+        island7ReflectionTarget = reflectionGenerator.fromScene(reflectionScene, 0.025);
+        scene.environment = island7ReflectionTarget.texture; scene.environmentIntensity = island7NightMix ? 0.12 : 0.25;
+        reflectionScene.dispose(); reflectionGenerator.dispose();
+      }
+      // Keep replaced V1 scenery owned by the ambience cleanup. Its hidden
+      // parent also prevents animation from re-enabling retired water layers.
+      const retiredWater = new THREE.Group();
+      retiredWater.name = 'ISLAND_7_RETIRED_V1_WATER_LAYERS';
+      retiredWater.visible = false;
+      const oldLayers: THREE.Object3D[] = [];
+      livingAmbience.root.traverse(node => {
+        if (node.name === 'ISLAND_7_SURFACE_LIGHT_SHAFT' || node.name === 'ISLAND_7_WATER_SURFACE_CEILING' || node.name === 'ISLAND_7_STATIC_SCENERY' || node.name === 'ISLAND_7_ANIMATED_KELP_GARDEN') oldLayers.push(node);
+      });
+      oldLayers.forEach(node => retiredWater.add(node));
+      const manta = livingAmbience.root.getObjectByName('ISLAND_7_MANTA');
+      if (manta) {
+        // Preserve the existing orbit animator and disposal ownership, replacing
+        // the old paper-thin wing with a closed, cambered 3D animal.
+        manta.children.forEach(child => { child.visible = false; });
+        manta.add(createIsland7MantaV2());
+      }
+      livingAmbience.root.add(retiredWater);
+      scene.add(island7Environment.root);
+      island7Environment.setNight(island7NightMix);
+      const waterColor = new THREE.Color(0x4298ad).lerp(new THREE.Color(0x071b3b), island7NightMix);
+      scene.background = waterColor.clone();
+      scene.fog = new THREE.FogExp2(waterColor, island7NightMix ? .011 : .006);
+      hemisphere.color.setHex(0xc5e9ff); hemisphere.groundColor.setHex(0x142947);
+      sunlight.color.setHex(island7NightMix ? 0xc7d5ff : 0xffe3b8);
+      hemisphere.intensity = THREE.MathUtils.lerp(1.05, 0.65, island7NightMix);
+      sunlight.intensity = THREE.MathUtils.lerp(3.1, 1.45, island7NightMix);
+      if (island7PreviewParams?.get('island7EnvironmentClay') === 'neutral') {
+        // Geometry inspection only: fixed camera and model, explicit neutral
+        // clay/key so teal fog and albedo cannot obscure ledge readability.
+        scene.background = new THREE.Color(0x15242e);
+        scene.fog = new THREE.FogExp2(0x15242e, 0.0035);
+        hemisphere.color.setHex(0xffffff); hemisphere.groundColor.setHex(0x1b2634); hemisphere.intensity = 0.45;
+        sunlight.color.setHex(0xffffff); sunlight.intensity = 3.2;
+        sunlight.position.set(-12, 35, 10);
+      }
+      canvas.dataset.island7Environment = 'world-space-geometry-v2';
+      canvas.dataset.island7EnvironmentBudget = JSON.stringify(island7Environment.root.userData.environmentBudget);
+      canvas.dataset.island7TimeOfDay = island7NightMix ? 'night' : 'day';
+      canvas.dataset.island7EnvironmentReady = 'loading';
+      void island7Environment.ready.then(() => {
+        if (island7Environment.root.userData.status !== 'ready') return;
+        canvas.dataset.island7EnvironmentReady = 'true';
+        if (sceneUsesRealtimeShadows) renderer.shadowMap.needsUpdate = true;
+        canvas.dataset.island7EnvironmentBudget = JSON.stringify(island7Environment.root.userData.environmentBudget);
+      }).catch(error => {
+        if (island7Environment.root.userData.status === 'disposed') return;
+        canvas.dataset.island7EnvironmentReady = 'error';
+        console.error('Island 007 authored environment failed to load', error);
+      });
+    }
     const jungleInspectionOccluders = isJungleExpedition
       ? [
           'ISLAND_18_INSTANCED_JUNGLE_CANOPY_FIELD',
@@ -6118,6 +6200,21 @@ export default function Island5ThreePilot({
           new THREE.MeshBasicMaterial({ color: 0xffdf79, transparent: true, opacity: 0.86 }),
         ]
       : [];
+    if (island7EnvironmentV2Enabled && !island7PreviewParams?.get('island7EnvironmentClay')) {
+      // Existing tile surfaces become luminous enamel; route geometry and semantics stay fixed.
+      tileMaterials.forEach((material, index) => {
+        if (material instanceof THREE.MeshStandardMaterial) {
+          material.emissive.setHex(index === 2 ? 0xe0a646 : index === 1 ? 0x43d8c2 : 0x147fa4);
+          material.emissiveIntensity = island7NightMix ? .85 : .06;
+          applyIsland7TileEnamelV2(material, tileGeometry, island7NightMix);
+        }
+      });
+      abyssalTileEdgeMaterials.forEach((material, index) => {
+        material.color.setHex(index ? 0xffe6a1 : 0xe8bf70);
+        material.opacity = island7NightMix ? 1 : 0.8;
+        material.toneMapped = false;
+      });
+    }
     const honeycombTileEdgeGeometry = isHoneycombKingdom ? createTileBorderMeshGeometry(tileGeometry) : null;
     const honeycombTileEdgeMaterials = isHoneycombKingdom
       ? [
@@ -6537,7 +6634,12 @@ export default function Island5ThreePilot({
                     resolvedBuildLevel,
                     qualityProfile.id,
                     island7UnderwaterMaterials,
-                    { constructionPreview },
+                    { constructionPreview,
+                      palaceFactory: island7PalaceV2Enabled ? (level, quality) => createIsland7PearlPalaceV2(level, quality, island7PreviewParams?.get('island7EnvironmentClay') ? new THREE.MeshStandardMaterial({ color: 0xa7bbc2, roughness: 0.82 }) : undefined, island7NightMix) : undefined,
+                      outerFactory: island7EnvironmentV2Enabled ? (id, level, quality) => id === 'hatchery'
+                        ? createIsland7NautilusHatcheryV2(level, quality, island7PreviewParams?.get('island7EnvironmentClay') ? new THREE.MeshStandardMaterial({ color: 0xa7bbc2, roughness: 0.82 }) : undefined, island7NightMix)
+                        : createIsland7OuterLandmarkV2(id, level, quality, Boolean(island7PreviewParams?.get('island7EnvironmentClay')), island7NightMix) : undefined,
+                    },
                   )
               : isEverblossomKingdom && island8EverblossomMaterials
                 ? buildIsland8EverblossomLandmark(
@@ -9287,11 +9389,30 @@ export default function Island5ThreePilot({
             controls.target.y + offset.y * distanceScale,
             controls.target.z + Math.cos(radians) * horizontalRadius,
           );
+          if (import.meta.env.DEV && isAbyssalPearlKingdom) {
+            const translation = THREE.MathUtils.clamp(Number(evidenceParams.get('island7EvidenceTranslateX')) || 0, -8, 8);
+            camera.position.x += translation;
+            controls.target.x += translation;
+            canvas.dataset.island7EvidenceTranslateX = String(translation);
+            if (evidenceParams.get('island7EvidencePart') === 'reef-shelf') {
+              // Labeled diagnostic only: the ordinary gameplay camera stays
+              // unchanged while the active reef part is inspected in context.
+              controls.target.set(-8.5, -5.3, -5.5);
+              camera.position.set(-8.5 + Math.sin(radians) * 28, 6.7, -5.5 + Math.cos(radians) * 28);
+              canvas.dataset.island7EvidencePart = 'reef-shelf';
+            } else if (evidenceParams.get('island7EvidencePart') === 'foundation-roots') {
+              // Supplemental grounding proof, never a replacement approval camera.
+              controls.target.set(0, -14, 0);
+              camera.position.set(Math.sin(radians) * 42, -3, Math.cos(radians) * 42);
+              canvas.dataset.island7EvidencePart = 'foundation-roots';
+            }
+          }
           camera.lookAt(controls.target);
           controls.update();
           publishCameraAuthoringPose(performance.now(), true);
           canvas.dataset.evidenceAzimuth = String(evidenceAzimuth);
           canvas.dataset.evidenceDistanceScale = String(distanceScale);
+          if (import.meta.env.DEV && isAbyssalPearlKingdom) canvas.dataset.island7EvidenceCamera = JSON.stringify({ position: camera.position.toArray(), target: controls.target.toArray(), fov: camera.fov, zoom: camera.zoom, aspect: camera.aspect });
         }
       }
     }
@@ -9476,11 +9597,14 @@ export default function Island5ThreePilot({
     };
     controls.addEventListener('start', cancelTransition);
 
+    const island7NightGlow = import.meta.env.DEV && island7EnvironmentV2Enabled && island7NightMix === 1 && qualityProfile.id !== 'low' && !island7PreviewParams?.get('island7EnvironmentClay')
+      ? createIsland7NightGlowV2(renderer, scene, camera) : null;
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       const width = Math.max(1, Math.round(rect.width));
       const height = Math.max(1, Math.round(rect.height));
       renderer.setSize(width, height, false);
+      island7NightGlow?.setSize(width, height);
       const previousAspect = camera.aspect;
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
@@ -10192,6 +10316,7 @@ export default function Island5ThreePilot({
       if (isFrostmoonHaven) {
         livingAmbience.updateSignatureMission?.({ ...signatureMissionPresentationRef.current, reducedMotion: isReducedMotion });
       }
+      island7Environment?.animate(isReducedMotion ? 0 : island7EnvironmentTime ?? elapsed);
       if (!isReducedMotion) {
         if (isFishermansVillage) {
           livingAmbience.updateWaterDragonMission?.(fishermansFishingPresentationRef.current);
@@ -10200,7 +10325,8 @@ export default function Island5ThreePilot({
         }
         if (isLavaLabyrinth) livingAmbience.animate(lavaLookdevElapsed);
         else livingAmbience.animate(
-          isJungleExpedition && jungleDeterministicPreviewElapsed !== null && !jungleZenithPreviewEnabled
+          isAbyssalPearlKingdom && island7EnvironmentTime !== null ? island7EnvironmentTime
+          : isJungleExpedition && jungleDeterministicPreviewElapsed !== null && !jungleZenithPreviewEnabled
             ? jungleDeterministicPreviewElapsed
             : elapsed,
         );
@@ -12078,6 +12204,10 @@ export default function Island5ThreePilot({
           occupiedLabelRects.push({ left: x - width / 2, right: x + width / 2, top: bottom - height, bottom });
         }
       }
+      if (import.meta.env.DEV && isAbyssalPearlKingdom && canvas.dataset.island7EvidenceCamera) {
+        canvas.dataset.island7EvidenceActualCamera = JSON.stringify({ position: camera.position.toArray(), target: controls.target.toArray(), fov: camera.fov, zoom: camera.zoom, aspect: camera.aspect });
+        canvas.dataset.island7EvidenceVisibility = JSON.stringify({ inspectionPreset: activeInspectionPreset, visibleLandmarks: [...landmarkRootsById].filter(([, root]) => root.visible).map(([id]) => id) });
+      }
       const luckySpinTile = luckySpinTileIndexRef.current;
       luckySpinWheel.root.visible = luckySpinTile !== null && luckySpinTile !== undefined && tileTransforms.length > 0;
       if (luckySpinWheel.root.visible) {
@@ -12129,11 +12259,19 @@ export default function Island5ThreePilot({
         // The bubble's own CSS animation pops it in and fades it out.
         cheer.element.style.visibility = cheerProjection.z < 1 ? 'visible' : 'hidden';
       }
-      try { renderer.render(scene, renderCamera); }
+      try {
+        if (island7NightGlow) island7NightGlow.render(renderCamera);
+        else renderer.render(scene, renderCamera);
+      }
       finally {
         scene.matrixWorldAutoUpdate = automaticWorldMatrices;
         playerPiece.root.position.y -= cheerLift;
         playerPiece.root.rotation.y -= cheerSpin;
+      }
+      if (import.meta.env.DEV && island7EnvironmentV2Enabled) {
+        const triangles = String(renderer.info.render.triangles), calls = String(renderer.info.render.calls);
+        if (canvas.dataset.island7SceneTriangles !== triangles) canvas.dataset.island7SceneTriangles = triangles;
+        if (canvas.dataset.island7SceneDrawCalls !== calls) canvas.dataset.island7SceneDrawCalls = calls;
       }
       if (celebrationPhase === 'capture') {
         // Read back in the same task as the render (no preserveDrawingBuffer needed).
@@ -12409,6 +12547,9 @@ export default function Island5ThreePilot({
       wizardMask.dispose();
       wizardZap.dispose();
       livingAmbience.dispose?.();
+      island7Environment?.dispose();
+      island7NightGlow?.dispose();
+      if (island7ReflectionTarget) { scene.environment = null; island7ReflectionTarget.dispose(); }
       openingCeremonyFx?.dispose();
       const disposedSceneBackground = scene.background;
       if (assemblyEnvironmentTarget) { scene.environment = null; assemblyEnvironmentTarget.dispose(); }

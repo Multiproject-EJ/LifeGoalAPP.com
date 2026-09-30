@@ -1,0 +1,111 @@
+{
+  "revision": "fused-reef-terraces-v002",
+  "family": "continuous-fused-geological-terraces",
+  "status": "naked-blockout-awaiting-independent-QC",
+  "sourceRevision": "worker-reef-v002",
+  "sourceSha256": "fb15e6dd84512933b13ce5a291b1fe46543cd36a78a4524089fa7fa12dd053d4",
+  "construction": [
+    {
+      "name": "ISLAND_7_FUSED_LEFT_TERRACED_BANK",
+      "connectedComponents": 1,
+      "discardedTinyFragmentVertices": 240,
+      "voxelSize": 0.24,
+      "smoothingApplied": false
+    },
+    {
+      "name": "ISLAND_7_FUSED_RIGHT_TERRACED_BANK",
+      "connectedComponents": 1,
+      "discardedTinyFragmentVertices": 152,
+      "voxelSize": 0.24,
+      "smoothingApplied": false
+    },
+    {
+      "name": "ISLAND_7_FUSED_COMMON_GEOLOGICAL_FOOTING",
+      "connectedComponents": 1,
+      "discardedTinyFragmentVertices": 72,
+      "voxelSize": 0.13,
+      "smoothingApplied": false
+    }
+  ],
+  "correctionHypothesis": "Expose descending inward geological ledges via compressed tier heights, receding footprints and alternating attached fingers; taper lower common footing. Floor, frozen collars, materials and cameras unchanged.",
+  "previousRevision": "fused-reef-terraces-v001",
+  "placementCount": 557,
+  "models": [
+    {
+      "quality": "high",
+      "triangles": 26948,
+      "drawCalls": 4,
+      "parts": [
+        {
+          "name": "ISLAND_7_FUSED_LEFT_TERRACED_BANK.001",
+          "triangles": 11000,
+          "nonManifoldEdges": 0
+        },
+        {
+          "name": "ISLAND_7_FUSED_RIGHT_TERRACED_BANK.001",
+          "triangles": 11000,
+          "nonManifoldEdges": 0
+        },
+        {
+          "name": "ISLAND_7_FUSED_COMMON_GEOLOGICAL_FOOTING.001",
+          "triangles": 4000,
+          "nonManifoldEdges": 0
+        }
+      ],
+      "bytes": 486760,
+      "sha256": "aabb8570f59a49e6556d1697b5a2fe143294845041c0c676e2184515fc728fb9",
+      "url": "/assets/islands/island-007/v2/fused-reef-terraces-v002/fused-reef-terraces-high.glb"
+    },
+    {
+      "quality": "medium",
+      "triangles": 16946,
+      "drawCalls": 4,
+      "parts": [
+        {
+          "name": "ISLAND_7_FUSED_LEFT_TERRACED_BANK.001",
+          "triangles": 6500,
+          "nonManifoldEdges": 0
+        },
+        {
+          "name": "ISLAND_7_FUSED_RIGHT_TERRACED_BANK.001",
+          "triangles": 6500,
+          "nonManifoldEdges": 0
+        },
+        {
+          "name": "ISLAND_7_FUSED_COMMON_GEOLOGICAL_FOOTING.001",
+          "triangles": 2998,
+          "nonManifoldEdges": 0
+        }
+      ],
+      "bytes": 306724,
+      "sha256": "b30518a0b895bb2245d422706cad83f3477bbf448547062f6c355abccfbfba66",
+      "url": "/assets/islands/island-007/v2/fused-reef-terraces-v002/fused-reef-terraces-medium.glb"
+    },
+    {
+      "quality": "low",
+      "triangles": 10948,
+      "drawCalls": 4,
+      "parts": [
+        {
+          "name": "ISLAND_7_FUSED_LEFT_TERRACED_BANK.001",
+          "triangles": 4000,
+          "nonManifoldEdges": 0
+        },
+        {
+          "name": "ISLAND_7_FUSED_RIGHT_TERRACED_BANK.001",
+          "triangles": 4000,
+          "nonManifoldEdges": 0
+        },
+        {
+          "name": "ISLAND_7_FUSED_COMMON_GEOLOGICAL_FOOTING.001",
+          "triangles": 2000,
+          "nonManifoldEdges": 0
+        }
+      ],
+      "bytes": 198756,
+      "sha256": "bb36e9c9a234bb6917af311fc96c9d785fd7601d1ea0fe34aef5566ec47d4124",
+      "url": "/assets/islands/island-007/v2/fused-reef-terraces-v002/fused-reef-terraces-low.glb"
+    }
+  ],
+  "frozen": "Runtime retains all five original foundation transforms and top collars; no camera, lighting, building or gameplay edits."
+}
