@@ -4984,13 +4984,6 @@ export function IslandRunBoardPrototype({
     setIslandRunAudioEnabled(sfxEnabled && hasConfirmedEntryAudioChoice && isDocumentVisible);
   }, [hasConfirmedEntryAudioChoice, isDocumentVisible, sfxEnabled]);
 
-  useEffect(() => {
-    applyIslandRunAmbienceState({
-      enabled: ambienceEnabled && hasConfirmedEntryAudioChoice,
-      suspended: !isDocumentVisible || showStoryReader,
-    });
-  }, [ambienceEnabled, hasConfirmedEntryAudioChoice, isDocumentVisible, showStoryReader]);
-
   const islandRunMusicContext = useMemo(() => resolveIslandRunMusicContext({
     musicEnabled: musicEnabled && hasConfirmedEntryAudioChoice && isDocumentVisible,
     effectiveIslandNumber,
@@ -5003,6 +4996,17 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     applyIslandRunMusicContext(islandRunMusicContext);
   }, [islandRunMusicContext]);
+
+  // One soundtrack at a time: whenever a music track owns the channel (island
+  // clear celebration, shop, mini-games) the ambience bed pauses, so the two
+  // never play over each other.
+  const musicTrackActive = islandRunMusicContext.kind !== 'none';
+  useEffect(() => {
+    applyIslandRunAmbienceState({
+      enabled: ambienceEnabled && hasConfirmedEntryAudioChoice,
+      suspended: !isDocumentVisible || showStoryReader || musicTrackActive,
+    });
+  }, [ambienceEnabled, hasConfirmedEntryAudioChoice, isDocumentVisible, musicTrackActive, showStoryReader]);
 
   useEffect(() => {
     return () => {
