@@ -8774,78 +8774,6 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
   -webkit-touch-callout: default;
 }
 
-.habit-checklist__item--super-habit-prompt-open {
-  margin-top: 2.7rem;
-}
-
-.habit-checklist__item--super-habit-charging {
-  z-index: 3;
-  transform: scale(1.018);
-  border-color: rgba(124, 58, 237, 0.5);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.14), 0 18px 34px rgba(76, 29, 149, 0.2);
-  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.habit-checklist__item--super-habit-charging::before {
-  position: absolute;
-  inset: -3px;
-  z-index: 5;
-  border: 3px solid transparent;
-  border-top-color: #8b5cf6;
-  border-right-color: #38bdf8;
-  border-radius: 21px;
-  pointer-events: none;
-  content: '';
-  animation: super-habit-hold-charge var(--super-habit-hold-duration, 1300ms) linear forwards;
-}
-
-.habit-checklist__super-habit-prompt {
-  position: absolute;
-  left: 50%;
-  top: -0.4rem;
-  z-index: 12;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
-  min-height: 36px;
-  max-width: calc(100% - 2rem);
-  padding: 0.42rem 0.72rem;
-  border: 1px solid rgba(196, 181, 253, 0.92);
-  border-radius: 999px;
-  color: #ffffff;
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
-  box-shadow: 0 12px 28px rgba(76, 29, 149, 0.34), 0 0 0 4px rgba(237, 233, 254, 0.82);
-  transform: translate(-50%, -100%);
-  cursor: pointer;
-  white-space: nowrap;
-  animation: super-habit-prompt-arrive 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.habit-checklist__super-habit-prompt > span {
-  font-size: 1rem;
-}
-
-.habit-checklist__super-habit-prompt strong {
-  overflow: hidden;
-  font-size: 0.72rem;
-  text-overflow: ellipsis;
-}
-
-.habit-checklist__super-habit-prompt small {
-  padding-left: 0.42rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.35);
-  color: rgba(255, 255, 255, 0.84);
-  font-size: 0.58rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.habit-checklist__super-habit-prompt:focus-visible {
-  outline: 3px solid #fbbf24;
-  outline-offset: 3px;
-}
-
 .habit-super-tool-slot {
   min-height: 0;
 }
@@ -8887,16 +8815,6 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
 .habit-super-tool-slot .today-expandable-action-section {
   margin: 0;
   box-shadow: none;
-}
-
-@keyframes super-habit-hold-charge {
-  from { clip-path: inset(0 100% 100% 0 round 21px); filter: brightness(1); }
-  to { clip-path: inset(0 round 21px); filter: brightness(1.18); }
-}
-
-@keyframes super-habit-prompt-arrive {
-  from { opacity: 0; transform: translate(-50%, -82%) scale(0.82); }
-  to { opacity: 1; transform: translate(-50%, -100%) scale(1); }
 }
 
 @keyframes super-habit-tool-slide-down {
@@ -41403,8 +41321,6 @@ body.habit-wizard-open .mobile-footer-nav {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .habit-checklist__item--super-habit-charging::before,
   .habit-checklist__super-habit-prompt,
   .habit-super-tool-slot--active {
     animation: none;

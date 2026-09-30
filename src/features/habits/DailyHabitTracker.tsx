@@ -239,7 +239,6 @@ const DONE_ISH_DEFAULT_PERCENTAGE = 85;
 const HABIT_SWIPE_MAX_PX = 132;
 const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
 const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
-const SUPER_HABIT_HOLD_MS = 1300;
 // Long-press-to-reorder tuning for today todos.
 const TODO_REORDER_LONG_PRESS_MS = 360;
 const TODO_REORDER_MOVE_CANCEL_PX = 10;
@@ -1902,8 +1901,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [superHabitRosterOpen, setSuperHabitRosterOpen] = useState(false);
   const [selectedSuperHabitId, setSelectedSuperHabitId] = useState<SuperHabitId | null>(null);
   const [superHabitSourceHabitId, setSuperHabitSourceHabitId] = useState<string | null>(null);
-  const [superHabitHoldHabitId, setSuperHabitHoldHabitId] = useState<string | null>(null);
-  const [superHabitPromptHabitId, setSuperHabitPromptHabitId] = useState<string | null>(null);
   const [journalToolHost, setJournalToolHost] = useState<HTMLDivElement | null>(null);
   const [activeSuperHabitSession, setActiveSuperHabitSession] = useState<{
     superHabitId: 'journal';
@@ -1961,14 +1958,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     armedDirection: HabitSwipeDirection | null;
   } | null>(null);
   const swipeSuppressClickUntilByHabitIdRef = useRef<Record<string, number>>({});
-  const superHabitHoldRef = useRef<{
-    habitId: string;
-    pointerId: number;
-    startX: number;
-    startY: number;
-    timerId: number;
-    triggered: boolean;
-  } | null>(null);
   const todoSwipeGestureRef = useRef<{
     todoId: string;
     pointerId: number;
@@ -6615,7 +6604,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, []);
 
   const openSuperHabitRoster = useCallback((habitId: string, superHabitId: SuperHabitId | null = null) => {
-    setSuperHabitPromptHabitId(null);
     setSuperHabitSourceHabitId(habitId);
     setSelectedSuperHabitId(superHabitId);
     setSuperHabitRosterOpen(true);
@@ -6647,45 +6635,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       document.getElementById('today-quick-journal-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 80);
   }, [habits, hiddenTodayExtraSections, session.user.id]);
-
-  const cancelSuperHabitHold = useCallback((pointerId?: number) => {
-    const hold = superHabitHoldRef.current;
-    if (!hold || (pointerId !== undefined && hold.pointerId !== pointerId)) return;
-    window.clearTimeout(hold.timerId);
-    superHabitHoldRef.current = null;
-    setSuperHabitHoldHabitId((current) => current === hold.habitId ? null : current);
-  }, []);
-
-  const beginSuperHabitHold = useCallback((
-    habit: HabitWithGoal,
-    pointerId: number,
-    startX: number,
-    startY: number,
-  ) => {
-    cancelSuperHabitHold();
-    setSuperHabitHoldHabitId(habit.id);
-    const hold = {
-      habitId: habit.id,
-      pointerId,
-      startX,
-      startY,
-      timerId: 0,
-      triggered: false,
-    };
-    hold.timerId = window.setTimeout(() => {
-      if (superHabitHoldRef.current !== hold) return;
-      hold.triggered = true;
-      swipeSuppressClickUntilByHabitIdRef.current[habit.id] = Date.now() + 800;
-      setSuperHabitHoldHabitId(null);
-      setSuperHabitPromptHabitId(habit.id);
-      triggerCompletionHaptic('medium', { channel: 'habit', minIntervalMs: 120 });
-    }, SUPER_HABIT_HOLD_MS);
-    superHabitHoldRef.current = hold;
-  }, [cancelSuperHabitHold]);
-
-  useEffect(() => () => {
-    if (superHabitHoldRef.current) window.clearTimeout(superHabitHoldRef.current.timerId);
-  }, []);
 
   useEffect(() => {
     setHiddenTodayExtraSections(readHiddenTodayExtraSections(session.user.id));
@@ -9233,7 +9182,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   habitCardRefs.current[habit.id] = node;
                 }}
                 tabIndex={-1}
-                style={{ '--super-habit-hold-duration': `${SUPER_HABIT_HOLD_MS}ms` } as CSSProperties}
                 className={`habit-checklist__item ${!scheduledToday ? 'habit-checklist__item--rest' : ''} ${
                   isCompleted ? 'habit-checklist__item--completed' : ''
                 } ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''} ${
@@ -9244,8 +9192,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   linkedQuestTags.length > 0 ? 'habit-checklist__item--linked-quest' : ''
                 } ${
                   dailyLifeUpgradeHighlightedHabitId === habit.id ? 'habit-card--daily-life-upgrade-target' : ''
-                } ${superHabitHoldHabitId === habit.id ? 'habit-checklist__item--super-habit-charging' : ''} ${
-                  superHabitPromptHabitId === habit.id ? 'habit-checklist__item--super-habit-prompt-open' : ''
                 }`}
                 onContextMenu={(event) => {
                   if (!isInteractiveHabitChild(event.target)) {
@@ -9253,22 +9199,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   }
                 }}
               >
-                {superHabitPromptHabitId === habit.id ? (
-                  <button
-                    type="button"
-                    className="habit-checklist__super-habit-prompt"
-                    aria-label={`Open ${matchedSuperHabit?.name ?? 'SuperHabits'} for ${habit.name}`}
-                    onPointerDown={(event) => event.stopPropagation()}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      openSuperHabitRoster(habit.id, matchedSuperHabit?.id ?? null);
-                    }}
-                  >
-                    <span aria-hidden="true">{matchedSuperHabit?.emoji ?? '✦'}</span>
-                    <strong>{matchedSuperHabit?.name ?? 'SuperHabit'}</strong>
-                    <small>Open tools</small>
-                  </button>
-                ) : null}
                 <div
                   className="habit-checklist__swipe-frame"
                   aria-hidden={isExpanded ? 'true' : undefined}
@@ -9482,22 +9412,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       tabIndex={0}
                       aria-expanded={isExpanded}
                       aria-controls={detailPanelId}
-                      onPointerDownCapture={(event) => {
-                        if (
-                          isInteractiveHabitChild(event.target)
-                          || (event.pointerType === 'mouse' && event.button !== 0)
-                        ) return;
-                        beginSuperHabitHold(habit, event.pointerId, event.clientX, event.clientY);
-                      }}
-                      onPointerMoveCapture={(event) => {
-                        const hold = superHabitHoldRef.current;
-                        if (!hold || hold.habitId !== habit.id || hold.pointerId !== event.pointerId || hold.triggered) return;
-                        if (Math.hypot(event.clientX - hold.startX, event.clientY - hold.startY) > 10) {
-                          cancelSuperHabitHold(event.pointerId);
-                        }
-                      }}
-                      onPointerUpCapture={(event) => cancelSuperHabitHold(event.pointerId)}
-                      onPointerCancelCapture={(event) => cancelSuperHabitHold(event.pointerId)}
                       onClick={() => {
                         const suppressUntil = swipeSuppressClickUntilByHabitIdRef.current[habit.id] ?? 0;
                         if (Date.now() < suppressUntil) {
@@ -9702,7 +9616,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           >
                             <span aria-hidden="true">{activatedSuperHabit.emoji}</span>
                           </button>
-                        ) : null}
+                        ) : (
+                          // SuperHabits open with a tap (no hold-to-activate on habits).
+                          <button
+                            type="button"
+                            className="habit-checklist__super-action-btn"
+                            aria-label={`Open ${matchedSuperHabit?.name ?? 'SuperHabits'} for ${habit.name}`}
+                            title={matchedSuperHabit?.name ?? 'SuperHabits'}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openSuperHabitRoster(habit.id, matchedSuperHabit?.id ?? null);
+                            }}
+                          >
+                            <span aria-hidden="true">{matchedSuperHabit?.emoji ?? '✦'}</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
