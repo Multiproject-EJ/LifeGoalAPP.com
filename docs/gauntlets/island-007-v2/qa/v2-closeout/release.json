@@ -1,0 +1,68 @@
+{
+  "status": "user-accepted-v2-development-milestone",
+  "mainRuntimeCommit": "2406319e",
+  "productionBuild": "passed: TypeScript and Vite; existing large-chunk warnings",
+  "architecture": "passed: zero violations, three allowlisted warnings",
+  "artAssets": "passed: 12 manifests, zero warnings",
+  "renderWiring": "passed",
+  "construction": {
+    "actualBrowserCases": 45,
+    "result": "passed",
+    "focusedContractTests": 6,
+    "focusedResult": "passed; existing merge attribute warnings"
+  },
+  "gameplayRegression": {
+    "merged": "2313 passed, 28 failed",
+    "preMergeBaseline": "2313 passed, 28 failed",
+    "baselineCommit": "bc3f21e7",
+    "identicalFailureNames": true,
+    "newFailures": [],
+    "existingFailureNames": [
+      "FAIL island5ThreePilotContract: requires authored five-stage landmark construction across Islands 002 through 010, 014, 015, 017, 018, 019 and 020",
+      "FAIL island5ThreePilotContract: keeps the workbench internal while routing authored actual-3D worlds through the canonical live shell",
+      "FAIL islandRunSkyboundAcademyActions: an Ace flight credits the reward bar once and duplicate settlement is idempotent",
+      "FAIL islandRunContractV2RewardBar: v2 on: feeding tile/action increases reward bar progress",
+      "FAIL islandRunContractV2RewardBar: v2 on: claim resets progress and increments claim/escalation state",
+      "FAIL islandRunContractV2RewardBar: v2 on: claim payout has rewardKind and progressive amounts",
+      "FAIL islandRunContractV2RewardBar: v2 on: high target values do not automatically cause huge dice payouts",
+      "FAIL islandRunContractV2RewardBar: v2 on: essence primary payout scales faster at higher tiers",
+      "FAIL islandRunContractV2RewardBar: v2 on: Space Excavator event-ticket payouts use tuned 8/12/16/20 ladder",
+      "FAIL islandRunContractV2RewardBar: v2 on: reward marker preview amount matches actual event-ticket award",
+      "FAIL islandRunContractV2RewardBar: v2 on: multiplier increases progress contributed",
+      "FAIL islandRunContractV2RewardBar: v2 on: low multipliers preserve usable early reward-bar progression",
+      "FAIL islandRunContractV2RewardBar: P1-10: encounter_resolve source ticks reward bar progress",
+      "FAIL islandRunContractV2RewardBar: P1-10: encounter_resolve progress scales with dice multiplier",
+      "FAIL islandRunContractV2RewardBar: v2 on: overflow progress carries to next fill (chained claims)",
+      "FAIL islandRunContractV2RewardBar: v2 on: chained claims resolve multiple fills in one go",
+      "FAIL islandRunContractV2RewardBar: v2 on: high-tier overflow can carry but no longer cheaply chains forever",
+      "FAIL islandRunContractV2RewardBar: economy: x200 progress-tile farming from 2500 dice burns dice overall",
+      "FAIL islandRunContractV2RewardBar: economy safety: scenario A max-available farming from 2500 dice burns down",
+      "FAIL islandRunContractV2RewardBar: economy safety: scenario B 500 max-available farming attempts are not self-sustaining",
+      "FAIL islandRunContractV2RewardBar: economy safety: 1000 max-available multiplier farming attempts do not revive dice loop",
+      "FAIL islandRunContractV2RewardBar: economy safety: 2000 max-available multiplier farming attempts do not trend upward",
+      "FAIL islandRunContractV2RewardBar: v2 on: sticker completion awards bonus dice and essence",
+      "FAIL islandRunIntegratedEconomySafety: integrated economy safety: 500 attempts with reward bar, Lucky Roll, Space Excavator, and one passive regen refill are not dice-positive",
+      "FAIL islandRunIntegratedEconomySafety: integrated economy safety: 1000 attempts with reward bar, Lucky Roll, Space Excavator, and one passive regen refill are not dice-positive",
+      "FAIL islandRunIntegratedEconomySafety: integrated economy safety: 2000 attempts with reward bar, Lucky Roll, Space Excavator, and one passive regen refill are not dice-positive",
+      "FAIL islandRunEconomyTelemetry: canonical reward actions attribute passive regen, daily-treat dice, tickets, and preserve gameplay totals",
+      "FAIL minigameConsolidationPhase3: recordEventProgress increments reward-bar progress via the engine"
+    ],
+    "baselineMethod": "Archived pre-merge source/scripts/config to temporary directory; reused unchanged dependency, asset and documentation directories"
+  },
+  "visualSurvey": {
+    "views": 11,
+    "sourceStable": true,
+    "pageErrors": 0,
+    "reviewer": "reef_reference_curator",
+    "decision": "local acceptable with known limitations",
+    "findings": "No missing building backs, one-sided disappearance or gross clipping. Board readable day/night and side views. Bloom softens details; overview edges crop outer landmarks; fauna simple."
+  },
+  "lowQualityPhoneSpotCheck": {
+    "views": 2,
+    "pageErrors": 0,
+    "scope": "desktop browser phone framing, not physical-device acceptance"
+  },
+  "scope": "DEV preview boundaries preserved; no push, deployment or production activation",
+  "excluded": "All rejected terrain/creature study sources and assets; Pearlback V004 retired below macro quality floor",
+  "deferred": "Physical-phone and live-HUD acceptance, production activation and expanded mission implementation are not part of this preview closeout."
+}

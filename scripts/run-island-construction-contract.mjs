@@ -15,7 +15,7 @@ try {
   const requiredTests = [
     'builds Island 014 as a source-specific Honeycomb Kingdom with five additive landmarks',
     'finishes landmark levels with one bounded pop and reduced-motion-safe sparkle beat',
-    'requires authored five-stage landmark construction across Islands 002 through 010 and Island 014',
+    'requires authored five-stage landmark construction across Islands 002 through 010, 014, 015, 017, 018, 019 and 020',
   ]
 
   for (const testName of requiredTests) {
