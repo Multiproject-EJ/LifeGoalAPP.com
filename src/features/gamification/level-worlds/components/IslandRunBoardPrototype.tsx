@@ -13256,7 +13256,9 @@ export function IslandRunBoardPrototype({
     const rewardSummary = `+${result.diceAwarded} dice, +${result.essenceAwarded} money, +${result.shardsAwarded} essence`;
     const message = result.status === 'banked_and_traveled'
       ? `Treasure collected: ${rewardSummary}. Your journey continues.`
-      : `Treasure Path is ${result.status.replace(/_/g, ' ')}.`;
+      : result.status === 'banked_island_not_cleared'
+        ? `Treasure collected: ${rewardSummary}. Finish this island to continue your journey.`
+        : `Treasure Path is ${result.status.replace(/_/g, ' ')}.`;
     setLandingText(message);
     return message;
   }, [applyPostRareTreasurePathCollectTravelRecord, client, session]);
