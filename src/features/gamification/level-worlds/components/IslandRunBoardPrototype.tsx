@@ -885,7 +885,7 @@ import { SKY_HANGAR_LAUNCH_DELAY_MS, SKY_HANGAR_LAUNCH_DELAY_REDUCED_MS, resolve
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
 import { registerCrashContext } from '../../../../services/crashReports';
 import { IslandRunScoreboardModal } from './IslandRunScoreboardModal';
-import { MISSION_MESSAGE_BANNER_MS, MISSION_MESSAGE_NUDGE_INTERVAL_MS, playMissionMessageRing } from '../services/islandRunMissionMessage';
+import { MISSION_MESSAGE_AFTER_LANDING_MS, MISSION_MESSAGE_CONTROLLER_LANDING_FALLBACK_MS, MISSION_MESSAGE_NUDGE_INTERVAL_MS, playMissionMessageRing, shouldDeliverMissionMessage } from '../services/islandRunMissionMessage';
 import { ISLAND_DEPARTURE_FALLBACK_MS, shouldPlayIslandDepartureCinematic } from '../services/islandRunDepartureCinematic';
 
 // The legacy Island Mission narrative was designed around unsolicited story
@@ -2181,6 +2181,8 @@ export function IslandRunBoardPrototype({
   const [incomingMissionBriefing, setIncomingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
   const [missionMessageNudge, setMissionMessageNudge] = useState(0);
   const [showMissionMessageBanner, setShowMissionMessageBanner] = useState(false);
+  // The island the dice controller last landed on (its arrival animation).
+  const [controllerLandedIslandNumber, setControllerLandedIslandNumber] = useState<number | null>(null);
   // Dev island jump intro sequence (arrival + mission briefing) that the
   // bottom-right Skip button can dismiss in one tap.
   const [devFreshArrivalBriefing, setDevFreshArrivalBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
@@ -14742,16 +14744,28 @@ export function IslandRunBoardPrototype({
     }, 50);
     return () => window.clearInterval(interval);
   }, [dragonCinematicStartedAtMs, fishermansFishingProgress.dragonTriggeredAtMs, fishermansFishingProgress.fishCaughtKg]);
+  // No landing animation plays when the controller already arrived on this
+  // island this session (or an adapter replaces it): count it as landed once
+  // it has been on screen for a moment.
   useEffect(() => {
-    if (!pendingMissionBriefing || doesModalOwnAttention || queuedSignatureMissionPresentation) return;
-    if (isRolling || pendingHopSequence) return;
+    if (controllerLandedIslandNumber === islandNumber || hideControllerForPresentation) return undefined;
+    const timer = window.setTimeout(() => setControllerLandedIslandNumber(islandNumber), MISSION_MESSAGE_CONTROLLER_LANDING_FALLBACK_MS);
+    return () => window.clearTimeout(timer);
+  }, [controllerLandedIslandNumber, hideControllerForPresentation, islandNumber]);
+  useEffect(() => {
+    if (!pendingMissionBriefing || !shouldDeliverMissionMessage({
+      islandNumber: pendingMissionBriefing.islandNumber,
+      controllerLandedIslandNumber,
+      controllerHidden: hideControllerForPresentation,
+      screenBusy: doesModalOwnAttention || Boolean(queuedSignatureMissionPresentation) || isRolling || Boolean(pendingHopSequence),
+    })) return undefined;
     const timer = window.setTimeout(() => {
       setIncomingMissionBriefing(pendingMissionBriefing);
       setShowMissionMessageBanner(true);
       setPendingMissionBriefing(null);
-    }, pendingMissionBriefing.islandNumber === 1 ? 850 : 0);
+    }, MISSION_MESSAGE_AFTER_LANDING_MS);
     return () => window.clearTimeout(timer);
-  }, [doesModalOwnAttention, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
+  }, [controllerLandedIslandNumber, doesModalOwnAttention, hideControllerForPresentation, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
   // Ring and shake as the message lands, then again every 30 s until read.
   useEffect(() => {
     if (!incomingMissionBriefing) return undefined;
@@ -14764,11 +14778,7 @@ export function IslandRunBoardPrototype({
     const interval = window.setInterval(nudge, MISSION_MESSAGE_NUDGE_INTERVAL_MS);
     return () => window.clearInterval(interval);
   }, [incomingMissionBriefing]);
-  useEffect(() => {
-    if (!showMissionMessageBanner) return undefined;
-    const timer = window.setTimeout(() => setShowMissionMessageBanner(false), MISSION_MESSAGE_BANNER_MS);
-    return () => window.clearTimeout(timer);
-  }, [showMissionMessageBanner]);
+  // The banner stays until the player taps it (no auto-hide).
   // Crash reports carry where in the game the player was (no personal data).
   useEffect(() => registerCrashContext('islandRun', () => ({
     islandNumber,
@@ -18159,7 +18169,7 @@ export function IslandRunBoardPrototype({
               <LivingController
                 arrivalKey={String(islandNumber)}
                 onThemeChange={setTopbarControllerTheme}
-                onArrivalImpact={() => triggerIslandRunHaptic('controller_land')}
+                onArrivalImpact={() => { triggerIslandRunHaptic('controller_land'); setControllerLandedIslandNumber(islandNumber); }}
                 dark={false} dev={isDevModeEnabled} devThemeSelection={devControllerThemeSelection}
                 islandNumber={islandArtPreviewNumber} preferredTheme={controllerDefaultTheme}
                 dice={hasHydratedRuntimeState ? dicePool : 0}

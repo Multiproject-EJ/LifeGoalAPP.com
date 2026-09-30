@@ -6,7 +6,26 @@ import { getIslandRunAudioEnabled } from './islandRunAudio';
  * briefing acknowledgement stays the canonical write.
  */
 export const MISSION_MESSAGE_NUDGE_INTERVAL_MS = 30_000;
-export const MISSION_MESSAGE_BANNER_MS = 6_500;
+/** Fallback when no controller landing plays (same island this session, adapters). */
+export const MISSION_MESSAGE_CONTROLLER_LANDING_FALLBACK_MS = 3_000;
+/** A beat after the controller lands before the message slides in. */
+export const MISSION_MESSAGE_AFTER_LANDING_MS = 600;
+
+/**
+ * The incoming mission message waits for the controller to land on this
+ * island, and for the screen to be free (user request 2026-09-30). The banner
+ * then stays until the player taps it.
+ */
+export function shouldDeliverMissionMessage(options: {
+  islandNumber: number;
+  controllerLandedIslandNumber: number | null;
+  controllerHidden: boolean;
+  screenBusy: boolean;
+}): boolean {
+  return options.controllerLandedIslandNumber === options.islandNumber
+    && !options.controllerHidden
+    && !options.screenBusy;
+}
 
 export type MissionMessageStepKind = 'roll' | 'build' | 'boss' | 'egg' | 'dynamite' | 'fish' | 'collect';
 

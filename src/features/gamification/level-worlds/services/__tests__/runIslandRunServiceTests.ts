@@ -26,6 +26,7 @@ import { island2StormfrontCinematicTests } from './island2StormfrontCinematic.te
 import { skyHangarArenaSyncTests } from './skyHangarArenaSync.test';
 import { devMenuAutoCollapseTests } from './devMenuAutoCollapse.test';
 import { puzzleCollectionTests } from './puzzleCollection.test';
+import { missionMessageDeliveryTests } from './missionMessageDelivery.test';
 import { wisdomDeferralTests } from './wisdomDeferral.test';
 import { landmarkSightCutawayTests } from './landmarkSightCutaway.test';
 import { mandateEggBasketTests } from './mandateEggBasket.test';
@@ -358,6 +359,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'skyHangarArenaSync', tests: skyHangarArenaSyncTests },
   { label: 'devMenuAutoCollapse', tests: devMenuAutoCollapseTests },
   { label: 'puzzleCollection', tests: puzzleCollectionTests },
+  { label: 'missionMessageDelivery', tests: missionMessageDeliveryTests },
   { label: 'wisdomDeferral', tests: wisdomDeferralTests },
   { label: 'landmarkSightCutaway', tests: landmarkSightCutawayTests },
   { label: 'mandateEggBasket', tests: mandateEggBasketTests },
