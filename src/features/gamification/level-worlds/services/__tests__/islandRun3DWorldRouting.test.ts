@@ -72,15 +72,16 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.filter(route => route.presentationStatus !== 'placeholder').length, 20, 'twenty authored world packs remain');
       assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 21, 'one explicit temporary setting is also routed');
       assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 21, 'runtime islands are unique');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.worldSourceNumber)).size, 21, 'visual source packs are unique');
+      const authored = ISLAND_RUN_3D_WORLD_ROUTES.filter((route) => route.presentationStatus !== 'placeholder');
+      assertEqual(new Set(authored.map((route) => route.worldSourceNumber)).size, 20, 'authored visual source packs are unique');
     },
   },
   {
-    name: 'Island 040 is explicitly temporary without promoting any other unbuilt island',
+    name: 'Island 040 is an explicit visual copy of the Island 002 (new campaign) Crown Citadel look, without promoting any other unbuilt island',
     run: () => {
       const route = resolveIslandRun3DWorldRoute(40);
-      assertEqual(route?.worldSourceNumber, 40, 'no disguised Island 005 reuse');
-      assertEqual(route?.presentationStatus, 'placeholder', 'not production Cosmic Outpost');
+      assertEqual(route?.worldSourceNumber, 4, 'user decision 2026-09-30: copy the Island 002 look (source 004)');
+      assertEqual(route?.presentationStatus, 'placeholder', 'a stand-in copy, not production Cosmic Outpost');
       assertEqual(route?.role, 'arena', 'visual placeholder preserves arena cadence');
       assertEqual(isIslandRunArenaIsland(40), true, 'gameplay arena classification is unchanged');
       for (const island of [0, 21, 22, 39, 41, 120, 121, 40.5, NaN]) {
