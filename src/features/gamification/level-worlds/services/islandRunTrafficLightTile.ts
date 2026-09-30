@@ -1,5 +1,5 @@
 import type { BonusTileChargeByIsland } from './islandRunBonusTile';
-import type { IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
+import { GRADUAL_PUZZLE_INTRODUCTION_ISLAND, type IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
 import { getBonusTileCharge } from './islandRunBonusTile';
 import {
   isPuzzleCollectionAvailableForIsland,
@@ -119,7 +119,7 @@ export function resolveTrafficLightCoinFlipReward(input: {
     0,
     Math.min(STICKER_FRAGMENTS_PER_STICKER, STICKER_FRAGMENTS_PER_STICKER - Math.max(0, Math.floor(input.stickerFragments))),
   );
-  const grantsPuzzlePieces = isPuzzleCollectionAvailableForIsland(input.islandNumber ?? 2, input.signatureMissionProgressByIsland)
+  const grantsPuzzlePieces = isPuzzleCollectionAvailableForIsland(input.islandNumber ?? GRADUAL_PUZZLE_INTRODUCTION_ISLAND, input.signatureMissionProgressByIsland)
     && missingFragments > 0
     && seededRandom(input.seed + 7919) < 0.35;
 

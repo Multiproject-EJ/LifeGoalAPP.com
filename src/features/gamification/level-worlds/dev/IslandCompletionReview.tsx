@@ -5,6 +5,9 @@ import '../LevelWorlds.css';
 import { IslandMissionBriefingModal } from '../components/IslandMissionBriefingModal';
 import { MandateEggBasketOverlay } from '../components/MandateEggBasketOverlay';
 import { MinigameRatingModal } from '../components/MinigameRatingModal';
+import { PuzzleCollectionModal } from '../components/PuzzleCollectionModal';
+import { getEventRotationTemplates } from '../services/islandRunEventEngine';
+import { resolvePuzzleCollectionView } from '../services/puzzleCollection';
 import { resolveIslandMissionTrackerPresentation } from '../services/islandRunMissionTracker';
 import type { PerIslandEggEntry, PerIslandEggsLedger } from '../services/islandRunGameStateStore';
 
@@ -66,4 +69,14 @@ function RatingReview() {
     {!result ? <MinigameRatingModal gameName="Space Excavator" gameIcon="◇" onSubmit={(rating) => setResult(`Sent ${rating}`)} onSkip={() => setResult('Skipped')} /> : null}
   </main>;
 }
-createRoot(document.getElementById('root')!).render(params.get('basket') === '1' ? <BasketReview /> : params.get('rating') === '1' ? <RatingReview /> : <CompletionReview />);
+// ?puzzle=1 shows the Island 015 Puzzle Collection (3 of 5 pieces, two finished puzzles).
+function PuzzleReview() {
+  const templates = getEventRotationTemplates();
+  const view = resolvePuzzleCollectionView({
+    fragments: Number(params.get('pieces') ?? 3),
+    stickerInventory: { [templates[0]!.stickerId]: 2, [templates[2]!.stickerId]: 1 },
+    activeEventId: `${templates[1]!.eventId}:1`,
+  });
+  return <main style={{ minHeight: '100vh', background: '#0c2336' }}><PuzzleCollectionModal view={view} bonusDice={100} bonusMoney={50} onClose={() => undefined} /></main>;
+}
+createRoot(document.getElementById('root')!).render(params.get('basket') === '1' ? <BasketReview /> : params.get('rating') === '1' ? <RatingReview /> : params.get('puzzle') === '1' ? <PuzzleReview /> : <CompletionReview />);

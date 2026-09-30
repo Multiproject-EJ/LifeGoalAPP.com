@@ -873,6 +873,11 @@ import { getMinigameRatingKey, readMinigameFeedback, shouldAskMinigameRating, wr
 import { MinigameRatingModal } from './MinigameRatingModal';
 import { MandateEggBasketOverlay } from './MandateEggBasketOverlay';
 import { OpeningArenaBuildModal } from './OpeningArenaBuildModal';
+import { PuzzleCollectionModal } from './PuzzleCollectionModal';
+import { resolvePuzzleCollectionView } from '../services/puzzleCollection';
+import { STICKER_COMPLETION_BONUS_DICE, STICKER_COMPLETION_BONUS_ESSENCE } from '../services/islandRunContractV2RewardBar';
+
+const PUZZLE_COLLECTION_SEEN_STORAGE_KEY = 'islandRun.puzzleCollectionSeen.v1';
 import { OPENING_ARENA_DELIVERY_ROLLS, OPENING_ARENA_SEAT_COUNT, isOpeningArenaAvailable, resolveOpeningArenaProgress, resolveOpeningArenaStage } from '../services/island2OpeningArena';
 import { anchorOpeningArenaHoverBase, fundOpeningArena, orderOpeningArenaHoverBase } from '../services/island2OpeningArenaActions';
 import { deferWisdomStop } from '../services/wisdomDeferralActions';
@@ -3486,6 +3491,14 @@ export function IslandRunBoardPrototype({
 
   // ── Sticker album dialog ───────────────────────────────────────────────────
   const [showStickerAlbumDialog, setShowStickerAlbumDialog] = useState(false);
+  // Per-viewer UI hint only: the "NEW" badge until the collection is first opened.
+  const [puzzleCollectionSeen, setPuzzleCollectionSeen] = useState(() => {
+    try { return window.localStorage.getItem(PUZZLE_COLLECTION_SEEN_STORAGE_KEY) === '1'; } catch { return false; }
+  });
+  const markPuzzleCollectionSeen = useCallback(() => {
+    setPuzzleCollectionSeen(true);
+    try { window.localStorage.setItem(PUZZLE_COLLECTION_SEEN_STORAGE_KEY, '1'); } catch { /* storage unavailable */ }
+  }, []);
 
   const [creatureCollection, setCreatureCollection] = useState(() => fetchCreatureCollection(session.user.id));
   const [activeCompanionId, setActiveCompanionId] = useState<string | null>(null);
@@ -7938,6 +7951,7 @@ export function IslandRunBoardPrototype({
     nowMs,
   });
   const isPuzzleCollectionAvailable = isPuzzleCollectionAvailableForIsland(islandNumber, __storeState.signatureMissionProgressByIsland);
+  const puzzleCollectionIsNew = isPuzzleCollectionAvailable && !puzzleCollectionSeen;
   const diplomaticRewardChannelVisible = openingCeremonyPlayback === null && featureAccess.rewardChannel && isDiplomaticRewardChannelVisible({
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
@@ -17219,11 +17233,12 @@ export function IslandRunBoardPrototype({
             {isPuzzleCollectionAvailable ? (
               <button
                 type="button"
-                className="island-run-board__sticker-album-btn"
-                aria-label="Sticker album"
-                onClick={() => setShowStickerAlbumDialog(true)}
+                className={`island-run-board__sticker-album-btn${puzzleCollectionIsNew ? ' is-new' : ''}`}
+                aria-label={puzzleCollectionIsNew ? 'Puzzle collection (new)' : 'Puzzle collection'}
+                onClick={() => { setShowStickerAlbumDialog(true); markPuzzleCollectionSeen(); }}
               >
                 🧩 {runtimeState.stickerProgress.fragments}/5
+                {puzzleCollectionIsNew ? <span className="island-run-board__sticker-album-new" aria-hidden="true">NEW</span> : null}
               </button>
             ) : null}
             {onOpenDailySpinWheel && featureAccess.dailyWheel && !luckySpinBoardReady ? (
@@ -20165,51 +20180,18 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {/* ── Sticker album dialog ────────────────────────────────────────── */}
+      {/* ── Puzzle Collection (Island 015+) ─────────────────────────────── */}
       {showStickerAlbumDialog && isPuzzleCollectionAvailable && (
-        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Sticker album">
-            <h3 className="island-stop-modal__title">🧩 Sticker Album</h3>
-            <p className="island-stop-modal__copy">
-              Fragments: <strong>{runtimeState.stickerProgress.fragments}</strong> / 5
-              {runtimeState.stickerProgress.fragments >= 5 ? ' — Ready to create a sticker!' : ''}
-            </p>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '8px 0' }}>
-              {getEventRotationTemplates().map((template) => {
-                const count = runtimeState.stickerInventory[template.stickerId] ?? 0;
-                return (
-                  <div key={template.eventId} style={{
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    background: count > 0 ? 'rgba(255,215,0,0.15)' : 'rgba(128,128,128,0.1)',
-                    border: count > 0 ? '1px solid rgba(255,215,0,0.4)' : '1px solid rgba(128,128,128,0.2)',
-                    textAlign: 'center',
-                    minWidth: '80px',
-                  }}>
-                    <div style={{ fontSize: '1.5em' }}>{template.icon}</div>
-                    <div style={{ fontSize: '0.75em', opacity: 0.8 }}>{template.displayName}</div>
-                    <div style={{ fontWeight: 'bold' }}>{count > 0 ? `×${count}` : '—'}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="island-stop-modal__copy">
-              Each complete sticker awards <strong>+100 🎲 dice</strong> and <strong>+50 💰 money</strong>!
-            </p>
-            <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
-              Collect sticker fragments from the reward bar. Every 5 fragments complete one sticker.
-            </p>
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => setShowStickerAlbumDialog(false)}
-              >
-                Close
-              </button>
-            </div>
-          </section>
-        </div>
+        <PuzzleCollectionModal
+          view={resolvePuzzleCollectionView({
+            fragments: runtimeState.stickerProgress.fragments,
+            stickerInventory: runtimeState.stickerInventory,
+            activeEventId: runtimeState.activeTimedEvent?.eventId,
+          })}
+          bonusDice={STICKER_COMPLETION_BONUS_DICE}
+          bonusMoney={STICKER_COMPLETION_BONUS_ESSENCE}
+          onClose={() => setShowStickerAlbumDialog(false)}
+        />
       )}
 
       {showIslandClearCelebration && islandClearStats && (

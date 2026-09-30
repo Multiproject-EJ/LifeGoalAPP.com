@@ -29279,3 +29279,28 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 .opening-arena-modal__levels li.is-built b { background: #19d85c; color: #04210f; }
 .opening-arena-modal__levels li.is-current { border-color: #ffd54a; background: rgba(255, 213, 74, 0.12); }
 .opening-arena-modal__levels li i { color: #7dffac; font-style: normal; font-weight: 900; }
+
+/* Puzzle Collection button: one-time NEW badge when it opens on Island 015. */
+.island-run-board__sticker-album-btn { position: relative; }
+.island-run-board__sticker-album-btn.is-new {
+  border-color: rgba(255, 215, 0, 0.9);
+  animation: island-run-puzzle-new-pulse 1.6s ease-in-out infinite;
+}
+.island-run-board__sticker-album-new {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #ffcf33;
+  color: #2b1d52;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+@keyframes island-run-puzzle-new-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.55); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 215, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-run-board__sticker-album-btn.is-new { animation: none; }
+}
