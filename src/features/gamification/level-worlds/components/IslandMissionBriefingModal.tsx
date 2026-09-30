@@ -7,6 +7,7 @@ import { formatMissionPhoneMessageTime, type MissionPhoneMessage } from '../serv
 import type { IslandMissionBriefingPresentation } from '../services/islandRunMissionBriefing';
 import type { IslandMissionStats, IslandMissionTrackerObjective } from '../services/islandRunMissionTracker';
 import type { resolveIslandRunCompletion } from '../services/islandRunCompletion';
+import { LANDMARK_FLAG_LABEL, type LandmarkFlag } from '../services/landmarkFlags';
 
 export type MissionObjectiveAction = 'launch' | 'details';
 
@@ -34,6 +35,8 @@ export interface IslandMissionBriefingModalProps {
   stats?: IslandMissionStats | null;
   objectiveActions?: readonly MissionObjectiveAction[];
   objectiveDetails?: readonly string[];
+  /** One flag per landmark: red = still needs work, green = 100% done. */
+  landmarkFlags?: ReadonlyArray<{ id: string; title: string; flag: LandmarkFlag }>;
   acknowledgeLabel?: string;
   /** Filed Mission Phone messages, newest first. */
   messages?: readonly MissionPhoneMessage[];
@@ -446,6 +449,7 @@ export function IslandMissionBriefingModal({
   stats = null,
   objectiveActions = [],
   objectiveDetails = [],
+  landmarkFlags,
   acknowledgeLabel = 'Accept field order',
   messages = [],
   openMessageId = null,
@@ -806,6 +810,25 @@ export function IslandMissionBriefingModal({
                     );
                   })}
                 </ol>
+                {landmarkFlags && landmarkFlags.length > 0 ? (
+                  <section className="island-mission-tracker__flags" aria-label="Landmark flags">
+                    <header>
+                      <small>Landmark flags</small>
+                      <span><i className="island-landmark-flag island-landmark-flag--green" aria-hidden="true" /> green flag = landmark done</span>
+                    </header>
+                    <ul>
+                      {landmarkFlags.map((landmark) => (
+                        <li key={landmark.id} data-flag={landmark.flag}>
+                          {landmark.flag === 'none'
+                            ? <span className="island-mission-tracker__flag-empty" aria-hidden="true" />
+                            : <i className={`island-landmark-flag island-landmark-flag--${landmark.flag}`} aria-hidden="true" />}
+                          <strong>{landmark.title}</strong>
+                          <small>{LANDMARK_FLAG_LABEL[landmark.flag]}</small>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
                 </>
               )}
 

@@ -240,6 +240,7 @@ import { useIslandRunState } from '../hooks/useIslandRunState';
 import { DepartureDayScene } from './DepartureDayScene';
 import { isPlayerPieceId } from '../services/islandRunPlayerPieces';
 import { resolveTreasureIslandWealth } from '../services/islandRunTreasures';
+import { resolveLandmarkFlag } from '../services/landmarkFlags';
 import { readExpeditionShipGarageQualityPreference, resolveExpeditionShipGarageQuality } from './expeditionShipGarageQuality';
 import { resolveDepartureDaySeenKey, resolveDepartureDaySkip } from '../services/islandRunDepartureDay';
 import { purchaseDiceSkin, resolveDiceSkinProgress, selectDiceSkin } from '../services/islandRunDiceSkinActions';
@@ -21556,6 +21557,12 @@ export function IslandRunBoardPrototype({
         onMessageRead={handleMissionMessageRead}
         objectiveActions={showMissionPhoneBriefing ? missionPhoneObjectiveActions : undefined}
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}
+        landmarkFlags={showMissionPhoneBriefing ? islandStopPlan.map((stop, index) => {
+          const build = islandProgressReadState.stopBuildStateByIndex[index];
+          const level = build?.buildLevel ?? 0;
+          const spent = build && build.requiredEssence > 0 ? build.spentEssence / build.requiredEssence : 0;
+          return { id: stop.stopId, title: stop.title, flag: resolveLandmarkFlag({ level, percent: level >= 3 ? 100 : spent > 0 ? 1 : 0 }) };
+        }) : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
         primaryActionLabel={showMissionPhoneBriefing && isIslandClearSignalPending

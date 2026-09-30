@@ -12,3 +12,16 @@ Error: spawn xdg-open ENOENT
 [BABEL] Note: The code generator has deoptimised the styling of /home/user/LifeGoalAPP.com/src/features/habits/DailyHabitTracker.tsx as it exceeds the max of 500KB.
 [BABEL] Note: The code generator has deoptimised the styling of /home/user/LifeGoalAPP.com/src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx as it exceeds the max of 500KB.
 3:21:59 PM [vite] hmr update /src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+3:27:10 PM [vite] hmr update /src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx
+3:27:19 PM [vite] hmr update /src/features/gamification/level-worlds/LevelWorlds.css
+3:29:26 PM [vite] hmr update /src/features/gamification/level-worlds/components/IslandMissionBriefingModal.tsx
+3:29:36 PM [vite] hmr update /src/features/gamification/level-worlds/LevelWorlds.css
+3:29:47 PM [vite] hmr update /src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx
+[BABEL] Note: The code generator has deoptimised the styling of /home/user/LifeGoalAPP.com/src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx as it exceeds the max of 500KB.
+[BABEL] Note: The code generator has deoptimised the styling of /home/user/LifeGoalAPP.com/src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx as it exceeds the max of 500KB.
+3:36:28 PM [vite] hmr update /src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx
+[BABEL] Note: The code generator has deoptimised the styling of /home/user/LifeGoalAPP.com/src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx as it exceeds the max of 500KB.
+3:40:23 PM [vite] hmr update /src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx
+[BABEL] Note: The code generator has deoptimised the styling of /home/user/LifeGoalAPP.com/src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx as it exceeds the max of 500KB.
+3:42:51 PM [vite] hmr update /src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx
+[BABEL] Note: The code generator has deoptimised the styling of /home/user/LifeGoalAPP.com/src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx as it exceeds the max of 500KB.

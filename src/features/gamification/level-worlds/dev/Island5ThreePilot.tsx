@@ -360,6 +360,7 @@ import {
 } from '../services/island001Atmosphere';
 import { playIslandRunBubblePop, triggerIslandRunHaptic } from '../services/islandRunAudio';
 import { createPlayerPieceRelic } from './PlayerPieceRelicThree';
+import { resolveLandmarkFlag, type LandmarkFlag, LANDMARK_FLAG_LABEL } from '../services/landmarkFlags';
 import type { PlayerPieceId } from '../services/islandRunPlayerPieces';
 import {
   createIslandStagedRestorationThreePresentation,
@@ -3544,6 +3545,69 @@ type IslandPlayerPieceToken = ReturnType<typeof createIslandPlayerPiece>;
  * with zoom and sits under every menu (it used to be a DOM badge floating
  * above the page).
  */
+/**
+ * A landmark flag (see services/landmarkFlags.ts): a pole with a waving,
+ * glowing cloth planted beside the landmark. Red while it still needs work,
+ * green once it is built to Level 3.
+ */
+const LANDMARK_FLAG_COLORS = {
+  red: { cloth: 0xd0141c, glow: 0xff1f1f },
+  green: { cloth: 0x0f9d45, glow: 0x19d85c },
+} as const;
+let landmarkFlagGlowTexture: THREE.CanvasTexture | null = null;
+function getLandmarkFlagGlowTexture(): THREE.CanvasTexture | null {
+  if (landmarkFlagGlowTexture || typeof document === 'undefined') return landmarkFlagGlowTexture;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.35, 'rgba(255,255,255,0.45)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 64, 64);
+  landmarkFlagGlowTexture = new THREE.CanvasTexture(canvas);
+  return landmarkFlagGlowTexture;
+}
+function createLandmarkFlagObject() {
+  const root = new THREE.Group();
+  root.name = 'LANDMARK_FLAG';
+  const metal = new THREE.MeshStandardMaterial({ color: 0xe9e4d6, metalness: 0.6, roughness: 0.35 });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 1, 8), metal);
+  pole.position.y = 0.5;
+  root.add(pole);
+  const finial = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), new THREE.MeshStandardMaterial({ color: 0xf2c14e, metalness: 0.8, roughness: 0.25 }));
+  finial.position.y = 1.02;
+  root.add(finial);
+  const clothMaterial = new THREE.MeshStandardMaterial({ color: LANDMARK_FLAG_COLORS.red.cloth, emissive: LANDMARK_FLAG_COLORS.red.glow, emissiveIntensity: 0.35, roughness: 0.6, side: THREE.DoubleSide });
+  const clothGeometry = new THREE.PlaneGeometry(0.6, 0.38, 10, 2);
+  clothGeometry.translate(0.3, 0, 0);
+  const clothBase = Float32Array.from(clothGeometry.attributes.position.array as Float32Array);
+  const cloth = new THREE.Mesh(clothGeometry, clothMaterial);
+  cloth.position.y = 0.82;
+  root.add(cloth);
+  const glowMaterial = new THREE.SpriteMaterial({ map: getLandmarkFlagGlowTexture(), color: LANDMARK_FLAG_COLORS.red.glow, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending });
+  const glow = new THREE.Sprite(glowMaterial);
+  glow.scale.setScalar(0.9);
+  glow.position.set(0.3, 0.82, 0);
+  root.add(glow);
+  const wave = (time: number) => {
+    const position = clothGeometry.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < position.count; i += 1) {
+      const x = clothBase[i * 3]!;
+      position.setZ(i, Math.sin(time * 5 - x * 9) * 0.06 * (x / 0.6));
+    }
+    position.needsUpdate = true;
+  };
+  const setColor = (flag: 'red' | 'green') => {
+    clothMaterial.color.setHex(LANDMARK_FLAG_COLORS[flag].cloth);
+    clothMaterial.emissive.setHex(LANDMARK_FLAG_COLORS[flag].glow);
+    glowMaterial.color.setHex(LANDMARK_FLAG_COLORS[flag].glow);
+  };
+  return { root, cloth, glowMaterial, clothMaterial, wave, setColor };
+}
+
 function createLuckySpinWheelObject() {
   const root = new THREE.Group();
   root.name = 'LUCKY_SPIN_TILE_WHEEL';
@@ -6390,6 +6454,17 @@ export default function Island5ThreePilot({
     const clickableLandmarks: THREE.Object3D[] = [];
     const landmarkRootsById = new Map<Island5LandmarkDefinition['id'], THREE.Object3D>();
     const attentionVisuals = new Map<string, { root: THREE.Object3D; level: number; visual: ReturnType<typeof createLandmarkAttentionVisual> }>();
+    // One flag per landmark, placed from the landmark's bounds (recomputed only
+    // when the landmark model is rebuilt).
+    const landmarkFlags = new Map<string, {
+      object: ReturnType<typeof createLandmarkFlagObject>;
+      root: THREE.Object3D | null;
+      shown: LandmarkFlag;
+      changedAt: number;
+    }>();
+    const landmarkFlagBounds = new THREE.Box3();
+    const landmarkFlagSize = new THREE.Vector3();
+    const landmarkFlagCentre = new THREE.Vector3();
     const landmarkLabelAnchors = new WeakMap<THREE.Object3D, THREE.Vector3>();
     const projectedLandmarkLabel = new THREE.Vector3();
     const island15FallbackRoot = new THREE.Group();
@@ -11434,6 +11509,57 @@ export default function Island5ThreePilot({
       }
       // DOM presentation follows the camera without React updates every frame.
       const occupiedLabelRects: Array<{ left: number; top: number; right: number; bottom: number }> = [];
+      // Landmark flags: red while unfinished, green at Level 3. They stay up
+      // during the build animation so the red flag pops up as building starts.
+      const flagTime = performance.now() / 1000;
+      const flagsHidden = firstArrivalRef.current.active && !firstArrivalCompletedRef.current;
+      for (const item of landmarkProgressRef.current ?? []) {
+        const root = landmarkRootsById.get(item.id as Island5LandmarkId);
+        if (!root) continue;
+        let flag = landmarkFlags.get(item.id);
+        if (!flag) {
+          flag = { object: createLandmarkFlagObject(), root: null, shown: 'none', changedAt: 0 };
+          flag.object.root.visible = false;
+          scene.add(flag.object.root);
+          landmarkFlags.set(item.id, flag);
+        }
+        if (flag.root !== root) {
+          flag.root = root;
+          landmarkFlagBounds.setFromObject(root);
+          if (!landmarkFlagBounds.isEmpty()) {
+            landmarkFlagBounds.getSize(landmarkFlagSize);
+            landmarkFlagBounds.getCenter(landmarkFlagCentre);
+            const poleHeight = THREE.MathUtils.clamp(landmarkFlagSize.y * 0.55, 1.1, 2.4);
+            flag.object.root.position.set(
+              landmarkFlagCentre.x + landmarkFlagSize.x * 0.42,
+              landmarkFlagBounds.min.y,
+              landmarkFlagCentre.z + landmarkFlagSize.z * 0.42,
+            );
+            flag.object.root.userData.poleHeight = poleHeight;
+          }
+        }
+        const level = landmarkBuildLevelsRef.current?.[item.id as Island5LandmarkId] ?? buildLevelRef.current;
+        const target = resolveLandmarkFlag({ level, percent: item.percent });
+        if (target !== flag.shown) {
+          flag.shown = target;
+          flag.changedAt = flagTime;
+          if (target !== 'none') flag.object.setColor(target);
+        }
+        const baseScale = (flag.object.root.userData.poleHeight as number | undefined) ?? 1.4;
+        flag.object.root.visible = target !== 'none' && !flagsHidden && root.visible;
+        if (flag.object.root.visible) {
+          // Pop up with an overshoot when raised or when it turns green.
+          const age = flagTime - flag.changedAt;
+          const pop = isReducedMotion || age > 0.8 ? 1 : Math.min(1, age / 0.45) + Math.sin(Math.min(1, age / 0.8) * Math.PI) * 0.18;
+          flag.object.root.scale.setScalar(baseScale * pop);
+          if (!isReducedMotion) {
+            flag.object.wave(flagTime);
+            const pulse = 0.35 + Math.sin(flagTime * 3) * 0.15;
+            flag.object.glowMaterial.opacity = target === 'red' ? pulse + 0.15 : pulse;
+          }
+        }
+      }
+      canvas.dataset.landmarkFlags = [...landmarkFlags.entries()].map(([id, f]) => `${id}:${f.object.root.visible ? f.shown : 'none'}`).join(',');
       for (const item of landmarkProgressRef.current ?? []) {
         const label = landmarkLabelRefs.current.get(item.id);
         const root = landmarkRootsById.get(item.id as Island5LandmarkId);
@@ -11971,6 +12097,12 @@ export default function Island5ThreePilot({
           <span className="island-landmark-progress-ring" style={{ background: `conic-gradient(#70e6ad ${item.percent}%, #ffffff26 0)` }}>
             <span>{item.percent}%</span>
           </span>
+          {(() => {
+            const flag = resolveLandmarkFlag({ level: landmarkBuildLevels?.[item.id as Island5LandmarkId] ?? buildLevel ?? 0, percent: item.percent });
+            return flag === 'none' ? null : (
+              <span className={`island-landmark-flag island-landmark-flag--${flag}`} title={`${LANDMARK_FLAG_LABEL[flag]} flag`} aria-hidden="true" />
+            );
+          })()}
           {/* The name is earned: until the building is 100% built only its % shows. */}
           {item.percent >= 100 ? <span><strong>{item.title}</strong><small>{item.status}</small></span> : null}
         </button>)}
