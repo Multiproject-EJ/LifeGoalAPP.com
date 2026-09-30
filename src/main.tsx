@@ -489,7 +489,17 @@ function ExpeditionShipGaragePreviewRoute() {
   const [GaragePreview, setGaragePreview] = useState<ComponentType<{
     onOpenUpgrades: () => void;
     onOpenCosmetics: () => void;
+    onReliveDeparture?: () => void;
   }> | null>(null);
+  const [DepartureReplay, setDepartureReplay] = useState<ComponentType<{
+    replay: boolean;
+    skippable: boolean;
+    shipName: string;
+    initialPieceId: string | null;
+    onChoosePiece: () => void;
+    onComplete: () => void;
+  }> | null>(null);
+  const [replayOpen, setReplayOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -499,10 +509,30 @@ function ExpeditionShipGaragePreviewRoute() {
     return () => { isMounted = false; };
   }, []);
 
+  const reliveDeparture = () => {
+    void import('./features/gamification/level-worlds/components/DepartureDayScene').then((module) => {
+      setDepartureReplay(() => module.DepartureDayScene);
+      setReplayOpen(true);
+    });
+  };
+
+  if (replayOpen && DepartureReplay) {
+    return (
+      <DepartureReplay
+        replay
+        skippable
+        shipName="Starling"
+        initialPieceId={null}
+        onChoosePiece={() => undefined}
+        onComplete={() => setReplayOpen(false)}
+      />
+    );
+  }
+
   return GaragePreview ? (
     <main style={{minHeight: '100vh', padding: 'clamp(12px, 3vw, 36px)', background: '#050b10'}}>
       <div style={{width: 'min(1120px, 100%)', margin: '0 auto'}}>
-        <GaragePreview onOpenUpgrades={() => undefined} onOpenCosmetics={() => undefined} />
+        <GaragePreview onOpenUpgrades={() => undefined} onOpenCosmetics={() => undefined} onReliveDeparture={reliveDeparture} />
       </div>
     </main>
   ) : null;

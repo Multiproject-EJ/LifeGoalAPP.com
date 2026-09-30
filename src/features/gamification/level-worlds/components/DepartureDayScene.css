@@ -126,6 +126,16 @@
   animation: departure-day-caption .7s ease both;
 }
 @keyframes departure-day-caption { from { opacity: 0; transform: translateY(6px); } }
+.departure-day__replay-loading {
+  position: relative;
+  margin: 0;
+  padding: .6rem 1.1rem;
+  border: 1px solid rgba(242, 200, 103, .4);
+  border-radius: 999px;
+  color: #fff4d6;
+  font: 600 .95rem/1.2 Georgia, 'Times New Roman', serif;
+  background: rgba(9, 14, 30, .85);
+}
 .departure-day__skip {
   position: absolute;
   top: max(16px, env(safe-area-inset-top, 0px));

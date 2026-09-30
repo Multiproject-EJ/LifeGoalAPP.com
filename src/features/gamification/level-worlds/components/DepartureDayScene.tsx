@@ -38,6 +38,8 @@ export interface DepartureDaySceneProps {
   onComplete: () => void;
   /** Dev preview: start at this time (seconds) and hold, without the picker. */
   previewTimeSeconds?: number | null;
+  /** Garage "Relive departure": no picker, plays as soon as the hangar is ready. */
+  replay?: boolean;
 }
 
 /**
@@ -55,12 +57,13 @@ export function DepartureDayScene({
   onChoosePiece,
   onComplete,
   previewTimeSeconds = null,
+  replay = false,
 }: DepartureDaySceneProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hangarRef = useRef<DepartureDayHangar | null>(null);
   const [progress, setProgress] = useState(0);
   const [failed, setFailed] = useState(false);
-  const [phase, setPhase] = useState<Phase>(previewTimeSeconds !== null ? 'playing' : 'picker');
+  const [phase, setPhase] = useState<Phase>(previewTimeSeconds !== null ? 'playing' : replay ? 'waiting' : 'picker');
   const [pieceId, setPieceId] = useState<PlayerPieceId>(() => normalizePlayerPieceId(initialPieceId));
   const [caption, setCaption] = useState<string | null>(null);
   const playStartRef = useRef<number | null>(null);
@@ -183,13 +186,16 @@ export function DepartureDayScene({
       {phase === 'playing' && caption ? (
         <p key={caption} className="departure-day__caption" role="status" aria-live="polite">{caption}</p>
       ) : null}
-      {phase === 'playing' && skippable ? (
+      {replay && phase === 'waiting' ? (
+        <p className="departure-day__replay-loading" role="status">Opening Hangar 01…</p>
+      ) : null}
+      {(phase === 'playing' || (replay && phase === 'waiting')) && skippable ? (
         <button type="button" className="departure-day__skip" onClick={() => { setPhase('done'); onCompleteRef.current(); }}>
           Skip
         </button>
       ) : null}
 
-      {phase === 'picker' || phase === 'waiting' ? (
+      {!replay && (phase === 'picker' || phase === 'waiting') ? (
         <section className="departure-day__picker" role="dialog" aria-modal="true" aria-labelledby="departure-day-picker-title">
           <p className="departure-day__eyebrow">Departure day · Hangar 01</p>
           <h2 id="departure-day-picker-title">Choose the piece you carry aboard</h2>

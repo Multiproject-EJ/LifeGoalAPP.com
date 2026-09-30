@@ -154,7 +154,9 @@ contract. Auto / Smooth / Ultra quality tiers reuse
 - First run: `celebration → ship-name → departure → mission → launch` (guest-named ships go straight to `departure`).
 - Dev seam: `?departureDayPreview=1` (add `&departureDayTime=<s>` to hold a frame). Evidence: `docs/design/departure-day/`.
 
-Still open: a garage "Relive departure" button; the concept frames.
+- Garage "Relive departure day" button (Score → Garage, and `/dev/expedition-ship-garage`): the garage closes, the film replays without the picker (Skip always available), then the garage reopens.
+
+Still open: the concept frames.
 
 ## Slices
 
