@@ -4,9 +4,10 @@
  *
  * - `aiEnabled`: AI suggestions at all (on-device or cloud). Off means every
  *   feature shows its written fallback.
- * - `cloudFallback`: whether a task may go to the cloud (`ai-task` edge
- *   function) when on-device AI is unavailable or the task is cloud-only.
- *   Off means no text from these features ever leaves the device.
+ * - `cloudFallback`: whether AI may use the cloud: the `ai-task` edge
+ *   function when on-device AI is unavailable, and the coach chats
+ *   (`ai-coach-chat`, `goal-coach-chat`), which only run in the cloud.
+ *   Off means none of these send text off the device; the coaches pause.
  */
 
 export type AiPreferences = {
@@ -62,3 +63,16 @@ export function subscribeToAiPreferences(listener: (preferences: AiPreferences) 
     window.removeEventListener('storage', handler);
   };
 }
+
+/** Whether cloud AI may be used right now (AI on, and cloud AI allowed). */
+export function isCloudAiAllowed(): boolean {
+  const preferences = readAiPreferences();
+  return preferences.aiEnabled && preferences.cloudFallback;
+}
+
+/** Short reason for features that are unavailable while cloud AI is turned off. */
+export const CLOUD_AI_OFF_REASON = 'Cloud AI is turned off in Settings → AI & privacy.';
+
+/** Shown by the coach chats while cloud AI is turned off. */
+export const CLOUD_AI_OFF_MESSAGE =
+  'Cloud AI is turned off in Settings → AI & privacy, so the coach is paused. Turn on "Allow cloud AI" there to chat again.';

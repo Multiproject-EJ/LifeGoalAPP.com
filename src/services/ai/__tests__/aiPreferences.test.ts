@@ -1,4 +1,4 @@
-import { getAiPreferences, readAiPreferences, setAiPreferences } from '../aiPreferences';
+import { getAiPreferences, isCloudAiAllowed, readAiPreferences, setAiPreferences } from '../aiPreferences';
 
 function assertEqual<T>(actual: T, expected: T, message: string): void {
   if (actual !== expected) {
@@ -33,13 +33,19 @@ export function runAiPreferencesTests(): void {
   assertEqual(getAiPreferences().aiEnabled, true, 'AI is on by default');
   assertEqual(getAiPreferences().cloudFallback, true, 'cloud backup is on by default');
 
+  assertEqual(isCloudAiAllowed(), true, 'cloud AI (and the coach chats) is allowed by default');
+
   setAiPreferences({ cloudFallback: false });
+  assertEqual(isCloudAiAllowed(), false, 'turning cloud AI off pauses every cloud AI feature');
   assertEqual(readAiPreferences().cloudFallback, false, 'turning cloud backup off is remembered');
   assertEqual(readAiPreferences().aiEnabled, true, 'other preferences are kept');
   assertEqual(events.length, 1, 'a change event is sent so open screens update');
 
   store.set('lifegoal.ai.preferences.v1', '{not json');
   assertEqual(getAiPreferences().aiEnabled, true, 'unreadable storage falls back to defaults');
+
+  setAiPreferences({ cloudFallback: true, aiEnabled: false });
+  assertEqual(isCloudAiAllowed(), false, 'turning AI off also blocks cloud AI');
 
   installFakeWindow(false);
   setAiPreferences({ aiEnabled: false });

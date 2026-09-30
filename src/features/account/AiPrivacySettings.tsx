@@ -67,12 +67,19 @@ export function AiPrivacySettings() {
         ok: false,
       }
       : onDeviceStatus === 'not_ios'
-        ? {
-          title: 'AI suggestions use the cloud here',
-          body: 'On an iPhone with Apple Intelligence, AI runs on the device. In the browser, suggestions come from our server.',
-          status: preferences.cloudFallback ? 'Cloud AI allowed' : 'AI suggestions paused',
-          ok: preferences.cloudFallback,
-        }
+        ? preferences.cloudFallback
+          ? {
+            title: 'AI suggestions use the cloud here',
+            body: 'On an iPhone with Apple Intelligence, AI runs on the device. In the browser, suggestions come from our server.',
+            status: 'Cloud AI allowed',
+            ok: true,
+          }
+          : {
+            title: 'AI is paused in this browser',
+            body: 'Browsers have no on-device AI, so with cloud AI off you get written suggestions instead. On an iPhone with Apple Intelligence, AI still runs on the device.',
+            status: 'Cloud AI off',
+            ok: false,
+          }
         : null;
 
   return (
@@ -98,11 +105,11 @@ export function AiPrivacySettings() {
           )}
         />
         <SettingsRow
-          title="Allow cloud AI as backup"
-          subtitle="Used only when on-device AI isn't available"
+          title="Allow cloud AI"
+          subtitle="Coach chats, goal and Compass help, and a backup when on-device AI isn't available"
           control={(
             <SettingsSwitch
-              label="Allow cloud AI as backup"
+              label="Allow cloud AI"
               checked={preferences.cloudFallback}
               disabled={!preferences.aiEnabled}
               onChange={(next) => update({ cloudFallback: next })}
@@ -111,9 +118,9 @@ export function AiPrivacySettings() {
         />
       </SettingsGroup>
       <p className="settings-list__note">
-        With cloud AI off, habit ideas, tips and explanations never send your text off this device;
-        they show written suggestions instead. AI Coach chat, goal suggestions and Compass help are
-        separate features that use the cloud when you open them.
+        With cloud AI off, nothing you type for AI leaves this device. Habit ideas and tips use
+        on-device AI or written suggestions; goal suggestions use a simple built-in version; the
+        coach chats, Compass help and Vision Star images pause.
       </p>
     </div>
   );

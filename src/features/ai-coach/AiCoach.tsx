@@ -23,6 +23,7 @@ import { recordTelemetryEvent, getTelemetryDifficultyAdjustment } from '../../se
 import { fetchRecentGoalSnapshots } from '../../services/goalSnapshots';
 import { fetchWorkspaceProfile } from '../../services/workspaceProfile';
 import { getSupabaseClient } from '../../lib/supabaseClient';
+import { CLOUD_AI_OFF_MESSAGE, isCloudAiAllowed } from '../../services/ai/aiPreferences';
 import {
   getFeatureAvailability,
   getServiceHealthManager,
@@ -737,6 +738,11 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const requestAiCoachResponse = async (conversationMessages: Message[], latestUserText: string): Promise<AiCoachReply> => {
     if (demoMode) {
       return { assistantMessage: await simulateAiResponse(latestUserText), threadId: null };
+    }
+
+    // The coach only runs in the cloud; Settings → AI & privacy can turn that off.
+    if (!isCloudAiAllowed()) {
+      return { assistantMessage: CLOUD_AI_OFF_MESSAGE, threadId: null };
     }
 
     // Availability comes from the capability matrix — the coach pauses with

@@ -1,6 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import { guardedCloudCall } from './service-health';
+import { isCloudAiAllowed } from './ai/aiPreferences';
 import type { GoalReflectionRow } from './goalReflections';
 
 export type FollowUpPrompt = {
@@ -50,7 +51,9 @@ export async function generateFollowUpPrompts(
     return { data: [], error: null, source: 'demo' };
   }
 
-  if (!canUseSupabaseData()) {
+  // Supabase not configured, or cloud AI turned off in Settings → AI & privacy:
+  // use the built-in follow-up prompts.
+  if (!canUseSupabaseData() || !isCloudAiAllowed()) {
     return { data: buildDemoFollowUpPrompts(goalId, goalTitle, reflections), error: null, source: 'demo' };
   }
 
