@@ -7,7 +7,6 @@ import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPr
 import { AiSettingsSection } from './AiSettingsSection';
 import { AiPrivacySettings } from './AiPrivacySettings';
 import { SettingsGroup, SettingsRow, SettingsSegmented, SettingsSwitch } from './SettingsList';
-import { ExperimentalFeaturesSection } from './ExperimentalFeaturesSection';
 import { GameDebugLogSection } from './GameDebugLogSection';
 import { ViewportDiagnosticsSection } from './ViewportDiagnosticsSection';
 import { YesterdayRecapSettings } from './YesterdayRecapSettings';
@@ -136,7 +135,6 @@ export function MyAccountPanel({
   const [birthdayGiftFolderOpen, setBirthdayGiftFolderOpen] = useState(false);
   const [onboardingToolsFolderOpen, setOnboardingToolsFolderOpen] = useState(false);
   const [aiPrivacyFolderOpen, setAiPrivacyFolderOpen] = useState(false);
-  const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
   const [showExperimentsModal, setShowExperimentsModal] = useState(false);
   const [gameRewardsFolderOpen, setGameRewardsFolderOpen] = useState(false);
   const [cacheFolderOpen, setCacheFolderOpen] = useState(false);
@@ -1660,18 +1658,6 @@ export function MyAccountPanel({
         title="Holiday Themes"
       >
         <HolidayPreferencesSection session={session} isDemoExperience={isDemoExperience} />
-      </SettingsFolderPopup>
-
-      <SettingsFolderPopup
-        isOpen={experimentalFolderOpen}
-        onClose={() => setExperimentalFolderOpen(false)}
-        title="Experimental Features"
-      >
-        <ExperimentalFeaturesSection
-          session={session}
-          isAdmin={showAdminTools}
-          onLaunchYesterdayTodoCleanup={onLaunchYesterdayTodoCleanup}
-        />
       </SettingsFolderPopup>
 
       {creatorNoteOpen && !creatorNoteAsText ? (

@@ -8,6 +8,8 @@
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
+  /* Size to the screen, not to the widest row, so narrow phones never scroll sideways. */
+  container-type: inline-size;
 }
 
 .settings-list__section {
@@ -299,4 +301,32 @@
 .settings-list__status--ok {
   background: rgba(34, 197, 94, 0.16);
   color: #15803d;
+}
+
+.settings-list__profile > span:nth-child(2) {
+  min-width: 0;
+}
+
+.settings-list__profile-name,
+.settings-list__profile-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Narrow phones: segmented buttons (Appearance, Vibration) move under their label. */
+@container (max-width: 350px) {
+  .settings-list__row:has(> .settings-list__segmented) {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .settings-list__row > .settings-list__segmented {
+    width: calc(100% - 30px - 0.75rem);
+    margin-left: calc(30px + 0.75rem);
+  }
+
+  .settings-list__row > .settings-list__segmented .settings-list__segment {
+    flex: 1;
+  }
 }
