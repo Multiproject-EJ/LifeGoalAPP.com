@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import '../LevelWorlds.css';
 import { IslandMissionBriefingModal } from '../components/IslandMissionBriefingModal';
 import { MandateEggBasketOverlay } from '../components/MandateEggBasketOverlay';
+import { MinigameRatingModal } from '../components/MinigameRatingModal';
 import { resolveIslandMissionTrackerPresentation } from '../services/islandRunMissionTracker';
 import type { PerIslandEggEntry, PerIslandEggsLedger } from '../services/islandRunGameStateStore';
 
@@ -57,4 +58,12 @@ function CompletionReview() {
       onMessageRead={(id) => setMessages((all) => all.map((entry) => (entry.id === id ? { ...entry, readAtMs: Date.now() } : entry)))} />
   </>;
 }
-createRoot(document.getElementById('root')!).render(params.get('basket') === '1' ? <BasketReview /> : <CompletionReview />);
+// ?rating=1 shows the optional event mini game rating.
+function RatingReview() {
+  const [result, setResult] = React.useState<string>('');
+  return <main style={{ minHeight: '100vh', background: '#0c2336', color: '#fff', fontFamily: 'system-ui', padding: 24 }}>
+    <p>{result || 'Rating open'}</p>
+    {!result ? <MinigameRatingModal gameName="Space Excavator" gameIcon="◇" onSubmit={(rating) => setResult(`Sent ${rating}`)} onSkip={() => setResult('Skipped')} /> : null}
+  </main>;
+}
+createRoot(document.getElementById('root')!).render(params.get('basket') === '1' ? <BasketReview /> : params.get('rating') === '1' ? <RatingReview /> : <CompletionReview />);

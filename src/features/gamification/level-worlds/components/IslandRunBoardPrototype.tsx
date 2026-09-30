@@ -869,6 +869,8 @@ import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinem
 import { Island2StormfrontBuildModal, Island2StormfrontMessage, resolveStormfrontStructureView } from './Island2StormfrontModals';
 import { WISDOM_DEFERRAL_ROLLS, resolveWisdomDeferral } from '../services/wisdomDeferral';
 import { ARENA_GAMES_CALL, getArenaGamesCallMessageId } from '../services/mandateEggBasket';
+import { getMinigameRatingKey, readMinigameFeedback, shouldAskMinigameRating, writeMinigameFeedback, type MinigameRatingValue } from '../services/minigameFeedback';
+import { MinigameRatingModal } from './MinigameRatingModal';
 import { MandateEggBasketOverlay } from './MandateEggBasketOverlay';
 import { deferWisdomStop } from '../services/wisdomDeferralActions';
 import { SKY_HANGAR_LAUNCH_DELAY_MS, SKY_HANGAR_LAUNCH_DELAY_REDUCED_MS, resolveSkyHangarFlight, resolveSkyHangarTap } from '../services/skyHangarArenaSync';
@@ -2319,6 +2321,11 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timer);
   }, [isIslandVisualPreview]);
   const [arenaGamesCallId, setArenaGamesCallId] = useState<string | null>(null);
+  // Player feedback (services/minigameFeedback.ts): presentation only.
+  const minigameLaunchRef = useRef<{ gameId: string | null; eventId: string | null; startedAt: number } | null>(null);
+  const lastMinigameCompletedRef = useRef(false);
+  const [minigameRatingPrompt, setMinigameRatingPrompt] = useState<{ gameId: string; eventId: string | null; name: string; icon: string } | null>(null);
+  const [revisitIslands, setRevisitIslands] = useState<Record<string, boolean>>(() => readMinigameFeedback(session.user.id).revisitIslands);
   const [phoneCallMessageId, setPhoneCallMessageId] = useState<string | null>(null);
   useEffect(() => () => assemblyMandateRef.current?.close(), [__storeState.currentIslandNumber, __storeState.cycleIndex, session.user.id]);
   const openAssemblyMandate = useCallback(() => {
@@ -14449,6 +14456,7 @@ export function IslandRunBoardPrototype({
       Boolean(activeMissionBriefing) ||
       stormfrontCinematicPlaying ||
       showMandateBasket ||
+      minigameRatingPrompt !== null ||
       showStormfrontMessage ||
       showStormfrontBuild ||
       showTitanAwakening ||
@@ -14792,6 +14800,56 @@ export function IslandRunBoardPrototype({
     setArenaGamesCallId(id);
     triggerIslandRunHaptic('mission_phone_latch');
   }, [cycleIndex, updateMissionInbox]);
+  useEffect(() => {
+    if (activeLaunchedMinigameId) {
+      const inCatalog = ARENA_GAME_CATALOG.some((game) => game.id === activeLaunchedMinigameId);
+      minigameLaunchRef.current = {
+        gameId: inCatalog ? activeLaunchedMinigameId
+          : activeLaunchedMinigameSource === 'timed_event' ? effectiveActiveTimedEvent?.eventType ?? null : null,
+        eventId: effectiveActiveTimedEvent?.eventId ?? null,
+        startedAt: Date.now(),
+      };
+      lastMinigameCompletedRef.current = false;
+      return;
+    }
+    const launch = minigameLaunchRef.current;
+    minigameLaunchRef.current = null;
+    if (!launch?.gameId) return;
+    const ask = shouldAskMinigameRating({
+      gameId: launch.gameId,
+      eventId: launch.eventId,
+      elapsedMs: Date.now() - launch.startedAt,
+      completed: lastMinigameCompletedRef.current,
+      store: readMinigameFeedback(session.user.id),
+    });
+    const game = ARENA_GAME_CATALOG.find((entry) => entry.id === launch.gameId);
+    if (ask && game) setMinigameRatingPrompt({ gameId: game.id, eventId: launch.eventId, name: game.displayName, icon: game.icon });
+    // Only the launch/close transition matters; other values are read at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLaunchedMinigameId]);
+  const finishMinigameRating = useCallback((rating: MinigameRatingValue | null) => {
+    const prompt = minigameRatingPrompt;
+    setMinigameRatingPrompt(null);
+    if (!prompt) return;
+    const store = readMinigameFeedback(session.user.id);
+    store.ratings[getMinigameRatingKey(prompt.gameId, prompt.eventId)] = rating === null
+      ? { skipped: true, atMs: Date.now() }
+      : { rating, atMs: Date.now() };
+    writeMinigameFeedback(session.user.id, store);
+    if (rating !== null) {
+      void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_gameplay_event',
+        metadata: { stage: 'minigame_rating', game_id: prompt.gameId, event_id: prompt.eventId, rating, island_number: islandNumber } });
+    }
+  }, [islandNumber, minigameRatingPrompt, session.user.id]);
+  const toggleRevisitIsland = useCallback((targetIsland: number) => {
+    const store = readMinigameFeedback(session.user.id);
+    const next = !store.revisitIslands[String(targetIsland)];
+    store.revisitIslands[String(targetIsland)] = next;
+    writeMinigameFeedback(session.user.id, store);
+    setRevisitIslands({ ...store.revisitIslands });
+    void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_gameplay_event',
+      metadata: { stage: 'island_revisit_interest', island_number: targetIsland, interested: next } });
+  }, [session.user.id]);
   const answerArenaGamesCall = useCallback(() => {
     if (!arenaGamesCallId) return;
     setPhoneCallMessageId(arenaGamesCallId);
@@ -20091,6 +20149,15 @@ export function IslandRunBoardPrototype({
               <div className="island-clear-celebration__content">
                 <IslandCompleteTitle islandNumber={islandClearStats.islandNumber} />
                 <p className="island-clear-celebration__eyebrow">New Island Unlocked</p>
+                <button
+                  type="button"
+                  className={`island-clear-celebration__revisit${revisitIslands[String(islandClearStats.islandNumber)] ? ' is-loved' : ''}`}
+                  aria-pressed={Boolean(revisitIslands[String(islandClearStats.islandNumber)])}
+                  onClick={() => toggleRevisitIsland(islandClearStats.islandNumber)}
+                >
+                  <span aria-hidden="true">{revisitIslands[String(islandClearStats.islandNumber)] ? '❤️' : '🤍'}</span>
+                  {revisitIslands[String(islandClearStats.islandNumber)] ? "Noted — you'd love to revisit" : "I'd like to revisit this island"}
+                </button>
                 {isIslandClearRewardClaimed ? (
                   <p className="island-clear-celebration__rewards-collected">✅ Rewards Collected</p>
                 ) : (
@@ -21486,6 +21553,14 @@ export function IslandRunBoardPrototype({
         </button>, document.body) : null}
       {showScoreboard ? <IslandRunScoreboardModal session={session} onClose={() => setShowScoreboard(false)} /> : null}
       {showMandateBasket ? <MandateEggBasketOverlay onDone={handleMandateBasketDone} /> : null}
+      {minigameRatingPrompt && !activeLaunchedMinigameId ? (
+        <MinigameRatingModal
+          gameName={minigameRatingPrompt.name}
+          gameIcon={minigameRatingPrompt.icon}
+          onSubmit={(rating) => finishMinigameRating(rating)}
+          onSkip={() => finishMinigameRating(null)}
+        />
+      ) : null}
       {arenaGamesCallId && !doesModalOwnAttention ? createPortal(
         <button type="button" className="island-run-mission-message-banner island-run-mission-call-banner" onClick={answerArenaGamesCall}>
           <span className="island-run-mission-message-banner__icon" aria-hidden="true"><MissionPhoneRailIcon /></span>
@@ -21607,6 +21682,7 @@ export function IslandRunBoardPrototype({
             controllerInput={activeLaunchedMinigameId === 'shooter_blitz' ? shooterControllerInput : undefined}
             launchConfig={activeLaunchedMinigameConfig}
             onComplete={async (result) => {
+              lastMinigameCompletedRef.current = Boolean(result.completed);
               if (arenaLaunchOwnerRef.current !== session.user.id
                 || (activeLaunchedMinigameConfig?.arenaLaunchVisitKey
                   && activeLaunchedMinigameConfig.arenaLaunchVisitKey !== arenaStadiumVisitKey(getIslandRunStateSnapshot(session)))) return;
