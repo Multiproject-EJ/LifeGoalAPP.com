@@ -1,0 +1,34 @@
+{
+  "status": "pass",
+  "scope": "Actual factory, 600 consecutive animation steps, three qualities, attached eyes, day/night and owned resource disposal. Not physical-device or visual approval.",
+  "results": [
+    {
+      "quality": "high",
+      "triangles": 492,
+      "drawCalls": 2,
+      "maxStepAt60FPS": 0.002401818939199912,
+      "maxEyeAttachmentError": 1.2134932597249974e-06,
+      "dayEyesOff": true,
+      "resourcesDisposed": true
+    },
+    {
+      "quality": "medium",
+      "triangles": 492,
+      "drawCalls": 2,
+      "maxStepAt60FPS": 0.002401818939199912,
+      "maxEyeAttachmentError": 1.2134932597249974e-06,
+      "dayEyesOff": true,
+      "resourcesDisposed": true
+    },
+    {
+      "quality": "low",
+      "triangles": 280,
+      "drawCalls": 2,
+      "maxStepAt60FPS": 0.002401818939199912,
+      "maxEyeAttachmentError": 1.2134932597249974e-06,
+      "dayEyesOff": true,
+      "resourcesDisposed": true
+    }
+  ],
+  "factoryRevision": "V055"
+}

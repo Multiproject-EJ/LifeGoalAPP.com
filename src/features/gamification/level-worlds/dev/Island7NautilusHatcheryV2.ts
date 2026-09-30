@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { applyIsland7NacreV2 } from './Island7NacreV2';
 import type { Island3DQuality } from './island5ThreePilotContract';
 import { HATCHERY_V004_PARTS } from './Island7NautilusHatcheryV2.packed';
 
@@ -14,12 +15,14 @@ export function createIsland7NautilusHatcheryV2(level: 1 | 2 | 3, _quality: Isla
   const finish = (name: string) => {
     if (neutralMaterial) return neutralMaterial;
     const key = name.includes('EGG') ? 'egg' : name.includes('GALLERY') ? 'base' : name.includes('CRADLE') ? 'cradle' : 'shell';
-    if (!finishes.has(key)) finishes.set(key,new THREE.MeshStandardMaterial({
+    if (!finishes.has(key)) finishes.set(key,new THREE.MeshPhysicalMaterial({
       color: key === 'egg' ? 0xf2efd4 : key === 'base' ? 0x4a898e : key === 'cradle' ? 0xcbaa70 : 0xeadcc6,
       roughness: key === 'egg' ? 0.22 : 0.4, metalness: key === 'cradle' ? 0.4 : 0.12,
       emissive: key === 'egg' ? 0xe7ba76 : 0x142b39, emissiveIntensity: key === 'egg' ? .15 + night * 1.2 : 0.08,
     }));
-    return finishes.get(key)!;
+    const material = finishes.get(key)!;
+    if ((key === 'shell' || key === 'egg') && material instanceof THREE.MeshPhysicalMaterial) applyIsland7NacreV2(material, key === 'shell' ? .52 : .28);
+    return material;
   };
   for (const part of HATCHERY_V004_PARTS) {
     if (part.level > level) continue;

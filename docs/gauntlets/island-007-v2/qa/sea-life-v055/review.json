@@ -1,0 +1,28 @@
+{
+  "action": "retain-local-ambience-pass",
+  "reviewer": "whole_scene_critique",
+  "finding": "Depth hierarchy and smaller rounded eyes improve night ambience, bodies recede, eyes remain readable and kingdom retains visual priority. Nacre finish retained.",
+  "limitations": [
+    "Nearest daytime creature still has angular hard silhouette",
+    "Older pre-existing creature can pass behind notch at t45",
+    "Stills do not establish natural swimming; separate factory checks establish continuous finite transforms, not artistic anatomy approval"
+  ],
+  "scope": "User requested sea life/shadows/eyes and shell finish. No whole-scene approval.",
+  "evidence": [
+    "v055-sea-life-nacre",
+    "v055-sea-life-t45",
+    "v055-sea-life-low"
+  ],
+  "trianglesHighDay": 179898,
+  "trianglesHighNight": 179912,
+  "drawCallsHighDay": 153,
+  "drawCallsHighNight": 167,
+  "sampledHighFPS": 60,
+  "checks": {
+    "typeScript": "pass",
+    "productionBuild": "pass; existing chunk warnings",
+    "lowDayNight": "60 FPS sampled; 92928 triangles and150drawcalls; no capture errors",
+    "highDayNight": "60 FPS sampled; no capture errors",
+    "motionAndDisposal": "pass, 600 steps per quality"
+  }
+}

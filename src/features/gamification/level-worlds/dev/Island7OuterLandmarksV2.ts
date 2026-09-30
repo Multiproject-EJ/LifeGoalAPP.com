@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { applyIsland7NacreV2 } from './Island7NacreV2';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 type Quality = 'high' | 'medium' | 'low';
@@ -8,7 +9,7 @@ export function createIsland7OuterLandmarkV2(id: 'habit' | 'wisdom' | 'event', l
   const root = new THREE.Group(); root.name = `ISLAND_7_${id.toUpperCase()}_V2`;
   const n = quality === 'high' ? 16 : quality === 'medium' ? 12 : 8;
   const tubeSegments = quality === 'high' ? 16 : quality === 'medium' ? 12 : 8;
-  const standard = (color: number, metalness = 0, roughness = .5, emission = 0, intensity = 0) => new THREE.MeshStandardMaterial({ color: neutral ? 0xa5adb5 : color, metalness: neutral ? 0 : metalness, roughness, emissive: neutral ? 0 : emission, emissiveIntensity: intensity });
+  const standard = (color: number, metalness = 0, roughness = .5, emission = 0, intensity = 0) => new THREE.MeshPhysicalMaterial({ color: neutral ? 0xa5adb5 : color, metalness: neutral ? 0 : metalness, roughness, emissive: neutral ? 0 : emission, emissiveIntensity: intensity });
   const materials: Record<Key, THREE.Material> = {
     pearl: standard(0xd7e6dc,.22,.3), stone: standard(0x236f79,.2,.65), gold: standard(0xe8b86c,.7,.3),
     glass: neutral ? standard(0xa5adb5) : new THREE.MeshPhysicalMaterial({color:0x239caa,metalness:.2,roughness:.16,transparent:true,opacity:.28,depthWrite:false,side:THREE.DoubleSide}),
@@ -16,6 +17,8 @@ export function createIsland7OuterLandmarkV2(id: 'habit' | 'wisdom' | 'event', l
     aqua: standard(0x85f5eb,.15,.3,0x35d8db,1.2), violet: standard(0xa08ef4,.1,.3,0x8252e7,1.1),dark:standard(0x17313b,.1,.75),
   };
   if (!neutral) {
+    applyIsland7NacreV2(materials.pearl as THREE.MeshPhysicalMaterial, .48);
+    applyIsland7NacreV2(materials.stone as THREE.MeshPhysicalMaterial, .28);
     for (const key of ['warm', 'aqua', 'violet', 'coral'] as const) {
       const material = materials[key] as THREE.MeshStandardMaterial;
       material.emissiveIntensity *= THREE.MathUtils.lerp(.45, key === 'coral' ? 2.5 : key === 'warm' ? 1.45 : 2.1, night);

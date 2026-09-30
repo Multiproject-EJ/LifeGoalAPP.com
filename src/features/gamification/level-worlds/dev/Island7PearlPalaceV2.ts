@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { applyIsland7NacreV2 } from './Island7NacreV2';
 import { createIsland7PalaceFacadeV2 } from './Island7PalaceFacadeV2';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Island3DQuality } from './island5ThreePilotContract';
@@ -28,10 +29,11 @@ export function createIsland7PearlPalaceV2(
     return group;
   });
   function add(geometry: THREE.BufferGeometry, number: number, name: string) {
-    const finish = neutralMaterial ?? new THREE.MeshStandardMaterial({
+    const finish = neutralMaterial ?? new THREE.MeshPhysicalMaterial({
       color: /FOUNDATION|ENTRANCE/.test(name) ? 0xc9ac71 : /NAVE|GALLERIES|CANOPY/.test(name) ? 0x15869b : /CROWN/.test(name) ? 0xe9ddba : 0xc9e4df,
       roughness: 0.38, metalness: 0.24, emissive: /CROWN/.test(name) ? 0x214b57 : 0x102b35, emissiveIntensity: 0.23,
     });
+    if (!neutralMaterial && finish instanceof THREE.MeshPhysicalMaterial && !/FOUNDATION|ENTRANCE/.test(name)) applyIsland7NacreV2(finish, .40);
     if (!neutralMaterial && /TOWERS/.test(name)) {
       const shoulder = /WIDE/.test(name) ? 1.30 : /INTERMEDIATE/.test(name) ? 1.78 : 2.28;
       const positions = geometry.getAttribute('position'), colors = new Float32Array(positions.count * 3);

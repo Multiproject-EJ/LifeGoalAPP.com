@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createIsland7DeepSeaLifeV2 } from './Island7DeepSeaLifeV2';
 import { applyIsland7RockSurfaceV2 } from './Island7RockSurfaceV2';
 import { createIsland7WaterAtmosphereV2 } from './Island7WaterAtmosphereV2';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -37,6 +38,7 @@ export function createIsland7UnderwaterEnvironmentV2(options: {
   let garden: ReturnType<typeof createIsland7ReefGardenV2> | null = null;
   let archiveGarden: ReturnType<typeof createIsland7ArchiveReefGardenV2> | null = null;
   let atmosphere: ReturnType<typeof createIsland7WaterAtmosphereV2> | null = null;
+  let deepLife: ReturnType<typeof createIsland7DeepSeaLifeV2> | null = null;
   const reefLights: THREE.PointLight[] = [];
   let night = 0, disposed = false;
   const applyNight = () => {
@@ -44,7 +46,7 @@ export function createIsland7UnderwaterEnvironmentV2(options: {
       material.color.copy(day).multiplyScalar(1 - night * 0.08);
       if (material.userData.island7Daylight) material.userData.island7Daylight.value = 1 - night;
     }
-    garden?.setNight(night); archiveGarden?.setNight(night); atmosphere?.setNight(night);
+    garden?.setNight(night); archiveGarden?.setNight(night); atmosphere?.setNight(night); deepLife?.setNight(night);
     reefLights.forEach((light, index) => { light.intensity = night * (index === 1 ? 7 : index < 3 ? 12 : 3.5); });
     root.userData.nightMix = night;
   };
@@ -97,6 +99,7 @@ export function createIsland7UnderwaterEnvironmentV2(options: {
       archiveGarden = createIsland7ArchiveReefGardenV2(shelf, options.quality);
       root.add(archiveGarden.root);
       atmosphere = createIsland7WaterAtmosphereV2(shelf, options.quality); root.add(atmosphere.root);
+      deepLife = createIsland7DeepSeaLifeV2(options.quality); root.add(deepLife.root);
       // Five broad, shadow-free pools illuminate real rock and architecture.
       // No per-colony lights or screen-space fake background glow.
       for (const [x, y, z, color] of [[-5.6, -1, 4.5, 0x50fbdc], [5.6, -1, 4.2, 0xa073ff], [0, -0.6, -5.8, 0x45bbff], [-4.36, 1.2, -3.3, 0xffba69], [0, 1.0, 2.3, 0xffd89e]]) {
@@ -128,12 +131,12 @@ export function createIsland7UnderwaterEnvironmentV2(options: {
       night = THREE.MathUtils.clamp(Number.isFinite(value) ? value : 0, 0, 1);
       applyNight();
     },
-    animate: elapsed => { garden?.animate(elapsed); archiveGarden?.animate(elapsed); atmosphere?.animate(elapsed); },
+    animate: elapsed => { garden?.animate(elapsed); archiveGarden?.animate(elapsed); atmosphere?.animate(elapsed); deepLife?.animate(elapsed); },
     dispose: () => {
       if (disposed) return;
       disposed = true; root.userData.status = 'disposed';
       controller.abort(); window.clearTimeout(timeout);
-      disposeIsland7Reef(root); root.clear(); materials.length = 0; garden = null; atmosphere = null; reefLights.length = 0;
+      disposeIsland7Reef(root); root.clear(); materials.length = 0; garden = null; atmosphere = null; deepLife = null; reefLights.length = 0;
     },
   };
 }
