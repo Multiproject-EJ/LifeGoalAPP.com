@@ -53,6 +53,7 @@ const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
 const CARETAKER_CHARACTER_LAB_PATH = '/dev/caretaker-character-lab';
 const EGG_HATCH_THREE_LAB_PATH = '/dev/egg-hatch-3d';
 const ROBOT_FAMILY_THREE_LAB_PATH = '/dev/robot-family-3d';
+const HERO_SPRITE_STUDIO_PATH = '/dev/hero-sprite-studio';
 const EXPEDITION_SHIP_THREE_LAB_PATH = '/dev/expedition-ship-3d';
 const EXPEDITION_SHIP_GARAGE_PREVIEW_PATH = '/dev/expedition-ship-garage';
 const VAULT_ISLAND_LAB_PATH = '/dev/vault-island-lab';
@@ -494,6 +495,20 @@ function RobotFamilyThreeLabRoute() {
   return RobotFamilyLab ? <RobotFamilyLab /> : null;
 }
 
+function HeroSpriteStudioRoute() {
+  const [HeroSpriteStudio, setHeroSpriteStudio] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./world/dev/HeroSpriteStudio').then((module) => {
+      if (isMounted) setHeroSpriteStudio(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return HeroSpriteStudio ? <HeroSpriteStudio /> : null;
+}
+
 function ExpeditionShipThreeLabRoute() {
   const [ExpeditionShipLab, setExpeditionShipLab] = useState<ComponentType | null>(null);
 
@@ -711,6 +726,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === ROBOT_FAMILY_THREE_LAB_PATH;
+  const isHeroSpriteStudioRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === HERO_SPRITE_STUDIO_PATH;
   const isExpeditionShipThreeLabRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -969,6 +988,10 @@ function Root() {
 
   if (isRobotFamilyThreeLabRoute) {
     return <RobotFamilyThreeLabRoute />;
+  }
+
+  if (isHeroSpriteStudioRoute) {
+    return <HeroSpriteStudioRoute />;
   }
 
   if (isExpeditionShipThreeLabRoute) {
