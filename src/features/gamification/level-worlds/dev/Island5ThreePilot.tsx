@@ -439,7 +439,11 @@ interface Island5ThreePilotProps {
   onStormfrontCinematicBeat?: (beat: StormfrontCinematicBeat) => void;
   /** Island 002 storm-safe add-on structures (null hides them). */
   stormfrontStructureLevels?: { grid: number; hangar: number } | null;
-  onStormfrontStructureClick?: () => void;
+  onStormfrontStructureClick?: (structure: 'grid' | 'hangar') => void;
+  /** Event Arena sync: the banner the hangar's plane tows (null: none). */
+  skyHangarBanner?: { text: string; accent: string } | null;
+  /** Bump to make the hangar's plane take off right away. */
+  skyHangarLaunchKey?: number;
   firstArrivalSkip?: boolean;
   onFirstArrivalComplete?: () => void;
   onFirstArrivalBeat?: (beat: string) => void;
@@ -3813,6 +3817,8 @@ export default function Island5ThreePilot({
   onStormfrontCinematicBeat,
   stormfrontStructureLevels = null,
   onStormfrontStructureClick,
+  skyHangarBanner = null,
+  skyHangarLaunchKey = 0,
   openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
@@ -4073,6 +4079,10 @@ export default function Island5ThreePilot({
   stormfrontStructureLevelsRef.current = stormfrontStructureLevels;
   const onStormfrontStructureClickRef = useRef(onStormfrontStructureClick);
   onStormfrontStructureClickRef.current = onStormfrontStructureClick;
+  const skyHangarBannerRef = useRef(skyHangarBanner);
+  skyHangarBannerRef.current = skyHangarBanner;
+  const skyHangarLaunchKeyRef = useRef(skyHangarLaunchKey);
+  skyHangarLaunchKeyRef.current = skyHangarLaunchKey;
   const onLuckySpinClickRef = useRef(onLuckySpinClick);
   onLuckySpinClickRef.current = onLuckySpinClick;
   const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
@@ -5813,6 +5823,7 @@ export default function Island5ThreePilot({
     scene.add(luckySpinWheel.root);
     const stormfrontStructures = createStormfrontStructures();
     scene.add(stormfrontStructures.root);
+    let lastSkyHangarLaunchKey: number | null = null;
     const stormfrontStructureFlags = new Map<'grid' | 'hangar', { object: ReturnType<typeof createLandmarkFlagObject>; shown: LandmarkFlag; changedAt: number }>();
     const sharedTileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileTransforms = isFishermansVillage
@@ -9371,12 +9382,16 @@ export default function Island5ThreePilot({
         onLuckySpinClickRef.current?.({ x: event.clientX, y: event.clientY });
         return;
       }
-      if (stormfrontStructures.root.visible && raycaster.intersectObjects(stormfrontStructures.hitTargets, true).some((hit) => {
-        // Raycasts ignore visibility, so skip parts that are not built yet.
-        for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
-        return true;
-      })) {
-        onStormfrontStructureClickRef.current?.();
+      const stormfrontHit = stormfrontStructures.root.visible
+        ? raycaster.intersectObjects(stormfrontStructures.hitTargets, true).find((hit) => {
+          // Raycasts ignore visibility, so skip parts that are not built yet.
+          for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
+          return true;
+        })
+        : undefined;
+      const stormfrontHitStructure = stormfrontHit ? stormfrontStructures.structureOf(stormfrontHit.object) : null;
+      if (stormfrontHitStructure) {
+        onStormfrontStructureClickRef.current?.(stormfrontHitStructure);
         return;
       }
       const trainIntersection = raycaster.intersectObjects(clickableRideTrain, true)[0];
@@ -11668,6 +11683,12 @@ export default function Island5ThreePilot({
           });
         }
         stormfrontStructures.setLevels(stormfrontLevels.grid, stormfrontLevels.hangar);
+        const hangarBanner = skyHangarBannerRef.current;
+        stormfrontStructures.setBanner(hangarBanner?.text ?? null, hangarBanner?.accent ?? null);
+        if (skyHangarLaunchKeyRef.current !== lastSkyHangarLaunchKey) {
+          if (lastSkyHangarLaunchKey !== null) stormfrontStructures.launch();
+          lastSkyHangarLaunchKey = skyHangarLaunchKeyRef.current;
+        }
         stormfrontStructures.update(flagTime, isReducedMotion);
       }
       (['grid', 'hangar'] as const).forEach((id) => {
@@ -11697,7 +11718,7 @@ export default function Island5ThreePilot({
         }
       });
       canvas.dataset.stormfrontStructures = stormfrontStructures.root.visible && stormfrontLevels
-        ? `grid:${stormfrontLevels.grid},hangar:${stormfrontLevels.hangar},placement:${stormfrontStructures.root.userData.hangarPlacement ?? '-'},flags:${[...stormfrontStructureFlags.values()].map((f) => (f.object.root.visible ? f.shown : 'none')).join('/')}`
+        ? `grid:${stormfrontLevels.grid},hangar:${stormfrontLevels.hangar},banner:${stormfrontStructures.bannerText ?? '-'},placement:${stormfrontStructures.root.userData.hangarPlacement ?? '-'},flags:${[...stormfrontStructureFlags.values()].map((f) => (f.object.root.visible ? f.shown : 'none')).join('/')}`
         : 'hidden';
       canvas.dataset.landmarkFlags = [...landmarkFlags.entries()].map(([id, f]) => `${id}:${f.object.root.visible ? f.shown : 'none'}`).join(',');
       for (const item of landmarkProgressRef.current ?? []) {

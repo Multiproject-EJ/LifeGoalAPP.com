@@ -77,7 +77,7 @@ export const island2StormfrontCinematicTests: TestCase[] = [
       assert(structures.includes('floating sky-dock'), 'the hangar never lands on top of a landmark');
       const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       assert(board.includes("stormfrontProgress.struckAtMs === null || stormfrontAwaitingCinematic) return null;"), 'structures appear only after the storm has been shown');
-      assert(board.includes('onStormfrontStructureClick={isIslandVisualPreview ? undefined : () => setShowStormfrontBuild(true)}'), 'tapping a structure opens the build panel');
+      assert(board.includes('onStormfrontStructureClick={handleStormfrontStructureClick}') && board.includes("if (tap === 'build' || !skyHangarFlight) { setShowStormfrontBuild(true); return; }"), 'tapping an unfinished structure opens the build panel');
       const pilot = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       assert(pilot.includes("const target: LandmarkFlag = !stormfrontLevels ? 'none' : level >= 3 ? 'green' : 'red';"), 'each structure has a flag: red until Level 3, then green');
       assert(pilot.includes('groundRay.camera = camera;'), 'ground probing never trips sprite raycasts');

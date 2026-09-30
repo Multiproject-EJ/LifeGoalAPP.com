@@ -157,6 +157,32 @@ export function createStormfrontStructures() {
   });
   const flyer = createPlane('#fff7e8', '#f2b322');
   hangar.add(flyer.plane);
+  // Event Arena sync: the flyer tows a banner naming the current arena game.
+  const bannerCanvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  if (bannerCanvas) { bannerCanvas.width = 256; bannerCanvas.height = 64; }
+  const bannerTexture = bannerCanvas ? track(new THREE.CanvasTexture(bannerCanvas)) : null;
+  if (bannerTexture) bannerTexture.colorSpace = THREE.SRGBColorSpace;
+  const bannerMaterial = track(new THREE.MeshBasicMaterial({ map: bannerTexture, color: bannerTexture ? '#ffffff' : '#f2b322', side: THREE.FrontSide }));
+  const bannerGeometry = track(new THREE.PlaneGeometry(2.1, 0.52));
+  const banner = new THREE.Group();
+  const bannerFront = new THREE.Mesh(bannerGeometry, bannerMaterial);
+  const bannerBack = new THREE.Mesh(bannerGeometry, bannerMaterial);
+  bannerBack.rotation.y = Math.PI;
+  banner.add(bannerFront, bannerBack);
+  banner.position.set(-2.15, 0, 0);
+  const towLine = new THREE.Mesh(track(new THREE.BoxGeometry(0.9, 0.012, 0.012)), steel);
+  towLine.position.set(-1.0, 0, 0);
+  // The flyer reads larger than the parked planes so its banner is legible.
+  const FLYER_SCALE = 1.35;
+  flyer.plane.add(banner, towLine);
+  banner.visible = false;
+  towLine.visible = false;
+  let bannerText: string | null = null;
+  // Loop clock: normally real time; a tap on the hangar launches at once and
+  // runs the takeoff faster so the player is not kept waiting.
+  let loopClock = 0.05 * PLANE_LOOP_SECONDS;
+  let lastUpdateT: number | null = null;
+  let boosted = false;
   parked.concat(flyer).forEach((entry) => entry.plane.traverse((node) => {
     const mesh = node as THREE.Mesh;
     if (mesh.isMesh) { track(mesh.geometry); track(mesh.material as THREE.Material); }
@@ -263,7 +289,35 @@ export function createStormfrontStructures() {
   }
 
   const arcPoint = new THREE.Vector3();
+  function setBanner(text: string | null, accent: string | null) {
+    if (text === bannerText) return;
+    bannerText = text;
+    if (!text || !bannerCanvas || !bannerTexture) return;
+    const ctx = bannerCanvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, 256, 64);
+    ctx.fillStyle = '#fffaf0';
+    ctx.fillRect(0, 0, 256, 64);
+    ctx.fillStyle = accent ?? '#f2b322';
+    ctx.fillRect(0, 0, 256, 8);
+    ctx.fillRect(0, 56, 256, 8);
+    ctx.fillStyle = '#1b2433';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text.length > 16 ? `${text.slice(0, 15)}…` : text, 128, 33);
+    bannerTexture.needsUpdate = true;
+  }
+
+  /** Tap on a ready hangar: the flyer takes off right away, faster. */
+  function launch() {
+    loopClock = 0.05 * PLANE_LOOP_SECONDS;
+    boosted = true;
+  }
+
   function update(t: number, reducedMotion: boolean) {
+    const previousT = lastUpdateT;
+    lastUpdateT = t;
     if (!placed) return;
     tipGlow.emissiveIntensity = gridLevel >= 3 ? (reducedMotion ? 1.4 : 1.2 + Math.sin(t * 3) * 0.5) : 0.25;
     copper.emissiveIntensity = gridLevel >= 3 ? 0.25 + (reducedMotion ? 0 : Math.max(0, Math.sin(t * 1.3)) * 0.35) : 0;
@@ -298,8 +352,17 @@ export function createStormfrontStructures() {
       if (reducedMotion) {
         flyer.plane.position.set(HANGAR_LENGTH / 2 - 0.9, 0.33, 0);
         flyer.plane.rotation.set(0, 0, 0);
+        flyer.plane.scale.setScalar(FLYER_SCALE);
+        banner.visible = bannerText !== null;
+        towLine.visible = banner.visible;
       } else {
-        const p = (t % PLANE_LOOP_SECONDS) / PLANE_LOOP_SECONDS;
+        const dt = previousT === null ? 0 : Math.min(0.1, Math.max(0, t - previousT));
+        loopClock = (loopClock + dt * (boosted ? 2.6 : 1)) % PLANE_LOOP_SECONDS;
+        const p = loopClock / PLANE_LOOP_SECONDS;
+        if (boosted && p > 0.55) boosted = false;
+        banner.visible = bannerText !== null && flyer.plane.scale.x > 0.01;
+        towLine.visible = banner.visible;
+        if (banner.visible) banner.rotation.x = Math.sin(t * 7) * 0.12;
         const s = THREE.MathUtils.smoothstep;
         const x0 = -HANGAR_LENGTH / 2 + 3.4;
         const x1 = HANGAR_LENGTH / 2;
@@ -328,7 +391,7 @@ export function createStormfrontStructures() {
         }
         flyer.plane.position.set(x, y, 0);
         flyer.plane.rotation.set(0, heading, pitch);
-        flyer.plane.scale.setScalar(scale);
+        flyer.plane.scale.setScalar(scale * FLYER_SCALE);
         flyer.propeller.rotation.x = t * 40;
       }
     }
@@ -336,6 +399,17 @@ export function createStormfrontStructures() {
 
   return {
     root,
+    setBanner,
+    launch,
+    get bannerText() { return bannerText; },
+    /** Which structure a hit belongs to. */
+    structureOf(object: THREE.Object3D): 'grid' | 'hangar' | null {
+      for (let node: THREE.Object3D | null = object; node; node = node.parent) {
+        if (node === grid) return 'grid';
+        if (node === hangar) return 'hangar';
+      }
+      return null;
+    },
     get placed() { return placed; },
     place,
     setLevels,

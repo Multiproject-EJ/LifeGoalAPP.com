@@ -867,6 +867,7 @@ import { STORMFRONT_DAMAGED_STOP_INDICES, STORMFRONT_ISLAND_NUMBER, STORMFRONT_S
 import { fundIsland2StormfrontStructure, markIsland2StormfrontSeen, strikeIsland2Stormfront } from '../services/island2StormfrontActions';
 import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
 import { Island2StormfrontBuildModal, Island2StormfrontMessage, resolveStormfrontStructureView } from './Island2StormfrontModals';
+import { SKY_HANGAR_LAUNCH_DELAY_MS, SKY_HANGAR_LAUNCH_DELAY_REDUCED_MS, resolveSkyHangarFlight, resolveSkyHangarTap } from '../services/skyHangarArenaSync';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
 import { registerCrashContext } from '../../../../services/crashReports';
 import { IslandRunScoreboardModal } from './IslandRunScoreboardModal';
@@ -14272,6 +14273,39 @@ export function IslandRunBoardPrototype({
     if (islandNumber !== STORMFRONT_ISLAND_NUMBER || stormfrontProgress.struckAtMs === null || stormfrontAwaitingCinematic) return null;
     return { grid: stormfrontProgress.levels['lightning-grid'], hangar: stormfrontProgress.levels['sky-hangar'] };
   }, [islandNumber, stormfrontAwaitingCinematic, stormfrontPreviewMode, stormfrontProgress]);
+  // Sky Hangar ↔ Event Arena (services/skyHangarArenaSync.ts): at Level 3 the
+  // hangar's plane tows the current arena game and tapping it flies there.
+  // Dev: add &stormfrontEvent=<event id> to the structures preview.
+  const skyHangarFlight = useMemo(() => resolveSkyHangarFlight({
+    hangarLevel: stormfrontStructureLevels?.hangar ?? 0,
+    activeEventType: stormfrontPreviewMode === 'structures'
+      ? new URLSearchParams(window.location.search).get('stormfrontEvent') ?? effectiveActiveTimedEvent?.eventType
+      : effectiveActiveTimedEvent?.eventType,
+    journeyDiscReplacesEvent: journeyDiscReplacesTimedEventSurface,
+  }), [effectiveActiveTimedEvent?.eventType, journeyDiscReplacesTimedEventSurface, stormfrontPreviewMode, stormfrontStructureLevels?.hangar]);
+  const [skyHangarLaunchKey, setSkyHangarLaunchKey] = useState(0);
+  const skyHangarLaunchTimerRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (skyHangarLaunchTimerRef.current !== null) window.clearTimeout(skyHangarLaunchTimerRef.current);
+  }, []);
+  const handleStormfrontStructureClick = useCallback((structure: 'grid' | 'hangar') => {
+    const tap = structure === 'hangar'
+      ? resolveSkyHangarTap({ hangarLevel: stormfrontStructureLevels?.hangar ?? 0, flight: skyHangarFlight })
+      : 'build';
+    if (isIslandVisualPreview) {
+      if (tap === 'fly') setSkyHangarLaunchKey((key) => key + 1);
+      return;
+    }
+    if (tap === 'build' || !skyHangarFlight) { setShowStormfrontBuild(true); return; }
+    if (skyHangarLaunchTimerRef.current !== null) return;
+    const reducedMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    setSkyHangarLaunchKey((key) => key + 1);
+    setLandingText(`✈ Sky Hangar: flying to the Event Arena · ${skyHangarFlight.icon} ${skyHangarFlight.displayName}`);
+    skyHangarLaunchTimerRef.current = window.setTimeout(() => {
+      skyHangarLaunchTimerRef.current = null;
+      handleLandmarkOpenRequest('mystery');
+    }, reducedMotion ? SKY_HANGAR_LAUNCH_DELAY_REDUCED_MS : SKY_HANGAR_LAUNCH_DELAY_MS);
+  }, [handleLandmarkOpenRequest, isIslandVisualPreview, skyHangarFlight, stormfrontStructureLevels?.hangar]);
   const island5ThreeBuildLevels = useMemo(() => {
     const hold = (index: number) => (stormfrontAwaitingCinematic && STORMFRONT_DAMAGED_STOP_INDICES.includes(index)
       ? 3 : islandArtLandmarkBuildLevels[index]);
@@ -14736,11 +14770,13 @@ export function IslandRunBoardPrototype({
   }, []);
   const stormfrontAddOnMission = islandNumber === STORMFRONT_ISLAND_NUMBER && stormfrontProgress.struckAtMs !== null
     ? {
-      title: 'Storm-safe island',
+      title: skyHangarFlight ? `Storm-safe island · ✈ Now flying: ${skyHangarFlight.icon} ${skyHangarFlight.displayName}` : 'Storm-safe island',
       items: resolveStormfrontStructureView(stormfrontProgress, islandNumber, cycleIndex)
         .map(({ id, title, flag, percent }) => ({ id, title, flag, percent })),
-      actionLabel: stormfrontProgress.completedAtMs !== null ? 'View storm defences' : 'Build storm defences',
-      onAction: () => setShowStormfrontBuild(true),
+      actionLabel: skyHangarFlight ? '✈ Fly to the Event Arena' : stormfrontProgress.completedAtMs !== null ? 'View storm defences' : 'Build storm defences',
+      onAction: skyHangarFlight
+        ? () => { setShowMissionPhoneBriefing(false); handleStormfrontStructureClick('hangar'); }
+        : () => setShowStormfrontBuild(true),
     }
     : undefined;
   // The island's signature mission items (Island 001 dynamite etc.) stay off
@@ -17314,7 +17350,9 @@ export function IslandRunBoardPrototype({
                 onStormfrontCinematicComplete={finishStormfrontCinematic}
                 onStormfrontCinematicBeat={handleStormfrontBeat}
                 stormfrontStructureLevels={stormfrontStructureLevels}
-                onStormfrontStructureClick={isIslandVisualPreview ? undefined : () => setShowStormfrontBuild(true)}
+                onStormfrontStructureClick={handleStormfrontStructureClick}
+                skyHangarBanner={skyHangarFlight ? { text: skyHangarFlight.bannerText, accent: skyHangarFlight.accent } : null}
+                skyHangarLaunchKey={skyHangarLaunchKey}
                 celebrationOrbit={(showIslandClearCelebration && !isIslandClearCelebrationDeparting)
                   || activeLaunchedMinigameId === 'journey_disc_arena'}
                 onCelebrationSnapshot={setIslandBackdropSnapshotUrl}
