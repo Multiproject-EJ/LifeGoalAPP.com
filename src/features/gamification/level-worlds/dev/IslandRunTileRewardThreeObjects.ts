@@ -13,6 +13,11 @@ export interface IslandRunTileRewardThreeRuntime {
   setTechnologyFragments: (fragments: readonly VisibleTechnologyFragment[]) => void;
   setTrafficLightCharge: (charge: number) => void;
   setCactusCanyonMissionStarted: (started: boolean) => void;
+  /**
+   * Pops the Island 006 rod stations in, one after another, when the fishing
+   * mission has just started (wall-clock ms, or null for no animation).
+   */
+  setFishermansRodsRevealedAtMs: (revealedAtMs: number | null) => void;
   setFirstLightClaimedDynamiteTiles: (tileIndices: readonly number[]) => void;
   setStagedRestorationClaimedTiles: (tileIndices: readonly number[]) => void;
 }
@@ -806,6 +811,25 @@ export function createIslandRunTileRewardThreeObjects(options: {
   };
   let trafficCharge=0;
   let cactusCanyonMissionStarted = true;
+  let fishermansRodsRevealedAtMs: number | null = null;
+  // Reveal order: each rod pops shortly after the previous one.
+  const fishermansRodOrder = new Map(
+    entries
+      .filter((entry) => entry.signatureMissionKind === 'fishermans_rod')
+      .map((entry, order) => [entry.tileIndex, order] as const),
+  );
+  const ROD_POP_MS = 620;
+  const ROD_POP_STAGGER_MS = 170;
+  const resolveRodPop = (tileIndex: number): number => {
+    if (fishermansRodsRevealedAtMs === null) return 1;
+    const order = fishermansRodOrder.get(tileIndex) ?? 0;
+    const t = (Date.now() - fishermansRodsRevealedAtMs - order * ROD_POP_STAGGER_MS) / ROD_POP_MS;
+    if (t >= 1) return 1;
+    if (t <= 0) return 0;
+    // Ease-out-back: overshoots slightly, then settles.
+    const c = 1.70158;
+    return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2;
+  };
   let firstLightClaimedDynamiteTiles = new Set<number>();
   let stagedRestorationClaimedTiles = new Set<number>();
   const update = (elapsed: number, tokenIndex: number) => {
@@ -854,7 +878,9 @@ export function createIslandRunTileRewardThreeObjects(options: {
       entry.root.position.y = entry.baseY + Math.sin(elapsed * 1.55 + entry.phase) * bob;
       entry.root.rotation.y = -((transformByIndex.get(entry.tileIndex)?.rotationYRad) ?? 0) + elapsed * entry.spinRate;
       const pulse = 1 + Math.sin(elapsed * 2.1 + entry.phase) * (entry.tileType === 'free_ticket' ? 0.08 : 0.035);
-      entry.root.scale.setScalar(entry.baseScale * collectScale * pulse);
+      const pop = entry.signatureMissionKind === 'fishermans_rod' ? resolveRodPop(entry.tileIndex) : 1;
+      if (pop < 1) entry.root.position.y += (1 - Math.max(0, pop)) * 0.6;
+      entry.root.scale.setScalar(entry.baseScale * collectScale * pulse * Math.max(0.001, pop));
     });
   };
   update(0, -1);
@@ -866,6 +892,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
     disposeFragments: () => { for(const sprite of fragmentSprites.values()){sprite.material.map?.dispose();sprite.material.dispose();root.remove(sprite);}fragmentSprites.clear(); },
     setTrafficLightCharge: (charge) => { trafficCharge=charge; },
     setCactusCanyonMissionStarted: (started) => { cactusCanyonMissionStarted = started; },
+    setFishermansRodsRevealedAtMs: (revealedAtMs) => { fishermansRodsRevealedAtMs = revealedAtMs; },
     setFirstLightClaimedDynamiteTiles: (tileIndices) => {
       firstLightClaimedDynamiteTiles = new Set(tileIndices);
     },

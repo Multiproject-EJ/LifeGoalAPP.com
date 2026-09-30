@@ -573,6 +573,9 @@ export const islandRunRollActionTests: TestCase[] = [
         tokenIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0] - 2,
         currentIslandNumber: 6,
         cycleIndex: 0,
+        // The mission message was read before (older save without startedAtMs):
+        // the roll starts fishing, so the rod station works on this landing.
+        narrativeSeenState: { beats: { 'MISSION-BRIEFING-C0-I006': 1 }, episodes: {} },
       });
       const rod = await withMockedRandom([0, 0, 0.7], () => executeIslandRunRollAction({
         session: makeSession(), client: null, diceMultiplier: 1,
@@ -584,6 +587,31 @@ export const islandRunRollActionTests: TestCase[] = [
       assert(rodProgress.rodCollectedAtMs !== null, 'rod pickup persists with movement');
       assertEqual(rodProgress.pendingCatch?.kind, 'medium', 'hooked catch survives reload until the player reels');
       assertEqual(rodProgress.fishCaughtKg, 0, 'landing alone cannot award kilograms');
+    },
+  },
+  {
+    name: 'Island 006 rod stations do nothing until the mission message is opened',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0] - 2,
+        currentIslandNumber: 6,
+        cycleIndex: 0,
+        narrativeSeenState: { beats: {}, episodes: {} },
+      });
+      const result = await withMockedRandom([0, 0, 0.7], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(result.fishermansVillageRodCollected, false, 'no rod pickup before the message');
+      assertEqual(result.fishermansVillagePendingCatch ?? null, null, 'no cast before the message');
+      const progress = resolveFishermansVillageFishingProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.startedAtMs ?? null, null, 'rolling alone never starts the fishing mission');
+      assertEqual(progress.castsCompleted, 0, 'no cast is recorded');
     },
   },
   {

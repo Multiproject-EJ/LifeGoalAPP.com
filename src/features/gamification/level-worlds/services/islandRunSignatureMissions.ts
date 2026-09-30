@@ -392,6 +392,12 @@ export interface GreatHoneyfallProgress {
 export interface FishermansVillageFishingProgress {
   missionId: 'fishermans-village-fishing';
   version: 1;
+  /**
+   * When the player opened the Island 006 mission message. Rod stations and
+   * the catch bar appear only from then on. Older saves have no value; see
+   * isFishermansVillageFishingStarted for how they are treated.
+   */
+  startedAtMs?: number | null;
   rodCollectedAtMs: number | null;
   castsCompleted: number;
   successfulCatches: number;
@@ -579,6 +585,7 @@ export function sanitizeIslandRunSignatureMissionProgress(
       result[key] = {
         missionId: 'fishermans-village-fishing',
         version: 1,
+        startedAtMs: timestamp('startedAtMs', 'started_at_ms'),
         rodCollectedAtMs: timestamp('rodCollectedAtMs', 'rod_collected_at_ms'),
         castsCompleted: Math.max(0, finiteInteger(record.castsCompleted ?? record.casts_completed)),
         successfulCatches: Math.max(0, finiteInteger(record.successfulCatches ?? record.successful_catches)),
@@ -986,6 +993,7 @@ export function resolveFishermansVillageFishingProgress(options: {
   return current?.missionId === 'fishermans-village-fishing' ? current : {
     missionId: 'fishermans-village-fishing',
     version: 1,
+    startedAtMs: null,
     rodCollectedAtMs: null,
     castsCompleted: 0,
     successfulCatches: 0,
@@ -1172,6 +1180,35 @@ export function resolveFishermansVillageCatch(
   return { catchId, kind, kilograms, pullsRequired: first ? 3 : 5, tileIndex, ...assisted };
 }
 
+/**
+ * Whether the fishing mission is running: the mission message was opened, or
+ * (for saves from before startedAtMs existed) the player already fished.
+ */
+export function isFishermansVillageFishingStarted(progress: FishermansVillageFishingProgress): boolean {
+  return (progress.startedAtMs ?? null) !== null
+    || progress.rodCollectedAtMs !== null
+    || progress.castsCompleted > 0
+    || progress.fishCaughtKg > 0
+    || progress.completedAtMs !== null;
+}
+
+/** Starts the fishing mission when its mission message is opened. Idempotent. */
+export function startFishermansVillageFishingMission(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  nowMs: number;
+}): IslandRunSignatureMissionProgressByIsland {
+  if (options.islandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER) return options.ledger;
+  const current = resolveFishermansVillageFishingProgress(options);
+  if (isFishermansVillageFishingStarted(current)) return options.ledger;
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
+  return {
+    ...options.ledger,
+    [key]: { ...current, startedAtMs: options.nowMs, updatedAtMs: options.nowMs },
+  };
+}
+
 export function collectFishermansVillageLanding(options: {
   ledger: IslandRunSignatureMissionProgressByIsland;
   islandNumber: number;
@@ -1191,6 +1228,8 @@ export function collectFishermansVillageLanding(options: {
   const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
   if (
     !isFishermansVillageRodTile(options.islandNumber, options.tileIndex)
+    // No rod stations until the mission message has been opened.
+    || !isFishermansVillageFishingStarted(current)
     || current.pendingCatch !== null
     || current.completedAtMs !== null
   ) {
@@ -1768,6 +1807,7 @@ export function mergeIslandRunSignatureMissionProgress(
       merged[key] = {
         missionId: 'fishermans-village-fishing',
         version: 1,
+        startedAtMs: earliest(a.startedAtMs ?? null, b.startedAtMs ?? null),
         rodCollectedAtMs: earliest(a.rodCollectedAtMs, b.rodCollectedAtMs),
         castsCompleted: Math.max(a.castsCompleted, b.castsCompleted),
         successfulCatches: Math.max(a.successfulCatches, b.successfulCatches),

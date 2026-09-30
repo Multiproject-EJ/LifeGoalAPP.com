@@ -83,6 +83,7 @@ import {
   markIslandMissionBriefingSeen,
   type IslandMissionBriefingTrigger,
 } from './islandRunMissionBriefing';
+import { startFishermansVillageFishingMission } from './islandRunSignatureMissions';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import {
   applyEssenceDrift,
@@ -4099,6 +4100,15 @@ export function acknowledgeIslandMissionBriefing(
   const next: IslandRunGameStateRecord = {
     ...current,
     narrativeSeenState: nextNarrativeSeenState,
+    // Missions that launch with their message (Island 006 fishing) are started by
+    // openIslandMissionMessage; accepting the order also starts them in case the
+    // message was read another way.
+    signatureMissionProgressByIsland: startFishermansVillageFishingMission({
+      ledger: current.signatureMissionProgressByIsland,
+      islandNumber: trigger.islandNumber,
+      cycleIndex: trigger.cycleIndex,
+      nowMs: options.seenAtMs ?? Date.now(),
+    }),
     runtimeVersion: current.runtimeVersion + 1,
   };
   void commitIslandRunState({
@@ -4108,6 +4118,50 @@ export function acknowledgeIslandMissionBriefing(
     triggerSource: triggerSource ?? 'acknowledge_island_mission_briefing',
   });
   return { record: next, applied: true };
+}
+
+export interface OpenIslandMissionMessageOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  trigger: IslandMissionBriefingTrigger;
+  nowMs?: number;
+  triggerSource?: string;
+}
+
+/**
+ * Opening an island's mission message launches missions that start with their
+ * briefing: on Island 006 the fishing rods and catch bar appear from here on.
+ * Idempotent; returns the unchanged record when nothing needs to start.
+ */
+export function openIslandMissionMessage(
+  options: OpenIslandMissionMessageOptions,
+): { record: IslandRunGameStateRecord; started: boolean } {
+  const { session, client, trigger, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (current.currentIslandNumber !== trigger.islandNumber || current.cycleIndex !== trigger.cycleIndex) {
+    return { record: current, started: false };
+  }
+  const ledger = startFishermansVillageFishingMission({
+    ledger: current.signatureMissionProgressByIsland,
+    islandNumber: trigger.islandNumber,
+    cycleIndex: trigger.cycleIndex,
+    nowMs: options.nowMs ?? Date.now(),
+  });
+  if (ledger === current.signatureMissionProgressByIsland) {
+    return { record: current, started: false };
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    signatureMissionProgressByIsland: ledger,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'open_island_mission_message',
+  });
+  return { record: next, started: true };
 }
 
 /**

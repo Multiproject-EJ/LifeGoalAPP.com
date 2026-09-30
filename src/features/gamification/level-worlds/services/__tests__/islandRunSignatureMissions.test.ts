@@ -18,6 +18,8 @@ import {
   collectFirstLightAssemblyDynamiteForLanding,
   collectFirstLightAssemblyDynamiteForRoute,
   collectFishermansVillageLanding,
+  isFishermansVillageFishingStarted,
+  startFishermansVillageFishingMission,
   type IslandRunSignatureMissionProgressByIsland,
   collectGreatHoneyfallNectarForLanding,
   collectRootheartPowerComponentForLanding,
@@ -299,6 +301,10 @@ async function seedGreatHoneyfall(options: {
     },
   });
   refreshIslandRunStateFromLocal(session);
+}
+
+function fishingStartedLedger() {
+  return startFishermansVillageFishingMission({ ledger: {}, islandNumber: 6, cycleIndex: 0, nowMs: 1 });
 }
 
 export const islandRunSignatureMissionTests: TestCase[] = [
@@ -968,10 +974,52 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
+    name: 'Fisherman’s Village fishing starts only when its mission message is opened',
+    run: () => {
+      const notStarted = collectFishermansVillageLanding({
+        ledger: {}, islandNumber: 6, cycleIndex: 0,
+        tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 10, randomValue: 0.7,
+      });
+      assertEqual(notStarted.rodCollected, false, 'no rod pickup before the mission message is opened');
+      assertEqual(notStarted.pendingCatch, null, 'no cast before the mission message is opened');
+      assertEqual(Object.keys(notStarted.ledger).length, 0, 'the unopened mission leaves the ledger untouched');
+
+      const started = startFishermansVillageFishingMission({ ledger: {}, islandNumber: 6, cycleIndex: 0, nowMs: 42 });
+      const progress = resolveFishermansVillageFishingProgress({ ledger: started, cycleIndex: 0 });
+      assertEqual(progress.startedAtMs, 42, 'opening the message records when fishing started');
+      assert(isFishermansVillageFishingStarted(progress), 'the mission counts as started');
+      assertEqual(startFishermansVillageFishingMission({ ledger: started, islandNumber: 6, cycleIndex: 0, nowMs: 99 }), started, 'starting again is a no-op');
+      const otherIsland = {};
+      assertEqual(startFishermansVillageFishingMission({ ledger: otherIsland, islandNumber: 7, cycleIndex: 0, nowMs: 42 }), otherIsland, 'other islands are untouched');
+
+      const afterStart = collectFishermansVillageLanding({
+        ledger: started, islandNumber: 6, cycleIndex: 0,
+        tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 50, randomValue: 0.7,
+      });
+      assertEqual(afterStart.rodCollected, true, 'after the message, rod stations work');
+    },
+  },
+  {
+    name: 'Fisherman’s Village saves from before startedAtMs keep fishing, and startedAtMs survives sanitize and merge',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 6);
+      const legacy = { ...resolveFishermansVillageFishingProgress({ ledger: {}, cycleIndex: 0 }), castsCompleted: 2, fishCaughtKg: 30 };
+      delete (legacy as { startedAtMs?: number | null }).startedAtMs;
+      assert(isFishermansVillageFishingStarted(legacy), 'a save that already fished counts as started');
+      const sanitized = sanitizeIslandRunSignatureMissionProgress({ [key]: { ...legacy, startedAtMs: 7 } });
+      assertEqual((sanitized[key] as { startedAtMs?: number | null }).startedAtMs, 7, 'sanitize keeps startedAtMs');
+      const merged = mergeIslandRunSignatureMissionProgress(
+        { [key]: { ...legacy, startedAtMs: 9 } },
+        { [key]: { ...legacy, startedAtMs: 7 } },
+      );
+      assertEqual((merged[key] as { startedAtMs?: number | null }).startedAtMs, 7, 'merge keeps the earliest start');
+    },
+  },
+  {
     name: 'Every Fisherman’s Village rod landing equips the rod and immediately hooks a catch',
     run: () => {
       const first = collectFishermansVillageLanding({
-        ledger: {}, islandNumber: 6, cycleIndex: 0,
+        ledger: fishingStartedLedger(), islandNumber: 6, cycleIndex: 0,
         tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 10, randomValue: 0.7,
       });
       assertEqual(first.rodCollected, true, 'first rod landing equips the reusable rod');
@@ -998,7 +1046,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island22FishermansVillageThreeWorld.ts', 'utf8');
       assert(boardSource.includes('className="fishermans-catch-celebration"'), 'successful catches render a foreground celebration');
       assert(boardSource.includes('className={`fishermans-fishing-mini'), 'caught progress renders as a compact reward-bar companion');
-      assert(boardSource.includes('fishermansFishingProgress.fishCaughtKg > 0'), 'mini progress stays hidden until the player catches fish');
+      assert(boardSource.includes('islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER && fishermansFishingStarted ?'), 'mini progress shows from the moment the mission message launches fishing');
       assert(boardSource.includes("? '🎣 Rod ready—your first cast is already on the line!'"), 'the first rod landing opens the catch flow instead of stopping at a pickup message');
       assert(!boardSource.includes('four fish-marked shore tiles'), 'stale fish-tile guidance is removed');
       assert(!boardSource.includes('className="fishermans-fishing-meter"'), 'the old permanent board-overlay meter is removed');
@@ -1023,7 +1071,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const session = makeSession();
       const base = readIslandRunGameStateRecord(session);
       const prepared = collectFishermansVillageLanding({
-        ledger: {}, islandNumber: 6, cycleIndex: 0,
+        ledger: fishingStartedLedger(), islandNumber: 6, cycleIndex: 0,
         tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 10, randomValue: 0.95,
       });
       await writeIslandRunGameStateRecord({
@@ -1092,7 +1140,7 @@ export const islandRunSignatureMissionTests: TestCase[] = [
       const land = (ledger: IslandRunSignatureMissionProgressByIsland, castsSoFar: number) => collectFishermansVillageLanding({
         ledger, islandNumber: 6, cycleIndex: 0, tileIndex: FISHERMANS_VILLAGE_ROD_TILE_INDICES[0], nowMs: 10 + castsSoFar, randomValue: 0.5,
       });
-      const first = land({}, 0);
+      const first = land(fishingStartedLedger(), 0);
       assertEqual(first.pendingCatch?.kind, 'medium', 'first great catch is a medium fish');
       assert(!first.pendingCatch?.assisted, 'the first cast is a real skill cast');
       // Simulate a missed cast (overswing) through the canonical action.
