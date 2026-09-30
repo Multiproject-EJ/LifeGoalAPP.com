@@ -29245,3 +29245,37 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   cursor: pointer;
 }
 .island-clear-celebration__revisit.is-loved { border-color: #ff7aa2; background: rgba(255, 90, 140, 0.22); }
+
+/* Island 002 Opening Arena build modal. */
+.opening-arena-modal__dialog { background: linear-gradient(165deg, #1b2c52, #0f1a33 60%, #2a1d44); }
+.opening-arena-modal__hero {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 110px;
+  margin: 6px 0 4px;
+  border-radius: 18px;
+  background: radial-gradient(ellipse at 50% 70%, rgba(127, 227, 255, 0.35), transparent 60%), linear-gradient(180deg, #264b86, #13284e);
+  overflow: hidden;
+}
+.opening-arena-modal__stadium { font-size: 58px; transform: translateY(-10px); }
+.opening-arena-modal__base { position: absolute; bottom: 4px; font-size: 40px; filter: drop-shadow(0 0 10px #7fe3ff); }
+.opening-arena-modal__facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; font-size: 0.8rem; font-weight: 800; }
+.opening-arena-modal__facts span { padding: 4px 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); }
+.opening-arena-modal__levels { display: grid; gap: 6px; margin: 8px 0; padding: 0; list-style: none; }
+.opening-arena-modal__levels li {
+  display: grid;
+  grid-template-columns: 34px 1fr 20px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.opening-arena-modal__levels li b { display: grid; place-items: center; height: 26px; border-radius: 8px; background: rgba(255, 255, 255, 0.12); font-size: 0.75rem; }
+.opening-arena-modal__levels li.is-built b { background: #19d85c; color: #04210f; }
+.opening-arena-modal__levels li.is-current { border-color: #ffd54a; background: rgba(255, 213, 74, 0.12); }
+.opening-arena-modal__levels li i { color: #7dffac; font-style: normal; font-weight: 900; }

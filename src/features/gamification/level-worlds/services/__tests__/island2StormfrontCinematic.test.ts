@@ -56,7 +56,7 @@ export const island2StormfrontCinematicTests: TestCase[] = [
       assert(board.includes('fundIsland2StormfrontStructure({ session, client, structureId })'), 'building is a canonical action');
       assert(board.includes('stormfrontAwaitingCinematic && STORMFRONT_DAMAGED_STOP_INDICES.includes(index)'), 'struck landmarks keep Level 3 on screen until the storm is shown');
       assert(board.includes('stormfrontCinematicActive={stormfrontCinematicPlaying}'), 'the storm plays in the 3D board');
-      assert(board.includes('addOnMission={showMissionPhoneBriefing ? stormfrontAddOnMission : undefined}'), 'the add-on shows in the Mission Phone');
+      assert(board.includes('addOnMission={showMissionPhoneBriefing ? openingArenaAddOnMission ?? stormfrontAddOnMission : undefined}'), 'the add-on shows in the Mission Phone');
       assert(board.includes('id: stormfrontMessageId'), 'the add-on arrives as a Mission Phone message');
       assert(!/persistIslandRunRuntimeStatePatch\([^)]*stormfront/i.test(board), 'no UI gameplay writes');
       const modals = fsMod.readFileSync('src/features/gamification/level-worlds/components/Island2StormfrontModals.tsx', 'utf8');

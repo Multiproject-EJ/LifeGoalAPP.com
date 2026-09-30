@@ -106,4 +106,21 @@ export const island2OpeningArenaTests: TestCase[] = [
       assert(roll.includes('applyOpeningArenaRoll('), 'rolls bring the hover base closer');
     },
   },
+  {
+    name: 'opening arena: the board shows the hover base in transit, plays its arrival, anchors canonically and opens the arena build modal',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes('void anchorOpeningArenaHoverBase({ session, client })'), 'anchoring is canonical, after the arrival');
+      assert(board.includes('void orderOpeningArenaHoverBase({ session, client })'), 'ordered from the Mission Phone');
+      assert(board.includes('onFundStep={() => fundOpeningArena({ session, client })}'), 'the arena build modal funds canonically');
+      assert(board.includes('addOnMission={showMissionPhoneBriefing ? openingArenaAddOnMission ?? stormfrontAddOnMission : undefined}'), 'the arena comes before the storm on the phone');
+      assert(board.includes("case 'arriving': return openingArenaArrivalBusy"), 'the arrival waits until nothing else is on screen');
+      const base = fsMod.readFileSync('src/features/gamification/level-worlds/dev/OpeningArenaHoverBase.ts', 'utf8');
+      assert(base.includes('construction.visible = anchored && arenaLevel < 3;') && base.includes('crowd.visible = arenaLevel >= 3;'), 'steel construction first, a full crowd at Level 3');
+      const modal = fsMod.readFileSync('src/features/gamification/level-worlds/components/OpeningArenaBuildModal.tsx', 'utf8');
+      assert(modal.includes('useControllerShopScrollLock()') && modal.includes('document.body'), 'portal + scroll lock');
+    },
+  },
 ];

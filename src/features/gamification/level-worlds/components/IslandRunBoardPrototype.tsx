@@ -872,6 +872,9 @@ import { ARENA_GAMES_CALL, getArenaGamesCallMessageId } from '../services/mandat
 import { getMinigameRatingKey, readMinigameFeedback, shouldAskMinigameRating, writeMinigameFeedback, type MinigameRatingValue } from '../services/minigameFeedback';
 import { MinigameRatingModal } from './MinigameRatingModal';
 import { MandateEggBasketOverlay } from './MandateEggBasketOverlay';
+import { OpeningArenaBuildModal } from './OpeningArenaBuildModal';
+import { OPENING_ARENA_DELIVERY_ROLLS, OPENING_ARENA_SEAT_COUNT, isOpeningArenaAvailable, resolveOpeningArenaProgress, resolveOpeningArenaStage } from '../services/island2OpeningArena';
+import { anchorOpeningArenaHoverBase, fundOpeningArena, orderOpeningArenaHoverBase } from '../services/island2OpeningArenaActions';
 import { deferWisdomStop } from '../services/wisdomDeferralActions';
 import { SKY_HANGAR_LAUNCH_DELAY_MS, SKY_HANGAR_LAUNCH_DELAY_REDUCED_MS, resolveSkyHangarFlight, resolveSkyHangarTap } from '../services/skyHangarArenaSync';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
@@ -14326,6 +14329,17 @@ export function IslandRunBoardPrototype({
     ? new URLSearchParams(window.location.search).get('islandStormfrontPreview') : null), [isIslandVisualPreview]);
   const stormfrontPreview = stormfrontPreviewMode === '1';
   const [stormfrontCinematicPlaying, setStormfrontCinematicPlaying] = useState(false);
+  // Island 002 Opening Arena (services/island2OpeningArena.ts).
+  const openingArenaAvailable = isOpeningArenaAvailable(__storeState);
+  const openingArenaProgress = useMemo(
+    () => resolveOpeningArenaProgress(__storeState.signatureMissionProgressByIsland, __storeState.cycleIndex),
+    [__storeState.signatureMissionProgressByIsland, __storeState.cycleIndex],
+  );
+  const openingArenaStage = resolveOpeningArenaStage(openingArenaProgress);
+  const [showOpeningArenaBuild, setShowOpeningArenaBuild] = useState(false);
+  // Dev: islandOpeningArenaPreview=transit3|transit1|arriving|0|1|2|3 on the preview page.
+  const openingArenaPreview = useMemo(() => (isIslandVisualPreview && typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('islandOpeningArenaPreview') : null), [isIslandVisualPreview]);
   const [showStormfrontMessage, setShowStormfrontMessage] = useState(() => stormfrontPreviewMode === 'message');
   const [showStormfrontBuild, setShowStormfrontBuild] = useState(() => stormfrontPreviewMode === 'build');
   // Structures stand on the board once the storm has been shown.
@@ -14456,6 +14470,7 @@ export function IslandRunBoardPrototype({
       Boolean(activeMissionBriefing) ||
       stormfrontCinematicPlaying ||
       showMandateBasket ||
+      showOpeningArenaBuild ||
       minigameRatingPrompt !== null ||
       showStormfrontMessage ||
       showStormfrontBuild ||
@@ -14909,6 +14924,80 @@ export function IslandRunBoardPrototype({
     const timer = window.setTimeout(finishStormfrontCinematic, 30_000);
     return () => window.clearTimeout(timer);
   }, [finishStormfrontCinematic, stormfrontCinematicPlaying, stormfrontPreview]);
+  const openingArenaArrivalBusy = doesModalOwnAttention || isRolling || Boolean(pendingHopSequence)
+    || Boolean(constructionPresentation?.active) || Boolean(islandDeparture) || stormfrontCinematicPlaying;
+  const openingArenaVisual = useMemo((): { stage: 'hidden' | 'in_transit' | 'arriving' | 'anchored'; arenaLevel: number; rollsUntilDelivery: number } | null => {
+    if (openingArenaPreview) {
+      if (openingArenaPreview.startsWith('transit')) return { stage: 'in_transit', arenaLevel: 0, rollsUntilDelivery: Number(openingArenaPreview.slice(7)) || 3 };
+      if (openingArenaPreview === 'arriving') return { stage: 'arriving', arenaLevel: 0, rollsUntilDelivery: 0 };
+      return { stage: 'anchored', arenaLevel: Math.max(0, Math.min(3, Number(openingArenaPreview) || 0)), rollsUntilDelivery: 0 };
+    }
+    if (!openingArenaAvailable) return null;
+    switch (openingArenaStage) {
+      case 'order': return null;
+      case 'in_transit': return { stage: 'in_transit', arenaLevel: 0, rollsUntilDelivery: openingArenaProgress.rollsUntilDelivery };
+      // The arrival plays when nothing else is on screen; until then it waits close by.
+      case 'arriving': return openingArenaArrivalBusy
+        ? { stage: 'in_transit', arenaLevel: 0, rollsUntilDelivery: 1 }
+        : { stage: 'arriving', arenaLevel: 0, rollsUntilDelivery: 0 };
+      default: return { stage: 'anchored', arenaLevel: openingArenaProgress.arenaLevel, rollsUntilDelivery: 0 };
+    }
+  }, [openingArenaArrivalBusy, openingArenaAvailable, openingArenaPreview, openingArenaProgress, openingArenaStage]);
+  const openingArenaAnchorInFlightRef = useRef(false);
+  const handleOpeningArenaArrivalComplete = useCallback(() => {
+    if (openingArenaPreview || openingArenaAnchorInFlightRef.current) return;
+    openingArenaAnchorInFlightRef.current = true;
+    void anchorOpeningArenaHoverBase({ session, client })
+      .then((result) => {
+        if (result.status !== 'ok') return;
+        setLandingText('🛸 The Opening Arena hover base is anchored! Time to build the arena.');
+        triggerIslandRunHaptic('build_level_complete');
+        setShowOpeningArenaBuild(true);
+      })
+      .catch((error) => console.warn('[IslandRun] Opening Arena anchor failed.', error))
+      .finally(() => { openingArenaAnchorInFlightRef.current = false; });
+  }, [client, openingArenaPreview, session]);
+  const orderOpeningArena = useCallback(() => {
+    void orderOpeningArenaHoverBase({ session, client }).then((result) => {
+      if (result.status === 'ok') setLandingText(`🛸 Hover base ordered! It arrives in ${OPENING_ARENA_DELIVERY_ROLLS} rolls.`);
+    }).catch((error) => console.warn('[IslandRun] Opening Arena order failed.', error));
+  }, [client, session]);
+  // One inbox message when the mission opens on Island 002.
+  const openingArenaMessageId = `opening-arena:${cycleIndex}:2`;
+  useEffect(() => {
+    if (!openingArenaAvailable || openingArenaStage !== 'order') return;
+    updateMissionInbox((inbox) => addMissionPhoneMessage(inbox, {
+      id: openingArenaMessageId,
+      islandNumber: 2,
+      cycleIndex,
+      sender: 'Central Command',
+      title: 'Order the Opening Arena hover base',
+      body: `The Arena Games need a stadium. Order a massive flying construction plot; it is towed in and anchored beside the island, then you build ${OPENING_ARENA_SEAT_COUNT.toLocaleString()} seats and a golden Sky Lift brings the guests up.`,
+      stepLabels: ['Order the hover base on the Mission Phone', `Roll ${OPENING_ARENA_DELIVERY_ROLLS} times while it is towed in`, 'Build the Opening Arena to Level 3'],
+      receivedAtMs: Date.now(),
+      readAtMs: null,
+    }));
+  }, [cycleIndex, openingArenaAvailable, openingArenaMessageId, openingArenaStage, updateMissionInbox]);
+  const openingArenaAddOnMission = openingArenaAvailable && openingArenaStage !== 'complete'
+    ? {
+      title: 'Opening Arena',
+      items: [
+        { id: 'hover-base', title: 'Hover base', flag: openingArenaStage === 'order' ? 'none' as const : openingArenaStage === 'building' ? 'green' as const : 'red' as const,
+          percent: openingArenaStage === 'order' ? 0 : openingArenaStage === 'building' ? 100 : Math.round(((OPENING_ARENA_DELIVERY_ROLLS - openingArenaProgress.rollsUntilDelivery) / OPENING_ARENA_DELIVERY_ROLLS) * 99) },
+        { id: 'arena', title: 'Opening Arena', flag: openingArenaProgress.arenaLevel > 0 ? 'red' as const : 'none' as const,
+          percent: Math.round((openingArenaProgress.arenaLevel / 3) * 100) },
+      ],
+      actionLabel: openingArenaStage === 'order' ? '🛸 Order the hover base'
+        : openingArenaStage === 'in_transit' ? `🛸 Arriving in ${openingArenaProgress.rollsUntilDelivery} roll${openingArenaProgress.rollsUntilDelivery === 1 ? '' : 's'}`
+          : openingArenaStage === 'arriving' ? '🛸 Arriving now — close the phone to watch'
+            : '🏟️ Build the Opening Arena',
+      onAction: () => {
+        if (openingArenaStage === 'order') orderOpeningArena();
+        else if (openingArenaStage === 'building') { setShowMissionPhoneBriefing(false); setShowOpeningArenaBuild(true); }
+        else setShowMissionPhoneBriefing(false);
+      },
+    }
+    : undefined;
   const handleStormfrontBeat = useCallback((beat: StormfrontCinematicBeat) => {
     if (beat === 'boom') triggerIslandRunHaptic('assembly_topbar_blast');
   }, []);
@@ -17497,6 +17586,9 @@ export function IslandRunBoardPrototype({
                 onStormfrontStructureClick={handleStormfrontStructureClick}
                 skyHangarBanner={skyHangarFlight ? { text: skyHangarFlight.bannerText, accent: skyHangarFlight.accent } : null}
                 skyHangarLaunchKey={skyHangarLaunchKey}
+                openingArena={openingArenaVisual}
+                onOpeningArenaArrivalComplete={handleOpeningArenaArrivalComplete}
+                onOpeningArenaClick={isIslandVisualPreview ? undefined : () => setShowOpeningArenaBuild(true)}
                 celebrationOrbit={(showIslandClearCelebration && !isIslandClearCelebrationDeparting)
                   || activeLaunchedMinigameId === 'journey_disc_arena'}
                 onCelebrationSnapshot={setIslandBackdropSnapshotUrl}
@@ -21553,6 +21645,16 @@ export function IslandRunBoardPrototype({
         </button>, document.body) : null}
       {showScoreboard ? <IslandRunScoreboardModal session={session} onClose={() => setShowScoreboard(false)} /> : null}
       {showMandateBasket ? <MandateEggBasketOverlay onDone={handleMandateBasketDone} /> : null}
+      {showOpeningArenaBuild ? (
+        <OpeningArenaBuildModal
+          progress={openingArenaProgress}
+          islandNumber={islandNumber}
+          cycleIndex={cycleIndex}
+          money={__storeState.essence}
+          onFundStep={() => fundOpeningArena({ session, client })}
+          onClose={() => setShowOpeningArenaBuild(false)}
+        />
+      ) : null}
       {minigameRatingPrompt && !activeLaunchedMinigameId ? (
         <MinigameRatingModal
           gameName={minigameRatingPrompt.name}
@@ -21905,7 +22007,7 @@ export function IslandRunBoardPrototype({
           const spent = build && build.requiredEssence > 0 ? build.spentEssence / build.requiredEssence : 0;
           return { id: stop.stopId, title: stop.title, flag: resolveLandmarkFlag({ level, percent: level >= 3 ? 100 : spent > 0 ? 1 : 0 }) };
         }) : undefined}
-        addOnMission={showMissionPhoneBriefing ? stormfrontAddOnMission : undefined}
+        addOnMission={showMissionPhoneBriefing ? openingArenaAddOnMission ?? stormfrontAddOnMission : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
         primaryActionLabel={showMissionPhoneBriefing && isIslandClearSignalPending

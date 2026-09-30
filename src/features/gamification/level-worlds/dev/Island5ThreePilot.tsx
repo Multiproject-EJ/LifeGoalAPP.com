@@ -13,6 +13,7 @@ import {createIsland001FirstArrival} from './Island001FirstArrival';
 import { createIslandDepartureCinematic } from './IslandDepartureCinematic';
 import { createIsland2StormfrontCinematic } from './StormfrontCinematic';
 import { createStormfrontStructures } from './StormfrontStructures';
+import { OPENING_ARENA_ARRIVAL_SECONDS, createOpeningArenaHoverBase, type OpeningArenaVisualStage } from './OpeningArenaHoverBase';
 import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
 import { buildIsland40PlaceholderLandmark, createIsland40PlaceholderWorld, ISLAND_40_PLACEHOLDER_LABEL } from './Island40PlaceholderThreeWorld';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -445,6 +446,10 @@ interface Island5ThreePilotProps {
   skyHangarBanner?: { text: string; accent: string } | null;
   /** Bump to make the hangar's plane take off right away. */
   skyHangarLaunchKey?: number;
+  /** Island 002 Opening Arena hover base (null hides it). */
+  openingArena?: { stage: OpeningArenaVisualStage; arenaLevel: number; rollsUntilDelivery: number } | null;
+  onOpeningArenaArrivalComplete?: () => void;
+  onOpeningArenaClick?: () => void;
   firstArrivalSkip?: boolean;
   onFirstArrivalComplete?: () => void;
   onFirstArrivalBeat?: (beat: string) => void;
@@ -3820,6 +3825,9 @@ export default function Island5ThreePilot({
   onStormfrontStructureClick,
   skyHangarBanner = null,
   skyHangarLaunchKey = 0,
+  openingArena = null,
+  onOpeningArenaArrivalComplete,
+  onOpeningArenaClick,
   openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
@@ -4084,6 +4092,8 @@ export default function Island5ThreePilot({
   skyHangarBannerRef.current = skyHangarBanner;
   const skyHangarLaunchKeyRef = useRef(skyHangarLaunchKey);
   skyHangarLaunchKeyRef.current = skyHangarLaunchKey;
+  const openingArenaRef = useRef({ state: openingArena, onArrivalComplete: onOpeningArenaArrivalComplete, onClick: onOpeningArenaClick });
+  openingArenaRef.current = { state: openingArena, onArrivalComplete: onOpeningArenaArrivalComplete, onClick: onOpeningArenaClick };
   const onLuckySpinClickRef = useRef(onLuckySpinClick);
   onLuckySpinClickRef.current = onLuckySpinClick;
   const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
@@ -5825,6 +5835,10 @@ export default function Island5ThreePilot({
     const stormfrontStructures = createStormfrontStructures();
     scene.add(stormfrontStructures.root);
     let lastSkyHangarLaunchKey: number | null = null;
+    const openingArenaBase = createOpeningArenaHoverBase();
+    scene.add(openingArenaBase.root);
+    let openingArenaArrivalNotified = false;
+    let openingArenaArrivalCamera: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
     const stormfrontStructureFlags = new Map<'grid' | 'hangar', { object: ReturnType<typeof createLandmarkFlagObject>; shown: LandmarkFlag; changedAt: number }>();
     const sharedTileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileTransforms = isFishermansVillage
@@ -9394,6 +9408,14 @@ export default function Island5ThreePilot({
         onLuckySpinClickRef.current?.({ x: event.clientX, y: event.clientY });
         return;
       }
+      if (openingArenaBase.root.visible && openingArenaRef.current.state?.stage === 'anchored'
+        && raycaster.intersectObjects(openingArenaBase.hitTargets, true).some((hit) => {
+          for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
+          return true;
+        })) {
+        openingArenaRef.current.onClick?.();
+        return;
+      }
       const stormfrontHit = stormfrontStructures.root.visible
         ? raycaster.intersectObjects(stormfrontStructures.hitTargets, true).find((hit) => {
           // Raycasts ignore visibility, so skip parts that are not built yet.
@@ -11358,6 +11380,53 @@ export default function Island5ThreePilot({
         delete canvas.dataset.stormfrontTime;
         controls.enabled = true;
       }
+      // Island 002 Opening Arena hover base: towed in, anchored, built up.
+      const openingArenaState = openingArenaRef.current.state;
+      if (openingArenaState && openingArenaState.stage !== 'hidden' && !openingArenaBase.placed && landmarkRootsById.size > 0) {
+        const islandBox = new THREE.Box3();
+        landmarkRootsById.forEach((entry) => islandBox.expandByObject(entry));
+        if (!islandBox.isEmpty()) {
+          const size = islandBox.getSize(new THREE.Vector3());
+          const centre = islandBox.getCenter(new THREE.Vector3());
+          openingArenaBase.place({
+            centre,
+            islandRadius: THREE.MathUtils.clamp(Math.max(size.x, size.z) * 0.62, 8, 30),
+            groundY: islandBox.min.y,
+            viewFrom: camera.position.clone(),
+          });
+        }
+      }
+      if (openingArenaState && openingArenaBase.placed) {
+        if (openingArenaState.stage !== 'arriving') { openingArenaBase.resetArrival(); openingArenaArrivalNotified = false; }
+        openingArenaBase.setState(openingArenaState);
+        openingArenaBase.update(now / 1000, Math.min(0.1, actualFrameDeltaSeconds), isReducedMotion);
+        if (openingArenaState.stage === 'arriving') {
+          // Frame the island and the incoming base; hand the camera back after.
+          if (!openingArenaArrivalCamera) openingArenaArrivalCamera = { position: camera.position.clone(), target: controls.target.clone() };
+          const focus = openingArenaBase.focusPoint;
+          const u = THREE.MathUtils.smoothstep(openingArenaBase.arrivalProgress, 0, 0.25) * (1 - THREE.MathUtils.smoothstep(openingArenaBase.arrivalProgress, 0.88, 1));
+          const target = openingArenaArrivalCamera.target.clone().lerp(focus, 0.45 * u);
+          const eye = openingArenaArrivalCamera.position.clone().lerp(
+            target.clone().add(openingArenaArrivalCamera.position.clone().sub(openingArenaArrivalCamera.target).multiplyScalar(1.35)), u);
+          transition = null;
+          controls.enabled = false;
+          camera.position.copy(eye);
+          camera.lookAt(target);
+          if (openingArenaBase.arrivalProgress >= 1 && !openingArenaArrivalNotified) {
+            openingArenaArrivalNotified = true;
+            openingArenaRef.current.onArrivalComplete?.();
+          }
+        } else if (openingArenaArrivalCamera) {
+          camera.position.copy(openingArenaArrivalCamera.position);
+          controls.target.copy(openingArenaArrivalCamera.target);
+          camera.lookAt(controls.target);
+          openingArenaArrivalCamera = null;
+          controls.enabled = true;
+        }
+        canvas.dataset.openingArena = `${openingArenaState.stage}:${openingArenaState.arenaLevel}:${openingArenaBase.arrivalProgress.toFixed(2)}`;
+      } else {
+        openingArenaBase.root.visible = false;
+      }
       publishCameraAuthoringPose(now);
 
       let restoreAssemblyCameraAfterRender = false;
@@ -12069,6 +12138,7 @@ export default function Island5ThreePilot({
       departureCinematic?.dispose();
       stormfrontCinematic?.dispose();
       stormfrontStructures.dispose();
+      openingArenaBase.dispose();
       stormfrontStructureFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
       landmarkFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
       livingAmbience.root.userData.disposeAwakening?.();
