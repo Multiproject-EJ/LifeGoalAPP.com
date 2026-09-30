@@ -22,8 +22,17 @@ const tracker = resolveIslandMissionTrackerPresentation({ islandNumber, state: {
   perIslandEggs: reviewEggs,
   signatureMissionProgressByIsland: {},
 } });
+// ?message=1 opens with an incoming message (fullscreen); the Messages button opens the modal.
+const reviewMessages = [
+  { id: 'review:incoming', islandNumber, cycleIndex: 0, sender: 'Central Command', title: 'Get ready, it’s time to kick off the Arena Games',
+    body: 'The mandate is signed. Your first eggs are in the basket — now open the Arena and play your first round.',
+    stepLabels: ['Set an egg at the Hatchery', 'Build Landmarks', 'Play one Arena round'], receivedAtMs: Date.now() - 60_000, readAtMs: null },
+  { id: 'review:older', islandNumber, cycleIndex: 0, sender: 'Central Command', title: 'Welcome to the island',
+    body: 'Build every landmark to Level 3.', stepLabels: ['Build Landmarks'], receivedAtMs: Date.now() - 3_600_000, readAtMs: 1 },
+];
 function CompletionReview() {
   const [open, setOpen] = React.useState(true);
+  const [messages, setMessages] = React.useState(reviewMessages);
   return <>
     <main style={{ padding: 24, fontFamily: 'system-ui' }}>
       <h1>Completion UI check</h1><p>Isolated fixtures · no player data is read or changed.</p>
@@ -33,7 +42,9 @@ function CompletionReview() {
     </main>
     <IslandMissionBriefingModal isOpen={open} presentation={tracker.briefing}
       progress={tracker.objectives} overallProgressPercent={tracker.overallProgressPercent}
-      islandCompletion={tracker.islandCompletion} stats={tracker.stats} onAcknowledge={() => setOpen(false)} />
+      islandCompletion={tracker.islandCompletion} stats={tracker.stats} onAcknowledge={() => setOpen(false)}
+      messages={messages} openMessageId={params.get('message') === '1' ? 'review:incoming' : null}
+      onMessageRead={(id) => setMessages((all) => all.map((entry) => (entry.id === id ? { ...entry, readAtMs: Date.now() } : entry)))} />
   </>;
 }
 createRoot(document.getElementById('root')!).render(<CompletionReview />);
