@@ -100,8 +100,10 @@ export type IslandRunTileRewardObjectKind =
   | 'active_landmark_door';
 
 export function resolveIslandRunTileRewardObjectKind(
-  entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster' | 'signatureMissionKind'>,
+  entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster' | 'signatureMissionKind' | 'islandTreasureId'>,
 ): IslandRunTileRewardObjectKind | null {
+  // An island treasure (see islandRunTreasures.ts) waits on this tile.
+  if (entry.islandTreasureId) return 'treasure_chest';
   if (entry.signatureMissionKind === 'first_light_dynamite') return 'first_light_dynamite';
   if (entry.signatureMissionKind === 'frostwell_drill') return 'frostwell_drill';
   if (entry.signatureMissionKind === 'moonwell_heat') return 'moonwell_heat';

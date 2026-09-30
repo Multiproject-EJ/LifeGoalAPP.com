@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../utils/scrollLock';
 import { fetchOwnedCosmetics, type OwnedCosmeticRow } from '../../../../services/themePurchases';
 import { isPlayerPieceId, resolvePlayerPiece } from '../services/islandRunPlayerPieces';
+import type { TreasureIslandWealth } from '../services/islandRunTreasures';
 import './IslandRunWalletPanel.css';
 
 const NUMBER = new Intl.NumberFormat();
@@ -24,7 +25,11 @@ export interface IslandRunWalletPanelProps {
   money: number;
   essence: number;
   dice: number;
-  treasures: { unlocked: boolean; relics: number; relicTotal: number; invested: number };
+  /** Event tickets for the active timed event (null when none is running). */
+  tickets: number | null;
+  /** Treasure Island: collected island treasures + Vault investment. */
+  wealth: TreasureIslandWealth;
+  vault: { unlocked: boolean; relics: number; relicTotal: number };
   /** Where the panel grows from (the wallet in the top bar). */
   originRect: DOMRect | null;
   onClose: () => void;
@@ -38,7 +43,7 @@ export interface IslandRunWalletPanelProps {
  * read-only (store buttons open the existing wallet stores).
  */
 export function IslandRunWalletPanel({
-  userId, money, essence, dice, treasures, originRect, onClose, onGetMoney, onGetEssence,
+  userId, money, essence, dice, tickets, wealth, vault, originRect, onClose, onGetMoney, onGetEssence,
 }: IslandRunWalletPanelProps) {
   const [purchases, setPurchases] = useState<{ status: 'loading' | 'ready' | 'error'; items: OwnedCosmeticRow[] }>({ status: 'loading', items: [] });
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -102,19 +107,33 @@ export function IslandRunWalletPanel({
           <div className="ir-wallet__tile ir-wallet__tile--dice">
             <span aria-hidden="true">🎲</span><small>Dice</small><strong>{format(dice)}</strong>
           </div>
+          <div className="ir-wallet__tile ir-wallet__tile--tickets">
+            <span aria-hidden="true">🎟️</span><small>Tickets</small><strong>{tickets === null ? '—' : format(tickets)}</strong>
+          </div>
         </div>
 
-        <div className="ir-wallet__treasure">
-          <span className="ir-wallet__treasure-icon" aria-hidden="true">🏛️</span>
-          <span>
-            <small>Treasure Island</small>
-            {treasures.unlocked ? (
-              <strong>{treasures.relics}/{treasures.relicTotal} relics · {format(treasures.invested)} invested</strong>
+        <section className="ir-wallet__treasure" aria-labelledby="ir-wallet-treasure-title">
+          <span className="ir-wallet__treasure-icon" aria-hidden="true">🏝️</span>
+          <span className="ir-wallet__treasure-body">
+            <small id="ir-wallet-treasure-title">Treasure Island worth</small>
+            <strong className="ir-wallet__treasure-total">{format(wealth.total)}</strong>
+            <span className="ir-wallet__treasure-breakdown">
+              💎 {format(wealth.treasureValue)} in treasures · 🏗️ {format(wealth.invested)} invested
+            </span>
+            <span className="ir-wallet__treasure-meter" aria-label={`${wealth.collectedCount} of ${wealth.totalCount} treasures found`}>
+              <i style={{ width: `${(wealth.collectedCount / Math.max(1, wealth.totalCount)) * 100}%` }} />
+            </span>
+            <span className="ir-wallet__treasure-count">{wealth.collectedCount}/{wealth.totalCount} treasures found{vault.unlocked ? ` · ${vault.relics}/${vault.relicTotal} Vault relics` : ''}</span>
+            {wealth.next ? (
+              <span className="ir-wallet__treasure-next">
+                Next: <strong>{wealth.next.name}</strong> on Island {String(wealth.next.islandNumber).padStart(3, '0')}
+                {' · '}{wealth.next.placement === 'mission' ? 'hidden in its special mission' : 'waiting on a board tile'}
+              </span>
             ) : (
-              <strong>Locked · opens after the Island 004 mission</strong>
+              <span className="ir-wallet__treasure-next">Every treasure on this journey is found.</span>
             )}
           </span>
-        </div>
+        </section>
 
         <div className="ir-wallet__actions">
           <button type="button" onClick={onGetMoney}>Get Money</button>

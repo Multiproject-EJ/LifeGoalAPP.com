@@ -35,7 +35,7 @@
   color: #e8eefc; background: rgba(255, 255, 255, .06); cursor: pointer;
 }
 
-.ir-wallet__balances { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.ir-wallet__balances { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .4rem; }
 .ir-wallet__tile {
   display: grid;
   justify-items: center;
@@ -51,6 +51,8 @@
 .ir-wallet__tile--money { border-color: rgba(134, 239, 172, .35); }
 .ir-wallet__tile--essence { border-color: rgba(196, 150, 255, .4); }
 .ir-wallet__tile--dice { border-color: rgba(125, 211, 252, .38); }
+.ir-wallet__tile--tickets { border-color: rgba(251, 191, 36, .38); }
+.ir-wallet__tile small { font-size: .62rem; }
 
 .ir-wallet__treasure {
   display: flex;
@@ -61,10 +63,15 @@
   border-radius: 14px;
   background: linear-gradient(135deg, rgba(255, 196, 87, .14), rgba(255, 255, 255, .03));
 }
-.ir-wallet__treasure-icon { font-size: 1.4rem; }
-.ir-wallet__treasure > span:last-child { display: grid; }
+.ir-wallet__treasure { align-items: flex-start; }
+.ir-wallet__treasure-icon { font-size: 1.6rem; line-height: 1; }
+.ir-wallet__treasure-body { display: grid; gap: 3px; min-width: 0; flex: 1; }
 .ir-wallet__treasure small { color: #f3d58c; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.ir-wallet__treasure strong { font-size: .92rem; }
+.ir-wallet__treasure-total { font: 700 1.35rem/1.1 Georgia, 'Times New Roman', serif; color: #ffe6a6; font-variant-numeric: tabular-nums; }
+.ir-wallet__treasure-breakdown, .ir-wallet__treasure-count { color: #d9c7a0; font-size: .74rem; }
+.ir-wallet__treasure-next { color: #f5ecd6; font-size: .78rem; line-height: 1.35; }
+.ir-wallet__treasure-meter { position: relative; height: 5px; margin: 3px 0 1px; overflow: hidden; border-radius: 999px; background: rgba(255, 255, 255, .12); }
+.ir-wallet__treasure-meter i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: linear-gradient(90deg, #f0b43c, #ffe08a); }
 
 .ir-wallet__actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 .ir-wallet__actions button {

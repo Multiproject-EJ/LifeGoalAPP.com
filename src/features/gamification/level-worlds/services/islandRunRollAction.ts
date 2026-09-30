@@ -63,7 +63,7 @@ import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStat
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { getIslandBoardThemeForIslandNumber } from './islandBoardThemes';
-import { generateTileMap, getFreeTicketTileIndexForTileCount, getIslandRarity, type IslandTileType } from './islandBoardTileMap';
+import { generateTileMap, getFreeTicketTileIndexForTileCount, getIslandRarity, getIslandTreasureTileIndex, type IslandTileType } from './islandBoardTileMap';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { arenaStadiumBlocksRoll } from './arenaStadium';
 import { advanceOpeningGamesForRoll, OPENING_GAMES_CEREMONY_KEY } from './islandRunOpeningGames';
@@ -117,6 +117,7 @@ import {
   collectIslandRunLivingTicket,
   type IslandRunLivingTicketPickup,
 } from './islandRunLivingTicket';
+import { collectIslandTreasureForLanding, type IslandTreasure } from './islandRunTreasures';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -297,6 +298,8 @@ export interface IslandRunRollActionResult {
   missionBriefingTrigger?: IslandMissionBriefingTrigger | null;
   /** Event-ticket bud collected by this landing, if it was fully regrown. */
   livingTicketPickup?: IslandRunLivingTicketPickup | null;
+  /** An island treasure collected by landing on its tile this roll. */
+  islandTreasurePickup?: IslandTreasure | null;
 }
 
 // ── per-user async mutex (defence-in-depth against concurrent rolls) ──────────
@@ -606,6 +609,23 @@ async function performRollAction(options: {
         minigameTicketsByEvent: state.minigameTicketsByEvent,
         pickup: null,
       };
+  const ledgerAfterMissions = ceremonyRoll
+    ? { ...sunkenSandsTreasureRoll.ledger, [OPENING_GAMES_CEREMONY_KEY]: ceremonyRoll }
+    : sunkenSandsTreasureRoll.ledger;
+  // Island treasure: landing exactly on its tile collects it (once per player).
+  const islandTreasureLanding = ordinaryTileGameplayActive
+    ? collectIslandTreasureForLanding({
+        ledger: ledgerAfterMissions,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        landingTileIndex: newTokenIndex,
+        treasureTileIndex: getIslandTreasureTileIndex(state.currentIslandNumber, {
+          profileId: options.boardProfileId,
+          signatureMissionProgressByIsland: ledgerAfterMissions,
+        }),
+        nowMs,
+      })
+    : { ledger: ledgerAfterMissions, treasure: null };
   const nextState = {
     ...state,
     runtimeVersion: newRuntimeVersion,
@@ -620,9 +640,7 @@ async function performRollAction(options: {
     firstSessionTutorialState: nextFirstSessionTutorialState,
     concordRollProtectionState: concordProtection.state,
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
-    signatureMissionProgressByIsland: ceremonyRoll
-      ? { ...sunkenSandsTreasureRoll.ledger, [OPENING_GAMES_CEREMONY_KEY]: ceremonyRoll }
-      : sunkenSandsTreasureRoll.ledger,
+    signatureMissionProgressByIsland: islandTreasureLanding.ledger as typeof ledgerAfterMissions,
     narrativeSeenState: livingTicketLanding.narrativeSeenState,
     minigameTicketsByEvent: livingTicketLanding.minigameTicketsByEvent,
   };
@@ -686,5 +704,6 @@ async function performRollAction(options: {
     celestialRedockingBecameComplete: celestialRedockingRoll.becameComplete,
     missionBriefingTrigger,
     livingTicketPickup: livingTicketLanding.pickup,
+    islandTreasurePickup: islandTreasureLanding.treasure,
   };
 }

@@ -239,6 +239,7 @@ import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession'
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import { DepartureDayScene } from './DepartureDayScene';
 import { isPlayerPieceId } from '../services/islandRunPlayerPieces';
+import { resolveTreasureIslandWealth } from '../services/islandRunTreasures';
 import { readExpeditionShipGarageQualityPreference, resolveExpeditionShipGarageQuality } from './expeditionShipGarageQuality';
 import { resolveDepartureDaySeenKey, resolveDepartureDaySkip } from '../services/islandRunDepartureDay';
 import { purchaseDiceSkin, resolveDiceSkinProgress, selectDiceSkin } from '../services/islandRunDiceSkinActions';
@@ -8944,6 +8945,12 @@ export function IslandRunBoardPrototype({
           resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex);
           setShowEncounterModal(false);
           setEncounterResolved(false);
+        }
+        if (rollResult.islandTreasurePickup) {
+          const treasure = rollResult.islandTreasurePickup;
+          setLandingText(`💎 Treasure found: ${treasure.name}! Treasure Island is worth ${treasure.value.toLocaleString()} more.`);
+          playIslandRunSound('market_purchase_success');
+          triggerIslandRunHaptic('reward_claim');
         }
         if (rollResult.rootheartPowerComponentPickup) {
           const component = ROOTHEART_POWER_COMPONENTS.find(
@@ -17964,11 +17971,16 @@ export function IslandRunBoardPrototype({
           money={runtimeState.essence}
           essence={runtimeState.shards ?? 0}
           dice={dicePool}
-          treasures={{
+          tickets={activeTimedEventId ? activeEventTickets : null}
+          wealth={resolveTreasureIslandWealth({
+            ledger: __storeState.signatureMissionProgressByIsland,
+            vaultInvested: getVaultIslandTotalInvested(runtimeState.vaultIslandProgress),
+            currentIslandNumber: islandNumber,
+          })}
+          vault={{
             unlocked: isVaultIslandUnlocked,
             relics: vaultIslandCollection.unlockedCount,
             relicTotal: vaultIslandCollection.collectionSize,
-            invested: getVaultIslandTotalInvested(runtimeState.vaultIslandProgress),
           }}
           originRect={walletPanelOriginRect}
           onClose={() => setWalletPanelOriginRect(null)}
