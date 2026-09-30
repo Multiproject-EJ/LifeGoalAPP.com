@@ -41321,7 +41321,7 @@ body.habit-wizard-open .mobile-footer-nav {
   }
 }
 
-  .habit-checklist__super-habit-prompt,
+@media (prefers-reduced-motion: reduce) {
   .habit-super-tool-slot--active {
     animation: none;
   }
