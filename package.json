@@ -20,6 +20,9 @@
     "cap:copy:ios": "npm run build && npm run ios:assets && cap copy ios",
     "cap:open:ios": "cap open ios",
     "cap:run:ios": "npm run build && npm run ios:assets && cap sync ios && cap run ios",
+    "cap:sync:android": "npm run build && cap sync android",
+    "cap:open:android": "cap open android",
+    "cap:run:android": "npm run build && cap sync android && cap run android",
     "preview": "vite preview",
     "build:preview": "vite build --config vite.preview.config.ts",
     "build:vault-island-lab": "vite build --config vite.vault-island-lab.config.ts",
@@ -99,6 +102,7 @@
     "island-portraits": "node scripts/capture-voyage-portraits.mjs"
   },
   "dependencies": {
+    "@capacitor/android": "8.4.1",
     "@capacitor/app": "8.1.0",
     "@capacitor/browser": "8.0.2",
     "@capacitor/core": "8.4.1",

@@ -214,8 +214,8 @@ export function WisdomCaretakerCompassEncounter({
       setNativeAISuggestion(text);
     } catch {
       setNativeAIError(isFirstSignal
-        ? 'Your First Signal is safe. The optional iPhone suggestion was not available this time.'
-        : 'Your authored Compass insight is safe. The optional iPhone suggestion was not available this time.');
+        ? 'Your First Signal is safe. The optional on-device suggestion was not available this time.'
+        : 'Your authored Compass insight is safe. The optional on-device suggestion was not available this time.');
     } finally {
       setNativeAIBusy(false);
     }
@@ -278,12 +278,12 @@ export function WisdomCaretakerCompassEncounter({
         <p className="wisdom-caretaker__growth-note">{insight.growthNote}</p>
 
         {nativeAIStatus?.available ? (
-          <aside className="wisdom-caretaker__native-ai" aria-label="Optional private iPhone reflection">
+          <aside className="wisdom-caretaker__native-ai" aria-label="Optional private on-device reflection">
             <div>
               <span aria-hidden="true">⌁</span>
               <p>
                 <strong>Optional on-device AI</strong>
-                Only this question and answer are processed privately on this iPhone. This reflection works fully without it.
+                Only this question and answer are processed privately on this phone. This reflection works fully without it.
               </p>
             </div>
             {nativeAISuggestion ? (

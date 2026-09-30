@@ -26,11 +26,16 @@ const ON_DEVICE_TIMEOUT_MS = 15000;
 
 let onDeviceAvailability: Promise<boolean> | null = null;
 
+/** Apple Intelligence on iPhone, Gemini Nano on Android; none in browsers. */
+function onDeviceModel(): string {
+  return Capacitor.getPlatform() === 'android' ? 'gemini-nano' : 'apple-foundation-models';
+}
+
 function isOnDeviceAvailable(): Promise<boolean> {
   if (!readAiPreferences().aiEnabled) return Promise.resolve(false);
-  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'ios') {
-    return Promise.resolve(false);
-  }
+  if (!Capacitor.isNativePlatform()) return Promise.resolve(false);
+  const platform = Capacitor.getPlatform();
+  if (platform !== 'ios' && platform !== 'android') return Promise.resolve(false);
   if (!onDeviceAvailability) {
     onDeviceAvailability = import('../../features/compass-book/services/nativeCompassAI')
       .then((module) => module.getNativeCompassAIStatus())
@@ -91,6 +96,7 @@ function getRuntime() {
     isOnDeviceTask: isOnDeviceAiTask,
     isOnDeviceAvailable,
     generateOnDevice,
+    onDeviceModel,
     isServerAvailable: isServerAiAvailable,
     isServerEntitled: (task) => resolveAiEntitlement(task, true).allowed,
     callServer,

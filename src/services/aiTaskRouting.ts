@@ -8,8 +8,8 @@ type AiTaskDefinition = {
   level: AiCostLevel;
   description: string;
   /**
-   * Whether the task may run on the device's own model (Apple Intelligence)
-   * before falling back to the server. Short rewrites and structured
+   * Whether the task may run on the device's own model (Apple Intelligence on
+   * iPhone, Gemini Nano on Android) before falling back to the server. Short rewrites and structured
    * suggestions fit the small on-device model; mediation stays on the server.
    */
   onDevice: boolean;

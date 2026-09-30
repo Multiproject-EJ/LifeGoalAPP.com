@@ -58,6 +58,14 @@ async function testOnDeviceFirst() {
   assertEqual(calls.entitled, 0, 'on-device use does not consume server quota');
 }
 
+async function testReportsOnDeviceModel() {
+  const unnamed = await makeRuntime().runtime.runAiTask(baseRequest);
+  assertEqual(unnamed?.model, 'on-device', 'uses a generic name without a model adapter');
+  const { runtime } = makeRuntime({ onDeviceModel: () => 'gemini-nano' });
+  const named = await runtime.runAiTask(baseRequest);
+  assertEqual(named?.model, 'gemini-nano', 'reports the platform on-device model');
+}
+
 async function testFallsBackWhenDeviceUnavailable() {
   const { runtime, calls } = makeRuntime({ isOnDeviceAvailable: async () => false });
   const result = await runtime.runAiTask(baseRequest);
@@ -146,6 +154,7 @@ function testExtractJson() {
 export async function runAiRuntimeCoreTests(): Promise<void> {
   testExtractJson();
   await testOnDeviceFirst();
+  await testReportsOnDeviceModel();
   await testFallsBackWhenDeviceUnavailable();
   await testFallsBackWhenDeviceFails();
   await testDeviceTimeout();
