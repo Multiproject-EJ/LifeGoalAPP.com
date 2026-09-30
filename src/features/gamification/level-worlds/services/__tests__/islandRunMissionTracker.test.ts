@@ -13,6 +13,7 @@ import {
   createOpeningGamesCampaignLedger,
 } from '../islandRunSignatureMissions';
 import { createOpeningGamesCeremonyProgress, OPENING_GAMES_CEREMONY_KEY } from '../islandRunOpeningGames';
+import { createStormfrontProgress, getStormfrontKey } from '../island2Stormfront';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 type TrackerState = Parameters<typeof resolveIslandMissionTrackerPresentation>[0]['state'];
@@ -91,10 +92,13 @@ export const islandRunMissionTrackerTests: TestCase[] = [
       const state = makeState({currentIslandNumber: 2, ...restoredStops(), signatureMissionProgressByIsland: ledger});
       const ready = resolveIslandMissionTrackerPresentation({islandNumber: 2, state});
       assertEqual(ready.islandCompletion?.objectivesComplete, 5, 'Welcome check-in needs no egg');
-      assertEqual(ready.islandCompletion?.requirements.filter(item => !item.complete).length, 1, 'only ceremony remains');
+      assertEqual(ready.islandCompletion?.requirements.filter(item => !item.complete).map(item => item.id).join(','), 'opening_ceremony,stormfront', 'only ceremony and the storm remain');
       assertEqual(ready.islandCompletion?.nextRequirement?.id, 'opening_ceremony', 'no legacy causeway or duplicate signature gate');
       ledger[OPENING_GAMES_CEREMONY_KEY] = {...createOpeningGamesCeremonyProgress(), rollsCompleted: 12,
         venuesPreparedAtMs: 1, teamsWelcomedAtMs: 2, beaconLitAtMs: 3, completedAtMs: 4};
+      assertEqual(resolveIslandMissionTrackerPresentation({islandNumber: 2, state}).islandCompletion?.nextRequirement?.id, 'stormfront', 'the storm add-on gates departure after the ceremony');
+      ledger[getStormfrontKey(0)] = {...createStormfrontProgress(), struckAtMs: 5, cinematicSeenAtMs: 6,
+        levels: {'lightning-grid': 3, 'sky-hangar': 3}, completedAtMs: 7};
       const done = resolveIslandMissionTrackerPresentation({islandNumber: 2, state});
       assert(done.complete && done.islandCompletion?.complete, 'phone and departure agree after participation');
       assertEqual(done.overallProgressPercent, 100, 'phone reaches 100 only with all canonical requirements');

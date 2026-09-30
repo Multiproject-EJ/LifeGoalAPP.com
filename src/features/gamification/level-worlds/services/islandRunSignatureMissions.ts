@@ -4,6 +4,7 @@ import { ARENA_JOURNEY_KEY, sanitizeArenaJourney, mergeArenaJourney, type ArenaJ
 import { ARCHETYPE_CUP_KEY, mergeArchetypeCupProgress, sanitizeArchetypeCupProgress, type ArchetypeCupProgress } from './archetypeCup';
 import { DICE_SKINS_KEY, mergeDiceSkinProgress, sanitizeDiceSkinProgress, type DiceSkinProgress } from './islandRunDiceSkins';
 import { ISLAND_TREASURES_KEY, mergeIslandTreasureCollections, sanitizeIslandTreasureCollection, type IslandTreasureCollection } from './islandRunTreasures';
+import { STORMFRONT_KEY_PATTERN, mergeStormfrontProgress, sanitizeStormfrontProgress, type StormfrontProgress } from './island2Stormfront';
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import {
   OPENING_GAMES_CAMPAIGN_KEY, OPENING_GAMES_CEREMONY_KEY,
@@ -437,6 +438,7 @@ export type IslandRunSignatureMissionProgress =
   | ArchetypeCupProgress
   | DiceSkinProgress
   | IslandTreasureCollection
+  | StormfrontProgress
   | OpeningGamesCampaignMarker
   | OpeningGamesCeremonyProgress
   | MoonwellThermalProgress
@@ -509,6 +511,10 @@ export function sanitizeIslandRunSignatureMissionProgress(
     }
     if (record.missionId === 'island-treasures') {
       if (key === ISLAND_TREASURES_KEY && record.version === 1) result[key] = sanitizeIslandTreasureCollection(record);
+      return;
+    }
+    if (record.missionId === 'island2-stormfront') {
+      if (STORMFRONT_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeStormfrontProgress(record);
       return;
     }
     if (record.missionId === 'opening-games-campaign') {
@@ -1758,6 +1764,10 @@ export function mergeIslandRunSignatureMissionProgress(
     }
     if (a.missionId === 'island-treasures' || b.missionId === 'island-treasures') {
       merged[key] = mergeIslandTreasureCollections(sanitizeIslandTreasureCollection(a), sanitizeIslandTreasureCollection(b));
+      return;
+    }
+    if (a.missionId === 'island2-stormfront' || b.missionId === 'island2-stormfront') {
+      merged[key] = mergeStormfrontProgress(sanitizeStormfrontProgress(a), sanitizeStormfrontProgress(b));
       return;
     }
     if (a.missionId === 'opening-games-campaign' || b.missionId === 'opening-games-campaign') {
