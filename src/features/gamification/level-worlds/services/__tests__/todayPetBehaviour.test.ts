@@ -6,6 +6,7 @@ import {
   todayPetBubbles,
   TODAY_PET_SIZE_PX,
 } from '../../../../habits/todayPet/todayPetBehaviour';
+import { resolveTodayPetOwner } from '../../../../habits/todayPet/todayPetSingleton';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 const entry = (creatureId: string, firstCollectedAtMs: number, copies = 1) => ({
@@ -46,12 +47,22 @@ export const todayPetBehaviourTests: TestCase[] = [
     name: 'Today pet 3D: only creatures with a real model render in 3D; moods read clearly',
     run: () => {
       assert(hasTodayPet3dModel('common-sproutling'), 'Sproutling has the canonical 3D model');
+      assert(hasTodayPet3dModel('common-garden-puff'), 'Garden Puff has its own 3D model');
+      assert(hasTodayPet3dModel('rare-crown-drifter'), 'Crown Drifter reuses its Island 005 model');
       assert(!hasTodayPet3dModel('common-mossling'), 'creatures without a model keep their own 2D art');
       assertEqual(resolveTodayPetPose('sleep', 1).eyesClosed, 1, 'sleeping eyes are closed');
       const hops = [0.1, 0.2, 0.3].map((t) => resolveTodayPetPose('happy', t).lift);
       assert(Math.max(...hops) > 0.1, 'happy hops');
       assertEqual(resolveTodayPetPose('walk', 2, true).lift, 0, 'reduced motion: no bobbing');
       assertEqual(resolveTodayPetPose('sleep', 2, true).eyesClosed, 1, 'reduced motion still shows sleep');
+    },
+  },
+  {
+    name: 'Today pet: only one pet ever renders, owned by the first displayed Today tracker',
+    run: () => {
+      assertEqual(resolveTodayPetOwner([{ id: 1, displayed: true }, { id: 2, displayed: true }]), 1, 'two live trackers still give one pet');
+      assertEqual(resolveTodayPetOwner([{ id: 1, displayed: false }, { id: 2, displayed: true }]), 2, 'a hidden tracker never owns the pet');
+      assertEqual(resolveTodayPetOwner([{ id: 1, displayed: false }]), null, 'no pet when no tracker is on screen');
     },
   },
 ];
