@@ -2187,8 +2187,8 @@ export function createIsland7UnderwaterLivingAmbience(
         // A continuous world-space loop in the upper-middle water corridor.
         // Keep the complete body below the phone header and face its travel tangent.
         const phase = elapsed * 0.016 - 0.8;
-        whale.position.set(Math.sin(phase) * 7, 2.8 + Math.sin(phase * 0.73) * 0.18, -18 + Math.cos(phase) * 3);
-        whale.rotation.y = Math.atan2(3 * Math.sin(phase), 7 * Math.cos(phase));
+        whale.position.set(Math.sin(phase) * 7, -0.6 + Math.sin(phase * 0.73) * 0.18, -13.5 + Math.cos(phase) * 1.5);
+        whale.rotation.y = Math.atan2(1.5 * Math.sin(phase), 7 * Math.cos(phase));
       } else {
         whale.position.x = -15 + ((elapsed * 0.24) % 34);
         whale.position.y = 6.9 + Math.sin(elapsed * 0.09) * 0.4;

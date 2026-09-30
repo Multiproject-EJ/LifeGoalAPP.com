@@ -27,5 +27,5 @@ try{
   if(Math.hypot(start.x-finish.x,start.z-finish.z)>1e-8)throw Error('Route seam');
   return{status:'pass',periodSeconds:period,rows,scope:'Actual factory geometry projected through both review and normal phone cameras for one full horizontal loop; no physical-device or artistic anatomy approval.'};
  });
- const out='docs/gauntlets/island-007-v2/qa/whale-route-v056';mkdirSync(out,{recursive:true});writeFileSync(out+'/runtime.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));
+ const out=process.argv[2] ?? 'docs/gauntlets/island-007-v2/qa/whale-route-v056';mkdirSync(out,{recursive:true});writeFileSync(out+'/runtime.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));
 }finally{await browser.close();}
