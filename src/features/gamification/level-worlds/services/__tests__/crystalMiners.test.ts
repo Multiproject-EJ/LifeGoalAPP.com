@@ -31,6 +31,17 @@ async function seed(tickets=3) {
 }
 const action = (command: Parameters<typeof applyCrystalMinersAction>[0]['command'], expectedRevision=0, nowMs=500) => applyCrystalMinersAction({session,client:null,eventId,command,expectedRevision,nowMs});
 export const crystalMinersTests: TestCase[] = [
+  {
+    name: 'crystal miners: every layout and fixed layer stays clear of the phone status bar and home indicator',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const css = fsMod.readFileSync('src/features/gamification/games/crystal-miners/crystalMiners.css', 'utf8');
+      assert(css.includes('.cm-focus-layout .cm-shell{padding-top:calc(env(safe-area-inset-top, 0px) + 10px)'), 'focus layout clears the status bar');
+      assert(css.includes('.cm-drop{bottom:calc(env(safe-area-inset-bottom, 0px) + 12px)}'), 'the drop button clears the home indicator');
+      assert(css.includes('.cm-sheet-backdrop{padding:calc(env(safe-area-inset-top, 0px) + 20px)'), 'sheets clear both edges');
+    },
+  },
   ...crystalMinersProgressionTests,
   {name:'balance analysis separates versions and layouts and exposes investment and unrewarding drops',run:()=>{
     const row=(id:string,version:string,layout:number,ore:number)=>({id,user_id:'test',event_type:'island_run_gameplay_event',occurred_at:'2026-09-19T00:00:00Z',metadata:{game_id:'crystal_miners',schema_version:1,stage:'crystal_miners_attempt',attempt_id:id,level:39,balance_version:version,layout_version:layout,ore_gained:ore,prep_ore_spent:120,outcome:'retry'}});

@@ -101,3 +101,11 @@
 @media(prefers-reduced-motion:reduce){.cm-heavy-fragment,.cm-nugget-fragment,.cm-ash-fragment,.cm-ember-dissolve,.cm-route-flash,.cm-portal-bloom,.cm-energy-rise,.cm-reward-rise,.cm-key-release,.cm-gate-half,.cm-charge-orbit{animation:none}}
 
 .cm-path-preview button[data-equipped=true]{border-bottom:2px solid #81c9a7}.cm-path-preview button[data-equipped=false]{border-bottom:2px solid #caa366}
+
+/* Safe areas (notch, status bar, home indicator): keep every layout and fixed
+   layer clear of the phone's clock/Wi-Fi/battery and the home indicator. */
+.cm-shell,
+.cm-focus-layout .cm-shell{padding-top:calc(env(safe-area-inset-top, 0px) + 10px);padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 10px)}
+@media(max-width:700px){.cm-focus-layout .cm-shell{padding-top:calc(env(safe-area-inset-top, 0px) + 8px);padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 8px)}}
+.cm-drop{bottom:calc(env(safe-area-inset-bottom, 0px) + 12px)}
+.cm-sheet-backdrop{padding:calc(env(safe-area-inset-top, 0px) + 20px) calc(env(safe-area-inset-right, 0px) + 20px) calc(env(safe-area-inset-bottom, 0px) + 20px) calc(env(safe-area-inset-left, 0px) + 20px)}

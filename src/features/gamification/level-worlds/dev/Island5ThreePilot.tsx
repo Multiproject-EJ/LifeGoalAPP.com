@@ -25,6 +25,7 @@ import { WONDER_RIDE_SPEED_SCALE } from './island19WonderRidePacing';
 import { createIsland19CoasterHelicopter } from './Island19CoasterHelicopter';
 import { WonderRideOfferModal } from './WonderRideOfferModal';
 import { resolveUnoccludedCameraPosition } from './islandCameraOcclusion';
+import { createLandmarkSightCutaway } from './landmarkSightCutaway';
 import { getIslandExplorePoints, type IslandExplorePoint, type IslandExplorePointId } from '../services/islandExplorePoints';
 import * as THREE from 'three';
 import { choosePawnCamera, shortestPawnAngle, pawnSightBlocked, completedPawnHops, type PawnObstacle, type PawnPoint } from './islandPawnPresentation';
@@ -7626,6 +7627,17 @@ export default function Island5ThreePilot({
     const bossOcclusionCenter = bossOcclusionBounds?.getCenter(new THREE.Vector3()) ?? null;
     const bossOcclusionSize = bossOcclusionBounds?.getSize(new THREE.Vector3()) ?? null;
     canvas.dataset.centralLandmarkOcclusion = 'opaque';
+    // Ordinary worlds mute only the part of the centre landmark that blocks the
+    // view (a soft see-through tunnel); Jungle/Frostmoon keep their full hide.
+    const bossSightCutaway = bossRootForOcclusion && !isJungleExpedition && !isFrostmoonHaven
+      ? createLandmarkSightCutaway(bossRootForOcclusion, {
+        // Worlds that batch landmark surfaces draw the palace from these roots.
+        extraRoots: () => scene.children.filter((child) => /_SURFACE_BATCHES$/.test(child.name)),
+      })
+      : null;
+    const bossSightCutawayEnd = new THREE.Vector3();
+    const sightCutawayPreviewEnabled = typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('sightCutawayPreview') === '1';
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const pointerDown = new THREE.Vector2();
@@ -11403,10 +11415,33 @@ export default function Island5ThreePilot({
             : undefined,
           centralOcclusionHeight: bossOcclusionSize?.y,
         }));
-        if (shouldFadeBoss !== isBossOcclusionFadeApplied) {
-          isBossOcclusionFadeApplied = shouldFadeBoss;
-          canvas.dataset.centralLandmarkOcclusion = shouldFadeBoss ? 'faded' : 'opaque';
-          const targetOpacity = shouldFadeBoss ? (isJungleExpedition || isFrostmoonHaven ? 0 : 0.16) : 1;
+        const useSightCutaway = Boolean(bossSightCutaway) && activeInspectionPreset !== 'frostwell';
+        if (bossSightCutaway) {
+          // Dev: ?sightCutawayPreview=1 aims the tunnel through the centre
+          // landmark as if the piece stood just behind it.
+          const cutawayPreview = import.meta.env.DEV && sightCutawayPreviewEnabled && bossOcclusionCenter && bossOcclusionSize;
+          if (cutawayPreview) {
+            const beyond = new THREE.Vector3(bossOcclusionCenter.x - camera.position.x, 0, bossOcclusionCenter.z - camera.position.z).normalize();
+            bossSightCutawayEnd.set(bossOcclusionCenter.x, bossOcclusionBounds!.min.y + 0.5, bossOcclusionCenter.z)
+              .addScaledVector(beyond, Math.max(bossOcclusionSize.x, bossOcclusionSize.z) * 0.75);
+          } else if (pawnNeedsClearView) bossSightCutawayEnd.set(playerPiece.root.position.x, playerPiece.root.position.y + 0.5, playerPiece.root.position.z);
+          else if (focusRoot) bossSightCutawayEnd.set(focusRoot.position.x, focusRoot.position.y + 1.2, focusRoot.position.z);
+          const strength = bossSightCutaway.update({
+            start: camera.position,
+            end: bossSightCutawayEnd,
+            radius: THREE.MathUtils.clamp((bossOcclusionSize ? Math.max(bossOcclusionSize.x, bossOcclusionSize.z) : 4) * 0.32, 1.1, 3.2),
+            active: useSightCutaway && (shouldFadeBoss || Boolean(cutawayPreview)),
+            deltaSeconds: Math.min(0.1, actualFrameDeltaSeconds),
+            reducedMotion: isReducedMotion,
+            box: bossOcclusionBounds,
+          });
+          if (useSightCutaway) canvas.dataset.centralLandmarkOcclusion = strength > 0.001 ? 'cutaway' : 'opaque';
+        }
+        const wholeLandmarkFade = shouldFadeBoss && !useSightCutaway;
+        if (wholeLandmarkFade !== isBossOcclusionFadeApplied) {
+          isBossOcclusionFadeApplied = wholeLandmarkFade;
+          canvas.dataset.centralLandmarkOcclusion = wholeLandmarkFade ? 'faded' : 'opaque';
+          const targetOpacity = wholeLandmarkFade ? (isJungleExpedition || isFrostmoonHaven ? 0 : 0.16) : 1;
           bossRoot.traverse((object) => {
             if (!(object instanceof THREE.Mesh)) return;
             const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
@@ -11419,8 +11454,8 @@ export default function Island5ThreePilot({
               }
               const originalOpacity = Number(material.userData.islandOriginalOpacity ?? 1);
               material.opacity = originalOpacity * targetOpacity;
-              material.transparent = shouldFadeBoss || Boolean(material.userData.islandOriginalTransparent);
-              material.depthWrite = shouldFadeBoss ? false : Boolean(material.userData.islandOriginalDepthWrite);
+              material.transparent = wholeLandmarkFade || Boolean(material.userData.islandOriginalTransparent);
+              material.depthWrite = wholeLandmarkFade ? false : Boolean(material.userData.islandOriginalDepthWrite);
               material.needsUpdate = true;
             });
           });
