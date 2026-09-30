@@ -75,6 +75,35 @@ export function createIsland7ReefGardenV2(shelf: THREE.Object3D, quality: Island
   };
   const stemMaterial = makeMaterial(0.03), tipMaterial = makeMaterial(0.2);
   const kelpMaterial = new THREE.MeshStandardMaterial({ color: 0x338d72, roughness: 0.7, side: THREE.DoubleSide, emissive: 0x0c493f, emissiveIntensity: 0.1 });
+  // A shared GPU current bends each leaf from its fixed base. Instance position
+  // offsets the phase so adjacent beds do not move in mechanical lockstep.
+  const currentTime = { value: 0 };
+  kelpMaterial.onBeforeCompile = shader => {
+    shader.uniforms.reefCurrentTime = currentTime;
+    shader.vertexShader = `uniform float reefCurrentTime;
+      vec4 reefLeafCurrent(vec3 p, float phase) {
+        float h = clamp(p.y / 1.30, 0.0, 1.0);
+        float a = reefCurrentTime * .65 + phase + h * .80;
+        float b = reefCurrentTime * .51 + phase * .73 + h * .55;
+        return vec4(.07 * h*h * sin(a), .035 * h*h * cos(b),
+          .07 / 1.30 * (2.0*h*sin(a) + .80*h*h*cos(a)),
+          .035 / 1.30 * (2.0*h*cos(b) - .55*h*h*sin(b)));
+      }
+    ` + shader.vertexShader;
+    shader.vertexShader = shader.vertexShader.replace('#include <beginnormal_vertex>', `
+      #include <beginnormal_vertex>
+      float reefPhase = 0.0;
+      #ifdef USE_INSTANCING
+        reefPhase = dot(instanceMatrix[3].xz, vec2(1.31, .87));
+      #endif
+      vec4 reefFlow = reefLeafCurrent(position, reefPhase);
+      objectNormal.y -= reefFlow.z * objectNormal.x + reefFlow.w * objectNormal.z;
+    `).replace('#include <begin_vertex>', `
+      #include <begin_vertex>
+      transformed.xz += reefFlow.xy;
+    `);
+  };
+  kelpMaterial.customProgramCacheKey = () => 'island7-rooted-kelp-current-v1';
   const livingBatches: { mesh: THREE.InstancedMesh; nightColors: THREE.Color[]; dayColors: THREE.Color[] }[] = [];
   const batch = (name: string, geometry: THREE.BufferGeometry, material: THREE.Material, transforms: THREE.Matrix4[], colors?: THREE.Color[]) => {
     const mesh = new THREE.InstancedMesh(geometry, material, transforms.length); mesh.name = name;
@@ -108,7 +137,9 @@ export function createIsland7ReefGardenV2(shelf: THREE.Object3D, quality: Island
   const ribbon = new THREE.BufferGeometry();
   ribbon.setAttribute('position', new THREE.Float32BufferAttribute(leafPositions, 3));
   ribbon.setIndex(leafIndices); ribbon.computeVertexNormals();
-  batch('ISLAND_7_RIBBON_KELP', ribbon, kelpMaterial, blades);
+  const kelp = batch('ISLAND_7_RIBBON_KELP', ribbon, kelpMaterial, blades);
+  // Account for maximum shader displacement when the static instance bounds cull.
+  if (kelp.boundingSphere) kelp.boundingSphere.radius += .15;
   // A cupped fan with a rolled, scalloped rim and a real thin back surface.
   const fanPositions: number[] = [], fanIndices: number[] = [];
   const rings = 3, segments = 12, surfaceVertices = (rings + 1) * (segments + 1);
@@ -153,6 +184,7 @@ export function createIsland7ReefGardenV2(shelf: THREE.Object3D, quality: Island
   return {
     root,
     animate: (elapsed: number) => {
+      currentTime.value = Number.isFinite(elapsed) ? Math.max(0, elapsed) : 0;
       tipMaterial.emissiveIntensity = (.025 + nightMix * 2.4) * (1 + Math.sin(elapsed * .65) * .08);
       fanMaterial.emissiveIntensity = .015 + nightMix * (.48 + Math.sin(elapsed * .43 + 1.2) * .04);
     },
