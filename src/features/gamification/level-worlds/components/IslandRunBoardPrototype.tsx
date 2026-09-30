@@ -16625,14 +16625,14 @@ export function IslandRunBoardPrototype({
           <button
             type="button"
             className="island-run-prototype__debug-btn"
-            onClick={focusNextAvailableStop}
+            onClick={() => { focusNextAvailableStop(); setIsDevPanelOpen(false); }}
           >
             Focus next stop
           </button>
           <button
             type="button"
             className="island-run-prototype__debug-btn"
-            onClick={() => setCameraMode((current) => (current === 'overview_manual' ? 'board_follow' : 'overview_manual'))}
+            onClick={() => { setCameraMode((current) => (current === 'overview_manual' ? 'board_follow' : 'overview_manual')); setIsDevPanelOpen(false); }}
           >
             {cameraMode === 'overview_manual' ? 'Exit overview' : 'Overview'}
           </button>
@@ -16642,6 +16642,7 @@ export function IslandRunBoardPrototype({
             onClick={() => {
               setCameraMode('board_follow');
               setFocusedStopId(null);
+              setIsDevPanelOpen(false);
             }}
           >
             Reset view
@@ -16652,13 +16653,13 @@ export function IslandRunBoardPrototype({
           {(showDebug || showQaHooks) && (
             <div className="island-run-prototype__qa-controls" role="group" aria-label="QA and debug controls">
               <p className="island-run-prototype__qa-label">QA / Debug tools</p>
-              <button type="button" className="island-run-prototype__debug-btn" onClick={handleQaMarkBossResolved}>
+              <button type="button" className="island-run-prototype__debug-btn" onClick={() => { handleQaMarkBossResolved(); setIsDevPanelOpen(false); }}>
                 QA: Mark boss resolved
               </button>
-              <button type="button" className="island-run-prototype__debug-btn" onClick={handleQaAdvanceIsland}>
+              <button type="button" className="island-run-prototype__debug-btn" onClick={() => { void handleQaAdvanceIsland(); setIsDevPanelOpen(false); }}>
                 QA: Advance island
               </button>
-              <button type="button" className="island-run-prototype__debug-btn" onClick={handleQaResetProgression}>
+              <button type="button" className="island-run-prototype__debug-btn" onClick={() => { void handleQaResetProgression(); setIsDevPanelOpen(false); }}>
                 QA: Reset progression
               </button>
               <button
@@ -17096,7 +17097,7 @@ export function IslandRunBoardPrototype({
                   <button
                     type="button"
                     className="island-run-board__dev-island-jump-submit"
-                    onClick={() => void handleDevJumpToIsland()}
+                    onClick={() => { setShowTopbarMenu(false); void handleDevJumpToIsland(); }}
                     disabled={!isDevIslandJumpTargetValid || isDevIslandJumpPending || isDevMissionResetPending}
                   >
                     {isDevIslandJumpPending ? 'Jumping…' : `Load Island ${devIslandJumpLabel}`}
@@ -17104,7 +17105,7 @@ export function IslandRunBoardPrototype({
                   <button
                     type="button"
                     className="island-run-board__dev-island-jump-submit island-run-board__dev-island-jump-submit--reset"
-                    onClick={() => void handleDevResetCurrentIslandMission()}
+                    onClick={() => { setShowTopbarMenu(false); void handleDevResetCurrentIslandMission(); }}
                     disabled={isDevMissionResetPending || isDevIslandJumpPending}
                   >
                     {isDevMissionResetPending ? 'Clearing mission…' : 'Clear current island mission'}
