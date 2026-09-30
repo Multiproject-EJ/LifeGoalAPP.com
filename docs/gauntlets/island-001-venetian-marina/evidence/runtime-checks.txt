@@ -1,0 +1,40 @@
+PASS: waterfall startup, nonfinite input, steady flow and long-session transforms at all qualities.
+PASS: entry-aware waterfall drain/restart, meeting release, scrubbing/replay and attached face batches.
+PASS: actual doorway ray clearance at all quality levels and dry entrance stairs.
+PASS: repeated replay, reset during blast, late completion before/during/after blast, same-sequence updates and reduced motion.
+PASS: relocated berths, actual tread raycasts, open canals, collision-free market/arrival paths, ramp timing, replay, seating and animated crowd at all three qualities.
+[
+  {
+    "quality": "low",
+    "batches": 14,
+    "triangles": 37778,
+    "people": {
+      "count": 25,
+      "walkers": 10
+    },
+    "firstEntry": 0.6771941106821144,
+    "lastEntry": 0.9012339547560575
+  },
+  {
+    "quality": "medium",
+    "batches": 14,
+    "triangles": 43688,
+    "people": {
+      "count": 46,
+      "walkers": 16
+    },
+    "firstEntry": 0.6892458440533726,
+    "lastEntry": 0.9140968680622843
+  },
+  {
+    "quality": "high",
+    "batches": 14,
+    "triangles": 44828,
+    "people": {
+      "count": 52,
+      "walkers": 22
+    },
+    "firstEntry": 0.695740096743418,
+    "lastEntry": 0.913187454779915
+  }
+]

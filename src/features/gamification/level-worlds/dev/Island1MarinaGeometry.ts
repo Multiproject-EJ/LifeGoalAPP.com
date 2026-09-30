@@ -4,6 +4,14 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 /** Vertex-colour batches preserve sculpted silhouettes without one draw per detail. */
 export class MarinaGeometry {
   private parts: THREE.BufferGeometry[] = [];
+  /** Merge an already colored subassembly without repainting its material zones. */
+  addColored(geometry: THREE.BufferGeometry) {
+    const g = geometry.index ? geometry.toNonIndexed() : geometry.clone();
+    geometry.dispose();
+    g.deleteAttribute('uv');
+    if (!g.attributes.normal) g.computeVertexNormals();
+    this.parts.push(g);
+  }
   add(geometry: THREE.BufferGeometry, color: number, p: number[] = [0, 0, 0], s: number[] = [1, 1, 1], r: number[] = [0, 0, 0]) {
     const g = geometry.index ? geometry.toNonIndexed() : geometry.clone();
     geometry.dispose();

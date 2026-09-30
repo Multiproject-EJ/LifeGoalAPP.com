@@ -1,0 +1,32 @@
+{
+  "scope": "Marina meshes only, before camera/frustum/shadow passes; includes all instances even when scaled to zero. Not FPS or physical-device evidence.",
+  "baselineCommit": "680e0b09512b4928c6d41600231f80443e672083",
+  "baseline": {
+    "low": {
+      "meshBatches": 77,
+      "submittedTriangles": 549246
+    },
+    "medium": {
+      "meshBatches": 78,
+      "submittedTriangles": 958266
+    },
+    "high": {
+      "meshBatches": 86,
+      "submittedTriangles": 1270194
+    }
+  },
+  "current": {
+    "low": {
+      "meshBatches": 91,
+      "submittedTriangles": 587024
+    },
+    "medium": {
+      "meshBatches": 92,
+      "submittedTriangles": 1001954
+    },
+    "high": {
+      "meshBatches": 100,
+      "submittedTriangles": 1315022
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "decision": "Use project scene-extension workflow; object-factory generator is not applicable",
+  "reason": "The img2threejs suitability rubric rejects scene references as isolated-object inputs. This task is an extension of an existing architectural scene, not standalone mesh reconstruction. Preserve the attempted intake and its strict-validation failures rather than claim passing object gates. Use approved source, explicit layout/animation contract, direct runtime model tests and actual multiview rendering.",
+  "referenceMaterialLimit": "Generated scene pixels are not PBR texture measurements. Extend existing independently authored game materials."
+}
