@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { readIslandRunGameStateRecord, resetIslandRunRuntimeCommitCoordinatorForTests, writeIslandRunGameStateRecord, type IslandRunGameStateRecord } from '../islandRunGameStateStore';
 import { __resetIslandRunStateStoreForTests, getIslandRunStateSnapshot, resetIslandRunStateSnapshot } from '../islandRunStateStore';
 import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
+import { createOpeningArenaProgress, getOpeningArenaKey } from '../island2OpeningArena';
 import { createOpeningGamesCampaignLedger, sanitizeIslandRunSignatureMissionProgress } from '../islandRunSignatureMissions';
 import { getStopUpgradeCost } from '../islandRunContractV2EssenceBuild';
 import { resolveIslandRunCompletion } from '../islandRunCompletion';
@@ -25,13 +26,16 @@ import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, typ
 const session = { user: { id: 'island2-stormfront-test', user_metadata: {} } } as Session;
 const allL3 = () => Array.from({ length: 5 }, () => ({ buildLevel: 3, requiredEssence: 100, spentEssence: 100 }));
 const allBuilt = () => Array.from({ length: 5 }, () => ({ objectiveComplete: true, buildComplete: true }));
+// The storm only comes after the finished Opening Arena (arena first, storm after).
+const arenaDoneLedger = () => ({ ...createOpeningGamesCampaignLedger(),
+  [getOpeningArenaKey(0)]: { ...createOpeningArenaProgress(), orderedAtMs: 1, rollsUntilDelivery: 0, anchoredAtMs: 2, arenaLevel: 3, completedAtMs: 3 } });
 const struck = (overrides: Partial<StormfrontProgress> = {}): StormfrontProgress => ({ ...createStormfrontProgress(), struckAtMs: 10, updatedAtMs: 10, ...overrides });
 
 async function seed(overrides: Partial<IslandRunGameStateRecord> = {}) {
   resetIslandRunRuntimeCommitCoordinatorForTests(); __resetIslandRunStateStoreForTests(); __resetIslandRunActionMutexesForTests();
   installWindowWithStorage(createMemoryStorage());
   const state = { ...readIslandRunGameStateRecord(session), currentIslandNumber: 2, cycleIndex: 0,
-    signatureMissionProgressByIsland: createOpeningGamesCampaignLedger(),
+    signatureMissionProgressByIsland: arenaDoneLedger(),
     stopBuildStateByIndex: allL3(), stopStatesByIndex: allBuilt(), ...overrides };
   await writeIslandRunGameStateRecord({ session, client: null, record: state });
   resetIslandRunStateSnapshot(session, state);
@@ -42,9 +46,10 @@ export const island2StormfrontTests: TestCase[] = [
   {
     name: 'island2 stormfront: strikes once, only on new-campaign Island 002 with every landmark at Level 3',
     run: () => {
-      const ledger = createOpeningGamesCampaignLedger();
-      const base = { currentIslandNumber: 2, stopBuildStateByIndex: allL3(), signatureMissionProgressByIsland: ledger };
-      assert(shouldStrikeStormfront(base, createStormfrontProgress()), 'all L3 on 002 triggers the storm');
+      const ledger = arenaDoneLedger();
+      const base = { currentIslandNumber: 2, cycleIndex: 0, stopBuildStateByIndex: allL3(), signatureMissionProgressByIsland: ledger };
+      assert(shouldStrikeStormfront(base, createStormfrontProgress()), 'all L3 on 002 with the arena built triggers the storm');
+      assert(!shouldStrikeStormfront({ ...base, signatureMissionProgressByIsland: createOpeningGamesCampaignLedger() }, createStormfrontProgress()), 'arena first, storm after');
       const oneL2 = allL3(); oneL2[4] = { ...oneL2[4], buildLevel: 2 };
       assert(!shouldStrikeStormfront({ ...base, stopBuildStateByIndex: oneL2 }, createStormfrontProgress()), 'every landmark must be L3, the centre included');
       assert(!shouldStrikeStormfront(base, struck()), 'never strikes twice');

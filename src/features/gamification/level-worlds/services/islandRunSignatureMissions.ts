@@ -5,6 +5,7 @@ import { ARCHETYPE_CUP_KEY, mergeArchetypeCupProgress, sanitizeArchetypeCupProgr
 import { DICE_SKINS_KEY, mergeDiceSkinProgress, sanitizeDiceSkinProgress, type DiceSkinProgress } from './islandRunDiceSkins';
 import { ISLAND_TREASURES_KEY, mergeIslandTreasureCollections, sanitizeIslandTreasureCollection, type IslandTreasureCollection } from './islandRunTreasures';
 import { STORMFRONT_KEY_PATTERN, mergeStormfrontProgress, sanitizeStormfrontProgress, type StormfrontProgress } from './island2Stormfront';
+import { OPENING_ARENA_KEY_PATTERN, mergeOpeningArenaProgress, sanitizeOpeningArenaProgress, type OpeningArenaProgress } from './island2OpeningArena';
 import { WISDOM_DEFERRAL_KEY_PATTERN, mergeWisdomDeferral, sanitizeWisdomDeferral, type WisdomDeferral } from './wisdomDeferral';
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import {
@@ -441,6 +442,7 @@ export type IslandRunSignatureMissionProgress =
   | IslandTreasureCollection
   | StormfrontProgress
   | WisdomDeferral
+  | OpeningArenaProgress
   | OpeningGamesCampaignMarker
   | OpeningGamesCeremonyProgress
   | MoonwellThermalProgress
@@ -517,6 +519,10 @@ export function sanitizeIslandRunSignatureMissionProgress(
     }
     if (record.missionId === 'island2-stormfront') {
       if (STORMFRONT_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeStormfrontProgress(record);
+      return;
+    }
+    if (record.missionId === 'island2-opening-arena') {
+      if (OPENING_ARENA_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeOpeningArenaProgress(record);
       return;
     }
     if (record.missionId === 'wisdom-deferral') {
@@ -1774,6 +1780,10 @@ export function mergeIslandRunSignatureMissionProgress(
     }
     if (a.missionId === 'island2-stormfront' || b.missionId === 'island2-stormfront') {
       merged[key] = mergeStormfrontProgress(sanitizeStormfrontProgress(a), sanitizeStormfrontProgress(b));
+      return;
+    }
+    if (a.missionId === 'island2-opening-arena' || b.missionId === 'island2-opening-arena') {
+      merged[key] = mergeOpeningArenaProgress(sanitizeOpeningArenaProgress(a), sanitizeOpeningArenaProgress(b));
       return;
     }
     if (a.missionId === 'wisdom-deferral' || b.missionId === 'wisdom-deferral') {

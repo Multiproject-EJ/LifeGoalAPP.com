@@ -28,6 +28,7 @@ import { wisdomDeferralTests } from './wisdomDeferral.test';
 import { landmarkSightCutawayTests } from './landmarkSightCutaway.test';
 import { mandateEggBasketTests } from './mandateEggBasket.test';
 import { minigameFeedbackTests } from './minigameFeedback.test';
+import { island2OpeningArenaTests } from './island2OpeningArena.test';
 import { island001AssemblyInvitationsTests } from './island001AssemblyInvitations.test';
 import { fishermansDragonPreludeTests } from './fishermansDragonPrelude.test';
 import { controllerDiceTiersTests } from './controllerDiceTiers.test';
@@ -357,6 +358,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'landmarkSightCutaway', tests: landmarkSightCutawayTests },
   { label: 'mandateEggBasket', tests: mandateEggBasketTests },
   { label: 'minigameFeedback', tests: minigameFeedbackTests },
+  { label: 'island2OpeningArena', tests: island2OpeningArenaTests },
   { label: 'island001AssemblyInvitations', tests: island001AssemblyInvitationsTests },
   { label: 'fishermansDragonPrelude', tests: fishermansDragonPreludeTests },
   { label: 'controllerDiceTiers', tests: controllerDiceTiersTests },

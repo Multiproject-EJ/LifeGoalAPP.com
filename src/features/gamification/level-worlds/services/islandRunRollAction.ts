@@ -67,6 +67,7 @@ import { generateTileMap, getFreeTicketTileIndexForTileCount, getIslandRarity, g
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { arenaStadiumBlocksRoll } from './arenaStadium';
 import { applyWisdomDeferralRoll } from './wisdomDeferral';
+import { applyOpeningArenaRoll } from './island2OpeningArena';
 import { advanceOpeningGamesForRoll, OPENING_GAMES_CEREMONY_KEY } from './islandRunOpeningGames';
 import { resolveIslandRunContractV2EssenceEarnForTile } from './islandRunContractV2EssenceBuild';
 import { collectMoonwellHeatForLanding } from './islandRunMoonwellThermal';
@@ -658,12 +659,13 @@ async function performRollAction(options: {
     concordRollProtectionState: concordProtection.state,
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
     // Wisdom "Come back later" cooldown counts down one roll per roll.
-    signatureMissionProgressByIsland: applyWisdomDeferralRoll(
+    // Wisdom cooldown and the Island 002 hover-base delivery count down per roll.
+    signatureMissionProgressByIsland: applyOpeningArenaRoll(applyWisdomDeferralRoll(
       islandTreasureLanding.ledger as typeof ledgerAfterMissions,
       state.cycleIndex,
       state.currentIslandNumber,
       nowMs,
-    ),
+    ), state.cycleIndex, state.currentIslandNumber, nowMs),
     narrativeSeenState: livingTicketLanding.narrativeSeenState,
     minigameTicketsByEvent: livingTicketLanding.minigameTicketsByEvent,
   };

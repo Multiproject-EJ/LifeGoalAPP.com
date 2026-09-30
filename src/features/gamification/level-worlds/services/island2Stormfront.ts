@@ -8,6 +8,7 @@ import {
 } from './islandRunContractV2EssenceBuild';
 import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
 import { usesOpeningGamesCampaign } from './islandRunOpeningGames';
+import { isOpeningArenaComplete, resolveOpeningArenaProgress } from './island2OpeningArena';
 
 /**
  * Island 002 Stormfront (user request 2026-09-30).
@@ -158,7 +159,7 @@ export function getStormfrontLevelCost(options: { structureId: StormfrontStructu
   return Math.max(1, Math.floor(base * structure.costScale * multiplier));
 }
 
-type StrikeState = Pick<IslandRunGameStateRecord, 'currentIslandNumber' | 'stopBuildStateByIndex' | 'signatureMissionProgressByIsland'>;
+type StrikeState = Pick<IslandRunGameStateRecord, 'currentIslandNumber' | 'cycleIndex' | 'stopBuildStateByIndex' | 'signatureMissionProgressByIsland'>;
 
 /**
  * The storm strikes once, when every Island 002 landmark is at Level 3.
@@ -168,6 +169,8 @@ type StrikeState = Pick<IslandRunGameStateRecord, 'currentIslandNumber' | 'stopB
 export function shouldStrikeStormfront(state: StrikeState, progress: StormfrontProgress): boolean {
   if (state.currentIslandNumber !== STORMFRONT_ISLAND_NUMBER || progress.struckAtMs !== null) return false;
   if (!usesOpeningGamesCampaign(state.signatureMissionProgressByIsland ?? {})) return false;
+  // Arena first, storm after (user decision 2026-09-30).
+  if (!isOpeningArenaComplete(resolveOpeningArenaProgress(state.signatureMissionProgressByIsland, state.cycleIndex))) return false;
   return Array.from({ length: STORMFRONT_LANDMARK_COUNT }, (_, index) => state.stopBuildStateByIndex[index]?.buildLevel ?? 0)
     .every((buildLevel) => buildLevel >= MAX_BUILD_LEVEL);
 }

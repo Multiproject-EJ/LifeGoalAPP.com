@@ -3,6 +3,7 @@ import { areAllEggSlotsTerminalForIsland } from './islandRunEggMania';
 import { resolveIslandMissionObjectives, resolveLandmarkProgress } from './islandRunMissionObjectives';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { resolveOpeningGamesCeremony } from './islandRunOpeningGames';
+import { OPENING_ARENA_ISLAND_NUMBER, resolveOpeningArenaCompletionValue, resolveOpeningArenaProgress } from './island2OpeningArena';
 import { STORMFRONT_ISLAND_NUMBER, resolveStormfrontCompletionValue, resolveStormfrontProgress } from './island2Stormfront';
 import {
   FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
@@ -19,7 +20,7 @@ export type IslandRunCompletionState = Pick<IslandRunGameStateRecord,
   & Partial<Pick<IslandRunGameStateRecord, 'completedStopsByIsland' | 'technologyUnlocksById'>>;
 
 export interface IslandCompletionRequirement {
-  id: 'builds' | 'objectives' | 'egg' | 'assembly' | 'mandate' | 'concord' | 'extraction' | 'signature' | 'opening_ceremony' | 'redocking' | 'stormfront';
+  id: 'builds' | 'objectives' | 'egg' | 'assembly' | 'mandate' | 'concord' | 'extraction' | 'signature' | 'opening_ceremony' | 'redocking' | 'opening_arena' | 'stormfront';
   label: string;
   value: number;
   target: number;
@@ -80,6 +81,11 @@ export function resolveIslandRunCompletion(state: IslandRunCompletionState) {
   if (access.gradual && islandNumber === 2) {
     const ceremony = resolveOpeningGamesCeremony(state.signatureMissionProgressByIsland);
     add('opening_ceremony', 'Host the opening ceremony and play the first game', ceremony.completedAtMs !== null ? 1 : 0);
+  }
+  // Island 002 Opening Arena: order the hover base, anchor it, build the arena.
+  if (access.gradual && islandNumber === OPENING_ARENA_ISLAND_NUMBER) {
+    const arena = resolveOpeningArenaCompletionValue(resolveOpeningArenaProgress(state.signatureMissionProgressByIsland, state.cycleIndex));
+    add('opening_arena', 'Build the Opening Arena on its hover base', arena.value, arena.target);
   }
   // Island 002 Stormfront: the storm strikes once every landmark is Level 3;
   // the island clears only after the storm-safe grid and hangar reach Level 3.
