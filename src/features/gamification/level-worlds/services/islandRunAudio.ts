@@ -406,6 +406,71 @@ export function playIslandRunBubblePop(step = 0): void {
 }
 
 /**
+ * Synthesised hangar crowd for Departure Day (no audio asset): a warm roar
+ * from band-passed noise plus scattered claps, both following `setEnergy`.
+ */
+export function startIslandRunCrowdAmbience(): { setEnergy: (energy: number) => void; stop: () => void } {
+  const silent = { setEnergy: () => undefined, stop: () => undefined };
+  if (!getIslandRunAudioEnabled() || typeof window === 'undefined') return silent;
+  const Context = window.AudioContext
+    ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Context) return silent;
+  try {
+    bubblePopContext ??= new Context();
+    const context = bubblePopContext;
+    if (context.state === 'suspended') void context.resume();
+    const buffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
+    const roar = context.createBufferSource();
+    roar.buffer = buffer;
+    roar.loop = true;
+    const band = context.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = 900;
+    band.Q.value = 0.6;
+    const roarGain = context.createGain();
+    roarGain.gain.value = 0.0001;
+    roar.connect(band).connect(roarGain).connect(context.destination);
+    roar.start();
+    let energy = 0;
+    let stopped = false;
+    const clap = () => {
+      if (stopped) return;
+      if (energy > 0.25) {
+        const now = context.currentTime;
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        const high = context.createBiquadFilter();
+        high.type = 'highpass';
+        high.frequency.value = 1400 + Math.random() * 900;
+        const gain = context.createGain();
+        gain.gain.setValueAtTime(ISLAND_RUN_SFX_VOLUME * 0.12 * energy, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+        source.connect(high).connect(gain).connect(context.destination);
+        source.start(now, Math.random() * 1.5, 0.06);
+      }
+      window.setTimeout(clap, 25 + Math.random() * (160 - energy * 120));
+    };
+    clap();
+    return {
+      setEnergy(next) {
+        energy = Math.min(1, Math.max(0, next));
+        roarGain.gain.setTargetAtTime(Math.max(0.0001, ISLAND_RUN_SFX_VOLUME * 0.22 * energy), context.currentTime, 0.25);
+      },
+      stop() {
+        if (stopped) return;
+        stopped = true;
+        roarGain.gain.setTargetAtTime(0.0001, context.currentTime, 0.3);
+        window.setTimeout(() => { try { roar.stop(); } catch { /* already stopped */ } }, 1200);
+      },
+    };
+  } catch {
+    return silent;
+  }
+}
+
+/**
  * Plays the creature-hatch sting once for a stable reveal identity.
  *
  * The canonical egg transition already prevents duplicate rewards; this

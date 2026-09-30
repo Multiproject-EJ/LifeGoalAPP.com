@@ -237,6 +237,9 @@ import { isIslandFragmentAnsweredForUser } from '../../../compass-book/services/
 import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
 import { useIslandRunState } from '../hooks/useIslandRunState';
+import { DepartureDayScene } from './DepartureDayScene';
+import { readExpeditionShipGarageQualityPreference, resolveExpeditionShipGarageQuality } from './expeditionShipGarageQuality';
+import { resolveDepartureDaySeenKey, resolveDepartureDaySkip } from '../services/islandRunDepartureDay';
 import { purchaseDiceSkin, resolveDiceSkinProgress, selectDiceSkin } from '../services/islandRunDiceSkinActions';
 import { resolveDiceSkin, type DiceSkinId } from '../services/islandRunDiceSkins';
 import { WorldPortalCouncilControl } from './WorldPortalCouncil';
@@ -350,6 +353,7 @@ import {
   SPACE_EXCAVATOR_TOTAL_BOARDS,
   ISLAND_RUN_MAX_ISLAND,
   travelToNextIsland,
+  selectPlayerPiece,
   setActiveCompanionId as commitActiveCompanionId,
   clearActiveCompanionId as commitClearActiveCompanionId,
 } from '../services/islandRunStateActions';
@@ -2788,7 +2792,7 @@ export function IslandRunBoardPrototype({
       dicePool?: number;
     };
   } | null>(null);
-  const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'ship-name' | 'mission' | 'launch'>('celebration');
+  const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'ship-name' | 'departure' | 'mission' | 'launch'>('celebration');
   const [firstRunShipName, setFirstRunShipName] = useState(
     () => readIslandRunGuestFunnelState().shipName?.trim() || 'Starling',
   );
@@ -13514,7 +13518,7 @@ export function IslandRunBoardPrototype({
       const guestShipName = readIslandRunGuestFunnelState().shipName?.trim();
       if (guestShipName) {
         setFirstRunShipName(guestShipName);
-        setFirstRunStep('mission');
+        setFirstRunStep('departure');
       } else {
         setFirstRunStep('ship-name');
       }
@@ -13536,7 +13540,7 @@ export function IslandRunBoardPrototype({
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(`island_run_spaceship_name_${session.user.id}`, normalizedShipName);
       }
-      setFirstRunStep('mission');
+      setFirstRunStep('departure');
       return;
     }
 
@@ -14649,6 +14653,19 @@ export function IslandRunBoardPrototype({
     const numeric = Number(requested);
     return Number.isFinite(numeric) ? Math.max(0, Math.min(3, numeric)) : null;
   }, []);
+  // Departure Day (pre-Island-001 send-off). Dev preview: ?departureDayPreview=1
+  // opens the picker and film; add &departureDayTime=<s> to hold one frame.
+  const [departureDayPreview, setDepartureDayPreview] = useState<{ timeSeconds: number | null } | null>(() => {
+    if (typeof window === 'undefined' || !import.meta.env.DEV) return null;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('departureDayPreview') !== '1') return null;
+    const time = Number(params.get('departureDayTime'));
+    return { timeSeconds: params.has('departureDayTime') && Number.isFinite(time) ? time : null };
+  });
+  const hasSeenDepartureDay = useMemo(() => {
+    try { return typeof window !== 'undefined' && window.localStorage.getItem(resolveDepartureDaySeenKey(session.user.id)) === '1'; } catch { return false; }
+  }, [session.user.id]);
+
   // Dev visual preview: ?missionItemPopPreview=1 hides the items, then pops them in.
   const [missionItemPopPreviewRevealed, setMissionItemPopPreviewRevealed] = useState(() => !(
     isIslandVisualPreview && typeof window !== 'undefined'
@@ -17991,7 +18008,26 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {shouldRenderFirstRunCelebration({
+      {(departureDayPreview || (showFirstRunCelebration && firstRunStep === 'departure')) ? (
+        <DepartureDayScene
+          shipName={(departureDayPreview ? firstRunShipName || 'Starling' : firstRunShipName) || 'Starling'}
+          initialPieceId={__storeState.selectedPlayerPieceId}
+          quality={resolveExpeditionShipGarageQuality(readExpeditionShipGarageQualityPreference())}
+          skippable={departureDayPreview !== null || resolveDepartureDaySkip({ hasSeenBefore: hasSeenDepartureDay }).skippable}
+          previewTimeSeconds={departureDayPreview?.timeSeconds ?? null}
+          onChoosePiece={(pieceId) => {
+            if (departureDayPreview) return;
+            selectPlayerPiece({ session, client, pieceId, triggerSource: 'departure_day_piece' });
+          }}
+          onComplete={() => {
+            if (departureDayPreview) { setDepartureDayPreview(null); return; }
+            try { window.localStorage.setItem(resolveDepartureDaySeenKey(session.user.id), '1'); } catch { /* storage unavailable */ }
+            setFirstRunStep('mission');
+          }}
+        />
+      ) : null}
+
+      {firstRunStep !== 'departure' && shouldRenderFirstRunCelebration({
         requested: showFirstRunCelebration,
         storyReaderOpen: showStoryReader,
       }) && (

@@ -1,6 +1,6 @@
 # Pre-Island-001 "Departure Day": garage send-off and piece picker
 
-Status: **brief, user-directed — story answers captured 2026-09-29; awaiting reference intake**
+Status: **first playable slice built 2026-09-30** (picker + hangar film wired into first run); concept frames still to be stored
 Date: 2026-09-29
 Parent contracts: `2026-08-23-expedition-ship-and-garage-visual-production.md`,
 `docs/design/expedition-ship/README.md`, `AGENTS.md` Island Run rules,
@@ -144,6 +144,17 @@ contract. Auto / Smooth / Ultra quality tiers reuse
   `selectedPlayerPieceId`.
 - **No hangar crowd/banner assets** and no crew/traveller rig yet (the ship
   README already asks for a reusable avatar rig separate from ship geometry).
+
+## Built (2026-09-30)
+
+- `services/islandRunDepartureDay.ts`: the 15 s timeline (beats, per-frame ship pose, crowd energy, crew walk, boarding, door, lift-off, hand-off), skip rule and reduced-motion stills, with tests.
+- `dev/DepartureDayHangarThree.ts`: the closed hangar in code: three balcony tiers per side with instanced crowd cards (4 poses, per-instance wave phase, flags and phones), ship-name banners with the gold crest, amber practicals, gantry and cab, causeway with bollards and 12 marshals, service carts, the rolling door and the blue launch tunnel behind it. The ship is the real `ExpeditionShipThreeModel`, starting in the closed controller shell, opening to living mode for the crowd and closing to leave. Six crew officers, the player (white uniform, gold ring, carrying the chosen piece) and the three family robots walk the causeway and ride the keel lift. Shaders are warmed with `compileAsync` before the film.
+- `dev/PlayerPieceRelicThree.ts` + `components/PlayerPieceIcon.tsx`: original procedural 3D relics and SVG portraits for the pieces.
+- `components/DepartureDayScene.tsx`: the picker opens over the dim hangar while it loads; confirm calls canonical `selectPlayerPiece`, waits with "Preparing the hangar…" if needed, then plays with captions, a synthesised crowd and a lift-off haptic. First viewing is required; replays show Skip. A 3D failure never traps the first run.
+- First run: `celebration → ship-name → departure → mission → launch` (guest-named ships go straight to `departure`).
+- Dev seam: `?departureDayPreview=1` (add `&departureDayTime=<s>` to hold a frame). Evidence: `docs/design/departure-day/`.
+
+Still open: the board token does not yet render the chosen piece; a garage "Relive departure" button; the concept frames; the caretaker first-run copy below.
 
 ## Slices
 
