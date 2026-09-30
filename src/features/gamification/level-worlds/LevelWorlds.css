@@ -25784,7 +25784,19 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   background: radial-gradient(circle at 45% 35%, #e7fff3 0 10%, #42cfc0 25%, #11668d 68%, #102b56);
   box-shadow: inset 0 0 12px rgba(212, 255, 242, .76), 0 0 13px rgba(56, 226, 211, .82);
 }
-.island-tile--fishermans-rod .island-tile__value { filter: drop-shadow(0 2px 2px #063354); }
+.island-tile--fishermans-rod .island-tile__value {
+  filter: drop-shadow(0 2px 2px #063354);
+  /* Rods pop onto their tiles when the fishing mission starts. */
+  animation: fishermans-rod-pop 620ms cubic-bezier(.34, 1.56, .64, 1) both;
+}
+@keyframes fishermans-rod-pop {
+  /* Keeps the spark36 upright-glyph rotation while popping in. */
+  from { transform: rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-40%) scale(0); opacity: 0; }
+  to { transform: rotate(var(--tile-upright-rotation-deg, 0deg)); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-tile--fishermans-rod .island-tile__value { animation: none; }
+}
 
 .fishermans-fishing-mini {
   position: absolute;
@@ -28348,6 +28360,32 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   box-shadow: 0 4px 10px rgba(8, 24, 48, 0.18);
 }
 .island-mission-tracker__picture-message-art svg { width: 46px; height: 46px; }
+/* Fishing step: the rod drops onto its tile, then repeats gently. */
+.mission-message-rod-pop__rod {
+  transform-box: fill-box;
+  transform-origin: 20% 100%;
+  animation: mission-message-rod-pop 2.4s cubic-bezier(.34, 1.56, .64, 1) 0.35s infinite both;
+}
+.mission-message-rod-pop__sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mission-message-rod-sparkle 2.4s ease-out 0.35s infinite both;
+}
+@keyframes mission-message-rod-pop {
+  0% { transform: translateY(-60%) scale(0); opacity: 0; }
+  22% { transform: none; opacity: 1; }
+  88% { transform: none; opacity: 1; }
+  100% { transform: none; opacity: 0; }
+}
+@keyframes mission-message-rod-sparkle {
+  0%, 16% { transform: scale(0); opacity: 0; }
+  28% { transform: scale(1.2); opacity: 1; }
+  48%, 100% { transform: scale(0.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mission-message-rod-pop__rod,
+  .mission-message-rod-pop__sparkle { animation: none; }
+}
 .island-mission-tracker__picture-message li > b {
   position: absolute;
   top: -5px;

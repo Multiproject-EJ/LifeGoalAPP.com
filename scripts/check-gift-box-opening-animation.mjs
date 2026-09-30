@@ -67,7 +67,7 @@ const integrations = [
       'setShowGiftOpening(true)',
       'const resolvedGiftRewards = toGiftBoxRewards(awardedRewards)',
       'rewards={giftRewards}',
-      'isTreasureChest ? <CelebrationFireworks variant="rapid" /> : null',
+      "<CelebrationFireworks variant={isTreasureChest || isIslandThreeJackpot || isSuperSlice || lastMultiplier > 1 ? 'hero' : 'rapid'}",
     ],
   ],
   [
@@ -82,13 +82,17 @@ const integrations = [
   ],
 ];
 
+// The Mystery award is chosen once in the reward policy, granted, returned and
+// persisted as-is so the Gift Box reveal shows exactly what the player got.
 const spinServiceSource = await readFile(path.join(root, 'src/services/dailySpin.ts'), 'utf8');
-for (const snippet of [
-  'const awardedRewards = await awardPrize(userId, prize, rewardMultiplier)',
-  'awardedRewards.push({ ...pick.reward, amount: pick.amount })',
-  'prize_details: { ...(prize.details || {}), awardedRewards }',
+const spinPolicySource = await readFile(path.join(root, 'src/services/dailySpinRewardPolicy.ts'), 'utf8');
+for (const [source, snippet] of [
+  [spinServiceSource, 'const awardedRewards = await awardPrize(options.session, prize, rewardMultiplier)'],
+  [spinServiceSource, 'const awardedRewards = resolveDailySpinAwards(prize, rewardMultiplier)'],
+  [spinServiceSource, 'prize_details: { ...(prize.details || {}), awardedRewards'],
+  [spinPolicySource, 'return [mysteryOptions[Math.floor(boundedRandom * mysteryOptions.length)]]'],
 ]) {
-  if (!spinServiceSource.includes(snippet)) {
+  if (!source.includes(snippet)) {
     throw new Error(`Daily Spin must return and persist the exact granted Mystery reward: ${snippet}`);
   }
 }

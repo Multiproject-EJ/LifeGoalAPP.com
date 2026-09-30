@@ -392,7 +392,8 @@ assert.match(islandPilot, /if \(transition\) transition = null;/);
 assert.match(islandPilot, /snapInitialLockedConstructionFocus/);
 assert.doesNotMatch(islandPilot, /constructionBounds\.min\.y \+ horizontalExtent \* 0\.4/);
 assert.match(islandPilot, /showBuildingEnvelope:\s*false/);
-assert.match(islandPilot, /createRobotFamilyModel\(\{ quality: 'low', showAddonRack: false \}\)/);
+// The on-island build crew may add further scene-cost options (no fixture lights, no glass transmission).
+assert.match(islandPilot, /createRobotFamilyModel\(\{ quality: 'low', showAddonRack: false[,}]/);
 assert.match(islandPilot, /constructionTheatre\.setCrewScale\(0\.11\)/);
 assert.match(islandPilot, /landmarkRootsById\.get\(mappedStopId as Island5LandmarkId\)/);
 assert.match(islandPilot, /constructionFamily\.update\(elapsed, frameDeltaSeconds, constructionReducedMotion\)/);
@@ -422,7 +423,7 @@ for (const styleId of [
   'crown-tides-tidekeeper-sail-rig',
   'crown-tides-concord-arena-fitout',
   'crown-tides-pearl-archive-lift',
-  'crown-tides-citadel-floodgate-commissioning',
+  'crown-tides-ornate-palace-commissioning',
 ]) {
   assert.match(constructionAuthoring, new RegExp(styleId), `Crown of Tides choreography ${styleId} is missing`);
 }
@@ -487,7 +488,11 @@ for (const styleId of [
   assert.match(constructionAuthoring, new RegExp(styleId), `Rootheart choreography ${styleId} is missing`);
 }
 assert.match(constructionAuthoring, /ROOTHEART_STAGE_STORIES/);
-assert.equal((scaffold.match(/^\s*\d+: \{ id:/gm) ?? []).length, 10, 'all ten authored world sources need a scaffold profile');
+// Sources 001-010 plus every later authored world (015, 018, 019, 020, ...) need a scaffold profile.
+const scaffoldSources = new Set([...scaffold.matchAll(/^\s*(\d+): \{ id:/gm)].map((match) => Number(match[1])));
+for (let source = 1; source <= 10; source += 1) {
+  assert.ok(scaffoldSources.has(source), `authored world source ${source} needs a scaffold profile`);
+}
 for (const profile of ['luma-crystal-brass', 'celestial-cloudglass', 'frostmoon-icewood', 'driftwood-ropeworks', 'sunshore-bamboo', 'moonveil-arcframe', 'abyssal-coral-frame', 'everblossom-vineframe', 'heartshaft-forgeframe', 'rootheart-living-frame']) {
   assert.match(scaffold, new RegExp(profile), `construction scaffold profile ${profile} is missing`);
 }

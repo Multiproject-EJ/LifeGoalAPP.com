@@ -33,7 +33,7 @@ for (const snippet of [
 const integrations = [
   [
     'src/features/gamification/level-worlds/components/WelcomePackModal.tsx',
-    ["type Phase = 'economy' | 'cards-intro' | 'pack-opening' | 'card-reveal'", '<CreaturePackOpeningAnimation', "setPhase('card-reveal')"],
+    ["type Phase = 'economy' | 'celebration' | 'cards-intro' | 'pack-opening' | 'card-reveal'", '<CreaturePackOpeningAnimation', "setPhase('card-reveal')"],
   ],
   [
     'src/features/gamification/level-worlds/components/FirstSessionCreaturePackModal.tsx',

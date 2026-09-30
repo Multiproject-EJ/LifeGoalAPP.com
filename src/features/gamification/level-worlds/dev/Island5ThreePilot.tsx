@@ -465,6 +465,8 @@ interface Island5ThreePilotProps {
   onIsland20SkiffRunComplete?: () => void;
   fishermansFishingPresentation?: Island22WaterDragonPresentation & {
     fishingInteraction?: Island22FishingInteractionPresentation;
+    /** When the rod stations should pop in (the fishing mission just started). */
+    rodsRevealedAtMs?: number | null;
   };
   onSignatureMissionClick?: () => void;
   onAssemblyMeetingComplete?: () => void;
@@ -9748,6 +9750,7 @@ export default function Island5ThreePilot({
             idleOverviewAt = null;
           }
         }
+        tileRewardObjects.setFishermansRodsRevealedAtMs(fishermansFishingPresentationRef.current?.rodsRevealedAtMs ?? null);
         tileRewardObjects.animate(elapsed, tokenIndexRef.current);
         routeGlow.material instanceof THREE.MeshStandardMaterial
           && (routeGlow.material.emissiveIntensity = 0.48 + Math.sin(elapsed * 1.2) * 0.14);

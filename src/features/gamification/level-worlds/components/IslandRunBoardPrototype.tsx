@@ -270,6 +270,7 @@ import {
 } from '../services/islandRunActionMutex';
 import {
   acknowledgeIslandMissionBriefing,
+  openIslandMissionMessage,
   applyAudioPreferencesMarker,
   applyBossTrialResolvedMarker,
   applyBossTrialResolutionReward,
@@ -671,6 +672,7 @@ import {
   resolveGreatHoneyfallProgress,
   resolveFrostwellIceworksProgress,
   resolveFishermansVillageFishingProgress,
+  isFishermansVillageFishingStarted,
   resolveRootheartPowerworksProgress,
   resolveSunkenSandsTreasureProgress,
   resolveStagedRestorationMissionProgress,
@@ -679,6 +681,7 @@ import {
   FISHERMANS_VILLAGE_ISLAND_NUMBER,
 } from '../services/islandRunSignatureMissions';
 import {
+  getIslandMissionBriefingBeatId,
   getIslandMissionBriefingPresentation,
   type IslandMissionBriefingTrigger,
 } from '../services/islandRunMissionBriefing';
@@ -727,6 +730,7 @@ import {
   clampMultiplierToPool,
   resolveDiceCostForMultiplier,
   resolveNextMultiplierCycleStep,
+  pickIslandRunRewardBarSlice,
   type RewardBarClaimPayout,
 } from '../services/islandRunContractV2RewardBar';
 import {
@@ -3794,6 +3798,21 @@ export function IslandRunBoardPrototype({
     cycleIndex: runtimeState.cycleIndex,
     islandNumber: FISHERMANS_VILLAGE_ISLAND_NUMBER,
   }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  // Rod stations and the catch bar appear once the Island 006 mission message
+  // has been opened (or, for older saves, once it was read or fishing began).
+  // Read from the canonical store so the message's start action shows at once.
+  const fishermansFishingStarted = isFishermansVillageFishingStarted(resolveFishermansVillageFishingProgress({
+    ledger: __storeState.signatureMissionProgressByIsland,
+    cycleIndex: __storeState.cycleIndex,
+    islandNumber: FISHERMANS_VILLAGE_ISLAND_NUMBER,
+  }))
+    || typeof __storeState.narrativeSeenState?.beats?.[
+      getIslandMissionBriefingBeatId(__storeState.cycleIndex, FISHERMANS_VILLAGE_ISLAND_NUMBER)
+    ] === 'number';
+  // Set when the order is accepted after the message launched the mission, so
+  // the rods visibly pop onto their tiles once the phone is put away.
+  const [fishermansRodsRevealedAtMs, setFishermansRodsRevealedAtMs] = useState<number | null>(null);
+  const fishermansRodRevealPendingRef = useRef(false);
   const rootheartPowerworksProgress = useMemo(() => resolveRootheartPowerworksProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
@@ -6223,12 +6242,15 @@ export function IslandRunBoardPrototype({
           ? { ...entry, signatureMissionKind: undefined }
           : entry);
       }
-      if (islandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER || fishermansFishingProgress.completedAtMs === null) return applied;
+      // Rod stations exist only while the fishing mission runs: from opening its
+      // mission message until the catch is complete.
+      const fishingRodsVisible = fishermansFishingStarted && fishermansFishingProgress.completedAtMs === null;
+      if (islandNumber !== FISHERMANS_VILLAGE_ISLAND_NUMBER || fishingRodsVisible) return applied;
       return applied.map((entry) => entry.signatureMissionKind === 'fishermans_rod'
         ? { ...entry, signatureMissionKind: undefined }
         : entry);
     },
-    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, fishermansFishingProgress.completedAtMs, islandNumber, lavaLabyrinthEscapeMissionStarted, moonwellHeatAvailable, tileMap],
+    [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, fishermansFishingProgress.completedAtMs, fishermansFishingStarted, islandNumber, lavaLabyrinthEscapeMissionStarted, moonwellHeatAvailable, tileMap],
   );
   const trafficLightCharge = getTrafficLightCharge(__storeState.bonusTileChargeByIsland, islandNumber);
   // Show the optimistic mid-hop charge while a roll is animating so the lights
@@ -8376,19 +8398,7 @@ export function IslandRunBoardPrototype({
 
   const handleContractV2RewardBarClaim = () => {
     runContractV2RewardBarClaimCascade({
-      state: {
-        rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-        rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-        rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-        rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-        rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-        rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-        rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-        activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-        activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-        stickerProgress: runtimeStateRef.current.stickerProgress,
-        stickerInventory: runtimeStateRef.current.stickerInventory,
-      },
+      state: pickIslandRunRewardBarSlice(runtimeStateRef.current),
       emptyMessage: 'Reward bar is not full yet.',
     });
   };
@@ -10485,19 +10495,7 @@ export function IslandRunBoardPrototype({
     // amplifier (§2E) applies here too, matching how feeding tiles scale.
     {
       const nextRewardBarState = recordEventProgress({
-        state: {
-          rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-          rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-          rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-          rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-          rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-          rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-          rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-          activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-          activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-          stickerProgress: runtimeStateRef.current.stickerProgress,
-          stickerInventory: runtimeStateRef.current.stickerInventory,
-        },
+        state: pickIslandRunRewardBarSlice(runtimeStateRef.current),
         source: { kind: 'encounter_resolve' },
         nowMs: Date.now(),
         multiplier: Math.max(1, effectiveMultiplier),
@@ -13861,19 +13859,7 @@ export function IslandRunBoardPrototype({
 
       if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
         const nextRewardBarState = recordEventProgress({
-          state: {
-            rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-            rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-            rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-            rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-            rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-            rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-            rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-            activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-            activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-            stickerProgress: runtimeStateRef.current.stickerProgress,
-            stickerInventory: runtimeStateRef.current.stickerInventory,
-          },
+          state: pickIslandRunRewardBarSlice(runtimeStateRef.current),
           source: { kind: 'creature_feed', treatType },
           nowMs,
         });
@@ -14522,12 +14508,16 @@ export function IslandRunBoardPrototype({
   }, [updateMissionInbox]);
   const openIncomingMissionBriefing = useCallback(() => {
     if (!incomingMissionBriefing) return false;
+    // Opening the message launches missions that start with it (Island 006 fishing).
+    // The store update reaches the board through useIslandRunState.
+    const opened = openIslandMissionMessage({ session, client, trigger: incomingMissionBriefing });
+    if (opened.started) fishermansRodRevealPendingRef.current = true;
     setOpenMissionMessageId(incomingMissionMessageId);
     setActiveMissionBriefing(incomingMissionBriefing);
     setIncomingMissionBriefing(null);
     setShowMissionMessageBanner(false);
     return true;
-  }, [incomingMissionBriefing, incomingMissionMessageId]);
+  }, [client, incomingMissionBriefing, incomingMissionMessageId, session]);
   useEffect(() => {
     setIncomingMissionBriefing((current) => (current && current.islandNumber !== islandNumber ? null : current));
   }, [islandNumber]);
@@ -16777,7 +16767,7 @@ export function IslandRunBoardPrototype({
             </div>
           </button>
 
-          {islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER && fishermansFishingProgress.fishCaughtKg > 0 ? (
+          {islandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER && fishermansFishingStarted ? (
             <div
               className={`fishermans-fishing-mini${fishingCatchCelebration ? ' fishermans-fishing-mini--catch' : ''}`}
               role="progressbar"
@@ -17178,6 +17168,7 @@ export function IslandRunBoardPrototype({
                 onAssemblyMeetingComplete={isIslandVisualPreview ? undefined : openAssemblyMandate}
                 onExplorePointChange={(id) => setExploreViewActive(id !== null)}
                 fishermansFishingPresentation={{
+                  rodsRevealedAtMs: fishermansRodsRevealedAtMs,
                   fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
                     ? FISHERMANS_VILLAGE_DRAGON_TRIGGER_KG
                     : fishermansFishingProgress.fishCaughtKg,
@@ -21183,19 +21174,7 @@ export function IslandRunBoardPrototype({
                 });
                 if (eventCompletionMinigameId) {
                   const nextRewardBarState = recordEventMinigameCompletion({
-                    state: {
-                      rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-                      rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-                      rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-                      rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-                      rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-                      rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-                      rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-                      activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-                      activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-                      stickerProgress: runtimeStateRef.current.stickerProgress,
-                      stickerInventory: runtimeStateRef.current.stickerInventory,
-                    },
+                    state: pickIslandRunRewardBarSlice(runtimeStateRef.current),
                     minigameId: eventCompletionMinigameId,
                     nowMs: Date.now(),
                   });
@@ -21475,6 +21454,12 @@ export function IslandRunBoardPrototype({
           });
           runtimeStateRef.current = acknowledgement.record;
           setRuntimeState(acknowledgement.record);
+          // The mission started when its message opened; now that the phone is
+          // put away, the rods pop onto their tiles for the player to see.
+          if (fishermansRodRevealPendingRef.current) {
+            fishermansRodRevealPendingRef.current = false;
+            setFishermansRodsRevealedAtMs(Date.now());
+          }
           setActiveMissionBriefing(null);
           setDevFreshArrivalBriefing(null);
           setLandingText(islandNumber === 1 ? 'Collect dynamite and build the Diplomatic Peace Signing Assembly. Your mission phone tracks the progress.' : 'Field order accepted. Your mission phone tracks the progress.');

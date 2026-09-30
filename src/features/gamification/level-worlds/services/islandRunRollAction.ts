@@ -104,6 +104,8 @@ import {
   isRootheartPowerworksCollectionComplete,
   resolveRootheartPowerworksProgress,
   startCactusCanyonSpiralMission,
+  startFishermansVillageFishingMission,
+  FISHERMANS_VILLAGE_ISLAND_NUMBER,
   type FishermansVillagePendingCatch,
   type RootheartPowerComponentId,
   type StagedRestorationPickupKind,
@@ -566,16 +568,30 @@ async function performRollAction(options: {
         collectionKind: null,
         pickupKind: null,
       };
+  // Island 006 fishing starts when its mission message is opened. A save that
+  // read the message before that rule existed starts on its next roll instead.
+  const fishermansBriefingAlreadySeen = state.currentIslandNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
+    && typeof state.narrativeSeenState?.beats?.[
+      getIslandMissionBriefingBeatId(state.cycleIndex, state.currentIslandNumber)
+    ] === 'number';
+  const fishermansStartedLedger = fishermansBriefingAlreadySeen
+    ? startFishermansVillageFishingMission({
+        ledger: stagedRestorationLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        nowMs,
+      })
+    : stagedRestorationLanding.ledger;
   const fishermansVillageLanding = ordinaryTileGameplayActive
     ? collectFishermansVillageLanding({
-        ledger: stagedRestorationLanding.ledger,
+        ledger: fishermansStartedLedger,
         islandNumber: state.currentIslandNumber,
         cycleIndex: state.cycleIndex,
         tileIndex: newTokenIndex,
         nowMs,
         randomValue: Math.random(),
       })
-    : { ledger: greatHoneyfallLanding.ledger, rodCollected: false, pendingCatch: null };
+    : { ledger: fishermansStartedLedger, rodCollected: false, pendingCatch: null };
   const celestialRedockingRoll = advanceCelestialRedockingForRoll({
     ledger: fishermansVillageLanding.ledger,
     islandNumber: state.currentIslandNumber,

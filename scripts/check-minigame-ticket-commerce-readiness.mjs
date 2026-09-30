@@ -58,7 +58,7 @@ assert.match(
 );
 assert.match(
   board,
-  /isIslandRunFeatureEnabled\('minigameTicketPurchasesReady'\)[\s\S]{0,220}activeTimedEvent[\s\S]{0,420}Buy Tickets/,
+  /isIslandRunFeatureEnabled\('minigameTicketPurchasesReady'\)[\s\S]{0,220}activeTimedEvent[\s\S]{0,420}Buy 10 event tickets/,
   'frontend must hide the purchase entry point while readiness is off',
 );
 assert.match(migration, /set search_path = ''/i);

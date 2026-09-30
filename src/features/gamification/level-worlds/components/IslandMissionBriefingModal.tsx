@@ -338,11 +338,23 @@ function MissionMessagePicture({ kind }: { kind: MissionMessageStepKind }): Reac
         </svg>
       );
     case 'fish':
+      // A fishing rod pops onto a board tile: the same thing happens on the
+      // island when this message launches the fishing mission.
       return (
-        <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-          <path d="M8 32c8-12 26-14 38-2l10-8v20l-10-8C34 46 16 44 8 32z" fill="#7fd6ff" stroke="#16324a" strokeWidth="3" strokeLinejoin="round" />
-          <circle cx="20" cy="30" r="3" fill="#16324a" />
-          <path d="M10 52c6 4 14 4 20 0s14-4 20 0" fill="none" stroke="#7fd6ff" strokeWidth="3" strokeLinecap="round" />
+        <svg className="mission-message-rod-pop" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <path d="M10 48L32 57L54 48V53L32 62L10 53Z" fill="#11668d" stroke="#16324a" strokeWidth="2.5" strokeLinejoin="round" />
+          <path d="M32 40l22 8-22 9-22-9z" fill="#42cfc0" stroke="#16324a" strokeWidth="2.5" strokeLinejoin="round" />
+          <g className="mission-message-rod-pop__rod">
+            <path d="M24 46L44 8" stroke="#16324a" strokeWidth="4" strokeLinecap="round" />
+            <path d="M24 46L44 8" stroke="#c98a45" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="28" cy="38" r="4" fill="#ffd54a" stroke="#16324a" strokeWidth="2" />
+            <path d="M44 8c6 6 7 14 3 20" fill="none" stroke="#16324a" strokeWidth="1.5" strokeDasharray="2 2" />
+            <path d="M47 28c-2 2 0 5 2 3" fill="none" stroke="#16324a" strokeWidth="1.8" strokeLinecap="round" />
+          </g>
+          <g className="mission-message-rod-pop__sparkle" fill="#ffd54a" stroke="#16324a" strokeWidth="1.2">
+            <path d="M14 30l2 4 4 2-4 2-2 4-2-4-4-2 4-2z" />
+            <path d="M52 34l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5z" />
+          </g>
         </svg>
       );
     default:

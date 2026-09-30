@@ -3108,7 +3108,13 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(islandParam)'), 'the workbench should expose every authored runtime world, including Titan Rest Island 017 and all current main worlds');
+      // The workbench validates ?island= through the canonical 3D world router rather than
+      // its own hard-coded list, so it exposes exactly the worlds the live shell can route.
+      assert(pageSource.includes('resolveIslandRun3DWorldRoute(islandParam)'), 'the workbench should accept islands through the canonical 3D world router');
+      const routing = await import('../islandRun3DWorldRouting');
+      for (let island = 1; island <= 20; island += 1) {
+        assert(routing.resolveIslandRun3DWorldRoute(island) !== null, `the workbench should expose every authored runtime world, including Titan Rest Island 017 (missing Island ${String(island).padStart(3, '0')})`);
+      }
       assert(pageSource.includes('assembly-crater-preview-controls') && pageSource.includes('Blast next'), 'the workbench must replay Assembly Crater sectors without writing a real gameplay save');
       assert(pageSource.includes('Play 3 + 5 + 2') && pageSource.includes('assemblyReplayActive'), 'the workbench needs a hands-free replay of the three charge batches');
       assert(pageSource.includes('resolveIslandRun3DWorldRoute(islandNumber)'), 'the workbench must resolve runtime Island 016 to its authored source pack without creating a live Island 022 route');
@@ -3127,7 +3133,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('new OrbitControls'), 'pilot should provide touch and pointer orbit controls');
       assert(pilotSource.includes('controls.enableRotate = true') && pilotSource.includes('controls.enableZoom = true'), 'the actual-3D Island 020 world must support touch orbit and zoom from every evidence angle');
       assert(!pilotSource.includes("isLavaLabyrinth && id !== 'overview'"), 'programmatic Island 020 focus requests must not collapse back to a camera-locked plate view');
-      assert(pilotSource.includes('(isCelestialSkyKingdom || isDriftwoodIsle || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth)') && pilotSource.includes('applyEvidenceOrbitRef.current(degrees)'), 'Island 004 and the existing authored worlds expose the complete eight-angle evidence orbit');
+      assert(pilotSource.includes('(isIsland40Placeholder || isCelestialSkyKingdom || isDriftwoodIsle || isHoneycombKingdom || isJungleExpedition || isLavaLabyrinth)') && pilotSource.includes('applyEvidenceOrbitRef.current(degrees)'), 'Island 004 and the existing authored worlds expose the complete eight-angle evidence orbit');
       assert(pilotSource.includes('material.polygonOffsetUnits = -4'), 'Cactus Canyon tiles need a deterministic depth bias so camera motion cannot reveal z-fighting');
       assert(pilotSource.includes('tappedAt - lastTrainTapAt <= 430'), 'Cactus Canyon must support a deliberate mouse double-click and mobile double-tap on the moving train');
       assert(pilotSource.includes("const ISLAND_13_TRAIN_RIDE_PHASE_MS = 15_000"), 'each train ride viewpoint must hold for the requested fifteen seconds');
@@ -3153,7 +3159,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes('islandNumber={islandArtPreviewNumber}') && boardSource.includes('worldSourceNumber={island3DWorldNumber ?? 5}'), 'the shared renderer must keep gameplay identity separate from the selected authored world');
       assert(routingSource.includes('runtimeIslandNumber: 2, worldSourceNumber: 2') && routingSource.includes('runtimeIslandNumber: 3, worldSourceNumber: 3'), 'Islands 002 and 003 must route their dedicated Celestial and Frostmoon world packs');
       assert(routingSource.includes('runtimeIslandNumber: 4, worldSourceNumber: 4') && routingSource.includes('runtimeIslandNumber: 5, worldSourceNumber: 5'), 'the citadel and tropical arena worlds must retain stable Island 004/005 identities');
-      assert(routingSource.includes('runtimeIslandNumber: 6, worldSourceNumber: 6'), 'Island 006 must route its dedicated Moonveil Nexus world pack');
+      // Fisherman's Village (source 022) plays at Island 006 and Moonveil Nexus (source 006)
+      // at Island 016; see the swap note in islandRun3DWorldRouting.ts.
+      assert(routingSource.includes('runtimeIslandNumber: 6, worldSourceNumber: 22'), 'Island 006 must route the Fisherman\'s Village world pack');
+      assert(routingSource.includes('runtimeIslandNumber: 16, worldSourceNumber: 6'), 'Island 016 must route its dedicated Moonveil Nexus world pack');
       assert(routingSource.includes('runtimeIslandNumber: 11, worldSourceNumber: 11'), 'Island 011 must route the preserved pre-crater First Light world identity');
       assert(routingSource.includes('runtimeIslandNumber: 14, worldSourceNumber: 14'), 'Island 014 must route its dedicated Honeycomb Kingdom world pack');
       assert(routingSource.includes('runtimeIslandNumber: 19, worldSourceNumber: 19'), 'Island 019 must route its dedicated Coaster Carnival world pack');
