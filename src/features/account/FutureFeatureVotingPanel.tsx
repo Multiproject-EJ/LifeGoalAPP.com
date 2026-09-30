@@ -16,8 +16,6 @@ const SETTINGS_FEEDBACK_FEATURE_IDS = [
   'app.routines',
   'score.playerShop',
   'score.garage',
-  'settings.notifications',
-  'settings.holidayThemes',
 ] as const satisfies readonly FeatureAvailabilityId[];
 
 type FutureFeatureVotingPanelProps = {

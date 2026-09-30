@@ -16,6 +16,8 @@
   "include": [
     "src/services/aiTaskKeys.ts",
     "src/services/ai/aiRuntimeCore.ts",
-    "src/services/ai/__tests__/aiRuntimeCore.test.ts"
+    "src/services/ai/__tests__/aiRuntimeCore.test.ts",
+    "src/services/ai/aiPreferences.ts",
+    "src/services/ai/__tests__/aiPreferences.test.ts"
   ]
 }

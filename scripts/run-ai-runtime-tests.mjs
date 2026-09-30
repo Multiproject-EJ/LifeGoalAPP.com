@@ -14,6 +14,10 @@ try {
     path.join(outDir, 'services/ai/__tests__/aiRuntimeCore.test.js'),
   );
   await runAiRuntimeCoreTests();
+  const { runAiPreferencesTests } = require(
+    path.join(outDir, 'services/ai/__tests__/aiPreferences.test.js'),
+  );
+  runAiPreferencesTests();
   console.log('ai-runtime-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });
