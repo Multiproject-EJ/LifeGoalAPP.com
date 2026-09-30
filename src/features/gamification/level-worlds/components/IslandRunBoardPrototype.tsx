@@ -863,6 +863,10 @@ import {
   type Island5CameraPresetId,
 } from '../dev/island5ThreePilotContract';
 import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } from '../dev/Island5ThreePilot';
+import { STORMFRONT_DAMAGED_STOP_INDICES, STORMFRONT_ISLAND_NUMBER, STORMFRONT_STRUCTURES, resolveStormfrontProgress, shouldStrikeStormfront } from '../services/island2Stormfront';
+import { fundIsland2StormfrontStructure, markIsland2StormfrontSeen, strikeIsland2Stormfront } from '../services/island2StormfrontActions';
+import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
+import { Island2StormfrontBuildModal, Island2StormfrontMessage, resolveStormfrontStructureView } from './Island2StormfrontModals';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
 import { registerCrashContext } from '../../../../services/crashReports';
 import { IslandRunScoreboardModal } from './IslandRunScoreboardModal';
@@ -14240,13 +14244,34 @@ export function IslandRunBoardPrototype({
       islandProgressReadState.stopBuildStateByIndex,
     ],
   );
-  const island5ThreeBuildLevels = useMemo(() => ({
-    hatchery: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[0]),
-    habit: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[1]),
-    event: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[2]),
-    wisdom: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[3]),
-    boss: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[4]),
-  }), [islandArtLandmarkBuildLevels]);
+  // Island 002 Stormfront (services/island2Stormfront.ts): the strike is
+  // committed first; until the storm has been shown, the struck landmarks keep
+  // their pre-storm Level 3 on the board so pieces break off on screen.
+  const stormfrontProgress = useMemo(
+    () => resolveStormfrontProgress(__storeState.signatureMissionProgressByIsland, __storeState.cycleIndex),
+    [__storeState.signatureMissionProgressByIsland, __storeState.cycleIndex],
+  );
+  const stormfrontAwaitingCinematic = islandNumber === STORMFRONT_ISLAND_NUMBER
+    && stormfrontProgress.struckAtMs !== null && stormfrontProgress.cinematicSeenAtMs === null;
+  // Dev: /dev/island-art-preview?islandVisualPreview=1&islandStormfrontPreview=1 loops the storm;
+  // =message and =build open the add-on message and the storm defences panel.
+  const stormfrontPreviewMode = useMemo(() => (isIslandVisualPreview && typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('islandStormfrontPreview') : null), [isIslandVisualPreview]);
+  const stormfrontPreview = stormfrontPreviewMode === '1';
+  const [stormfrontCinematicPlaying, setStormfrontCinematicPlaying] = useState(false);
+  const [showStormfrontMessage, setShowStormfrontMessage] = useState(() => stormfrontPreviewMode === 'message');
+  const [showStormfrontBuild, setShowStormfrontBuild] = useState(() => stormfrontPreviewMode === 'build');
+  const island5ThreeBuildLevels = useMemo(() => {
+    const hold = (index: number) => (stormfrontAwaitingCinematic && STORMFRONT_DAMAGED_STOP_INDICES.includes(index)
+      ? 3 : islandArtLandmarkBuildLevels[index]);
+    return {
+      hatchery: normalizeIsland5ThreeBuildLevel(hold(0)),
+      habit: normalizeIsland5ThreeBuildLevel(hold(1)),
+      event: normalizeIsland5ThreeBuildLevel(hold(2)),
+      wisdom: normalizeIsland5ThreeBuildLevel(hold(3)),
+      boss: normalizeIsland5ThreeBuildLevel(hold(4)),
+    };
+  }, [islandArtLandmarkBuildLevels, stormfrontAwaitingCinematic]);
   const isCurrentIslandBossDefeated = isProgressBossResolved;
   const runtimeBossCreatureArtState = resolveBossCreatureArtState({
     stopBuildStateByIndex: islandProgressReadState.stopBuildStateByIndex,
@@ -14318,6 +14343,9 @@ export function IslandRunBoardPrototype({
       showVaultIslandCollection ||
       showMissionPhoneBriefing ||
       Boolean(activeMissionBriefing) ||
+      stormfrontCinematicPlaying ||
+      showStormfrontMessage ||
+      showStormfrontBuild ||
       showTitanAwakening ||
       showFrostwellMission ||
       showFirstLightAssemblyCrater ||
@@ -14642,6 +14670,68 @@ export function IslandRunBoardPrototype({
   const handleMissionMessageRead = useCallback((messageId: string) => {
     updateMissionInbox((inbox) => markMissionPhoneMessageRead(inbox, messageId, Date.now()));
   }, [updateMissionInbox]);
+
+  // Island 002 Stormfront orchestration. Gameplay writes go through the
+  // canonical mutex-protected actions; this only decides when to present.
+  const stormfrontMessageId = `stormfront:${cycleIndex}:${STORMFRONT_ISLAND_NUMBER}`;
+  const stormfrontBoardBusy = doesModalOwnAttention || isRolling || Boolean(pendingHopSequence)
+    || Boolean(constructionPresentation?.active) || Boolean(islandDeparture);
+  const stormfrontStrikeInFlightRef = useRef(false);
+  useEffect(() => {
+    if (isIslandVisualPreview || stormfrontBoardBusy || stormfrontStrikeInFlightRef.current) return;
+    if (!shouldStrikeStormfront(__storeState, stormfrontProgress)) return;
+    stormfrontStrikeInFlightRef.current = true;
+    void strikeIsland2Stormfront({ session, client })
+      .catch((error) => console.warn('[IslandRun] Stormfront strike failed.', error))
+      .finally(() => { stormfrontStrikeInFlightRef.current = false; });
+  }, [__storeState, client, isIslandVisualPreview, session, stormfrontBoardBusy, stormfrontProgress]);
+  const finishStormfrontCinematic = useCallback(() => {
+    setStormfrontCinematicPlaying(false);
+    if (stormfrontPreview) return;
+    void markIsland2StormfrontSeen({ session, client })
+      .catch((error) => console.warn('[IslandRun] Stormfront seen stamp failed.', error));
+    updateMissionInbox((inbox) => addMissionPhoneMessage(inbox, {
+      id: stormfrontMessageId,
+      islandNumber: STORMFRONT_ISLAND_NUMBER,
+      cycleIndex,
+      sender: 'Central Command',
+      title: 'Stormfront: make the island storm-safe',
+      body: 'That strike tore pieces off all four landmarks. Rebuild them, then build a Storm-Safe Lightning Grid and a Covered Sky Hangar where the Event Arena planes take off and are stored.',
+      stepLabels: ['Rebuild the four damaged landmarks to Level 3', ...STORMFRONT_STRUCTURES.map((structure) => `Build the ${structure.title} to Level 3`)],
+      receivedAtMs: Date.now(),
+      readAtMs: null,
+    }));
+    setShowStormfrontMessage(true);
+  }, [client, cycleIndex, session, stormfrontMessageId, stormfrontPreview, updateMissionInbox]);
+  useEffect(() => {
+    if (stormfrontCinematicPlaying) return;
+    if (stormfrontPreview) {
+      const timer = window.setTimeout(() => setStormfrontCinematicPlaying(true), 1500);
+      return () => window.clearTimeout(timer);
+    }
+    if (!stormfrontAwaitingCinematic || stormfrontBoardBusy) return;
+    // Without the 3D board there is nothing to watch: go straight to the message.
+    if (!shouldRenderIsland5Three) { finishStormfrontCinematic(); return; }
+    setStormfrontCinematicPlaying(true);
+  }, [finishStormfrontCinematic, shouldRenderIsland5Three, stormfrontAwaitingCinematic, stormfrontBoardBusy, stormfrontCinematicPlaying, stormfrontPreview]);
+  useEffect(() => {
+    if (!stormfrontCinematicPlaying || stormfrontPreview) return;
+    // Watchdog: a stalled renderer never strands the player mid-storm.
+    const timer = window.setTimeout(finishStormfrontCinematic, 30_000);
+    return () => window.clearTimeout(timer);
+  }, [finishStormfrontCinematic, stormfrontCinematicPlaying, stormfrontPreview]);
+  const handleStormfrontBeat = useCallback((beat: StormfrontCinematicBeat) => {
+    if (beat === 'boom') triggerIslandRunHaptic('assembly_topbar_blast');
+  }, []);
+  const stormfrontAddOnMission = islandNumber === STORMFRONT_ISLAND_NUMBER && stormfrontProgress.struckAtMs !== null
+    ? {
+      title: 'Storm-safe island',
+      items: resolveStormfrontStructureView(stormfrontProgress, islandNumber, cycleIndex)
+        .map(({ id, title, flag, percent }) => ({ id, title, flag, percent })),
+      actionLabel: stormfrontProgress.completedAtMs !== null ? 'View storm defences' : 'Build storm defences',
+      onAction: () => setShowStormfrontBuild(true),
+    }
+    : undefined;
   // The island's signature mission items (Island 001 dynamite etc.) stay off
   // the board until its first mission message has been read and the phone is
   // closed; then they pop in. Saves that already have mission progress, or no
@@ -17209,6 +17299,9 @@ export function IslandRunBoardPrototype({
                 firstArrivalActive={firstArrivalActive}
                 departureCinematicActive={Boolean(islandDeparture)}
                 onDepartureCinematicComplete={() => islandDepartureFinishRef.current?.()}
+                stormfrontCinematicActive={stormfrontCinematicPlaying}
+                onStormfrontCinematicComplete={finishStormfrontCinematic}
+                onStormfrontCinematicBeat={handleStormfrontBeat}
                 celebrationOrbit={(showIslandClearCelebration && !isIslandClearCelebrationDeparting)
                   || activeLaunchedMinigameId === 'journey_disc_arena'}
                 onCelebrationSnapshot={setIslandBackdropSnapshotUrl}
@@ -18205,6 +18298,25 @@ export function IslandRunBoardPrototype({
           onClose={() => setShowHatcheryCompassModal(false)}
         />
       )}
+
+      {showStormfrontMessage ? (
+        <Island2StormfrontMessage
+          onBuild={() => { handleMissionMessageRead(stormfrontMessageId); setShowStormfrontMessage(false); setShowStormfrontBuild(true); }}
+          onClose={() => { handleMissionMessageRead(stormfrontMessageId); setShowStormfrontMessage(false); }}
+        />
+      ) : null}
+      {showStormfrontBuild ? (
+        <Island2StormfrontBuildModal
+          progress={stormfrontPreviewMode === 'build'
+            ? { ...stormfrontProgress, struckAtMs: 1, levels: { 'lightning-grid': 2, 'sky-hangar': 0 }, spentTowardLevel: { 'lightning-grid': 120, 'sky-hangar': 0 } }
+            : stormfrontProgress}
+          islandNumber={islandNumber}
+          cycleIndex={cycleIndex}
+          money={__storeState.essence}
+          onFundStep={(structureId) => fundIsland2StormfrontStructure({ session, client, structureId })}
+          onClose={() => setShowStormfrontBuild(false)}
+        />
+      ) : null}
 
       {showCompassBookReceiptModal ? createPortal(
         <div className="island-soft-save-modal" role="dialog" aria-modal="true" aria-labelledby="island-compass-book-receipt-title">
@@ -21563,6 +21675,7 @@ export function IslandRunBoardPrototype({
           const spent = build && build.requiredEssence > 0 ? build.spentEssence / build.requiredEssence : 0;
           return { id: stop.stopId, title: stop.title, flag: resolveLandmarkFlag({ level, percent: level >= 3 ? 100 : spent > 0 ? 1 : 0 }) };
         }) : undefined}
+        addOnMission={showMissionPhoneBriefing ? stormfrontAddOnMission : undefined}
         acknowledgeLabel={showMissionPhoneBriefing ? 'Return to island' : 'Accept field order'}
         onObjectiveSelect={showMissionPhoneBriefing ? handleMissionPhoneObjectiveSelect : undefined}
         primaryActionLabel={showMissionPhoneBriefing && isIslandClearSignalPending

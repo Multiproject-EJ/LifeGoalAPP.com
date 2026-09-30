@@ -11,6 +11,8 @@ import {FIRST_ARRIVAL_WELCOME_TIME,advanceFirstArrivalTime} from '../services/is
 import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragmentVisuals';
 import {createIsland001FirstArrival} from './Island001FirstArrival';
 import { createIslandDepartureCinematic } from './IslandDepartureCinematic';
+import { createIsland2StormfrontCinematic } from './StormfrontCinematic';
+import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
 import { buildIsland40PlaceholderLandmark, createIsland40PlaceholderWorld, ISLAND_40_PLACEHOLDER_LABEL } from './Island40PlaceholderThreeWorld';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -430,6 +432,10 @@ interface Island5ThreePilotProps {
   /** Island departure (after the completion signal): ship folds, lifts off, streaks away. */
   departureCinematicActive?: boolean;
   onDepartureCinematicComplete?: () => void;
+  /** Island 002 Stormfront: plays the storm and the central strike (presentation only). */
+  stormfrontCinematicActive?: boolean;
+  onStormfrontCinematicComplete?: () => void;
+  onStormfrontCinematicBeat?: (beat: StormfrontCinematicBeat) => void;
   firstArrivalSkip?: boolean;
   onFirstArrivalComplete?: () => void;
   onFirstArrivalBeat?: (beat: string) => void;
@@ -3791,6 +3797,9 @@ export default function Island5ThreePilot({
   onCelebrationSnapshot,
   departureCinematicActive = false,
   onDepartureCinematicComplete,
+  stormfrontCinematicActive = false,
+  onStormfrontCinematicComplete,
+  onStormfrontCinematicBeat,
   openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
@@ -4051,6 +4060,8 @@ export default function Island5ThreePilot({
   onLuckySpinClickRef.current = onLuckySpinClick;
   const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
   departureCinematicRef.current = { active: departureCinematicActive, onComplete: onDepartureCinematicComplete };
+  const stormfrontCinematicRef = useRef({ active: stormfrontCinematicActive, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat });
+  stormfrontCinematicRef.current = { active: stormfrontCinematicActive, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat };
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
   constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
@@ -9464,6 +9475,10 @@ export default function Island5ThreePilot({
     let departureCinematic: ReturnType<typeof createIslandDepartureCinematic> | null = null;
     let departureCinematicTime = 0;
     let departureCinematicNotified = false;
+    let stormfrontCinematic: ReturnType<typeof createIsland2StormfrontCinematic> | null = null;
+    let stormfrontCinematicTime = 0;
+    let stormfrontCinematicNotified = false;
+    let stormfrontCinematicBeat = '';
     const openingCeremonyFx = isDriftwoodIsle ? createOpeningGamesCeremonyThree() : null;
     if (openingCeremonyFx) {
       openingCeremonyFx.bindPalace(scene.getObjectByName('OPENING_PALACE'),
@@ -11251,6 +11266,43 @@ export default function Island5ThreePilot({
         delete canvas.dataset.departureShot;
         controls.enabled = true;
       }
+      if (stormfrontCinematicRef.current.active && !departureCinematicRef.current.active) {
+        if (!stormfrontCinematic) {
+          const outerIds: Island5LandmarkId[] = ['hatchery', 'habit', 'event', 'wisdom'];
+          const allRoots = [...landmarkRootsById.values()];
+          stormfrontCinematic = createIsland2StormfrontCinematic({
+            scene,
+            canvas,
+            start: { position: camera.position.clone(), target: controls.target.clone(), fov: camera.fov },
+            damagedRoots: outerIds.map((id) => landmarkRootsById.get(id)).filter((entry): entry is THREE.Object3D => Boolean(entry)),
+            allRoots,
+          });
+          stormfrontCinematicTime = 0;
+          stormfrontCinematicNotified = false;
+          stormfrontCinematicBeat = '';
+        }
+        stormfrontCinematicTime += Math.min(0.1, actualFrameDeltaSeconds);
+        transition = null;
+        controls.enabled = false;
+        const done = stormfrontCinematic.update(stormfrontCinematicTime, camera, isReducedMotion);
+        const beat = String(stormfrontCinematic.root.userData.beat ?? '');
+        canvas.dataset.stormfrontBeat = beat;
+        canvas.dataset.stormfrontTime = stormfrontCinematicTime.toFixed(2);
+        if (beat !== stormfrontCinematicBeat) {
+          stormfrontCinematicBeat = beat;
+          stormfrontCinematicRef.current.onBeat?.(beat as StormfrontCinematicBeat);
+        }
+        if (done && !stormfrontCinematicNotified) {
+          stormfrontCinematicNotified = true;
+          stormfrontCinematicRef.current.onComplete?.();
+        }
+      } else if (stormfrontCinematic) {
+        stormfrontCinematic.dispose();
+        stormfrontCinematic = null;
+        delete canvas.dataset.stormfrontBeat;
+        delete canvas.dataset.stormfrontTime;
+        controls.enabled = true;
+      }
       publishCameraAuthoringPose(now);
 
       let restoreAssemblyCameraAfterRender = false;
@@ -11512,7 +11564,7 @@ export default function Island5ThreePilot({
       // Landmark flags: red while unfinished, green at Level 3. They stay up
       // during the build animation so the red flag pops up as building starts.
       const flagTime = performance.now() / 1000;
-      const flagsHidden = firstArrivalRef.current.active && !firstArrivalCompletedRef.current;
+      const flagsHidden = (firstArrivalRef.current.active && !firstArrivalCompletedRef.current) || stormfrontCinematic !== null;
       for (const item of landmarkProgressRef.current ?? []) {
         const root = landmarkRootsById.get(item.id as Island5LandmarkId);
         if (!root) continue;
@@ -11565,7 +11617,7 @@ export default function Island5ThreePilot({
         const root = landmarkRootsById.get(item.id as Island5LandmarkId);
         if (!label || !root) continue;
         const presentationVisible = !(firstArrivalRef.current.active && !firstArrivalCompletedRef.current)
-          && !constructionPresentationRef.current?.active;
+          && !constructionPresentationRef.current?.active && stormfrontCinematic === null;
         let overlay = attentionVisuals.get(item.id);
         const visualLevel = landmarkBuildLevelsRef.current?.[item.id as Island5LandmarkId] ?? buildLevelRef.current;
         if (overlay?.root !== root || overlay?.level !== visualLevel) { overlay?.visual.dispose(); attentionVisuals.delete(item.id); overlay = undefined; }
@@ -11871,6 +11923,7 @@ export default function Island5ThreePilot({
       window.cancelAnimationFrame(animationFrame);
       firstArrival?.dispose();
       departureCinematic?.dispose();
+      stormfrontCinematic?.dispose();
       livingAmbience.root.userData.disposeAwakening?.();
       tileRewardObjects.disposeFragments();
       island001AtmosphereRuntime?.dispose();

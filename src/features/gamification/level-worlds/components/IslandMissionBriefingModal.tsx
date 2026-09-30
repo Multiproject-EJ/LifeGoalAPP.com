@@ -37,6 +37,13 @@ export interface IslandMissionBriefingModalProps {
   objectiveDetails?: readonly string[];
   /** One flag per landmark: red = still needs work, green = 100% done. */
   landmarkFlags?: ReadonlyArray<{ id: string; title: string; flag: LandmarkFlag }>;
+  /** An add-on mission (Island 002 Stormfront) with its own flagged structures. */
+  addOnMission?: {
+    title: string;
+    items: ReadonlyArray<{ id: string; title: string; flag: LandmarkFlag; percent: number }>;
+    actionLabel: string;
+    onAction: () => void;
+  };
   acknowledgeLabel?: string;
   /** Filed Mission Phone messages, newest first. */
   messages?: readonly MissionPhoneMessage[];
@@ -450,6 +457,7 @@ export function IslandMissionBriefingModal({
   objectiveActions = [],
   objectiveDetails = [],
   landmarkFlags,
+  addOnMission,
   acknowledgeLabel = 'Accept field order',
   messages = [],
   openMessageId = null,
@@ -827,6 +835,26 @@ export function IslandMissionBriefingModal({
                         </li>
                       ))}
                     </ul>
+                  </section>
+                ) : null}
+                {addOnMission ? (
+                  <section className="island-mission-tracker__flags island-mission-tracker__addon" aria-label={`Add-on mission: ${addOnMission.title}`}>
+                    <header>
+                      <small>⚡ Add-on mission</small>
+                      <span>{addOnMission.title}</span>
+                    </header>
+                    <ul>
+                      {addOnMission.items.map((item) => (
+                        <li key={item.id} data-flag={item.flag}>
+                          {item.flag === 'none'
+                            ? <span className="island-mission-tracker__flag-empty" aria-hidden="true" />
+                            : <i className={`island-landmark-flag island-landmark-flag--${item.flag}`} aria-hidden="true" />}
+                          <strong>{item.title}</strong>
+                          <small>{LANDMARK_FLAG_LABEL[item.flag]} · {item.percent}%</small>
+                        </li>
+                      ))}
+                    </ul>
+                    <button type="button" className="island-mission-tracker__addon-action" onClick={addOnMission.onAction}>{addOnMission.actionLabel}</button>
                   </section>
                 ) : null}
                 </>

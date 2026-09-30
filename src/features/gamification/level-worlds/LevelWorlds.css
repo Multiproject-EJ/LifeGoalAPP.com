@@ -28801,3 +28801,134 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 .island-mission-tracker__flags li[data-flag='green'] { background: rgba(47, 210, 122, 0.16); }
 .island-mission-tracker__flags li[data-flag='red'] { background: rgba(239, 59, 59, 0.14); }
 .island-mission-tracker__flag-empty { display: inline-block; width: 14px; height: 18px; border-left: 2px dashed rgba(255, 255, 255, 0.35); }
+
+/* Island 002 Stormfront add-on mission (message + storm defences build panel). */
+.island-stormfront-modal__dialog {
+  max-height: min(88vh, 44rem);
+  overflow-y: auto;
+  background: linear-gradient(160deg, rgba(18, 24, 38, 0.97), rgba(34, 52, 82, 0.97));
+}
+.island-stormfront-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 2px solid #ff4d5e;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.island-stormfront-modal h2 { margin: 0 2.5rem 0.6rem 0; }
+.island-stormfront-modal__brief {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.8rem 0;
+  padding: 0;
+  list-style: none;
+}
+.island-stormfront-modal__brief li {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.5rem;
+  align-items: start;
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 0.9rem;
+}
+.island-stormfront-modal__brief li > span:first-child { font-size: 1.4rem; }
+.island-stormfront-modal__structures { display: grid; gap: 0.8rem; margin-top: 0.8rem; }
+.island-stormfront-structure {
+  padding: 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+.island-stormfront-structure header { display: flex; gap: 0.65rem; align-items: center; }
+.island-stormfront-structure h3 { margin: 0 0 0.2rem; font-size: 1rem; }
+.island-stormfront-structure p { margin: 0.5rem 0; font-size: 0.85rem; opacity: 0.85; }
+.island-stormfront-structure__icon {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.8rem;
+  background: rgba(127, 182, 255, 0.18);
+  font-size: 1.5rem;
+}
+.island-stormfront-structure__levels { display: flex; gap: 0.35rem; margin: 0.5rem 0; }
+.island-stormfront-structure__levels span {
+  flex: 1;
+  padding: 0.2rem 0;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+}
+.island-stormfront-structure__levels span.is-built { background: #19d85c; color: #04210f; }
+.island-stormfront-structure__bar {
+  height: 0.5rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+}
+.island-stormfront-structure__bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #7fb6ff, #e8f3ff);
+  transition: width 0.12s linear;
+}
+.island-stormfront-structure__build {
+  width: 100%;
+  margin-top: 0.65rem;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.island-stormfront-structure__build.is-holding { transform: scale(0.97); filter: brightness(1.15); }
+.island-stormfront-structure__done { color: #7dffac; font-weight: 700; }
+.island-stormfront-modal__notice { margin: 0.8rem 0 0; font-weight: 600; color: #cfe6ff; }
+.island-stormfront-structure__flag { display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 700; opacity: 0.9; }
+.island-mission-tracker__addon { border-color: rgba(127, 182, 255, 0.4); background: rgba(60, 100, 170, 0.14); }
+.island-mission-tracker__addon header span { color: #cfe3ff; }
+.island-mission-tracker__addon-action {
+  justify-self: stretch;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #3d7bff, #7fb6ff);
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+}
+.island-stormfront-modal h2,
+.island-stormfront-modal h3 { color: #fff; }
+.island-stormfront-modal h2 { font-size: 1.35rem; line-height: 1.2; }
+.island-stormfront-modal .island-soft-save-modal__actions { display: flex; gap: 0.6rem; margin-top: 1rem; }
+.island-stormfront-modal .island-stop-modal__btn {
+  min-height: 2.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.9rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.island-stormfront-modal .island-stop-modal__btn--primary {
+  flex: 1;
+  border: 0;
+  background: linear-gradient(90deg, #3d7bff, #6fb0ff);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(61, 123, 255, 0.35);
+}
+.island-stormfront-modal .island-stop-modal__btn--secondary {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: #e6efff;
+}

@@ -22,6 +22,7 @@ import { islandRunDepartureDayTests } from './islandRunDepartureDay.test';
 import { islandRunTreasuresTests } from './islandRunTreasures.test';
 import { landmarkFlagsTests } from './landmarkFlags.test';
 import { island2StormfrontTests } from './island2Stormfront.test';
+import { island2StormfrontCinematicTests } from './island2StormfrontCinematic.test';
 import { island001AssemblyInvitationsTests } from './island001AssemblyInvitations.test';
 import { fishermansDragonPreludeTests } from './fishermansDragonPrelude.test';
 import { controllerDiceTiersTests } from './controllerDiceTiers.test';
@@ -345,6 +346,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunTreasures', tests: islandRunTreasuresTests },
   { label: 'landmarkFlags', tests: landmarkFlagsTests },
   { label: 'island2Stormfront', tests: island2StormfrontTests },
+  { label: 'island2StormfrontCinematic', tests: island2StormfrontCinematicTests },
   { label: 'island001AssemblyInvitations', tests: island001AssemblyInvitationsTests },
   { label: 'fishermansDragonPrelude', tests: fishermansDragonPreludeTests },
   { label: 'controllerDiceTiers', tests: controllerDiceTiersTests },
