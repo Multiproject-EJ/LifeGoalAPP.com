@@ -4019,13 +4019,26 @@ export default function Island5ThreePilot({
   }, [activeExplorePointId, explorePoints]);
   useEffect(() => {
     if (!activeExplorePointId) return undefined;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+    const exit = () => {
       exploreRequestRef.current = { kind: 'exit' };
       setActiveExplorePointId(null);
     };
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') exit(); };
+    // Tapping any other game control (zoom glass, top bar, …) leaves the view
+    // first, so the player is never stuck in a point of view. Drags on the 3D
+    // canvas look around instead.
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (!target || target.closest('.island-explore-exit-layer')) return;
+      if (target instanceof HTMLCanvasElement) return;
+      if (target.closest('button, a, [role="button"], input, select')) exit();
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('pointerdown', onPointerDown, true);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('pointerdown', onPointerDown, true);
+    };
   }, [activeExplorePointId]);
   const greatHoneyfallPresentationRef = useRef(greatHoneyfallPresentation);
   greatHoneyfallPresentationRef.current = greatHoneyfallPresentation;
@@ -7512,6 +7525,11 @@ export default function Island5ThreePilot({
     } | null = null;
     let idleOverviewAt: number | null = null;
     let exploreActive: IslandExplorePoint | null = null;
+    // Look-around inside an explore view: once the camera arrives, dragging
+    // turns the view in place (orbit around a point just in front of the lens).
+    let exploreLookArmed = false;
+    let exploreSavedMaxDistance: number | null = null;
+    const exploreLookDirection = new THREE.Vector3();
     const exploreProjection = new THREE.Vector3();
     let ambientCameraContext: 'board' | 'build-modal' = constructionPresentationRef.current?.active
       ? 'build-modal'
@@ -11000,6 +11018,8 @@ export default function Island5ThreePilot({
         applyPreset('overview', ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE);
       }
       const ambientCameraAllowed = !isEvidenceCapture
+        // An explore view belongs to the player: no ambient drift while looking around.
+        && !exploreActive
         && !activeWonderRide
         && !activeTrainRide
         && !isReducedMotion
@@ -11295,9 +11315,30 @@ export default function Island5ThreePilot({
           };
         } else if (exploreActive) {
           exploreActive = null;
+          exploreLookArmed = false;
+          if (exploreSavedMaxDistance !== null) controls.maxDistance = exploreSavedMaxDistance;
+          exploreSavedMaxDistance = null;
+          controls.enableZoom = true;
+          controls.enablePan = cameraAuthoringEnabledRef.current;
+          controls.rotateSpeed = 0.56;
           controls.enabled = true;
           applyPreset('overview', 0.8);
         }
+      }
+      if (exploreActive && !exploreLookArmed && !transition) {
+        exploreLookArmed = true;
+        exploreLookDirection.copy(controls.target).sub(camera.position).normalize();
+        controls.target.copy(camera.position).addScaledVector(exploreLookDirection, 0.05);
+        exploreSavedMaxDistance ??= controls.maxDistance;
+        controls.minDistance = 0.01;
+        controls.maxDistance = 0.1;
+        controls.minPolarAngle = THREE.MathUtils.degToRad(12);
+        controls.maxPolarAngle = THREE.MathUtils.degToRad(168);
+        controls.enableZoom = false;
+        controls.enablePan = false;
+        controls.rotateSpeed = 0.24;
+        controls.enabled = true;
+        controls.update();
       }
       if (exploreActive) idleOverviewAt = null;
       canvas.dataset.explorePoint = exploreActive?.id ?? '';
@@ -11857,16 +11898,19 @@ export default function Island5ThreePilot({
         const point = explorePoints.find((entry) => entry.id === activeExplorePointId);
         if (!point) return null;
         const exitExplore = () => { exploreRequestRef.current = { kind: 'exit' }; setActiveExplorePointId(null); };
-        // Viewport-level layer above the controller/footer: Back, a tap anywhere
-        // or Escape always returns to the island (the footer used to swallow Back).
+        // Viewport layer above the controller/footer. It only catches its own
+        // buttons, so dragging the scene looks around; Back, Escape or tapping
+        // any other game control (zoom glass, top bar…) returns to the island.
         const layer = (
-          <div className="island-explore-exit-layer" role="dialog" aria-label={`${point.label} view`} onClick={exitExplore}>
+          <div className="island-explore-exit-layer" role="dialog" aria-label={`${point.label} view`}>
+            <button type="button" className="island-explore-exit-layer__back" autoFocus onClick={exitExplore}>
+              <span aria-hidden="true">←</span> Back to island
+            </button>
             <div className="island-explore-caption" role="status">
               <span><small>🔭 Explore</small><strong>{point.label}</strong><em>{point.blurb}</em></span>
-              <button type="button" autoFocus onClick={(event) => { event.stopPropagation(); exitExplore(); }}
-                onKeyDown={(event) => { if (event.key === 'Escape') exitExplore(); }}>Back</button>
+              <button type="button" onClick={exitExplore}>Back</button>
             </div>
-            <p className="island-explore-exit-layer__hint">Tap anywhere to return</p>
+            <p className="island-explore-exit-layer__hint">Drag to look around</p>
           </div>
         );
         return typeof document === 'undefined' ? layer : createPortal(layer, document.body);

@@ -28486,13 +28486,33 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 9000;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  /* Only the buttons catch taps: drags reach the 3D scene to look around. */
+  pointer-events: none;
 }
-.island-explore-exit-layer .island-explore-caption { cursor: default; }
+.island-explore-exit-layer .island-explore-caption,
+.island-explore-exit-layer button { pointer-events: auto; }
+.island-explore-exit-layer__back {
+  position: absolute;
+  top: max(84px, calc(env(safe-area-inset-top) + 78px));
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(159, 240, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(8, 22, 40, 0.82);
+  color: #eef8ff;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
 .island-explore-exit-layer__hint {
   position: absolute;
-  top: max(84px, calc(env(safe-area-inset-top) + 76px));
+  top: max(140px, calc(env(safe-area-inset-top) + 134px));
   left: 50%;
   translate: -50% 0;
   margin: 0;
