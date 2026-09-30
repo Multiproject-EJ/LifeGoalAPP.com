@@ -461,6 +461,10 @@ interface Island5ThreePilotProps {
    * frame, no React updates). Presentation only; used by the Lucky Spin badge.
    */
   tileBadgeAnchor?: { tileIndex: number; element: HTMLElement | null } | null;
+  /** Today's Lucky Spin waits on this tile as a 3D wheel (null hides it). */
+  luckySpinTileIndex?: number | null;
+  /** Tapping the 3D Lucky Spin wheel (screen point for the launch burst). */
+  onLuckySpinClick?: (origin: { x: number; y: number }) => void;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
   signatureMissionPresentation?: FrostwellIceworksPresentation;
   moonwellThermalPresentation?: MoonwellThermalPresentation;
@@ -3535,6 +3539,62 @@ function createIslandPlayerPiece(quality: Island3DQuality) {
 type IslandPlayerPieceToken = ReturnType<typeof createIslandPlayerPiece>;
 
 /**
+ * Lucky Spin on the board as a real 3D object: a small prize wheel on a gold
+ * stand with a glowing ring on the tile. It lives in the scene, so it scales
+ * with zoom and sits under every menu (it used to be a DOM badge floating
+ * above the page).
+ */
+function createLuckySpinWheelObject() {
+  const root = new THREE.Group();
+  root.name = 'LUCKY_SPIN_TILE_WHEEL';
+  const gold = new THREE.MeshStandardMaterial({ color: 0xf2c14e, metalness: 0.75, roughness: 0.28, emissive: 0x3a2400, emissiveIntensity: 0.25 });
+  const hub = new THREE.MeshStandardMaterial({ color: 0xfff4d0, emissive: 0xffd36b, emissiveIntensity: 0.6, roughness: 0.3 });
+  const glow = new THREE.MeshBasicMaterial({ color: 0x7fe3ff, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.4, 40), glow);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.02;
+  root.add(ring);
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.07, 0.42, 10), gold);
+  stand.position.y = 0.21;
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.06, 20), gold);
+  foot.position.y = 0.03;
+  root.add(stand, foot);
+  // The wheel faces the camera-side of the tile and spins around its axle.
+  const face = new THREE.Group();
+  face.position.y = 0.66;
+  root.add(face);
+  const wheel = new THREE.Group();
+  face.add(wheel);
+  const colors = [0xf87171, 0xfacc15, 0x38bdf8, 0xa3e635, 0xc084fc, 0xfb923c];
+  colors.forEach((color, index) => {
+    const slice = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.27, 0.27, 0.05, 12, 1, false, (index / colors.length) * Math.PI * 2, (Math.PI * 2) / colors.length),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.45, emissive: color, emissiveIntensity: 0.12 }),
+    );
+    slice.rotation.x = Math.PI / 2;
+    wheel.add(slice);
+  });
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.03, 10, 40), gold);
+  wheel.add(rim);
+  const pegs = new THREE.Group();
+  for (let i = 0; i < 12; i += 1) {
+    const peg = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), hub);
+    const angle = (i / 12) * Math.PI * 2;
+    peg.position.set(Math.cos(angle) * 0.28, Math.sin(angle) * 0.28, 0.03);
+    pegs.add(peg);
+  }
+  wheel.add(pegs);
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.055, 14, 10), hub);
+  cap.position.z = 0.04;
+  wheel.add(cap);
+  const pointer = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.11, 3), gold);
+  pointer.rotation.z = Math.PI;
+  pointer.position.set(0, 0.33, 0.03);
+  face.add(pointer);
+  return { root, face, wheel, ring, glow };
+}
+
+/**
  * Show the player's chosen piece on the token's gold base. No choice yet keeps
  * the classic figure, so existing players see no change. Themed tokens whose
  * geometry was batched (Island 20) keep their themed figure.
@@ -3689,6 +3749,8 @@ export default function Island5ThreePilot({
   onTokenHop,
   onTokenLand,
   tileBadgeAnchor,
+  luckySpinTileIndex = null,
+  onLuckySpinClick,
   onLandmarkClick,
   signatureMissionPresentation = { metersDrilled: 0, built: false, constructionSequence: 0 },
   moonwellThermalPresentation = { heated: false, running: false, sequence: 0 },
@@ -3919,6 +3981,10 @@ export default function Island5ThreePilot({
   onCelebrationSnapshotRef.current = onCelebrationSnapshot;
   const tileBadgeAnchorRef = useRef(tileBadgeAnchor);
   tileBadgeAnchorRef.current = tileBadgeAnchor;
+  const luckySpinTileIndexRef = useRef(luckySpinTileIndex);
+  luckySpinTileIndexRef.current = luckySpinTileIndex;
+  const onLuckySpinClickRef = useRef(onLuckySpinClick);
+  onLuckySpinClickRef.current = onLuckySpinClick;
   const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
   departureCinematicRef.current = { active: departureCinematicActive, onComplete: onDepartureCinematicComplete };
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
@@ -5650,6 +5716,9 @@ export default function Island5ThreePilot({
         : [];
 
     const tileBadgeProjection = new THREE.Vector3();
+    const luckySpinWheel = createLuckySpinWheelObject();
+    luckySpinWheel.root.visible = false;
+    scene.add(luckySpinWheel.root);
     const sharedTileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileTransforms = isFishermansVillage
       ? sharedTileTransforms.map((transform) => ({
@@ -9192,6 +9261,10 @@ export default function Island5ThreePilot({
         -((event.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.setFromCamera(pointer, camera);
+      if (luckySpinWheel.root.visible && raycaster.intersectObject(luckySpinWheel.root, true).length > 0) {
+        onLuckySpinClickRef.current?.({ x: event.clientX, y: event.clientY });
+        return;
+      }
       const trainIntersection = raycaster.intersectObjects(clickableRideTrain, true)[0];
       if (trainIntersection) {
         const tappedAt = performance.now();
@@ -11406,6 +11479,22 @@ export default function Island5ThreePilot({
           }
           label.style.transform = `translate(${x}px, ${bottom}px) translate(-50%, -100%)`;
           occupiedLabelRects.push({ left: x - width / 2, right: x + width / 2, top: bottom - height, bottom });
+        }
+      }
+      const luckySpinTile = luckySpinTileIndexRef.current;
+      luckySpinWheel.root.visible = luckySpinTile !== null && luckySpinTile !== undefined && tileTransforms.length > 0;
+      if (luckySpinWheel.root.visible) {
+        const wheelTile = ((Math.floor(luckySpinTile!) % tileTransforms.length) + tileTransforms.length) % tileTransforms.length;
+        const wheelPosition = getIsland5TokenGroundPosition(tileTransforms, wheelTile);
+        luckySpinWheel.root.position.set(wheelPosition[0], wheelPosition[1], wheelPosition[2]);
+        // Face the camera around the vertical axis, spin and breathe.
+        luckySpinWheel.face.rotation.y = Math.atan2(renderCamera.position.x - wheelPosition[0], renderCamera.position.z - wheelPosition[2]);
+        const wheelTime = performance.now() / 1000;
+        if (!isReducedMotion) {
+          luckySpinWheel.wheel.rotation.z = wheelTime * 1.6;
+          luckySpinWheel.face.position.y = 0.66 + Math.sin(wheelTime * 2.2) * 0.04;
+          luckySpinWheel.ring.scale.setScalar(1 + Math.sin(wheelTime * 3) * 0.08);
+          luckySpinWheel.glow.opacity = 0.4 + Math.sin(wheelTime * 3) * 0.2;
         }
       }
       const tileBadge = tileBadgeAnchorRef.current;
