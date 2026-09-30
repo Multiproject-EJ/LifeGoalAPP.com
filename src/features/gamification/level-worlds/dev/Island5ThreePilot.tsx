@@ -5744,7 +5744,7 @@ export default function Island5ThreePilot({
             : isMoonveilNexus && island6MoonveilMaterials
               ? createIsland6MoonveilLivingAmbience(scene, qualityProfile, island6MoonveilMaterials, water)
             : isAbyssalPearlKingdom && island7UnderwaterMaterials
-              ? createIsland7UnderwaterLivingAmbience(scene, qualityProfile, island7UnderwaterMaterials, water)
+              ? createIsland7UnderwaterLivingAmbience(scene, qualityProfile, island7UnderwaterMaterials, water, { previewCreatureRoutes: island7EnvironmentV2Enabled })
             : isEverblossomKingdom && island8EverblossomMaterials
               ? createIsland8EverblossomLivingAmbience(scene, qualityProfile, island8EverblossomMaterials, water)
             : isHeartshaftCrucible && island9HeartshaftMaterials

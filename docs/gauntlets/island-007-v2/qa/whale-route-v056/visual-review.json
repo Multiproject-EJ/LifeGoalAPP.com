@@ -1,0 +1,13 @@
+{
+  "status": "retain-local-improvement",
+  "pass": "v057-whale-skin",
+  "route": "721 samples per matched and normal phone camera passed; continuous horizontal loop; no notch crossing",
+  "visualReview": "Independent whole_scene_critique retained route at t45/t240 and smooth blue skin day/night. Kingdom remains primary.",
+  "limitations": [
+    "Bulbous head transition remains toy-like",
+    "Temporary shadow overlap obscures tail",
+    "No whole-creature or physical-device acceptance"
+  ],
+  "capture": "evidence/presentation/v057-whale-skin-t240",
+  "scope": "DEV V2 only; canonical gameplay unchanged"
+}
