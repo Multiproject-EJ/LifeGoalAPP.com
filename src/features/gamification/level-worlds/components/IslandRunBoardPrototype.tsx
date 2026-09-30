@@ -14261,6 +14261,17 @@ export function IslandRunBoardPrototype({
   const [stormfrontCinematicPlaying, setStormfrontCinematicPlaying] = useState(false);
   const [showStormfrontMessage, setShowStormfrontMessage] = useState(() => stormfrontPreviewMode === 'message');
   const [showStormfrontBuild, setShowStormfrontBuild] = useState(() => stormfrontPreviewMode === 'build');
+  // Structures stand on the board once the storm has been shown.
+  // Dev: islandStormfrontPreview=structures&stormfrontGrid=0..3&stormfrontHangar=0..3.
+  const stormfrontStructureLevels = useMemo(() => {
+    if (stormfrontPreviewMode === 'structures') {
+      const params = new URLSearchParams(window.location.search);
+      const read = (key: string) => Math.max(0, Math.min(3, Math.floor(Number(params.get(key) ?? 3) || 0)));
+      return { grid: read('stormfrontGrid'), hangar: read('stormfrontHangar') };
+    }
+    if (islandNumber !== STORMFRONT_ISLAND_NUMBER || stormfrontProgress.struckAtMs === null || stormfrontAwaitingCinematic) return null;
+    return { grid: stormfrontProgress.levels['lightning-grid'], hangar: stormfrontProgress.levels['sky-hangar'] };
+  }, [islandNumber, stormfrontAwaitingCinematic, stormfrontPreviewMode, stormfrontProgress]);
   const island5ThreeBuildLevels = useMemo(() => {
     const hold = (index: number) => (stormfrontAwaitingCinematic && STORMFRONT_DAMAGED_STOP_INDICES.includes(index)
       ? 3 : islandArtLandmarkBuildLevels[index]);
@@ -17302,6 +17313,8 @@ export function IslandRunBoardPrototype({
                 stormfrontCinematicActive={stormfrontCinematicPlaying}
                 onStormfrontCinematicComplete={finishStormfrontCinematic}
                 onStormfrontCinematicBeat={handleStormfrontBeat}
+                stormfrontStructureLevels={stormfrontStructureLevels}
+                onStormfrontStructureClick={isIslandVisualPreview ? undefined : () => setShowStormfrontBuild(true)}
                 celebrationOrbit={(showIslandClearCelebration && !isIslandClearCelebrationDeparting)
                   || activeLaunchedMinigameId === 'journey_disc_arena'}
                 onCelebrationSnapshot={setIslandBackdropSnapshotUrl}

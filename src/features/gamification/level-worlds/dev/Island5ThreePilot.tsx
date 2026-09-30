@@ -12,6 +12,7 @@ import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragme
 import {createIsland001FirstArrival} from './Island001FirstArrival';
 import { createIslandDepartureCinematic } from './IslandDepartureCinematic';
 import { createIsland2StormfrontCinematic } from './StormfrontCinematic';
+import { createStormfrontStructures } from './StormfrontStructures';
 import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
 import { buildIsland40PlaceholderLandmark, createIsland40PlaceholderWorld, ISLAND_40_PLACEHOLDER_LABEL } from './Island40PlaceholderThreeWorld';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -436,6 +437,9 @@ interface Island5ThreePilotProps {
   stormfrontCinematicActive?: boolean;
   onStormfrontCinematicComplete?: () => void;
   onStormfrontCinematicBeat?: (beat: StormfrontCinematicBeat) => void;
+  /** Island 002 storm-safe add-on structures (null hides them). */
+  stormfrontStructureLevels?: { grid: number; hangar: number } | null;
+  onStormfrontStructureClick?: () => void;
   firstArrivalSkip?: boolean;
   onFirstArrivalComplete?: () => void;
   onFirstArrivalBeat?: (beat: string) => void;
@@ -3611,7 +3615,14 @@ function createLandmarkFlagObject() {
     clothMaterial.emissive.setHex(LANDMARK_FLAG_COLORS[flag].glow);
     glowMaterial.color.setHex(LANDMARK_FLAG_COLORS[flag].glow);
   };
-  return { root, cloth, glowMaterial, clothMaterial, wave, setColor };
+  // The glow texture is shared and cached; everything else is per flag.
+  const dispose = () => root.traverse((node) => {
+    const mesh = node as THREE.Mesh | THREE.Sprite;
+    if ((mesh as THREE.Mesh).isMesh) (mesh as THREE.Mesh).geometry.dispose();
+    const material = (mesh as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+    (Array.isArray(material) ? material : material ? [material] : []).forEach((entry) => entry.dispose());
+  });
+  return { root, cloth, glowMaterial, clothMaterial, wave, setColor, dispose };
 }
 
 function createLuckySpinWheelObject() {
@@ -3800,6 +3811,8 @@ export default function Island5ThreePilot({
   stormfrontCinematicActive = false,
   onStormfrontCinematicComplete,
   onStormfrontCinematicBeat,
+  stormfrontStructureLevels = null,
+  onStormfrontStructureClick,
   openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
@@ -4056,6 +4069,10 @@ export default function Island5ThreePilot({
   tileBadgeAnchorRef.current = tileBadgeAnchor;
   const luckySpinTileIndexRef = useRef(luckySpinTileIndex);
   luckySpinTileIndexRef.current = luckySpinTileIndex;
+  const stormfrontStructureLevelsRef = useRef(stormfrontStructureLevels);
+  stormfrontStructureLevelsRef.current = stormfrontStructureLevels;
+  const onStormfrontStructureClickRef = useRef(onStormfrontStructureClick);
+  onStormfrontStructureClickRef.current = onStormfrontStructureClick;
   const onLuckySpinClickRef = useRef(onLuckySpinClick);
   onLuckySpinClickRef.current = onLuckySpinClick;
   const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
@@ -5794,6 +5811,9 @@ export default function Island5ThreePilot({
     const luckySpinWheel = createLuckySpinWheelObject();
     luckySpinWheel.root.visible = false;
     scene.add(luckySpinWheel.root);
+    const stormfrontStructures = createStormfrontStructures();
+    scene.add(stormfrontStructures.root);
+    const stormfrontStructureFlags = new Map<'grid' | 'hangar', { object: ReturnType<typeof createLandmarkFlagObject>; shown: LandmarkFlag; changedAt: number }>();
     const sharedTileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileTransforms = isFishermansVillage
       ? sharedTileTransforms.map((transform) => ({
@@ -9351,6 +9371,14 @@ export default function Island5ThreePilot({
         onLuckySpinClickRef.current?.({ x: event.clientX, y: event.clientY });
         return;
       }
+      if (stormfrontStructures.root.visible && raycaster.intersectObjects(stormfrontStructures.hitTargets, true).some((hit) => {
+        // Raycasts ignore visibility, so skip parts that are not built yet.
+        for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
+        return true;
+      })) {
+        onStormfrontStructureClickRef.current?.();
+        return;
+      }
       const trainIntersection = raycaster.intersectObjects(clickableRideTrain, true)[0];
       if (trainIntersection) {
         const tappedAt = performance.now();
@@ -11611,6 +11639,66 @@ export default function Island5ThreePilot({
           }
         }
       }
+      // Island 002 storm-safe structures, each with its own flag.
+      const stormfrontLevels = stormfrontStructureLevelsRef.current;
+      stormfrontStructures.root.visible = Boolean(stormfrontLevels) && tileTransforms.length > 0 && stormfrontCinematic === null;
+      if (stormfrontStructures.root.visible && stormfrontLevels) {
+        if (!stormfrontStructures.placed) {
+          const eventRoot = landmarkRootsById.get('event');
+          const eventBox = eventRoot ? new THREE.Box3().setFromObject(eventRoot) : null;
+          const groundRay = new THREE.Raycaster();
+          // Sprites read the ray's camera; ground hits only use meshes anyway.
+          groundRay.camera = camera;
+          const down = new THREE.Vector3(0, -1, 0);
+          const groundTargets = scene.children.filter((child) => child !== stormfrontStructures.root && child !== luckySpinWheel.root && !(child instanceof THREE.Light));
+          stormfrontStructures.place({
+            tilePositions: tileTransforms.map((_, index) => getIsland5TokenGroundPosition(tileTransforms, index)),
+            eventCentre: eventBox && !eventBox.isEmpty() ? eventBox.getCenter(new THREE.Vector3()) : null,
+            viewFrom: camera.position.clone(),
+            blockers: [...landmarkRootsById.values()].map((entry) => new THREE.Box3().setFromObject(entry)).filter((box) => !box.isEmpty()),
+            groundAt: (x, z) => {
+              groundRay.set(new THREE.Vector3(x, 60, z), down);
+              const hit = groundRay.intersectObjects(groundTargets, true).find((entry) => {
+                const mesh = entry.object as THREE.Mesh;
+                const material = mesh.material as THREE.Material | undefined;
+                return mesh.isMesh && mesh.visible && !(material && material.transparent && material.opacity < 0.6);
+              });
+              return hit ? hit.point.y : null;
+            },
+          });
+        }
+        stormfrontStructures.setLevels(stormfrontLevels.grid, stormfrontLevels.hangar);
+        stormfrontStructures.update(flagTime, isReducedMotion);
+      }
+      (['grid', 'hangar'] as const).forEach((id) => {
+        let entry = stormfrontStructureFlags.get(id);
+        if (!entry) {
+          entry = { object: createLandmarkFlagObject(), shown: 'none', changedAt: 0 };
+          entry.object.root.visible = false;
+          scene.add(entry.object.root);
+          stormfrontStructureFlags.set(id, entry);
+        }
+        const level = stormfrontLevels ? stormfrontLevels[id] : 0;
+        const target: LandmarkFlag = !stormfrontLevels ? 'none' : level >= 3 ? 'green' : 'red';
+        if (target !== entry.shown) {
+          entry.shown = target;
+          entry.changedAt = flagTime;
+          if (target !== 'none') entry.object.setColor(target);
+        }
+        entry.object.root.visible = target !== 'none' && stormfrontStructures.root.visible && stormfrontStructures.placed && !flagsHidden;
+        if (!entry.object.root.visible) return;
+        entry.object.root.position.copy(id === 'grid' ? stormfrontStructures.gridFlagAnchor : stormfrontStructures.hangarFlagAnchor);
+        const age = flagTime - entry.changedAt;
+        const pop = isReducedMotion || age > 0.8 ? 1 : Math.min(1, age / 0.45) + Math.sin(Math.min(1, age / 0.8) * Math.PI) * 0.18;
+        entry.object.root.scale.setScalar(1.3 * pop);
+        if (!isReducedMotion) {
+          entry.object.wave(flagTime);
+          entry.object.glowMaterial.opacity = 0.35 + Math.sin(flagTime * 3) * 0.15 + (target === 'red' ? 0.15 : 0);
+        }
+      });
+      canvas.dataset.stormfrontStructures = stormfrontStructures.root.visible && stormfrontLevels
+        ? `grid:${stormfrontLevels.grid},hangar:${stormfrontLevels.hangar},placement:${stormfrontStructures.root.userData.hangarPlacement ?? '-'},flags:${[...stormfrontStructureFlags.values()].map((f) => (f.object.root.visible ? f.shown : 'none')).join('/')}`
+        : 'hidden';
       canvas.dataset.landmarkFlags = [...landmarkFlags.entries()].map(([id, f]) => `${id}:${f.object.root.visible ? f.shown : 'none'}`).join(',');
       for (const item of landmarkProgressRef.current ?? []) {
         const label = landmarkLabelRefs.current.get(item.id);
@@ -11924,6 +12012,9 @@ export default function Island5ThreePilot({
       firstArrival?.dispose();
       departureCinematic?.dispose();
       stormfrontCinematic?.dispose();
+      stormfrontStructures.dispose();
+      stormfrontStructureFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
+      landmarkFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
       livingAmbience.root.userData.disposeAwakening?.();
       tileRewardObjects.disposeFragments();
       island001AtmosphereRuntime?.dispose();
