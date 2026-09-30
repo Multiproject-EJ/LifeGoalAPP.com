@@ -14,6 +14,8 @@ import { createIslandDepartureCinematic } from './IslandDepartureCinematic';
 import { createIsland2StormfrontCinematic } from './StormfrontCinematic';
 import { createStormfrontStructures } from './StormfrontStructures';
 import { OPENING_ARENA_ARRIVAL_SECONDS, createOpeningArenaHoverBase, type OpeningArenaVisualStage } from './OpeningArenaHoverBase';
+import { createGoldenSkyLift } from './GoldenSkyLift';
+import { createCrystalDropZones } from './CrystalDropZones';
 import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
 import { buildIsland40PlaceholderLandmark, createIsland40PlaceholderWorld, ISLAND_40_PLACEHOLDER_LABEL } from './Island40PlaceholderThreeWorld';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -450,6 +452,11 @@ interface Island5ThreePilotProps {
   openingArena?: { stage: OpeningArenaVisualStage; arenaLevel: number; rollsUntilDelivery: number } | null;
   onOpeningArenaArrivalComplete?: () => void;
   onOpeningArenaClick?: () => void;
+  /** Island 002 (new campaign): the centre landmark is the Golden Sky Lift. */
+  centreLandmarkVariant?: 'golden-sky-lift' | null;
+  /** Island 002: four Crystal Miners drop zones beside the outer landmarks. */
+  crystalDropZonesVisible?: boolean;
+  onCrystalDropZoneClick?: () => void;
   firstArrivalSkip?: boolean;
   onFirstArrivalComplete?: () => void;
   onFirstArrivalBeat?: (beat: string) => void;
@@ -3828,6 +3835,9 @@ export default function Island5ThreePilot({
   openingArena = null,
   onOpeningArenaArrivalComplete,
   onOpeningArenaClick,
+  centreLandmarkVariant = null,
+  crystalDropZonesVisible = false,
+  onCrystalDropZoneClick,
   openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
@@ -4296,11 +4306,15 @@ export default function Island5ThreePilot({
       .join('|'),
     [sceneTileMap],
   );
+  const crystalDropZonesRef = useRef({ visible: crystalDropZonesVisible, onClick: onCrystalDropZoneClick });
+  crystalDropZonesRef.current = { visible: crystalDropZonesVisible, onClick: onCrystalDropZoneClick };
+  const centreLandmarkVariantRef = useRef(centreLandmarkVariant);
+  centreLandmarkVariantRef.current = centreLandmarkVariant;
   const landmarkBuildLevelsKey = useMemo(
-    () => ISLAND_5_LANDMARKS
+    () => `${ISLAND_5_LANDMARKS
       .map((landmark) => `${landmark.id}:${landmarkBuildLevels?.[landmark.id] ?? buildLevel}`)
-      .join('|'),
-    [buildLevel, landmarkBuildLevels],
+      .join('|')}|centre:${centreLandmarkVariant ?? 'authored'}`,
+    [buildLevel, centreLandmarkVariant, landmarkBuildLevels],
   );
   // Island 015 build levels mutate semantic GLB groups through the binder.
   // Other worlds still rebuild their authored procedural geometry as before.
@@ -5838,6 +5852,8 @@ export default function Island5ThreePilot({
     const openingArenaBase = createOpeningArenaHoverBase();
     scene.add(openingArenaBase.root);
     let openingArenaArrivalNotified = false;
+    const crystalDropZones = createCrystalDropZones();
+    scene.add(crystalDropZones.root);
     let openingArenaArrivalCamera: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
     const stormfrontStructureFlags = new Map<'grid' | 'hangar', { object: ReturnType<typeof createLandmarkFlagObject>; shown: LandmarkFlag; changedAt: number }>();
     const sharedTileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
@@ -6527,9 +6543,22 @@ export default function Island5ThreePilot({
     const island15FallbackRoot = new THREE.Group();
     island15FallbackRoot.name = 'ISLAND_15_CRYSTAL_PALACE_V4_LOADING_FALLBACK';
     if (isCrystalGlacier) scene.add(island15FallbackRoot);
+    const goldenSkyLifts: ReturnType<typeof createGoldenSkyLift>[] = [];
     for (const landmark of ISLAND_5_LANDMARKS) {
       const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevelRef.current;
       const landmarkRoot = buildAuthoredLandmark(landmark, resolvedBuildLevel);
+      if (landmark.id === 'boss' && centreLandmarkVariantRef.current === 'golden-sky-lift' && resolvedBuildLevel > 0) {
+        // Island 002: the Golden Sky Lift replaces the authored centre building.
+        landmarkRoot.updateMatrixWorld(true);
+        const authoredBox = new THREE.Box3().setFromObject(landmarkRoot);
+        const authoredSize = authoredBox.getSize(new THREE.Vector3());
+        landmarkRoot.children.forEach((child) => { child.visible = false; });
+        const liftRadius = THREE.MathUtils.clamp(Math.max(authoredSize.x, authoredSize.z) * 0.42, 0.8, 4);
+        const lift = createGoldenSkyLift({ level: resolvedBuildLevel, radius: liftRadius, height: Math.max(authoredSize.y * 1.5, liftRadius * 4.2) });
+        lift.root.position.y = authoredBox.isEmpty() ? 0 : authoredBox.min.y - landmarkRoot.position.y;
+        landmarkRoot.add(lift.root);
+        goldenSkyLifts.push(lift);
+      }
       if (landmark.id === 'boss' && !isCrystalGlacier) makeLandmarkMaterialsIndependent(landmarkRoot);
       // The representative Island 019 gate intentionally shows only the
       // approved p08/p09/p10/p24 geometry. Generic Crown-of-Tides landmarks
@@ -9408,6 +9437,10 @@ export default function Island5ThreePilot({
         onLuckySpinClickRef.current?.({ x: event.clientX, y: event.clientY });
         return;
       }
+      if (crystalDropZones.root.visible && raycaster.intersectObjects(crystalDropZones.hitTargets, true).length > 0) {
+        crystalDropZonesRef.current.onClick?.();
+        return;
+      }
       if (openingArenaBase.root.visible && openingArenaRef.current.state?.stage === 'anchored'
         && raycaster.intersectObjects(openingArenaBase.hitTargets, true).some((hit) => {
           for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
@@ -11424,9 +11457,35 @@ export default function Island5ThreePilot({
           controls.enabled = true;
         }
         canvas.dataset.openingArena = `${openingArenaState.stage}:${openingArenaState.arenaLevel}:${openingArenaBase.arrivalProgress.toFixed(2)}`;
+        // Guests walk from the Sky Lift towards the anchored arena.
+        const liftHost = landmarkRootsById.get('boss');
+        if (liftHost && goldenSkyLifts.length > 0) {
+          const arenaReady = openingArenaState.stage === 'anchored' && openingArenaState.arenaLevel >= 3;
+          const toward = liftHost.worldToLocal(openingArenaBase.focusPoint.clone());
+          toward.y = 0;
+          const reach = Math.min(toward.length(), openingArenaBase.radius * 1.6);
+          goldenSkyLifts.forEach((lift) => lift.setCrowdTarget(arenaReady && toward.lengthSq() > 1e-4 ? toward.normalize().multiplyScalar(reach) : null));
+        }
       } else {
         openingArenaBase.root.visible = false;
+        goldenSkyLifts.forEach((lift) => lift.setCrowdTarget(null));
       }
+      goldenSkyLifts.forEach((lift) => lift.update(now / 1000, isReducedMotion));
+      // Crystal Miners drop zones: one pad beside each outer landmark, toward the centre.
+      if (crystalDropZonesRef.current.visible && !crystalDropZones.placed && landmarkRootsById.size >= 5) {
+        const centreBox = new THREE.Box3();
+        landmarkRootsById.forEach((entry) => centreBox.expandByObject(entry));
+        const centre = centreBox.getCenter(new THREE.Vector3());
+        crystalDropZones.place((['hatchery', 'habit', 'event', 'wisdom'] as const).map((id) => {
+          const box = new THREE.Box3().setFromObject(landmarkRootsById.get(id)!);
+          const mid = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          const inward = new THREE.Vector3(centre.x - mid.x, 0, centre.z - mid.z).normalize();
+          return mid.clone().addScaledVector(inward, Math.max(size.x, size.z) * 0.62).setY(box.min.y);
+        }));
+      }
+      crystalDropZones.root.visible = crystalDropZonesRef.current.visible && crystalDropZones.placed;
+      if (crystalDropZones.root.visible) crystalDropZones.update(now / 1000, isReducedMotion);
       publishCameraAuthoringPose(now);
 
       let restoreAssemblyCameraAfterRender = false;
@@ -12139,6 +12198,8 @@ export default function Island5ThreePilot({
       stormfrontCinematic?.dispose();
       stormfrontStructures.dispose();
       openingArenaBase.dispose();
+      goldenSkyLifts.forEach((lift) => lift.dispose());
+      crystalDropZones.dispose();
       stormfrontStructureFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
       landmarkFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
       livingAmbience.root.userData.disposeAwakening?.();

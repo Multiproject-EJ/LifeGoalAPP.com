@@ -123,4 +123,20 @@ export const island2OpeningArenaTests: TestCase[] = [
       assert(modal.includes('useControllerShopScrollLock()') && modal.includes('document.body'), 'portal + scroll lock');
     },
   },
+  {
+    name: 'opening arena: Island 002 centre is the Golden Sky Lift and the outer landmarks carry Crystal Miners drop zones',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilot = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(pilot.includes("landmark.id === 'boss' && centreLandmarkVariantRef.current === 'golden-sky-lift' && resolvedBuildLevel > 0"), 'the lift replaces the centre building at L1-L3');
+      assert(pilot.includes('|centre:${centreLandmarkVariant ?? \'authored\'}'), 'a variant change rebuilds the scene');
+      assert(pilot.includes("(['hatchery', 'habit', 'event', 'wisdom'] as const).map((id) => {"), 'four drop zones, one per outer landmark');
+      const lift = fsMod.readFileSync('src/features/gamification/level-worlds/dev/GoldenSkyLift.ts', 'utf8');
+      assert(lift.includes('if (level >= 3) {') && lift.includes('cabin') && lift.includes('Cloud swirl inside the well'), 'crown, riding cabin and the cloud well');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes("centreLandmarkVariant={openingArenaAvailable ||"), 'only on new-campaign Island 002');
+      assert(board.includes("handleLandmarkOpenRequest('mystery');\n                }}"), 'drop zones open the real Event Arena');
+    },
+  },
 ];

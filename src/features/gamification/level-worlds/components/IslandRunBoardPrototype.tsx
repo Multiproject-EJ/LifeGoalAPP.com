@@ -17589,6 +17589,13 @@ export function IslandRunBoardPrototype({
                 openingArena={openingArenaVisual}
                 onOpeningArenaArrivalComplete={handleOpeningArenaArrivalComplete}
                 onOpeningArenaClick={isIslandVisualPreview ? undefined : () => setShowOpeningArenaBuild(true)}
+                centreLandmarkVariant={openingArenaAvailable || (isIslandVisualPreview && new URLSearchParams(window.location.search).get('islandSkyLiftPreview') === '1')
+                  ? 'golden-sky-lift' : null}
+                crystalDropZonesVisible={openingArenaAvailable || (isIslandVisualPreview && new URLSearchParams(window.location.search).get('islandSkyLiftPreview') === '1')}
+                onCrystalDropZoneClick={isIslandVisualPreview ? undefined : () => {
+                  setLandingText('💎 Crystal Miners drop zone — the Event Arena sends expeditions down from here.');
+                  handleLandmarkOpenRequest('mystery');
+                }}
                 celebrationOrbit={(showIslandClearCelebration && !isIslandClearCelebrationDeparting)
                   || activeLaunchedMinigameId === 'journey_disc_arena'}
                 onCelebrationSnapshot={setIslandBackdropSnapshotUrl}
