@@ -868,6 +868,8 @@ import { fundIsland2StormfrontStructure, markIsland2StormfrontSeen, strikeIsland
 import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
 import { Island2StormfrontBuildModal, Island2StormfrontMessage, resolveStormfrontStructureView } from './Island2StormfrontModals';
 import { WISDOM_DEFERRAL_ROLLS, resolveWisdomDeferral } from '../services/wisdomDeferral';
+import { ARENA_GAMES_CALL, getArenaGamesCallMessageId } from '../services/mandateEggBasket';
+import { MandateEggBasketOverlay } from './MandateEggBasketOverlay';
 import { deferWisdomStop } from '../services/wisdomDeferralActions';
 import { SKY_HANGAR_LAUNCH_DELAY_MS, SKY_HANGAR_LAUNCH_DELAY_REDUCED_MS, resolveSkyHangarFlight, resolveSkyHangarTap } from '../services/skyHangarArenaSync';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
@@ -2305,6 +2307,19 @@ export function IslandRunBoardPrototype({
   }, [featureAccess.gradual, __storeState.currentIslandNumber]);
   const assemblyMandateRef = useRef<ReturnType<typeof showAssemblyMandate> | null>(null);
   const [assemblyMandateOpen, setAssemblyMandateOpen] = useState(false);
+  // Mandate reward: the egg basket plays once the mandate closes, then the
+  // Mission Phone rings with the Arena Games call.
+  const mandateBasketPendingRef = useRef(false);
+  // Dev: /dev/island-art-preview?islandVisualPreview=1&mandateBasketPreview=1 replays the basket.
+  const [showMandateBasket, setShowMandateBasket] = useState(false);
+  useEffect(() => {
+    if (!isIslandVisualPreview || new URLSearchParams(window.location.search).get('mandateBasketPreview') !== '1') return undefined;
+    // Wait for the 3D scene so the preview shows the real, unblocked animation.
+    const timer = window.setTimeout(() => setShowMandateBasket(true), 12_000);
+    return () => window.clearTimeout(timer);
+  }, [isIslandVisualPreview]);
+  const [arenaGamesCallId, setArenaGamesCallId] = useState<string | null>(null);
+  const [phoneCallMessageId, setPhoneCallMessageId] = useState<string | null>(null);
   useEffect(() => () => assemblyMandateRef.current?.close(), [__storeState.currentIslandNumber, __storeState.cycleIndex, session.user.id]);
   const openAssemblyMandate = useCallback(() => {
     if (assemblyMandateRef.current) return;
@@ -2317,8 +2332,16 @@ export function IslandRunBoardPrototype({
       onSign: async () => {
         const result = await signFirstLightAssemblyMandate({ session, client });
         if (result.status !== 'ok' && result.status !== 'already_signed') throw new Error(result.status);
+        if (result.status === 'ok') mandateBasketPendingRef.current = true;
       },
-      onClose: () => { assemblyMandateRef.current = null; setAssemblyMandateOpen(false); },
+      onClose: () => {
+        assemblyMandateRef.current = null;
+        setAssemblyMandateOpen(false);
+        if (mandateBasketPendingRef.current) {
+          mandateBasketPendingRef.current = false;
+          setShowMandateBasket(true);
+        }
+      },
     });
   }, [__storeState.signatureMissionProgressByIsland, __storeState.cycleIndex, session, client]);
   const dicePool = __storeState.dicePool;
@@ -14425,6 +14448,7 @@ export function IslandRunBoardPrototype({
       showMissionPhoneBriefing ||
       Boolean(activeMissionBriefing) ||
       stormfrontCinematicPlaying ||
+      showMandateBasket ||
       showStormfrontMessage ||
       showStormfrontBuild ||
       showTitanAwakening ||
@@ -14751,6 +14775,32 @@ export function IslandRunBoardPrototype({
   const handleMissionMessageRead = useCallback((messageId: string) => {
     updateMissionInbox((inbox) => markMissionPhoneMessageRead(inbox, messageId, Date.now()));
   }, [updateMissionInbox]);
+  const handleMandateBasketDone = useCallback(() => {
+    setShowMandateBasket(false);
+    const id = getArenaGamesCallMessageId(cycleIndex);
+    updateMissionInbox((inbox) => addMissionPhoneMessage(inbox, {
+      id,
+      islandNumber: 1,
+      cycleIndex,
+      sender: 'Central Command',
+      title: ARENA_GAMES_CALL.title,
+      body: ARENA_GAMES_CALL.body,
+      stepLabels: [...ARENA_GAMES_CALL.stepLabels],
+      receivedAtMs: Date.now(),
+      readAtMs: null,
+    }));
+    setArenaGamesCallId(id);
+    triggerIslandRunHaptic('mission_phone_latch');
+  }, [cycleIndex, updateMissionInbox]);
+  const answerArenaGamesCall = useCallback(() => {
+    if (!arenaGamesCallId) return;
+    setPhoneCallMessageId(arenaGamesCallId);
+    setArenaGamesCallId(null);
+    setShowMissionPhoneBriefing(true);
+  }, [arenaGamesCallId]);
+  useEffect(() => {
+    if (!showMissionPhoneBriefing) setPhoneCallMessageId(null);
+  }, [showMissionPhoneBriefing]);
 
   // Island 002 Stormfront orchestration. Gameplay writes go through the
   // canonical mutex-protected actions; this only decides when to present.
@@ -17216,7 +17266,7 @@ export function IslandRunBoardPrototype({
                     <button
                       key={`mission-phone-${missionMessageNudge}`}
                       type="button"
-                      className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing ? ' island-run-mission-phone--message' : ''}`}
+                      className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing || arenaGamesCallId ? ' island-run-mission-phone--message' : ''}`}
                       aria-label={`${incomingMissionBriefing ? 'New mission message. ' : ''}${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(isIslandVisualPreview ? islandArtPreviewNumber : islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
                       title="Mission tracker"
                       onClick={handleMissionPhoneButton}
@@ -17770,7 +17820,7 @@ export function IslandRunBoardPrototype({
         <button
           key={`mission-phone-floating-${missionMessageNudge}`}
           type="button"
-          className={`island-run-board__mission-phone-floating${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing ? ' island-run-mission-phone--message' : ''}`}
+          className={`island-run-board__mission-phone-floating${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing || arenaGamesCallId ? ' island-run-mission-phone--message' : ''}`}
           aria-label={`${incomingMissionBriefing ? 'New mission message. ' : ''}${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
           title="Mission tracker"
           onClick={handleMissionPhoneButton}
@@ -21435,6 +21485,16 @@ export function IslandRunBoardPrototype({
           Skip <span aria-hidden="true">⏭</span>
         </button>, document.body) : null}
       {showScoreboard ? <IslandRunScoreboardModal session={session} onClose={() => setShowScoreboard(false)} /> : null}
+      {showMandateBasket ? <MandateEggBasketOverlay onDone={handleMandateBasketDone} /> : null}
+      {arenaGamesCallId && !doesModalOwnAttention ? createPortal(
+        <button type="button" className="island-run-mission-message-banner island-run-mission-call-banner" onClick={answerArenaGamesCall}>
+          <span className="island-run-mission-message-banner__icon" aria-hidden="true"><MissionPhoneRailIcon /></span>
+          <span className="island-run-mission-message-banner__copy">
+            <small>Mission Phone · ringing</small>
+            <strong>📞 {ARENA_GAMES_CALL.title}</strong>
+            <span>Tap to answer Central Command</span>
+          </span>
+        </button>, document.body) : null}
       {incomingMissionBriefing && showMissionMessageBanner && !doesModalOwnAttention ? createPortal(
         <button type="button" className="island-run-mission-message-banner" onClick={openIncomingMissionBriefing}>
           <span className="island-run-mission-message-banner__icon" aria-hidden="true"><MissionPhoneRailIcon /></span>
@@ -21759,7 +21819,7 @@ export function IslandRunBoardPrototype({
         stats={displayedMissionTracker.stats}
         overallProgressPercent={displayedMissionTracker.overallProgressPercent}
         messages={missionInbox}
-        openMessageId={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing ? openMissionMessageId : null}
+        openMessageId={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing ? openMissionMessageId : showMissionPhoneBriefing ? phoneCallMessageId : null}
         onMessageRead={handleMissionMessageRead}
         objectiveActions={showMissionPhoneBriefing ? missionPhoneObjectiveActions : undefined}
         objectiveDetails={showMissionPhoneBriefing ? missionPhoneObjectiveDetails : undefined}

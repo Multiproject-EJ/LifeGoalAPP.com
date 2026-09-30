@@ -255,7 +255,10 @@ export const islandRunCompletionTests: TestCase[] = [
       assertEqual((await signFirstLightAssemblyMandate({ session, client: null })).status, 'ok', 'Sign appointment once');
       assertEqual((await signFirstLightAssemblyMandate({ session, client: null })).status, 'already_signed', 'No repeated signing reward/write');
       const ready = getIslandRunStateSnapshot(session);
-      assertEqual(resolveIslandRunCompletion(ready).percent, 100, 'Assembly + four L3 activities + egg + mandate is 100%');
+      const basket = Object.values(ready.perIslandEggs).filter((egg) => egg.gift === 'mandate-basket');
+      assertEqual(basket.map((egg) => egg.tier).sort().join(','), 'common,common,rare', 'Signing hands over a basket of 1 rare + 2 common eggs');
+      assert(basket.every((egg) => egg.status === 'incubating'), 'Basket eggs start incubating in the egg column');
+      assertEqual(resolveIslandRunCompletion(ready).percent, 100, 'Assembly + four L3 activities + egg + mandate is 100% (gift eggs never block)');
       const args = { session, client: null, nextIsland: 2, completedVisitKey: '0:1', startTimer: true, nowMs: 12345, getIslandDurationMs: () => 0, islandRunContractV2Enabled: true };
       const traveled = await travelToNextIsland(args);
       assertEqual(traveled.resolvedIsland, 2, 'Normal departure reaches Island 002');

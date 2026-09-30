@@ -1,4 +1,5 @@
 import { applyTitanPuzzleInput, type TitanPuzzleInput } from './island17Awakening';
+import { buildMandateEggBasket } from './mandateEggBasket';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
@@ -419,7 +420,7 @@ export type DetonateFirstLightAssemblyChargeResult =
 export function signFirstLightAssemblyMandate(options: {
   session: Session;
   client: SupabaseClient | null;
-}): Promise<{ status: 'ok' | 'already_signed' | 'wrong_island' | 'assembly_incomplete' }> {
+}): Promise<{ status: 'ok' | 'already_signed' | 'wrong_island' | 'assembly_incomplete'; basketEggKeys?: string[] }> {
   return withIslandRunActionLock(options.session.user.id, async () => {
     const state = getIslandRunStateSnapshot(options.session);
     if (state.currentIslandNumber !== FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER) return { status: 'wrong_island' };
@@ -429,15 +430,19 @@ export function signFirstLightAssemblyMandate(options: {
     if (progress.completedAtMs === null || progress.chargesDetonated < FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET) return { status: 'assembly_incomplete' };
     if (progress.mandateSignedAtMs != null) return { status: 'already_signed' };
     const nowMs = Date.now(), key = getIslandRunSignatureMissionKey(state.cycleIndex, state.currentIslandNumber);
+    // The mandate reward: a basket of three gifted eggs (1 rare, 2 common),
+    // granted once with the signature itself.
+    const basket = buildMandateEggBasket({ perIslandEggs: state.perIslandEggs, islandNumber: state.currentIslandNumber, nowMs });
     await commitIslandRunState({
       session: options.session, client: options.client,
       record: { ...state, runtimeVersion: state.runtimeVersion + 1,
+        perIslandEggs: { ...state.perIslandEggs, ...basket },
         signatureMissionProgressByIsland: { ...state.signatureMissionProgressByIsland,
           [key]: { ...progress, mandateSignedAtMs: nowMs, updatedAtMs: nowMs },
         },
       },
     });
-    return { status: 'ok' };
+    return { status: 'ok', basketEggKeys: Object.keys(basket) };
   });
 }
 

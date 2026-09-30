@@ -81,7 +81,7 @@ export const missionPhoneInboxTests: TestCase[] = [
       assert(modal.includes('<MissionPictureMessage labels={openMessage.stepLabels} variant="boxed" />'), 'missions read as boxed 1 · 2 · 3 steps');
       assert(modal.includes('fileOpenMessage();\n    requestFold'), 'closing the phone also files the open message');
       const board = fs.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
-      assert(board.includes('openMessageId={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing ? openMissionMessageId : null}'), 'the incoming briefing opens its message view');
+      assert(board.includes('openMessageId={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing ? openMissionMessageId : showMissionPhoneBriefing ? phoneCallMessageId : null}'), 'the incoming briefing opens its message view');
       assert(board.includes('addMissionPhoneMessage(inbox, {'), 'arriving messages are filed in the inbox');
     },
   },

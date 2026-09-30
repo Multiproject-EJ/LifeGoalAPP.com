@@ -3,6 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import '../LevelWorlds.css';
 import { IslandMissionBriefingModal } from '../components/IslandMissionBriefingModal';
+import { MandateEggBasketOverlay } from '../components/MandateEggBasketOverlay';
 import { resolveIslandMissionTrackerPresentation } from '../services/islandRunMissionTracker';
 import type { PerIslandEggEntry, PerIslandEggsLedger } from '../services/islandRunGameStateStore';
 
@@ -30,6 +31,15 @@ const reviewMessages = [
   { id: 'review:older', islandNumber, cycleIndex: 0, sender: 'Central Command', title: 'Welcome to the island',
     body: 'Build every landmark to Level 3.', stepLabels: ['Build Landmarks'], receivedAtMs: Date.now() - 3_600_000, readAtMs: 1 },
 ];
+// ?basket=1 plays the Island 001 mandate egg basket into a stand-in egg column.
+function BasketReview() {
+  const [playing, setPlaying] = React.useState(true);
+  return <main style={{ minHeight: '100vh', background: '#0c2336', color: '#fff', fontFamily: 'system-ui' }}>
+    <div className="island-run-board__rewardbar-hatchery-tray" style={{ position: 'fixed', left: 8, top: 300, width: 44, height: 132, borderRadius: 22, background: 'rgba(255,255,255,0.16)' }} />
+    <p style={{ padding: 24 }}>{playing ? 'Playing…' : 'Done — the phone would ring now.'}</p>
+    {playing ? <MandateEggBasketOverlay onDone={() => setPlaying(false)} /> : null}
+  </main>;
+}
 function CompletionReview() {
   const [open, setOpen] = React.useState(true);
   const [messages, setMessages] = React.useState(reviewMessages);
@@ -47,4 +57,4 @@ function CompletionReview() {
       onMessageRead={(id) => setMessages((all) => all.map((entry) => (entry.id === id ? { ...entry, readAtMs: Date.now() } : entry)))} />
   </>;
 }
-createRoot(document.getElementById('root')!).render(<CompletionReview />);
+createRoot(document.getElementById('root')!).render(params.get('basket') === '1' ? <BasketReview /> : <CompletionReview />);
