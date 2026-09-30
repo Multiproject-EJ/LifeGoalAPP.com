@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { getSupabaseClient } from '../lib/supabaseClient';
+import { CLOUD_AI_OFF_MESSAGE, isCloudAiAllowed } from '../services/ai/aiPreferences';
 
 export type GoalCoachChatMessage = {
   role: 'user' | 'assistant';
@@ -55,6 +56,11 @@ export default function useGoalCoachChat() {
     setError(null);
 
     try {
+      // The goal coach only runs in the cloud; Settings → AI & privacy can turn that off.
+      if (!isCloudAiAllowed()) {
+        throw new Error(CLOUD_AI_OFF_MESSAGE);
+      }
+
       const edgeFunctionUrl = import.meta.env.VITE_AI_GOAL_COACH_CHAT_URL;
       if (!edgeFunctionUrl) {
         throw new Error('AI goal coach chat URL is not configured. Please set VITE_AI_GOAL_COACH_CHAT_URL.');

@@ -4,6 +4,7 @@ import {
   getServiceHealthManager,
   guardedCloudCall,
 } from '../../../../services/service-health';
+import { isCloudAiAllowed } from '../../../../services/ai/aiPreferences';
 import type { AiCoachDataAccess } from '../../../../types/aiCoach';
 import { buildWisdomWhisper, type LandmarkWhisperPayload } from './landmarkWhispers';
 
@@ -138,6 +139,9 @@ export function sanitizeWisdomKeeperReflection(value: string): string | null {
 
 export function createWisdomKeeperAiCoachGenerator(): WisdomKeeperAiGenerator {
   return async (prompt) => {
+    // Cloud AI turned off in Settings → AI & privacy: callers fall back to the local whisper.
+    if (!isCloudAiAllowed()) throw new Error('Cloud AI is turned off.');
+
     const availability = getFeatureAvailability('ai_coach', getServiceHealthManager().getSnapshot());
     if (availability.status !== 'available') {
       // Callers catch and fall back to the local whisper.

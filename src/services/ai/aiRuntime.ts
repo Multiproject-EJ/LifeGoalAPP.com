@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { canUseSupabaseData, getSupabaseClient } from '../../lib/supabaseClient';
 import { resolveAiEntitlement } from '../aiEntitlementService';
 import { isOnDeviceAiTask } from '../aiTaskRouting';
+import { readAiPreferences } from './aiPreferences';
 import type { AiTaskKey } from '../aiTaskKeys';
 import {
   createAiRuntime,
@@ -26,6 +27,7 @@ const ON_DEVICE_TIMEOUT_MS = 15000;
 let onDeviceAvailability: Promise<boolean> | null = null;
 
 function isOnDeviceAvailable(): Promise<boolean> {
+  if (!readAiPreferences().aiEnabled) return Promise.resolve(false);
   if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'ios') {
     return Promise.resolve(false);
   }
@@ -89,7 +91,7 @@ function getRuntime() {
     isOnDeviceTask: isOnDeviceAiTask,
     isOnDeviceAvailable,
     generateOnDevice,
-    isServerAvailable: canUseSupabaseData,
+    isServerAvailable: isServerAiAvailable,
     isServerEntitled: (task) => resolveAiEntitlement(task, true).allowed,
     callServer,
     now: () => (typeof performance !== 'undefined' ? performance.now() : Date.now()),
@@ -113,7 +115,11 @@ export function isAiAvailableFor(task: AiTaskKey): Promise<boolean> {
   return getRuntime().isAiAvailableFor(task);
 }
 
-/** Whether the server AI path can be used (signed in with Supabase configured). */
+/**
+ * Whether the cloud AI path can be used: AI and cloud AI are allowed in
+ * Settings → AI & privacy, and the user is signed in with Supabase configured.
+ */
 export function isServerAiAvailable(): boolean {
-  return canUseSupabaseData();
+  const preferences = readAiPreferences();
+  return preferences.aiEnabled && preferences.cloudFallback && canUseSupabaseData();
 }

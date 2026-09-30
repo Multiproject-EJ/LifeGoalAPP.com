@@ -7,6 +7,7 @@
 
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import { guardedCloudCall } from './service-health';
+import { isCloudAiAllowed } from './ai/aiPreferences';
 
 export interface SuggestGoalRequest {
   description: string;
@@ -42,8 +43,9 @@ export async function suggestGoal(request: SuggestGoalRequest): Promise<SuggestG
     };
   }
 
-  // Check if Supabase is configured
-  if (!canUseSupabaseData()) {
+  // Supabase not configured, or cloud AI turned off in Settings → AI & privacy:
+  // use the local suggestion.
+  if (!canUseSupabaseData() || !isCloudAiAllowed()) {
     return {
       data: generateDemoSuggestion(request),
       error: null,

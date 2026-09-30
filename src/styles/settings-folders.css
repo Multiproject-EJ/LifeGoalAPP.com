@@ -1,127 +1,4 @@
 /* Settings Folder Button */
-.settings-modules {
-  display: grid;
-  gap: 1.4rem;
-}
-
-.settings-modules__header h3 {
-  margin: 0.35rem 0 0;
-  color: var(--text-primary, #111827);
-  font-size: clamp(1.25rem, 3vw, 1.65rem);
-}
-
-.settings-modules__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.settings-modules__group {
-  display: grid;
-  gap: 0.85rem;
-  padding: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 1.2rem;
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.72), rgba(255, 255, 255, 0.88));
-}
-
-.settings-modules__group-header {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.settings-modules__group-eyebrow {
-  margin: 0;
-  color: var(--text-secondary, #64748b);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.settings-modules__group-hint {
-  margin: 0;
-  color: var(--text-secondary, #64748b);
-  font-size: 0.82rem;
-  line-height: 1.35;
-}
-
-.settings-module-card {
-  display: grid;
-  grid-template-rows: auto auto;
-  place-content: center;
-  justify-items: center;
-  aspect-ratio: 1 / 1;
-  min-height: 0;
-  width: 100%;
-  padding: 0.9rem;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  border-radius: 1.4rem;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.92)),
-    var(--card-background, #ffffff);
-  color: var(--text-primary, #111827);
-  cursor: pointer;
-  text-align: center;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
-}
-
-.settings-module-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(99, 102, 241, 0.4);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 1), rgba(239, 246, 255, 0.9)),
-    var(--card-hover-background, #f9fafb);
-  box-shadow: 0 8px 20px -16px rgba(15, 23, 42, 0.45);
-}
-
-.settings-module-card:active {
-  transform: translateY(0);
-}
-
-.settings-module-card:focus-visible {
-  outline: 2px solid var(--focus-ring-color, #3b82f6);
-  outline-offset: 3px;
-}
-
-.settings-module-card__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 7rem;
-  height: 7rem;
-  margin: 0 auto 0.7rem;
-  border-radius: 2rem;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.16), rgba(124, 58, 237, 0.16));
-  font-size: 3.9rem;
-}
-
-.settings-module-card__content {
-  display: grid;
-  justify-items: center;
-  gap: 0.24rem;
-}
-
-.settings-module-card__title-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.settings-module-card__title {
-  color: var(--text-primary, #111827);
-  font-size: 0.9rem;
-  font-weight: 750;
-  line-height: 1.15;
-}
-
-.settings-module-card__badge {
-  font-size: 0.66rem;
-  padding: 0.22rem 0.5rem;
-  letter-spacing: 0.04em;
-}
 
 .settings-folder-button {
   display: flex;
@@ -368,27 +245,6 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .settings-modules__group {
-    padding: 0.85rem;
-  }
-
-  .settings-module-card {
-    min-height: 9.9rem;
-    padding: 0.85rem;
-  }
-
-  .settings-module-card__icon {
-    width: 5.3rem;
-    height: 5.3rem;
-    margin: 0 auto 0.75rem;
-    border-radius: 1.5rem;
-    font-size: 3rem;
-  }
-
-  .settings-module-card__title {
-    font-size: 0.78rem;
-    line-height: 1.15;
-  }
 
   .settings-folder-popup {
     width: 95vw;
@@ -416,8 +272,6 @@
 
 /* Dark-glass hardening for settings folders/workspace snapshot (analysis pass 9) */
 [data-theme='dark-glass'] .settings-folder-button,
-[data-theme='dark-glass'] .settings-module-card,
-[data-theme='dark-glass'] .settings-modules__group,
 [data-theme='dark-glass'] .settings-folder-popup,
 [data-theme='dark-glass'] .settings-folder-popup__header,
 [data-theme='dark-glass'] .workspace-snapshot,
@@ -432,21 +286,13 @@
   background: color-mix(in srgb, var(--color-surface-secondary, rgba(15, 23, 42, 0.72)) 88%, transparent);
 }
 
-[data-theme='dark-glass'] .settings-module-card__icon {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.18), rgba(167, 139, 250, 0.18));
-}
-
 [data-theme='dark-glass'] .settings-folder-button__title,
-[data-theme='dark-glass'] .settings-modules__header h3,
-[data-theme='dark-glass'] .settings-module-card__title,
 [data-theme='dark-glass'] .settings-folder-popup__title,
 [data-theme='dark-glass'] .workspace-snapshot__header h3 {
   color: var(--color-text-primary, #f1f5f9);
 }
 
 [data-theme='dark-glass'] .settings-folder-button__description,
-[data-theme='dark-glass'] .settings-modules__group-eyebrow,
-[data-theme='dark-glass'] .settings-modules__group-hint,
 [data-theme='dark-glass'] .settings-folder-button__count,
 [data-theme='dark-glass'] .settings-folder-button__arrow,
 [data-theme='dark-glass'] .workspace-snapshot__header p,
@@ -456,7 +302,6 @@
 }
 
 [data-theme='dark-glass'] .settings-folder-button:hover,
-[data-theme='dark-glass'] .settings-module-card:hover,
 [data-theme='dark-glass'] .settings-folder-popup__close:hover {
   background: color-mix(in srgb, var(--color-surface-secondary, rgba(15, 23, 42, 0.72)) 92%, transparent);
 }

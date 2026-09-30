@@ -11,6 +11,7 @@
  */
 
 import { canUseSupabaseData, getSupabaseClient } from '../../../lib/supabaseClient';
+import { isCloudAiAllowed } from '../../../services/ai/aiPreferences';
 import {
   getFeatureAvailability,
   getServiceHealthManager,
@@ -28,7 +29,7 @@ const HELP_TIMEOUT_MS = 12000;
 
 /** Whether the per-question "Help me think" affordance should be offered. */
 export function isCompassAiAvailable(): boolean {
-  return canUseSupabaseData();
+  return canUseSupabaseData() && isCloudAiAllowed();
 }
 
 function unavailable(message: string): CompassHelpResult {
@@ -38,6 +39,9 @@ function unavailable(message: string): CompassHelpResult {
 export async function requestCompassHelp(request: CompassHelpRequest): Promise<CompassHelpResult> {
   if (!canUseSupabaseData()) {
     return unavailable('AI help isn’t available right now — continue on your own.');
+  }
+  if (!isCloudAiAllowed()) {
+    return unavailable('Cloud AI is turned off in Settings — continue on your own.');
   }
 
   const availability = getFeatureAvailability('ai_coach', getServiceHealthManager().getSnapshot());

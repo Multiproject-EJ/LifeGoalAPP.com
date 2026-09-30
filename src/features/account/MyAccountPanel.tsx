@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { SupabaseConnectionTest } from './SupabaseConnectionTest';
 import { ThemeSelector } from '../../components/ThemeSelector';
-import type { Theme, ThemeAccessResult, ThemeCheckoutSkuId, ThemeMetadata } from '../../contexts/ThemeContext';
+import { useTheme, type Theme, type ThemeAccessResult, type ThemeCheckoutSkuId, type ThemeMetadata } from '../../contexts/ThemeContext';
 import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPreferences, PerHabitReminderPrefs, ReminderActionDebugPanel, ReminderAnalyticsDashboard } from '../notifications';
 import { AiSettingsSection } from './AiSettingsSection';
-import { ExperimentalFeaturesSection } from './ExperimentalFeaturesSection';
+import { AiPrivacySettings } from './AiPrivacySettings';
+import { SettingsGroup, SettingsRow, SettingsSegmented, SettingsSwitch } from './SettingsList';
 import { GameDebugLogSection } from './GameDebugLogSection';
 import { ViewportDiagnosticsSection } from './ViewportDiagnosticsSection';
 import { YesterdayRecapSettings } from './YesterdayRecapSettings';
@@ -16,8 +17,6 @@ import { GamificationSettings } from '../gamification/GamificationSettings';
 import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { ServiceDiagnosticsPanel, SyncIndicator } from '../../components/service-status';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
-import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
-import { SettingsFeatureCard } from '../../components/SettingsFeatureCard';
 import { PersonalizationModal } from '../../components/PersonalizationModal';
 import { CreatorNoteModal } from '../onboarding/FounderWelcome';
 import { CreatorStory } from '../onboarding/CreatorStory';
@@ -27,9 +26,6 @@ import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { MyCasesPanel } from '../cases/MyCasesPanel';
 import { AdminHub } from '../admin/AdminHub';
 import { FutureFeatureVotingPanel } from './FutureFeatureVotingPanel';
-import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
-import { resolveFeatureAccess } from '../../services/featureAccess';
-import { isUserFeatureEnabled } from '../../services/userFeatureOverrides';
 import { isAdminUser } from '../../services/adminRoles';
 import type { WorkspaceProfileRow } from '../../services/workspaceProfile';
 import type { WorkspaceStats } from '../../services/workspaceStats';
@@ -132,17 +128,13 @@ export function MyAccountPanel({
 }: MyAccountPanelProps) {
   const [folder1Open, setFolder1Open] = useState(false);
   const [adminHubOpen, setAdminHubOpen] = useState(initialFolder === 'admin');
-  const [folder2Open, setFolder2Open] = useState(false);
+  const [planFolderOpen, setPlanFolderOpen] = useState(false);
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
   const [remindersFolderOpen, setRemindersFolderOpen] = useState(false);
   const [appearanceFolderOpen, setAppearanceFolderOpen] = useState(initialFolder === 'appearance');
-  const [soundFolderOpen, setSoundFolderOpen] = useState(false);
-  const [hapticsFolderOpen, setHapticsFolderOpen] = useState(false);
-  const [menuDisplayFolderOpen, setMenuDisplayFolderOpen] = useState(false);
   const [birthdayGiftFolderOpen, setBirthdayGiftFolderOpen] = useState(false);
   const [onboardingToolsFolderOpen, setOnboardingToolsFolderOpen] = useState(false);
   const [aiPrivacyFolderOpen, setAiPrivacyFolderOpen] = useState(false);
-  const [experimentalFolderOpen, setExperimentalFolderOpen] = useState(false);
   const [showExperimentsModal, setShowExperimentsModal] = useState(false);
   const [gameRewardsFolderOpen, setGameRewardsFolderOpen] = useState(false);
   const [cacheFolderOpen, setCacheFolderOpen] = useState(false);
@@ -178,7 +170,7 @@ export function MyAccountPanel({
     if (initialFolder === 'admin') setAdminHubOpen(true);
     onInitialFolderOpened?.();
   }, [initialFolder, onInitialFolderOpened]);
-  const [activeFutureFeatureId, setActiveFutureFeatureId] = useState<FeatureAvailabilityId | null>(null);
+  const { themeMode, setThemeMode } = useTheme();
   const [ownedThemeIds, setOwnedThemeIds] = useState<Set<Theme>>(new Set());
   const [themeEntitlementsLoading, setThemeEntitlementsLoading] = useState(false);
   const [themeEntitlementsError, setThemeEntitlementsError] = useState<string | null>(null);
@@ -225,7 +217,6 @@ export function MyAccountPanel({
     ? formatDate(new Date(new Date(profile.birthday_gift_last_claimed_at).getTime() + 365 * 24 * 60 * 60 * 1000).toISOString(), { dateStyle: 'medium' })
     : 'Now (if birthday matches today)';
   const showDemoNotice = isDemoExperience;
-  const activeFutureFeature = activeFutureFeatureId ? getFeatureAvailability(activeFutureFeatureId) : null;
   const themeAccessContext = useMemo(() => {
     const ownedCreatureIds = new Set(
       (islandRunState.creatureCollection ?? [])
@@ -330,14 +321,6 @@ export function MyAccountPanel({
       active = false;
     };
   }, [session.user.id]);
-
-  useEffect(() => {
-    if (isAdmin === true) return;
-    setFolder1Open(false);
-    setFolder2Open(false);
-    setHolidayFolderOpen(false);
-    setExperimentalFolderOpen(false);
-  }, [isAdmin]);
 
   const showAdminTools = isAdmin === true;
 
@@ -677,25 +660,6 @@ export function MyAccountPanel({
     }
   };
 
-  const handleSettingsModuleClick = (featureId: FeatureAvailabilityId, setModuleOpen: (isOpen: boolean) => void) => {
-    const isUserOverride = isUserFeatureEnabled(session.user.id, featureId);
-    const access = resolveFeatureAccess(featureId, { isAdminOrCreator: isAdmin === true || isUserOverride });
-
-    if (access === 'open') {
-      setModuleOpen(true);
-      return;
-    }
-
-    if (access === 'previewOnly') {
-      setActiveFutureFeatureId(featureId);
-      return;
-    }
-
-    // Hidden feature access should remain silent so public users never see internal details.
-  };
-  const handleHolidayThemesClick = () => handleSettingsModuleClick('settings.holidayThemes', setHolidayFolderOpen);
-  const handleNotificationsClick = () => handleSettingsModuleClick('settings.notifications', setFolder2Open);
-  const handleRemindersClick = () => setRemindersFolderOpen(true);
   const handleExperimentalFeaturesClick = () => setShowExperimentsModal(true);
   const handleAdvancedToolsClick = () => {
     setFolder1Open(true);
@@ -751,7 +715,7 @@ export function MyAccountPanel({
             onClick={handleClearPwaCache}
             disabled={cacheClearing}
           >
-            {cacheAction === 'pwa' ? 'Clearing…' : 'Clear PWA assets & refresh'}
+            {cacheAction === 'pwa' ? 'Refreshing…' : 'Refresh the app'}
           </button>
           {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
         </div>
@@ -998,19 +962,19 @@ export function MyAccountPanel({
     </>
   ) : null;
 
+  const displayName = profile?.full_name?.trim() || (isDemoExperience ? 'Demo player' : 'Player');
+  const profileMeta = [
+    `Island ${islandRunState.currentIslandNumber ?? 1} Explorer`,
+    user.email && !isDemoExperience ? user.email : null,
+  ].filter(Boolean).join(' · ');
+  const hapticLabel = hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Full';
+
   return (
-    <div className="account-panel">
+    <div className="account-panel account-panel--list">
       {showDemoNotice ? (
         <p className="account-panel__notice">
-          You’re exploring demo data. Sign in to sync with your Supabase project.
+          You’re exploring demo data. Sign in to save your progress.
         </p>
-      ) : null}
-      {showAdminTools ? (
-        <button type="button" className="account-panel__admin-entry" onClick={() => setAdminHubOpen(true)}>
-          <span className="account-panel__admin-entry-title">Admin</span>
-          <span className="account-panel__admin-entry-hint">Waitlist, players, alerts and dev tools</span>
-          <span aria-hidden="true">›</span>
-        </button>
       ) : null}
       <AdminHub
         session={session}
@@ -1018,7 +982,233 @@ export function MyAccountPanel({
         onClose={() => setAdminHubOpen(false)}
         devTools={adminDevTools}
       />
-      <div className="account-panel__summary-grid">
+      {resolvedBillingBanner ? (
+        <p className={`notification-preferences__message ${
+          resolvedBillingBanner.kind === 'canceled'
+            ? 'notification-preferences__message--error'
+            : 'notification-preferences__message--success'
+        }`} role="status">
+          {resolvedBillingBanner.message}
+        </p>
+      ) : null}
+
+      <div className="settings-list">
+        <button
+          type="button"
+          className="settings-list__profile"
+          onClick={() => setPersonalizationModalOpen(true)}
+          aria-label={`Edit profile: ${displayName}`}
+        >
+          <span className="settings-list__avatar" aria-hidden="true">
+            {userInitials || '🚀'}
+          </span>
+          <span>
+            <span className="settings-list__profile-name">{displayName}</span>
+            <span className="settings-list__profile-meta">{profileMeta}</span>
+          </span>
+          <span className={`settings-list__chip${isPro ? ' settings-list__chip--pro' : ''}`}>
+            {isDemoExperience ? 'Demo' : isPro ? 'Pro' : 'Free plan'}
+          </span>
+        </button>
+
+        {showAdminTools ? (
+          <button type="button" className="account-panel__admin-entry" onClick={() => setAdminHubOpen(true)}>
+            <span className="account-panel__admin-entry-title">Admin</span>
+            <span className="account-panel__admin-entry-hint">Waitlist, players, alerts and dev tools</span>
+            <span aria-hidden="true">›</span>
+          </button>
+        ) : null}
+
+        <SettingsGroup title="Account">
+          <SettingsRow
+            icon="⭐"
+            tone="gold"
+            title="Plan & billing"
+            subtitle={isPro ? `${planName} · renews ${renewsOn}` : 'Upgrade to Pro, manage renewal'}
+            onClick={() => setPlanFolderOpen(true)}
+          />
+          {!isDemoExperience ? (
+            <SettingsRow
+              icon="🎲"
+              tone="blue"
+              title="Dice rolls"
+              value={billingLoading ? '…' : walletRolls}
+              onClick={() => setRollsBudgetFolderOpen(true)}
+            />
+          ) : null}
+        </SettingsGroup>
+
+        <SettingsGroup title="Look & feel">
+          <SettingsRow
+            icon="🎨"
+            tone="purple"
+            title="Appearance"
+            control={(
+              <SettingsSegmented
+                label="Appearance"
+                value={themeMode}
+                onChange={setThemeMode}
+                options={[
+                  { value: 'light', label: 'Light' },
+                  { value: 'dark', label: 'Dark' },
+                  { value: 'system', label: 'Auto' },
+                ]}
+              />
+            )}
+          />
+          <SettingsRow icon="🖼️" tone="pink" title="Themes" onClick={() => setAppearanceFolderOpen(true)} />
+          <SettingsRow icon="🎊" tone="orange" title="Holiday themes" onClick={() => setHolidayFolderOpen(true)} />
+          {onGameModePreferenceChange ? (
+            <SettingsRow
+              icon="🎮"
+              tone="green"
+              title="Game-style menu"
+              subtitle="The illustrated game menu"
+              control={(
+                <SettingsSwitch
+                  label="Game-style menu"
+                  checked={isMobileMenuImageActive}
+                  onChange={(next) => void onGameModePreferenceChange(next)}
+                />
+              )}
+            />
+          ) : null}
+          <SettingsRow
+            icon="🪪"
+            tone="gray"
+            title="Initials as menu icon"
+            subtitle={profile?.full_name ? undefined : 'Add your name in your profile first'}
+            control={(
+              <SettingsSwitch
+                label="Show my initials as the menu icon"
+                checked={profile?.show_initials_in_menu ?? false}
+                disabled={savingPreference || !profile?.full_name || isDemoExperience}
+                onChange={(next) => void handleToggleInitialsInMenu(next)}
+              />
+            )}
+          />
+        </SettingsGroup>
+
+        <SettingsGroup title="Notifications & feedback">
+          <SettingsRow
+            icon="🔔"
+            tone="orange"
+            title="Reminders & notifications"
+            subtitle="Habits, daily prompts, quiet hours"
+            onClick={() => setRemindersFolderOpen(true)}
+          />
+          <SettingsRow
+            icon="🔊"
+            tone="blue"
+            title="Sound effects"
+            subtitle={soundPreferenceError ?? undefined}
+            control={(
+              <SettingsSwitch
+                label="Sound effects"
+                checked={soundEffectsEnabled}
+                disabled={soundPreferenceSaving}
+                onChange={(next) => void onSoundEffectsEnabledChange(next)}
+              />
+            )}
+          />
+          <SettingsRow
+            icon="📳"
+            tone="gray"
+            title="Vibration"
+            control={(
+              <SettingsSegmented
+                label={`Vibration: ${hapticLabel}`}
+                value={hapticMode}
+                onChange={(next) => {
+                  setHapticMode(next);
+                  setHapticModeState(next);
+                  if (next !== 'off') triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 });
+                }}
+                options={[
+                  { value: 'off', label: 'Off' },
+                  { value: 'subtle', label: 'Subtle' },
+                  { value: 'balanced', label: 'Full' },
+                ]}
+              />
+            )}
+          />
+        </SettingsGroup>
+
+        <SettingsGroup title="Game">
+          <SettingsRow
+            icon="🏆"
+            tone="gold"
+            title="Game & rewards"
+            subtitle="XP, streaks, Island Run progress"
+            onClick={() => setGameRewardsFolderOpen(true)}
+          />
+          <SettingsRow
+            icon="🎁"
+            tone="pink"
+            title="Birthday gift"
+            value={isBirthdayGiftEnabled ? 'On' : 'Off'}
+            onClick={() => setBirthdayGiftFolderOpen(true)}
+          />
+          {onLaunchLeapProgress ? (
+            <SettingsRow
+              icon="🧭"
+              tone="blue"
+              title="Leap progress"
+              subtitle="A 12-stage quick-start sprint"
+              onClick={() => setOnboardingToolsFolderOpen(true)}
+            />
+          ) : null}
+          <SettingsRow
+            icon="🧪"
+            tone="green"
+            title="Early features"
+            subtitle="Try what we're building next"
+            value="Beta"
+            onClick={handleExperimentalFeaturesClick}
+          />
+        </SettingsGroup>
+
+        <SettingsGroup title="Privacy & data">
+          <SettingsRow
+            icon="🛡️"
+            tone="green"
+            title="AI & privacy"
+            subtitle="On-device AI when your phone supports it"
+            onClick={() => setAiPrivacyFolderOpen(true)}
+          />
+          <SettingsRow
+            icon="📦"
+            tone="gray"
+            title="Your data"
+            subtitle="Account info, reset or delete"
+            onClick={handleAdvancedToolsClick}
+          />
+        </SettingsGroup>
+
+        <SettingsGroup title="Help">
+          <SettingsRow icon="💬" tone="blue" title="Feedback & support" onClick={() => setFeedbackSupportFolderOpen(true)} />
+          <SettingsRow
+            icon="🧰"
+            tone="gray"
+            title="Fix app problems"
+            subtitle="Sync status, refresh the app"
+            onClick={() => setCacheFolderOpen(true)}
+          />
+          <SettingsRow icon="💌" tone="pink" title="A note from the creator" onClick={() => setCreatorNoteOpen(true)} />
+        </SettingsGroup>
+
+        {isAuthenticated ? (
+          <SettingsGroup>
+            <SettingsRow title="Sign out" danger onClick={() => void onSignOut()} />
+          </SettingsGroup>
+        ) : null}
+      </div>
+
+      <SettingsFolderPopup
+        isOpen={planFolderOpen}
+        onClose={() => setPlanFolderOpen(false)}
+        title="Plan & billing"
+      >
         <section className="account-panel__card" aria-labelledby="account-subscription">
           <div className="account-panel__subscription-header">
             <div>
@@ -1030,15 +1220,6 @@ export function MyAccountPanel({
               {isPro ? 'Pro active' : 'Free plan'}
             </span>
           </div>
-          {resolvedBillingBanner ? (
-            <p className={`notification-preferences__message ${
-              resolvedBillingBanner.kind === 'canceled'
-                ? 'notification-preferences__message--error'
-                : 'notification-preferences__message--success'
-            }`} role="status">
-              {resolvedBillingBanner.message}
-            </p>
-          ) : null}
           {billingLoading ? (
             <p className="account-panel__hint">Syncing billing status…</p>
           ) : null}
@@ -1122,164 +1303,7 @@ export function MyAccountPanel({
             ) : null}
           </div>
         </section>
-
-      </div>
-
-      <section className="account-panel__card settings-modules" aria-labelledby="settings-modules-heading">
-        <div className="settings-modules__header">
-          <p className="account-panel__eyebrow">Settings</p>
-          <h3 id="settings-modules-heading">Feature Hub</h3>
-        </div>
-        {onGameModePreferenceChange ? (
-          <div className="mobile-menu-overlay__settings-toggle-row account-panel__game-menu-toggle-row">
-            <span className="mobile-menu-overlay__settings-toggle-copy">
-              <span className="mobile-menu-overlay__settings-toggle-title">Turn off game menu</span>
-              <span className="mobile-menu-overlay__settings-toggle-note">Hide the visual game-mode menu style.</span>
-            </span>
-            <button
-              type="button"
-              className={`mobile-footer-nav__diode-toggle ${
-                isMobileMenuImageActive
-                  ? 'mobile-footer-nav__diode-toggle--on'
-                  : 'mobile-footer-nav__diode-toggle--off'
-              }`}
-              aria-pressed={isMobileMenuImageActive}
-              aria-label="Turn off game menu"
-              onClick={() => {
-                const nextIsActive = !isMobileMenuImageActive;
-                void onGameModePreferenceChange(nextIsActive);
-              }}
-            />
-          </div>
-        ) : null}
-        <div className="settings-modules__group" aria-label="Personalization settings modules">
-          <div className="settings-modules__group-header">
-            <p className="settings-modules__group-eyebrow">Personalization</p>
-          </div>
-          <div className="settings-modules__grid">
-            <SettingsFeatureCard
-              icon="🎨"
-              title="Theme"
-              onClick={() => setAppearanceFolderOpen(true)}
-            />
-            <SettingsFeatureCard
-              icon="🎊"
-              title="Holiday"
-              featureId="settings.holidayThemes"
-              onClick={handleHolidayThemesClick}
-            />
-            <SettingsFeatureCard
-              icon="🎁"
-              title="Birthday Gift"
-              onClick={() => setBirthdayGiftFolderOpen(true)}
-            />
-          </div>
-        </div>
-        <div className="settings-modules__group" aria-label="Comfort and alerts settings modules">
-          <div className="settings-modules__group-header">
-            <p className="settings-modules__group-eyebrow">Comfort &amp; Alerts</p>
-          </div>
-          <div className="settings-modules__grid">
-            <SettingsFeatureCard
-              icon="🔊"
-              title="Sound"
-              onClick={() => setSoundFolderOpen(true)}
-            />
-            <SettingsFeatureCard
-              icon="📳"
-              title="Vibration"
-              onClick={() => setHapticsFolderOpen(true)}
-            />
-            <SettingsFeatureCard
-              icon="🪪"
-              title="Menu Icon"
-              onClick={() => setMenuDisplayFolderOpen(true)}
-            />
-            <SettingsFeatureCard
-              icon="⏰"
-              title="Reminders"
-              onClick={handleRemindersClick}
-            />
-            <SettingsFeatureCard
-              icon="🔔"
-              title="Notifications"
-              featureId="settings.notifications"
-              onClick={handleNotificationsClick}
-            />
-          </div>
-        </div>
-        <div className="settings-modules__group" aria-label="Quick settings modules">
-          <div className="settings-modules__group-header">
-            <p className="settings-modules__group-eyebrow">Quick modules</p>
-          </div>
-          <div className="settings-modules__grid">
-            <SettingsFeatureCard
-              icon="🛡️"
-              title="AI & Privacy"
-              onClick={() => setAiPrivacyFolderOpen(true)}
-            />
-            {onLaunchLeapProgress ? (
-              <SettingsFeatureCard
-                icon="🧭"
-                title="Leap Progress"
-                onClick={() => setOnboardingToolsFolderOpen(true)}
-              />
-            ) : null}
-            <SettingsFeatureCard
-              icon="🔧"
-              title="Advanced"
-              onClick={handleAdvancedToolsClick}
-            />
-            <SettingsFeatureCard
-              icon="✨"
-              title="Personalize"
-              onClick={() => setPersonalizationModalOpen(true)}
-            />
-            <SettingsFeatureCard
-              icon="🎮"
-              title="Rewards"
-              onClick={() => setGameRewardsFolderOpen(true)}
-            />
-            <SettingsFeatureCard
-              icon="⚗️"
-              title="Experiments"
-              featureId="settings.experimentalFeatures"
-              onClick={handleExperimentalFeaturesClick}
-            />
-            <SettingsFeatureCard
-              icon="🔄"
-              title="Device Cache"
-              onClick={() => setCacheFolderOpen(true)}
-            />
-          </div>
-        </div>
-        <div className="settings-modules__group" aria-label="About settings modules">
-          <div className="settings-modules__group-header">
-            <p className="settings-modules__group-eyebrow">About</p>
-          </div>
-          <div className="settings-modules__grid">
-            <SettingsFeatureCard
-              icon="💌"
-              title="Creator Note"
-              onClick={() => setCreatorNoteOpen(true)}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="account-panel__card" aria-labelledby="feedback-support-tools">
-        <p className="account-panel__eyebrow">Support</p>
-        <h3 id="feedback-support-tools">Feedback &amp; Support</h3>
-        <p className="account-panel__hint">
-          Send product feedback or request support. Support requests are reviewed manually.
-        </p>
-        <div className="account-panel__actions-row">
-          <button type="button" className="btn" onClick={() => setFeedbackSupportFolderOpen(true)}>
-            Open support center
-          </button>
-        </div>
-      </section>
-
+      </SettingsFolderPopup>
 
       <PersonalizationModal
         isOpen={personalizationModalOpen}
@@ -1335,14 +1359,11 @@ export function MyAccountPanel({
       <SettingsFolderPopup
         isOpen={folder1Open}
         onClose={() => setFolder1Open(false)}
-        title="Advanced Settings"
+        title="Your data"
       >
         <section className="account-panel__card" aria-labelledby="account-data">
-          <p className="account-panel__eyebrow">Data &amp; security</p>
-          <h3 id="account-data">Ship data</h3>
-          <p className="account-panel__hint">
-            View high-level metadata about your profile. Detailed exports are available through Supabase.
-          </p>
+          <p className="account-panel__eyebrow">Account</p>
+          <h3 id="account-data">Account info</h3>
           <dl className="account-panel__details">
             <div>
               <dt>Member since</dt>
@@ -1359,17 +1380,6 @@ export function MyAccountPanel({
           </dl>
         </section>
 
-        <section className="account-panel__card" aria-labelledby="account-cloud-sync">
-          <p className="account-panel__eyebrow">Data &amp; security</p>
-          <h3 id="account-cloud-sync">
-            Cloud sync &amp; service health <SyncIndicator />
-          </h3>
-          <p className="account-panel__hint">
-            Live status of cloud services, pending offline changes, and a diagnostics export you can
-            share with support. Changes made while offline stay on this device until sync returns.
-          </p>
-          <ServiceDiagnosticsPanel />
-        </section>
 
         <section className="account-panel__card" aria-labelledby="account-danger-zone">
           <p className="account-panel__eyebrow">Danger zone</p>
@@ -1439,7 +1449,7 @@ export function MyAccountPanel({
       <SettingsFolderPopup
         isOpen={appearanceFolderOpen}
         onClose={() => setAppearanceFolderOpen(false)}
-        title="Appearance / Theme"
+        title="Themes"
       >
         <section className="account-panel__card" aria-labelledby="account-theme">
           <p className="account-panel__eyebrow">Appearance</p>
@@ -1447,7 +1457,9 @@ export function MyAccountPanel({
             <p className="account-panel__hint">Syncing your owned themes…</p>
           ) : null}
           {themeEntitlementsError ? (
-            <p className="account-panel__hint">{themeEntitlementsError}</p>
+            <p className="account-panel__hint">
+              Couldn’t check which themes you own right now. Purchased themes will show again once you’re online.
+            </p>
           ) : null}
           {themeCheckoutError ? (
             <p className="account-panel__hint">{themeCheckoutError}</p>
@@ -1461,48 +1473,24 @@ export function MyAccountPanel({
         </section>
       </SettingsFolderPopup>
 
-      <SettingsFolderPopup
-        isOpen={hapticsFolderOpen}
-        onClose={() => setHapticsFolderOpen(false)}
-        title="Haptic feedback"
-      >
-        <section className="account-panel__card" aria-labelledby="account-haptics">
-          <p className="account-panel__eyebrow">Haptic feedback</p>
-          <h3 id="account-haptics">Vibration intensity</h3>
+      <SettingsFolderPopup isOpen={cacheFolderOpen} onClose={() => setCacheFolderOpen(false)} title="Fix app problems">
+        <section className="account-panel__card" aria-labelledby="account-cloud-sync">
+          <p className="account-panel__eyebrow">Sync</p>
+          <h3 id="account-cloud-sync">
+            Sync status <SyncIndicator />
+          </h3>
           <p className="account-panel__hint">
-            Tune how much vibration feedback you receive across habits, rewards, and timer/game completions.
+            Live status of cloud services, pending offline changes, and a diagnostics export you can
+            share with support. Changes made while offline stay on this device until sync returns.
           </p>
-          <p className="account-panel__hint" style={{ marginTop: '0.35rem' }}>
-            Off = no vibration, Subtle = lighter pulses, Balanced = full recommended feedback.
-          </p>
-          <div className="account-panel__actions-row" role="radiogroup" aria-label="Haptic feedback mode">
-            <button type="button" className={`btn ${hapticMode === 'off' ? 'btn--primary' : ''}`} aria-pressed={hapticMode === 'off'} onClick={() => { setHapticMode('off'); setHapticModeState('off'); }}>
-              Off
-            </button>
-            <button type="button" className={`btn ${hapticMode === 'subtle' ? 'btn--primary' : ''}`} aria-pressed={hapticMode === 'subtle'} onClick={() => { setHapticMode('subtle'); setHapticModeState('subtle'); }}>
-              Subtle
-            </button>
-            <button type="button" className={`btn ${hapticMode === 'balanced' ? 'btn--primary' : ''}`} aria-pressed={hapticMode === 'balanced'} onClick={() => { setHapticMode('balanced'); setHapticModeState('balanced'); }}>
-              Balanced
-            </button>
-          </div>
-          <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
-            Active mode: {hapticMode === 'off' ? 'Off' : hapticMode === 'subtle' ? 'Subtle' : 'Balanced'}
-          </p>
-          <div className="account-panel__actions-row" style={{ marginTop: '0.5rem' }}>
-            <button type="button" className="btn" onClick={() => triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 0 })}>
-              Test vibration
-            </button>
-          </div>
+          <ServiceDiagnosticsPanel />
         </section>
-      </SettingsFolderPopup>
 
-      <SettingsFolderPopup isOpen={cacheFolderOpen} onClose={() => setCacheFolderOpen(false)} title="Device cache tools">
         <section className="account-panel__card" aria-labelledby="account-reset-cache">
           <p className="account-panel__eyebrow">App maintenance</p>
-          <h3 id="account-reset-cache">Clear PWA asset cache</h3>
+          <h3 id="account-reset-cache">Refresh the app</h3>
           <p className="account-panel__hint">
-            If the app feels stuck or shows outdated content, clear the PWA asset cache first. This removes Cache Storage entries and unregisters the service worker, then reloads.
+            If the app feels stuck or shows outdated content, try this first. It downloads a fresh copy of the app and reloads. You stay signed in.
           </p>
           <div className="account-panel__actions-row">
             <button
@@ -1517,9 +1505,9 @@ export function MyAccountPanel({
           </div>
           <div className="account-panel__maintenance-actions" aria-label="Additional device cache actions">
             <div>
-              <h4>More local cleanup actions</h4>
+              <h4>Still stuck?</h4>
               <p className="account-panel__hint">
-                These are more destructive and only affect this device. They do not delete your Supabase account data, and local storage cleanup preserves Supabase sign-in tokens.
+                These clear more of what this device has stored. They never delete your account or synced progress, and you stay signed in. Changes made offline that haven’t synced yet can be lost.
               </p>
             </div>
             <div className="account-panel__actions-row">
@@ -1530,70 +1518,10 @@ export function MyAccountPanel({
                 {cacheAction === 'storage' ? 'Clearing…' : 'Clear local app storage'}
               </button>
               <button type="button" className="btn btn--danger" onClick={handleHardResetDeviceCache} disabled={cacheClearing}>
-                {cacheAction === 'hard-reset' ? 'Resetting…' : 'Hard reset device caches'}
+                {cacheAction === 'hard-reset' ? 'Resetting…' : 'Reset everything on this device'}
               </button>
             </div>
           </div>
-        </section>
-      </SettingsFolderPopup>
-
-      <SettingsFolderPopup isOpen={menuDisplayFolderOpen} onClose={() => setMenuDisplayFolderOpen(false)} title="Menu icon / Display preferences">
-        <section className="account-panel__card" aria-labelledby="account-menu-icon">
-          <p className="account-panel__eyebrow">Menu Icon</p>
-          <h3 id="account-menu-icon">Display Preferences</h3>
-          <p className="account-panel__hint">Choose whether to display your initials or the default icon in the main menu when signed in.</p>
-          <div className="account-panel__toggle-row">
-            <label className="account-panel__toggle-label">
-              <input type="checkbox" checked={profile?.show_initials_in_menu ?? false} onChange={(e) => handleToggleInitialsInMenu(e.target.checked)} disabled={savingPreference || !profile?.full_name || isDemoExperience} className="account-panel__toggle-input" />
-              <span className="account-panel__toggle-text">Show my initials ({userInitials || '--'}) in main menu</span>
-            </label>
-            {savingPreference && <span className="account-panel__saving-indicator">Saving...</span>}
-          </div>
-          {!profile?.full_name && !isDemoExperience && <p className="account-panel__hint" style={{ marginTop: '0.5rem', color: 'var(--color-text-muted)' }}>Set your name in the account details to enable this feature.</p>}
-        </section>
-      </SettingsFolderPopup>
-
-      <SettingsFolderPopup
-        isOpen={soundFolderOpen}
-        onClose={() => setSoundFolderOpen(false)}
-        title="Sound effects"
-      >
-        <section className="account-panel__card" aria-labelledby="account-sound-effects">
-          <p className="account-panel__eyebrow">Sound design</p>
-          <h3 id="account-sound-effects">App sound effects</h3>
-          <p className="account-panel__hint">
-            Turn launcher swooshes and footer button clicks on or off. Your choice is saved to your account.
-          </p>
-          <div className="account-panel__actions-row" role="radiogroup" aria-label="Sound effects">
-            <button
-              type="button"
-              className={`btn ${!soundEffectsEnabled ? 'btn--primary' : ''}`}
-              aria-pressed={!soundEffectsEnabled}
-              disabled={soundPreferenceSaving}
-              onClick={() => void onSoundEffectsEnabledChange(false)}
-            >
-              Off
-            </button>
-            <button
-              type="button"
-              className={`btn ${soundEffectsEnabled ? 'btn--primary' : ''}`}
-              aria-pressed={soundEffectsEnabled}
-              disabled={soundPreferenceSaving}
-              onClick={() => void onSoundEffectsEnabledChange(true)}
-            >
-              On
-            </button>
-          </div>
-          <p className="account-panel__saving-indicator" style={{ marginTop: '0.5rem' }}>
-            {soundPreferenceSaving
-              ? 'Saving sound preference…'
-              : `Sound effects: ${soundEffectsEnabled ? 'On' : 'Off'}`}
-          </p>
-          {soundPreferenceError ? (
-            <p className="account-panel__warning" role="alert">
-              {soundPreferenceError}
-            </p>
-          ) : null}
         </section>
       </SettingsFolderPopup>
 
@@ -1616,7 +1544,7 @@ export function MyAccountPanel({
       <SettingsFolderPopup
         isOpen={onboardingToolsFolderOpen}
         onClose={() => setOnboardingToolsFolderOpen(false)}
-        title="Leap Progress"
+        title="Leap progress"
       >
         <section className="account-panel__card" aria-labelledby="account-onboarding">
           <p className="account-panel__eyebrow">Leap Progress</p>
@@ -1683,7 +1611,7 @@ export function MyAccountPanel({
       <SettingsFolderPopup
         isOpen={gameRewardsFolderOpen}
         onClose={() => setGameRewardsFolderOpen(false)}
-        title="Game & Rewards"
+        title="Game & rewards"
       >
         <GamificationSettings session={session} />
       </SettingsFolderPopup>
@@ -1691,18 +1619,9 @@ export function MyAccountPanel({
       <SettingsFolderPopup
         isOpen={aiPrivacyFolderOpen}
         onClose={() => setAiPrivacyFolderOpen(false)}
-        title="AI & Privacy"
+        title="AI & privacy"
       >
-        <section className="account-panel__card" aria-labelledby="account-ai-privacy-overview">
-          <p className="account-panel__eyebrow">Privacy-sensitive</p>
-          <h3 id="account-ai-privacy-overview">AI &amp; Privacy controls</h3>
-          <p className="account-panel__hint">
-            Manage how AI Coach assists you and how adaptive telemetry supports personalized balance tuning.
-          </p>
-          <p className="account-panel__hint" style={{ marginTop: '0.35rem' }}>
-            Review these preferences before changing any toggles. Your selections stay in these dedicated controls.
-          </p>
-        </section>
+        <AiPrivacySettings />
 
         <AiSettingsSection session={session} />
 
@@ -1710,21 +1629,12 @@ export function MyAccountPanel({
       </SettingsFolderPopup>
 
       <SettingsFolderPopup
-        isOpen={folder2Open}
-        onClose={() => setFolder2Open(false)}
-        title="Notification Settings"
+        isOpen={remindersFolderOpen}
+        onClose={() => setRemindersFolderOpen(false)}
+        title="Reminders & notifications"
       >
         <NotificationSettingsSection session={session} />
 
-        <PerHabitReminderPrefs session={session} />
-      </SettingsFolderPopup>
-
-
-      <SettingsFolderPopup
-        isOpen={remindersFolderOpen}
-        onClose={() => setRemindersFolderOpen(false)}
-        title="Reminders"
-      >
         <YesterdayRecapSettings
           session={session}
           onLaunchDailyCatchUpPrompt={onLaunchDailyCatchUpPrompt}
@@ -1737,6 +1647,8 @@ export function MyAccountPanel({
         <DailyLifeUpgradeSettings session={session} />
 
         <DailyReminderPreferences session={session} />
+
+        <PerHabitReminderPrefs session={session} />
       </SettingsFolderPopup>
 
       {/* Holiday Preferences Popup */}
@@ -1746,18 +1658,6 @@ export function MyAccountPanel({
         title="Holiday Themes"
       >
         <HolidayPreferencesSection session={session} isDemoExperience={isDemoExperience} />
-      </SettingsFolderPopup>
-
-      <SettingsFolderPopup
-        isOpen={experimentalFolderOpen}
-        onClose={() => setExperimentalFolderOpen(false)}
-        title="Experimental Features"
-      >
-        <ExperimentalFeaturesSection
-          session={session}
-          isAdmin={showAdminTools}
-          onLaunchYesterdayTodoCleanup={onLaunchYesterdayTodoCleanup}
-        />
       </SettingsFolderPopup>
 
       {creatorNoteOpen && !creatorNoteAsText ? (
@@ -1776,22 +1676,6 @@ export function MyAccountPanel({
         />
       ) : null}
 
-      <div className="account-panel__actions">
-        <div>
-          <p className="account-panel__eyebrow">Session</p>
-          <p className="account-panel__hint">
-            {isAuthenticated
-              ? 'Sign out to switch to a different Supabase project.'
-              : 'Sign in with Supabase to sync your personal rituals.'}
-          </p>
-        </div>
-        {isAuthenticated ? (
-          <button type="button" className="btn btn--primary" onClick={() => onSignOut()}>
-            Sign out
-          </button>
-        ) : null}
-      </div>
-
       {showFeedbackModal ? (
         <CaseSubmissionModal
           session={session}
@@ -1807,16 +1691,6 @@ export function MyAccountPanel({
           caseType="support"
           sourceSurface="account_panel"
           onClose={() => setShowSupportModal(false)}
-        />
-      ) : null}
-
-      {activeFutureFeature ? (
-        <FeaturePreviewOverlay
-          featureId={activeFutureFeature.id}
-          label={activeFutureFeature.label}
-          body={activeFutureFeature.shortPitch}
-          statusLabelOverride={activeFutureFeature.publicLabel}
-          onClose={() => setActiveFutureFeatureId(null)}
         />
       ) : null}
 

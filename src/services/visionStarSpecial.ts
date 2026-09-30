@@ -6,6 +6,7 @@ import {
 } from './service-health';
 import { optimizeImageFileForUpload, IMAGE_UPLOAD_WEBP_MIME_TYPE } from '../utils/imageUploadOptimizer';
 import { VISION_BOARD_BUCKET } from './visionBoard';
+import { CLOUD_AI_OFF_REASON, isCloudAiAllowed } from './ai/aiPreferences';
 
 export type VisionStarSpecialRequest = {
   habitNames: string[];
@@ -30,6 +31,10 @@ export async function generateSpecialVisionStar(
       error: new Error('Supabase is not configured for AI image generation.'),
       source: 'unavailable',
     };
+  }
+
+  if (!isCloudAiAllowed()) {
+    return { data: null, error: new Error(CLOUD_AI_OFF_REASON), source: 'unavailable' };
   }
 
   const availability = getFeatureAvailability('ai_generation', getServiceHealthManager().getSnapshot());

@@ -3,6 +3,7 @@
 
 import { useState, useCallback } from 'react';
 import { getSupabaseClient } from '../lib/supabaseClient';
+import { CLOUD_AI_OFF_REASON, isCloudAiAllowed } from '../services/ai/aiPreferences';
 
 interface AiSuggestion {
   goal: string;
@@ -27,6 +28,10 @@ export default function useAiGoalSuggestion() {
     setSuggestion(null);
 
     try {
+      if (!isCloudAiAllowed()) {
+        throw new Error(CLOUD_AI_OFF_REASON);
+      }
+
       // Get the edge function URL from environment variables
       const edgeFunctionUrl = import.meta.env.VITE_AI_GOAL_SUGGEST_URL;
       
