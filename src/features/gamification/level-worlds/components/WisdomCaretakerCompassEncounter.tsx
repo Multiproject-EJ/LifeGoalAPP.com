@@ -4,10 +4,12 @@ import { isAnswerValuePresent } from '../../../compass-book/logic/progress';
 import type { Session } from '@supabase/supabase-js';
 
 import { COMPASS_BOOK_CHAPTER_IDS, type CompassAnswerValue } from '../../../compass-book/types';
-import { getChapterDefinition } from '../../../compass-book/content/compassBookCurriculum';
+import { getActivityDefinition, getChapterDefinition } from '../../../compass-book/content/compassBookCurriculum';
+import { resolveWisdomPromptActivityId } from '../services/wisdomDeferral';
 import { useCompassBook, type CompassAnswerEntry } from '../../../compass-book/hooks/useCompassBook';
 import {
   areBlocksAnswered,
+  getActivityFragment,
   getIslandFragment,
 } from '../../../compass-book/logic/islandFragment';
 import { isCompassFirstSignalIsland } from '../../../compass-book/logic/journey';
@@ -44,6 +46,8 @@ type WisdomCaretakerCompassEncounterProps = {
   landmarkRewardStatus?: 'locked' | 'earned' | 'legacy-complete';
   onComplete: (message: string) => void;
   onComeBackLater?: () => void;
+  /** Times "Come back later" was used on this visit; each one rotates the prompt. */
+  wisdomDeferrals?: number;
   /** Dev-only visual proof: deterministic in-memory Compass, with no remote/local writes. */
   previewMode?: boolean;
 };
@@ -70,11 +74,32 @@ export function WisdomCaretakerCompassEncounter({
   landmarkRewardStatus,
   onComplete,
   onComeBackLater,
+  wisdomDeferrals = 0,
   previewMode = false,
 }: WisdomCaretakerCompassEncounterProps) {
-  const fragment = useMemo(() => getIslandFragment(islandNumber), [islandNumber]);
   const isFirstSignal = isCompassFirstSignalIsland(islandNumber);
   const book = useCompassBook(session, { demo: previewMode });
+  // After "Come back later" the stop asks a different, unanswered prompt. The
+  // choice is frozen per deferral so saving an answer never swaps the question.
+  const [rotatedActivity, setRotatedActivity] = useState<{ deferrals: number; activityId: string | null } | null>(null);
+  useEffect(() => {
+    if (wisdomDeferrals <= 0 || rotatedActivity?.deferrals === wisdomDeferrals || !(book.ready || previewMode)) return;
+    setRotatedActivity({
+      deferrals: wisdomDeferrals,
+      activityId: resolveWisdomPromptActivityId({
+        islandNumber,
+        deferrals: wisdomDeferrals,
+        isAnswered: (activityId) => {
+          const chapterId = getActivityDefinition(activityId)?.chapterId;
+          return !!chapterId && (book.getChapterState(chapterId)?.answers ?? []).some((answer) => answer.activityId === activityId);
+        },
+      }),
+    });
+  }, [book.ready, book.getChapterState, islandNumber, previewMode, rotatedActivity?.deferrals, wisdomDeferrals]);
+  const fragment = useMemo(() => {
+    const rotatedId = wisdomDeferrals > 0 && rotatedActivity?.deferrals === wisdomDeferrals ? rotatedActivity.activityId : null;
+    return (rotatedId ? getActivityFragment(rotatedId, islandNumber) : null) ?? getIslandFragment(islandNumber);
+  }, [islandNumber, rotatedActivity, wisdomDeferrals]);
   const syncedActivityRef = useRef<string | null>(null);
   const [draft, setDraft] = useState<DraftValues>({});
   const [playerData, setPlayerData] = useState<CompassPlayerData>(EMPTY_COMPASS_PLAYER_DATA);

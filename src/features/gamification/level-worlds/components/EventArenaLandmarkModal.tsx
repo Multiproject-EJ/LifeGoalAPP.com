@@ -15,6 +15,11 @@ type Props = {
   /** False while a stadium round is owed; the player cannot leave yet. */
   canClose: boolean;
   onClose: () => void;
+  /**
+   * Always-available exit while a round is owed. Rolling stays blocked until
+   * the round is played, but the player is never trapped in this modal.
+   */
+  onLeaveForNow?: () => void;
   onFinishOrientation?: () => void;
   onJoinOpeningGames?: () => void;
   /** The stadium activity (game choice, comparisons, save status). */
@@ -34,6 +39,7 @@ export function EventArenaLandmarkModal({
   doorRequired,
   canClose,
   onClose,
+  onLeaveForNow,
   onFinishOrientation,
   onJoinOpeningGames,
   children,
@@ -91,7 +97,12 @@ export function EventArenaLandmarkModal({
         </div>
 
         {!canClose ? (
-          <p className="event-arena-modal__footer" role="status">Finish a round to leave the Arena.</p>
+          <div className="event-arena-modal__footer" role="status">
+            <p>Play a round before your next roll.</p>
+            {onLeaveForNow ? (
+              <button type="button" className="event-arena-modal__leave" onClick={onLeaveForNow}>Leave for now</button>
+            ) : null}
+          </div>
         ) : null}
       </section>
     </div>

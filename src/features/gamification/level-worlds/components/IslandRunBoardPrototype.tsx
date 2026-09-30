@@ -867,6 +867,8 @@ import { STORMFRONT_DAMAGED_STOP_INDICES, STORMFRONT_ISLAND_NUMBER, STORMFRONT_S
 import { fundIsland2StormfrontStructure, markIsland2StormfrontSeen, strikeIsland2Stormfront } from '../services/island2StormfrontActions';
 import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
 import { Island2StormfrontBuildModal, Island2StormfrontMessage, resolveStormfrontStructureView } from './Island2StormfrontModals';
+import { WISDOM_DEFERRAL_ROLLS, resolveWisdomDeferral } from '../services/wisdomDeferral';
+import { deferWisdomStop } from '../services/wisdomDeferralActions';
 import { SKY_HANGAR_LAUNCH_DELAY_MS, SKY_HANGAR_LAUNCH_DELAY_REDUCED_MS, resolveSkyHangarFlight, resolveSkyHangarTap } from '../services/skyHangarArenaSync';
 import { getIslandRunBossReward } from '../services/islandRunBossReward';
 import { registerCrashContext } from '../../../../services/crashReports';
@@ -2284,6 +2286,13 @@ export function IslandRunBoardPrototype({
   // reward-bar, minigame) use dedicated action functions.
   const { state: __storeState } = useIslandRunState(session, client);
   const featureAccess = resolveIslandRunFeatureAccess(__storeState);
+  // Wisdom "Come back later": a short roll cooldown, then a rotated prompt.
+  const wisdomDeferral = useMemo(() => resolveWisdomDeferral(
+    __storeState.signatureMissionProgressByIsland, __storeState.cycleIndex, __storeState.currentIslandNumber,
+  ), [__storeState.signatureMissionProgressByIsland, __storeState.cycleIndex, __storeState.currentIslandNumber]);
+  const wisdomCooldownText = wisdomDeferral.rollsRemaining > 0
+    ? `🌳 The Caretaker is preparing a new question — back in ${wisdomDeferral.rollsRemaining} roll${wisdomDeferral.rollsRemaining === 1 ? '' : 's'}.`
+    : null;
   const [showOpeningGamesCeremony, setShowOpeningGamesCeremony] = useState(false);
   // Transient presentation only; canonical beacon/participation remain in the store.
   const [openingCeremonyPlayback, setOpeningCeremonyPlayback] = useState<OpeningCeremonyPlayback | null>(null);
@@ -6407,6 +6416,10 @@ export function IslandRunBoardPrototype({
    * ticket guidance inside the modal copy + CTA layer.
    */
   const handleStopOpenRequest = useCallback((stopId: string) => {
+    if (stopId === 'wisdom' && wisdomCooldownText) {
+      setLandingText(wisdomCooldownText);
+      return;
+    }
     const stopIndex = stopIndexByStopId.get(stopId);
     const stopStatus =
       typeof stopIndex === 'number' && contractV2Stops
@@ -6439,7 +6452,7 @@ export function IslandRunBoardPrototype({
     setIsTopbarMenuPrimed(false);
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');
-  }, [contractV2Stops, doesStopRequireTicketPayment, requestActiveStopTransition, stopIndexByStopId]);
+  }, [contractV2Stops, doesStopRequireTicketPayment, requestActiveStopTransition, stopIndexByStopId, wisdomCooldownText]);
 
   const getPrepayPromptSeenKey = useCallback((stopId: string) => (
     `island_run_prepay_ticket_prompt_seen_${session.user.id}_${islandNumber}_${stopId}`
@@ -6498,6 +6511,13 @@ export function IslandRunBoardPrototype({
         setLandingText(featureAccess.welcomeCheckIn
           ? '⚑ Welcome Venue reached. Tap the landmark to check in for free.'
           : '🥚 Hatchery reached. Tap the landmark or egg tray when you want to open it.');
+        return;
+      }
+      if (doorStopId === 'wisdom' && wisdomCooldownText) {
+        // Deferred with "Come back later": the door waits, rolling continues.
+        setRequiredDoorStopId(null);
+        requestActiveStopTransition(null, 'wisdom_deferred_door');
+        setLandingText(wisdomCooldownText);
         return;
       }
       setRequiredDoorStopId(doorStopId);
@@ -6607,7 +6627,7 @@ export function IslandRunBoardPrototype({
       }),
     });
     setLandingText(`🎰 ${getVaultCasinoGameDefinition(gameId).name} opened behind the dormant door.`);
-  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, hasSeenPrepayPrompt, islandNumber, islandStopPlan, markPrepayPromptSeen, requestActiveStopTransition, stopIndexByStopId]);
+  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, hasSeenPrepayPrompt, islandNumber, islandStopPlan, markPrepayPromptSeen, requestActiveStopTransition, stopIndexByStopId, wisdomCooldownText]);
 
   const handlePrepayStopTicket = useCallback(async (stopId: string) => {
     const stopIndex = stopIndexByStopId.get(stopId);
@@ -6690,10 +6710,16 @@ export function IslandRunBoardPrototype({
   nonDismissableActiveStopRef.current = isActiveBehaviorStopNonDismissable;
 
   // Resume a persisted stadium obligation after interruption. No tile-index authority.
+  // After a deliberate "Leave for now" the Arena stays closed (the player is never
+  // trapped); a roll attempt or opening the landmark brings it back.
+  const [arenaResumeSuppressed, setArenaResumeSuppressed] = useState(false);
   useEffect(() => {
-    if (hasHydratedRuntimeState && !activeStopId && !activeLaunchedMinigameId && !isRolling
+    if (activeStopId === 'mystery') setArenaResumeSuppressed(false);
+  }, [activeStopId]);
+  useEffect(() => {
+    if (hasHydratedRuntimeState && !activeStopId && !activeLaunchedMinigameId && !isRolling && !arenaResumeSuppressed
       && arenaStadiumBlocksRoll(__storeState)) setActiveStopId('mystery');
-  }, [hasHydratedRuntimeState, activeStopId, activeLaunchedMinigameId, isRolling, __storeState]);
+  }, [hasHydratedRuntimeState, activeStopId, activeLaunchedMinigameId, isRolling, arenaResumeSuppressed, __storeState]);
 
   useEffect(() => {
     if (!requiredDoorStopId) return;
@@ -12739,6 +12765,16 @@ export function IslandRunBoardPrototype({
 
   const handleComeBackLaterForActiveStop = () => {
     if (!activeStopId) return;
+    if (activeStopId === 'wisdom') {
+      // Wisdom sits right before the Boss, so it cannot hand off to a next
+      // stop; it takes a short roll cooldown and returns with a new prompt.
+      void deferWisdomStop({ session, client })
+        .catch((error) => console.warn('[IslandRun] Wisdom deferral failed.', error));
+      setRequiredDoorStopId(null);
+      setActiveStopId(null);
+      setLandingText(`🌳 No pressure — the Caretaker will have a new question in ${WISDOM_DEFERRAL_ROLLS} rolls.`);
+      return;
+    }
     const stopIndex = islandStopPlan.findIndex((stop) => stop.stopId === activeStopId);
     if (stopIndex < 0) return;
     const result = postponeIslandRunStop({
@@ -18474,6 +18510,12 @@ export function IslandRunBoardPrototype({
               doorRequired={activeStopId === requiredDoorStopId && isDoorLandmarkCompletionRequired}
               canClose={!isActiveBehaviorStopNonDismissable}
               onClose={() => setActiveStopId(null)}
+              onLeaveForNow={() => {
+                setArenaResumeSuppressed(true);
+                setRequiredDoorStopId(null);
+                setActiveStopId(null);
+                setLandingText('🎪 The Arena will wait. Play a round there before your next roll.');
+              }}
               onFinishOrientation={() => {
                 setArenaSoftSaveValueMomentReached(true);
                 handleCompleteActiveStop('🎪 Arena orientation complete! Wisdom landmark unlocked.');
@@ -18837,6 +18879,7 @@ export function IslandRunBoardPrototype({
                     handleCompleteActiveStop(`🌳 Wisdom landmark complete — next landmark unlocked. ${message}`);
                   }}
                   onComeBackLater={handleComeBackLaterForActiveStop}
+                  wisdomDeferrals={wisdomDeferral.deferrals}
                 />
               </div>
             )}

@@ -24,6 +24,7 @@ import { landmarkFlagsTests } from './landmarkFlags.test';
 import { island2StormfrontTests } from './island2Stormfront.test';
 import { island2StormfrontCinematicTests } from './island2StormfrontCinematic.test';
 import { skyHangarArenaSyncTests } from './skyHangarArenaSync.test';
+import { wisdomDeferralTests } from './wisdomDeferral.test';
 import { island001AssemblyInvitationsTests } from './island001AssemblyInvitations.test';
 import { fishermansDragonPreludeTests } from './fishermansDragonPrelude.test';
 import { controllerDiceTiersTests } from './controllerDiceTiers.test';
@@ -349,6 +350,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'island2Stormfront', tests: island2StormfrontTests },
   { label: 'island2StormfrontCinematic', tests: island2StormfrontCinematicTests },
   { label: 'skyHangarArenaSync', tests: skyHangarArenaSyncTests },
+  { label: 'wisdomDeferral', tests: wisdomDeferralTests },
   { label: 'island001AssemblyInvitations', tests: island001AssemblyInvitationsTests },
   { label: 'fishermansDragonPrelude', tests: fishermansDragonPreludeTests },
   { label: 'controllerDiceTiers', tests: controllerDiceTiersTests },

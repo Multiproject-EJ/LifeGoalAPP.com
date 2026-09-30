@@ -5,6 +5,7 @@ import { ARCHETYPE_CUP_KEY, mergeArchetypeCupProgress, sanitizeArchetypeCupProgr
 import { DICE_SKINS_KEY, mergeDiceSkinProgress, sanitizeDiceSkinProgress, type DiceSkinProgress } from './islandRunDiceSkins';
 import { ISLAND_TREASURES_KEY, mergeIslandTreasureCollections, sanitizeIslandTreasureCollection, type IslandTreasureCollection } from './islandRunTreasures';
 import { STORMFRONT_KEY_PATTERN, mergeStormfrontProgress, sanitizeStormfrontProgress, type StormfrontProgress } from './island2Stormfront';
+import { WISDOM_DEFERRAL_KEY_PATTERN, mergeWisdomDeferral, sanitizeWisdomDeferral, type WisdomDeferral } from './wisdomDeferral';
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import {
   OPENING_GAMES_CAMPAIGN_KEY, OPENING_GAMES_CEREMONY_KEY,
@@ -439,6 +440,7 @@ export type IslandRunSignatureMissionProgress =
   | DiceSkinProgress
   | IslandTreasureCollection
   | StormfrontProgress
+  | WisdomDeferral
   | OpeningGamesCampaignMarker
   | OpeningGamesCeremonyProgress
   | MoonwellThermalProgress
@@ -515,6 +517,10 @@ export function sanitizeIslandRunSignatureMissionProgress(
     }
     if (record.missionId === 'island2-stormfront') {
       if (STORMFRONT_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeStormfrontProgress(record);
+      return;
+    }
+    if (record.missionId === 'wisdom-deferral') {
+      if (WISDOM_DEFERRAL_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeWisdomDeferral(record);
       return;
     }
     if (record.missionId === 'opening-games-campaign') {
@@ -1768,6 +1774,10 @@ export function mergeIslandRunSignatureMissionProgress(
     }
     if (a.missionId === 'island2-stormfront' || b.missionId === 'island2-stormfront') {
       merged[key] = mergeStormfrontProgress(sanitizeStormfrontProgress(a), sanitizeStormfrontProgress(b));
+      return;
+    }
+    if (a.missionId === 'wisdom-deferral' || b.missionId === 'wisdom-deferral') {
+      merged[key] = mergeWisdomDeferral(sanitizeWisdomDeferral(a), sanitizeWisdomDeferral(b));
       return;
     }
     if (a.missionId === 'opening-games-campaign' || b.missionId === 'opening-games-campaign') {
