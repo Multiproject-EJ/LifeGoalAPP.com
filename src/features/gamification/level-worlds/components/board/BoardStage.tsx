@@ -28,6 +28,7 @@ import {
   landingEventForTile,
 } from './cameraDirector';
 import type { DiceSkinId } from '../../services/islandRunDiceSkins';
+import type { PlayerPieceId } from '../../services/islandRunPlayerPieces';
 
 const PHONE_OVERVIEW_VERTICAL_BIAS_RATIO = 0.055;
 const BOARD_TILT_X_DEG = 47;
@@ -148,6 +149,7 @@ export interface BoardStageProps {
   diceFaces?: [number, number];
   onDiceRollComplete?: () => void;
   diceSkin?: DiceSkinId;
+  playerPieceId?: PlayerPieceId | null;
 }
 
 export interface BoardStageCameraControls {
@@ -207,6 +209,7 @@ export function BoardStage(props: BoardStageProps) {
     diceFaces = [1, 1],
     onDiceRollComplete,
     diceSkin,
+    playerPieceId = null,
   } = props;
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -803,6 +806,7 @@ export function BoardStage(props: BoardStageProps) {
             ref={boardTokenRef}
             animState={tokenAnim.animState}
             zBand={anchors[tokenIndex]?.zBand ?? 'mid'}
+            pieceId={playerPieceId}
           />
         </div>
 

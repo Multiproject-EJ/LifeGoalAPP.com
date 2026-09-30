@@ -6257,6 +6257,16 @@
   will-change: transform;
 }
 
+/* A chosen player piece replaces the classic ship on 2D boards. */
+.island-token__piece {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 30px; height: 30px;
+  transform: translate(-50%, -58%);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35));
+}
+.island-token__piece .player-piece-icon { display: block; width: 100%; height: 100%; }
+
 .island-token__ship-body {
   position: absolute;
   left: 50%; top: 50%;

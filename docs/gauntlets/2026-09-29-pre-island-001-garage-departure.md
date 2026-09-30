@@ -154,7 +154,7 @@ contract. Auto / Smooth / Ultra quality tiers reuse
 - First run: `celebration → ship-name → departure → mission → launch` (guest-named ships go straight to `departure`).
 - Dev seam: `?departureDayPreview=1` (add `&departureDayTime=<s>` to hold a frame). Evidence: `docs/design/departure-day/`.
 
-Still open: the board token does not yet render the chosen piece; a garage "Relive departure" button; the concept frames; the caretaker first-run copy below.
+Still open: a garage "Relive departure" button; the concept frames.
 
 ## Slices
 
@@ -171,7 +171,9 @@ Still open: the board token does not yet render the chosen piece; a garage "Reli
 5. Evidence: iPhone-sized capture of the full sequence at Smooth and Ultra,
    frame-time profile during the transform, reduced-motion stills.
 
-## Copy that must change (caretaker is unknown at the start)
+## Copy changed 2026-09-30 (caretaker is unknown at the start)
+
+Now reads: "The garage crew is ready to hand over your ship", "The garage crew loaded three supply packs of dice", "three 500-dice crew supply packs". Previously:
 
 - `IslandRunBoardPrototype.tsx` first-run step `ship-name`: "The caretaker is
   ready to hand over your ship" → the ship is handed over by the crew/garage.

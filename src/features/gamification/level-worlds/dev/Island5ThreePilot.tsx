@@ -359,6 +359,8 @@ import {
   type Island001AtmosphereProgress,
 } from '../services/island001Atmosphere';
 import { playIslandRunBubblePop, triggerIslandRunHaptic } from '../services/islandRunAudio';
+import { createPlayerPieceRelic } from './PlayerPieceRelicThree';
+import type { PlayerPieceId } from '../services/islandRunPlayerPieces';
 import {
   createIslandStagedRestorationThreePresentation,
   type IslandStagedRestorationPresentation,
@@ -493,6 +495,8 @@ interface Island5ThreePilotProps {
    * (0..3) is a dev/evidence seam.
    */
   island001Atmosphere?: Island001AtmosphereProgress & { dayPositionOverride?: number | null };
+  /** The player's chosen board piece; null keeps the classic figure. */
+  playerPieceId?: PlayerPieceId | null;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
   interactionPaused?: boolean;
@@ -3522,7 +3526,34 @@ function createIslandPlayerPiece(quality: Island3DQuality) {
   shadow.name = 'ISLAND_5_PLAYER_TOKEN_SHADOW';
   shadow.rotation.x = -Math.PI / 2;
 
-  return { root, shadow, compassLight, shadowMaterial };
+  const figureParts: THREE.Object3D[] = [cloak, collar, head, compassLight, frontSigil];
+  return { root, shadow, compassLight, shadowMaterial, figureParts };
+}
+
+type IslandPlayerPieceToken = ReturnType<typeof createIslandPlayerPiece>;
+
+/**
+ * Show the player's chosen piece on the token's gold base. No choice yet keeps
+ * the classic figure, so existing players see no change. Themed tokens whose
+ * geometry was batched (Island 20) keep their themed figure.
+ */
+function applyIslandPlayerPieceChoice(token: IslandPlayerPieceToken, pieceId: PlayerPieceId | null | undefined) {
+  const previous = token.root.userData.playerPieceRelic as ReturnType<typeof createPlayerPieceRelic> | undefined;
+  if (previous) {
+    if (previous.root.userData.pieceId === pieceId) return;
+    token.root.remove(previous.root);
+    previous.dispose();
+    token.root.userData.playerPieceRelic = undefined;
+  }
+  const usePiece = Boolean(pieceId) && !token.root.userData.island20ThemedScale;
+  token.figureParts.forEach((part) => { part.visible = !usePiece; });
+  if (!usePiece || !pieceId) return;
+  const relic = createPlayerPieceRelic(pieceId);
+  relic.root.userData.pieceId = pieceId;
+  relic.root.scale.setScalar(1.05);
+  relic.root.position.y = 0.1;
+  token.root.add(relic.root);
+  token.root.userData.playerPieceRelic = relic;
 }
 
 function disposeScene(scene: THREE.Scene) {
@@ -3689,6 +3720,7 @@ export default function Island5ThreePilot({
   onExplorePointChange,
   missionItemsRevealed = true,
   island001Atmosphere,
+  playerPieceId = null,
   caretakerEncounterOpen = false,
   onCaretakerClick,
   interactionPaused = false,
@@ -3957,6 +3989,13 @@ export default function Island5ThreePilot({
   const [activeExplorePointId, setActiveExplorePointId] = useState<IslandExplorePointId | null>(null);
   const island001AtmosphereRef = useRef(island001Atmosphere);
   island001AtmosphereRef.current = island001Atmosphere;
+  // The chosen board piece; swapped live on the token without rebuilding the scene.
+  const playerPieceIdRef = useRef(playerPieceId);
+  playerPieceIdRef.current = playerPieceId;
+  const playerPieceTokenRef = useRef<IslandPlayerPieceToken | null>(null);
+  useEffect(() => {
+    if (playerPieceTokenRef.current) applyIslandPlayerPieceChoice(playerPieceTokenRef.current, playerPieceId);
+  }, [playerPieceId]);
   // Mission items: hidden until the first mission message is read, then popped in.
   const missionItemsRevealedRef = useRef(missionItemsRevealed);
   const missionItemRevealRequestRef = useRef(false);
@@ -6056,6 +6095,8 @@ export default function Island5ThreePilot({
     playerPiece.root.position.set(...startingTokenPosition);
     playerPiece.shadow.position.set(startingTokenPosition[0], startingTokenPosition[1] + 0.012, startingTokenPosition[2]);
     scene.add(playerPiece.shadow, playerPiece.root);
+    applyIslandPlayerPieceChoice(playerPiece, playerPieceIdRef.current);
+    playerPieceTokenRef.current = playerPiece;
 
     const caretakerFootplateMaterial = new THREE.MeshStandardMaterial({
       color: 0x9fb7b7,
@@ -9834,6 +9875,7 @@ export default function Island5ThreePilot({
         materials.voiceGlow.emissiveIntensity = 0.96 + Math.sin(elapsed * 1.35) * 0.14;
         materials.pearlAccent.emissiveIntensity = 0.36 + Math.sin(elapsed * 1.08 + 0.7) * 0.1;
         playerPiece.compassLight.rotation.y += frameDeltaSeconds * 1.8;
+        (playerPiece.root.userData.playerPieceRelic as ReturnType<typeof createPlayerPieceRelic> | undefined)?.update(elapsed, false);
       } else {
         // Reduced motion freezes bob/spin at a deterministic pose while still
         // reflecting canonical token occupancy so the landed-on reward does
@@ -11631,6 +11673,8 @@ export default function Island5ThreePilot({
       }
       cancelConstructionCrewWarmup();
       discardPreparedNextConstructionPreview();
+      (playerPieceTokenRef.current?.root.userData.playerPieceRelic as ReturnType<typeof createPlayerPieceRelic> | undefined)?.dispose();
+      playerPieceTokenRef.current = null;
       disposeScene(scene);
       if (rootheartDayBackdrop && rootheartDayBackdrop !== disposedSceneBackground) rootheartDayBackdrop.dispose();
       if (rootheartNightBackdrop && rootheartNightBackdrop !== disposedSceneBackground) rootheartNightBackdrop.dispose();

@@ -238,6 +238,7 @@ import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRu
 import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import { DepartureDayScene } from './DepartureDayScene';
+import { isPlayerPieceId } from '../services/islandRunPlayerPieces';
 import { readExpeditionShipGarageQualityPreference, resolveExpeditionShipGarageQuality } from './expeditionShipGarageQuality';
 import { resolveDepartureDaySeenKey, resolveDepartureDaySkip } from '../services/islandRunDepartureDay';
 import { purchaseDiceSkin, resolveDiceSkinProgress, selectDiceSkin } from '../services/islandRunDiceSkinActions';
@@ -11588,6 +11589,12 @@ export function IslandRunBoardPrototype({
     setLandingText(message);
   };
 
+  // The chosen board piece (set on Departure Day); null keeps the classic token.
+  // Dev seam: ?playerPiecePreview=<pieceId> shows a piece without choosing it.
+  const playerPiecePreviewId = import.meta.env.DEV && typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('playerPiecePreview') : null;
+  const boardPlayerPieceId = isPlayerPieceId(playerPiecePreviewId) ? playerPiecePreviewId
+    : isPlayerPieceId(__storeState.selectedPlayerPieceId) ? __storeState.selectedPlayerPieceId : null;
   const diceSkinProgress = useMemo(
     () => resolveDiceSkinProgress(__storeState),
     [__storeState.signatureMissionProgressByIsland],
@@ -17174,6 +17181,7 @@ export function IslandRunBoardPrototype({
           isRolling={shouldRenderIsland5Three ? false : isRolling}
           diceFaces={rollingDiceFaces}
           diceSkin={diceSkinProgress.selectedSkinId}
+          playerPieceId={boardPlayerPieceId}
           onDiceRollComplete={shouldRenderIsland5Three ? undefined : () => {
             diceRollCompleteAlreadyFiredRef.current = true;
             diceRollCompleteResolverRef.current?.();
@@ -17356,6 +17364,7 @@ export function IslandRunBoardPrototype({
                 onIsland20SkiffRunComplete={handleLavaSkiffRunComplete}
                 onAssemblyMeetingComplete={isIslandVisualPreview ? undefined : openAssemblyMandate}
                 onExplorePointChange={(id) => setExploreViewActive(id !== null)}
+                playerPieceId={boardPlayerPieceId}
                 island001Atmosphere={islandNumber === 1 ? {
                   buildLevels: isIslandVisualPreview
                     ? [0, 1, 2, 3].map(() => island5ThreePreviewLevel)
@@ -18039,7 +18048,7 @@ export function IslandRunBoardPrototype({
                   <p className="island-stop-modal__eyebrow">First-run setup</p>
                   <h3 className="island-stop-modal__title">🎉 Welcome to Island Run</h3>
                   <p className="island-stop-modal__copy">Claim your starter gifts to begin your first island.</p>
-                  <p><strong>Starter gifts:</strong> 💰 250 money + 🎲 three 500-dice caretaker packs</p>
+                  <p><strong>Starter gifts:</strong> 💰 250 money + 🎲 three 500-dice crew supply packs</p>
                   <p>✨ 🎊 ✨</p>
                 </div>
                 <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
@@ -18057,7 +18066,7 @@ export function IslandRunBoardPrototype({
               <>
                 <div className="island-stop-modal__context">
                   <p className="island-stop-modal__eyebrow">Name your ship</p>
-                  <h3 className="island-stop-modal__title">🚀 The caretaker is ready to hand over your ship</h3>
+                  <h3 className="island-stop-modal__title">🚀 The garage crew is ready to hand over your ship</h3>
                   <p className="island-stop-modal__copy">Choose the name that will appear in your first mission briefing.</p>
                   <label className="island-stop-modal__copy" htmlFor="first-run-ship-name"><strong>Spaceship name</strong></label>
                   <input
@@ -18080,7 +18089,7 @@ export function IslandRunBoardPrototype({
                 <div className="island-stop-modal__context">
                   <p className="island-stop-modal__eyebrow">Mission briefing</p>
                   <h3 className="island-stop-modal__title">🛸 {firstRunShipName} begins the first descent</h3>
-                  <p className="island-stop-modal__copy">The caretaker has loaded three emergency dice packs — 500 dice each — so your first route has room to breathe.</p>
+                  <p className="island-stop-modal__copy">The garage crew loaded three supply packs of dice — 500 dice each — so your first route has room to breathe.</p>
                   <p className="island-stop-modal__copy">Your starting rank is Explorer. Complete landmarks, hatch companions, and let real-life progress help your world grow.</p>
                   <p className="island-stop-modal__copy">The ship is entering Island 1 atmosphere. When it lands, start rolling.</p>
                 </div>
