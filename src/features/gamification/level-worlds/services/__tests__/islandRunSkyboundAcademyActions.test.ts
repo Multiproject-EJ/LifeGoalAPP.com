@@ -33,6 +33,9 @@ function reset(overrides: Partial<IslandRunGameStateRecord>): void {
 
 function academyEventOverrides(): Partial<IslandRunGameStateRecord> {
   return {
+    // Island001 is the quiet beginner island with no reward bar (islandRunFeatureAccess);
+    // model a regular island where the reward channel is live.
+    currentIslandNumber: 2,
     activeTimedEvent: {
       eventId: EVENT_ID,
       eventType: 'skybound_expedition',

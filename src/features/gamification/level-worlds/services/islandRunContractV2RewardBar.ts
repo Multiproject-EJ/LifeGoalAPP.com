@@ -18,6 +18,32 @@ export type IslandRunRewardBarRuntimeSlice = Pick<
   | 'stickerInventory'
 > & Partial<Pick<IslandRunRuntimeState, 'signatureMissionProgressByIsland' | 'currentIslandNumber'>>;
 
+/**
+ * The reward-bar slice of a full game record, including the island context
+ * the reward channel needs (Island001 and not-yet-opened islands have no
+ * reward bar). Build slices with this instead of copying fields by hand: a
+ * slice without `currentIslandNumber` counts as no island and never credits.
+ */
+export function pickIslandRunRewardBarSlice(
+  record: Pick<IslandRunRuntimeState, keyof IslandRunRewardBarRuntimeSlice>,
+): IslandRunRewardBarRuntimeSlice {
+  return {
+    currentIslandNumber: record.currentIslandNumber,
+    signatureMissionProgressByIsland: record.signatureMissionProgressByIsland,
+    rewardBarProgress: record.rewardBarProgress,
+    rewardBarThreshold: record.rewardBarThreshold,
+    rewardBarClaimCountInEvent: record.rewardBarClaimCountInEvent,
+    rewardBarEscalationTier: record.rewardBarEscalationTier,
+    rewardBarLastClaimAtMs: record.rewardBarLastClaimAtMs,
+    rewardBarBoundEventId: record.rewardBarBoundEventId,
+    rewardBarLadderId: record.rewardBarLadderId,
+    activeTimedEvent: record.activeTimedEvent,
+    activeTimedEventProgress: record.activeTimedEventProgress,
+    stickerProgress: record.stickerProgress,
+    stickerInventory: record.stickerInventory,
+  };
+}
+
 function isRewardChannelAvailable(state: IslandRunRewardBarRuntimeSlice, islandNumber = state.currentIslandNumber): boolean {
   return resolveIslandRunFeatureAccess({ currentIslandNumber: islandNumber ?? 0,
     signatureMissionProgressByIsland: state.signatureMissionProgressByIsland }).rewardChannel;

@@ -25,6 +25,7 @@ import {
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
 import { recordEventMinigameCompletion } from './islandRunEventEngine';
+import { pickIslandRunRewardBarSlice } from './islandRunContractV2RewardBar';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 
 const SKYBOUND_TICKET_COST = 1;
@@ -234,19 +235,7 @@ export function settleSkyboundSortie(options: {
     && current.activeTimedEvent?.eventId === eventId
     && current.activeTimedEvent.eventType === 'skybound_expedition'
     ? recordEventMinigameCompletion({
-        state: {
-          rewardBarProgress: current.rewardBarProgress,
-          rewardBarThreshold: current.rewardBarThreshold,
-          rewardBarClaimCountInEvent: current.rewardBarClaimCountInEvent,
-          rewardBarEscalationTier: current.rewardBarEscalationTier,
-          rewardBarLastClaimAtMs: current.rewardBarLastClaimAtMs,
-          rewardBarBoundEventId: current.rewardBarBoundEventId,
-          rewardBarLadderId: current.rewardBarLadderId,
-          activeTimedEvent: current.activeTimedEvent,
-          activeTimedEventProgress: current.activeTimedEventProgress,
-          stickerProgress: current.stickerProgress,
-          stickerInventory: current.stickerInventory,
-        },
+        state: pickIslandRunRewardBarSlice(current),
         minigameId: 'skybound_expedition',
         nowMs: Date.now(),
         multiplier: canonicalEvaluation.ace ? 2 : 1,

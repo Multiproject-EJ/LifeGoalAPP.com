@@ -15,6 +15,7 @@ import {
   MULTIPLIER_TIERS,
   BASE_DICE_PER_ROLL,
   REWARD_BAR_CURATED_TARGET_SEQUENCE,
+  pickIslandRunRewardBarSlice,
 } from '../islandRunContractV2RewardBar';
 import type { IslandRunRewardBarRuntimeSlice } from '../islandRunContractV2RewardBar';
 import { resolveIslandRunContractV2RewardHudState } from '../islandRunContractV2Semantics';
@@ -22,6 +23,9 @@ import { assert, assertEqual, type TestCase } from './testHarness';
 
 function makeBaseState(): IslandRunRewardBarRuntimeSlice {
   return {
+    // Island001 is the quiet beginner island with no reward bar (islandRunFeatureAccess);
+    // model a regular island where the reward channel is live.
+    currentIslandNumber: 2,
     rewardBarProgress: 0,
     rewardBarThreshold: 5,
     rewardBarClaimCountInEvent: 0,
@@ -249,6 +253,35 @@ function assertEconomySafetyResult(result: RewardBarEconomySimulationResult, lab
 }
 
 export const islandRunContractV2RewardBarTests: TestCase[] = [
+  {
+    name: 'slices built from a full record keep island context: progress credits on Island002, not Island001',
+    run: () => {
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const record = { ...withEvent, signatureMissionProgressByIsland: {} };
+      const island2 = applyIslandRunContractV2RewardBarProgress({
+        state: pickIslandRunRewardBarSlice({ ...record, currentIslandNumber: 2 }),
+        source: { kind: 'creature_feed', treatType: 'basic' },
+        nowMs: 1_100,
+      });
+      assert(island2.rewardBarProgress > 0, 'Island002 feeding should fill the reward bar');
+      assertEqual(island2.currentIslandNumber, 2, 'the slice should carry the island number through');
+
+      const island1 = applyIslandRunContractV2RewardBarProgress({
+        state: pickIslandRunRewardBarSlice({ ...record, currentIslandNumber: 1 }),
+        source: { kind: 'creature_feed', treatType: 'basic' },
+        nowMs: 1_100,
+      });
+      assertEqual(island1.rewardBarProgress, 0, 'Island001 has no reward bar');
+
+      const { currentIslandNumber: _dropped, ...withoutIsland } = pickIslandRunRewardBarSlice({ ...record, currentIslandNumber: 2 });
+      const noIsland = applyIslandRunContractV2RewardBarProgress({
+        state: withoutIsland,
+        source: { kind: 'creature_feed', treatType: 'basic' },
+        nowMs: 1_100,
+      });
+      assertEqual(noIsland.rewardBarProgress, 0, 'a hand-built slice without the island never credits (why callers must use the helper)');
+    },
+  },
   {
     name: 'v2 on: exactly one active timed event is assigned when missing',
     run: () => {

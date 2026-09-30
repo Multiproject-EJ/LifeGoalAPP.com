@@ -216,6 +216,8 @@ export const islandRunEconomyTelemetryTests: TestCase[] = [
         dicePool: 10,
         diceRegenState: { maxDice: 30, regenRatePerHour: 7.5, lastRegenAtMs: 0 },
         minigameTicketsByEvent: { 'space_excavator:1': 2 },
+        // Island001 has no event games or reward bar (islandRunFeatureAccess).
+        currentIslandNumber: 2,
       });
 
       const regen = applyPassiveDiceRegenTick({

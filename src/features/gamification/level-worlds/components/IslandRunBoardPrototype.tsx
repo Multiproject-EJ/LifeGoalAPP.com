@@ -727,6 +727,7 @@ import {
   clampMultiplierToPool,
   resolveDiceCostForMultiplier,
   resolveNextMultiplierCycleStep,
+  pickIslandRunRewardBarSlice,
   type RewardBarClaimPayout,
 } from '../services/islandRunContractV2RewardBar';
 import {
@@ -8376,19 +8377,7 @@ export function IslandRunBoardPrototype({
 
   const handleContractV2RewardBarClaim = () => {
     runContractV2RewardBarClaimCascade({
-      state: {
-        rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-        rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-        rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-        rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-        rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-        rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-        rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-        activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-        activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-        stickerProgress: runtimeStateRef.current.stickerProgress,
-        stickerInventory: runtimeStateRef.current.stickerInventory,
-      },
+      state: pickIslandRunRewardBarSlice(runtimeStateRef.current),
       emptyMessage: 'Reward bar is not full yet.',
     });
   };
@@ -10485,19 +10474,7 @@ export function IslandRunBoardPrototype({
     // amplifier (§2E) applies here too, matching how feeding tiles scale.
     {
       const nextRewardBarState = recordEventProgress({
-        state: {
-          rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-          rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-          rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-          rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-          rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-          rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-          rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-          activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-          activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-          stickerProgress: runtimeStateRef.current.stickerProgress,
-          stickerInventory: runtimeStateRef.current.stickerInventory,
-        },
+        state: pickIslandRunRewardBarSlice(runtimeStateRef.current),
         source: { kind: 'encounter_resolve' },
         nowMs: Date.now(),
         multiplier: Math.max(1, effectiveMultiplier),
@@ -13861,19 +13838,7 @@ export function IslandRunBoardPrototype({
 
       if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
         const nextRewardBarState = recordEventProgress({
-          state: {
-            rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-            rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-            rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-            rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-            rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-            rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-            rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-            activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-            activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-            stickerProgress: runtimeStateRef.current.stickerProgress,
-            stickerInventory: runtimeStateRef.current.stickerInventory,
-          },
+          state: pickIslandRunRewardBarSlice(runtimeStateRef.current),
           source: { kind: 'creature_feed', treatType },
           nowMs,
         });
@@ -21183,19 +21148,7 @@ export function IslandRunBoardPrototype({
                 });
                 if (eventCompletionMinigameId) {
                   const nextRewardBarState = recordEventMinigameCompletion({
-                    state: {
-                      rewardBarProgress: runtimeStateRef.current.rewardBarProgress,
-                      rewardBarThreshold: runtimeStateRef.current.rewardBarThreshold,
-                      rewardBarClaimCountInEvent: runtimeStateRef.current.rewardBarClaimCountInEvent,
-                      rewardBarEscalationTier: runtimeStateRef.current.rewardBarEscalationTier,
-                      rewardBarLastClaimAtMs: runtimeStateRef.current.rewardBarLastClaimAtMs,
-                      rewardBarBoundEventId: runtimeStateRef.current.rewardBarBoundEventId,
-                      rewardBarLadderId: runtimeStateRef.current.rewardBarLadderId,
-                      activeTimedEvent: runtimeStateRef.current.activeTimedEvent,
-                      activeTimedEventProgress: runtimeStateRef.current.activeTimedEventProgress,
-                      stickerProgress: runtimeStateRef.current.stickerProgress,
-                      stickerInventory: runtimeStateRef.current.stickerInventory,
-                    },
+                    state: pickIslandRunRewardBarSlice(runtimeStateRef.current),
                     minigameId: eventCompletionMinigameId,
                     nowMs: Date.now(),
                   });

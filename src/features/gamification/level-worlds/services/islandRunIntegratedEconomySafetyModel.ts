@@ -56,6 +56,9 @@ export interface IslandRunIntegratedEconomySafetyResult {
 
 function makeBaseRewardBarState(): IslandRunRewardBarRuntimeSlice {
   return {
+    // Island001 is the quiet beginner island with no reward bar (islandRunFeatureAccess);
+    // model a regular island where the reward channel is live.
+    currentIslandNumber: 2,
     rewardBarProgress: 0,
     rewardBarThreshold: 4,
     rewardBarClaimCountInEvent: 0,
