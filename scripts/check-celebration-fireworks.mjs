@@ -30,6 +30,7 @@ const expectedComponentSnippets = [
   "matchMedia('(prefers-reduced-motion: reduce)')",
   'scheduleRapidFireworksPreload',
   "connection?.saveData",
+  "target.tagName === 'SOURCE' && target.nextElementSibling",
 ];
 
 for (const snippet of expectedComponentSnippets) {

@@ -3,6 +3,7 @@ import './world.css';
 import './landing.css';
 import type { BeforeInstallPromptEvent } from './useInstallState.ts';
 import { AwakeningExperience } from './AwakeningExperience.tsx';
+import { LandingHeroShow } from './LandingHeroShow.tsx';
 import { WorldHowItWorksModal } from './WorldHowItWorksModal.tsx';
 import { IOSInstallGuide } from './IOSInstallGuide.tsx';
 import { useInstallState } from './useInstallState.ts';
@@ -321,21 +322,7 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
         </div>
 
         <div className="lp-hero-inner">
-          <div className="lp-hero-art" aria-hidden="true">
-            <img
-              className="lp-hero-compass"
-              src="/assets/island_caretakers/001/first-light-caretaker.webp"
-              alt=""
-              decoding="async"
-            />
-            <img
-              className="lp-hero-caretaker"
-              src="/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp"
-              alt=""
-              fetchPriority="high"
-              decoding="async"
-            />
-          </div>
+          <LandingHeroShow />
 
           <div className="lp-hero-copy">
             <p className="lp-eyebrow"><span aria-hidden="true">✦</span> Early access is open</p>

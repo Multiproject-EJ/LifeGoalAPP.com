@@ -141,6 +141,14 @@ export function CelebrationFireworks({
     onComplete?.();
   };
 
+  // A <source> the browser can't play (HEVC .mov outside Safari) reports an
+  // error before the next <source> is tried; only the last one is fatal.
+  const handleError = (event: React.SyntheticEvent<HTMLVideoElement>) => {
+    const target = event.target as Element;
+    if (target.tagName === 'SOURCE' && target.nextElementSibling) return;
+    handleComplete();
+  };
+
   return (
     <div
       className={classes}
@@ -160,7 +168,7 @@ export function CelebrationFireworks({
           disablePictureInPicture
           controlsList="nodownload noplaybackrate"
           onEnded={handleComplete}
-          onError={handleComplete}
+          onError={handleError}
         >
           <source src={asset.mov} type='video/quicktime; codecs="hvc1"' />
           <source src={asset.webm} type='video/webm; codecs="vp9"' />
