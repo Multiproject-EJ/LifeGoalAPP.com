@@ -277,3 +277,10 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Relive departure: the warm, ceremonial action next to the utility buttons. */
+.expedition-ship-garage__actions button.expedition-ship-garage__relive {
+  border-color: rgba(242, 200, 103, 0.5);
+  background: linear-gradient(135deg, rgba(120, 82, 22, 0.55), rgba(40, 28, 10, 0.7));
+  color: #ffe7ad;
+}

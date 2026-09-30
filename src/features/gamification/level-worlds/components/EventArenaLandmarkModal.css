@@ -1,0 +1,75 @@
+/* Stop 3 Event Arena landmark: one compact surface that fits a phone
+   viewport without scrolling. Header → hero (the rule, once) → game choice. */
+.event-arena-modal-backdrop { z-index: 12000; }
+
+.event-arena-modal {
+  position: relative;
+  display: flex;
+  width: min(420px, 100%);
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid rgba(230, 199, 119, 0.4);
+  border-radius: 24px;
+  color: #f5f1e6;
+  background:
+    radial-gradient(120% 55% at 50% 0%, rgba(126, 88, 214, 0.28), transparent 60%),
+    linear-gradient(180deg, #121c33, #070d1b);
+  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.55), inset 0 1px rgba(255, 255, 255, 0.1);
+  animation: island-stop-modal-enter 380ms cubic-bezier(0.22, 1.3, 0.36, 1);
+}
+
+.event-arena-modal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.event-arena-modal__header > div { display: grid; gap: 2px; min-width: 0; }
+.event-arena-modal__eyebrow { color: #d9b86a; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.event-arena-modal__header h3 { margin: 0; color: #fff6df; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; line-height: 1.1; }
+.event-arena-modal__close {
+  flex: 0 0 auto; width: 36px; height: 36px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
+  color: #eae3cf; background: rgba(255, 255, 255, 0.06); font-size: 15px; cursor: pointer;
+}
+
+.event-arena-modal__hero {
+  position: relative; isolation: isolate; display: flex; min-height: 112px; align-items: center; gap: 12px;
+  overflow: hidden; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 18px;
+  background: linear-gradient(135deg, #2b1f5c, #0f2440);
+}
+.event-arena-modal__hero-art { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.event-arena-modal__hero-veil { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(5, 9, 24, 0.92) 20%, rgba(5, 9, 24, 0.55) 70%, rgba(5, 9, 24, 0.25)); }
+.event-arena-modal__emblem { flex: 0 0 auto; width: 58px; height: 58px; object-fit: contain; filter: drop-shadow(0 8px 14px rgba(124, 58, 237, 0.45)); }
+.event-arena-modal__hero-copy { display: grid; min-width: 0; gap: 7px; justify-items: start; }
+.event-arena-modal__rule { margin: 0; color: #fff; font-size: 15px; font-weight: 700; line-height: 1.3; text-wrap: pretty; }
+.event-arena-modal__reward { padding: 4px 10px; border-radius: 999px; color: #1b1405; background: #ffd978; font-size: 12px; font-weight: 900; }
+.event-arena-modal__ceremony {
+  padding: 5px 11px; border: 1px solid rgba(255, 225, 150, 0.45); border-radius: 999px;
+  color: #ffe7a8; background: rgba(12, 16, 36, 0.55); font-size: 12px; font-weight: 800; cursor: pointer;
+}
+
+.event-arena-modal__notice { margin: 0; padding: 8px 12px; border-radius: 12px; color: #ffe2a8; background: rgba(245, 158, 11, 0.14); font-size: 13px; font-weight: 700; }
+.event-arena-modal__body { display: grid; gap: 10px; }
+.event-arena-modal__primary {
+  min-height: 46px; border: 0; border-radius: 999px; color: #1b1405; cursor: pointer;
+  background: linear-gradient(180deg, #ffe08a, #f0b43c); font-size: 15px; font-weight: 900;
+}
+.event-arena-modal__footer { margin: 0; color: #b9c3d6; font-size: 12px; font-weight: 700; text-align: center; }
+
+/* Stadium activity inside the landmark: the hero already states the rule. */
+.event-arena-modal .arena-stadium__rule { display: none; }
+.event-arena-modal .arena-stadium__earn {
+  min-height: 42px; border: 1px solid rgba(238, 210, 137, 0.4); border-radius: 999px;
+  color: #f4dfa8; background: rgba(236, 205, 126, 0.08); font-size: 13px; font-weight: 800; cursor: pointer;
+}
+.event-arena-modal .arena-stadium__status { margin: 0; color: #cbd5e1; font-size: 13px; text-align: center; }
+
+@media (max-height: 700px) {
+  .event-arena-modal__hero { min-height: 84px; padding-block: 8px; }
+  .event-arena-modal__emblem { width: 44px; height: 44px; }
+  .event-arena-modal__ceremony { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-arena-modal { animation: none; }
+}

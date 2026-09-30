@@ -1,0 +1,155 @@
+/* Departure Day: full-viewport film with the piece picker on top. */
+.departure-day {
+  position: fixed;
+  inset: 0;
+  z-index: 13000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #0d0f16;
+  color: #f6f1e4;
+}
+.departure-day__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.departure-day__veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 70% at 50% 20%, rgba(255, 178, 92, .16), transparent 60%), #0d0f16;
+}
+.departure-day[data-phase='picker'] .departure-day__canvas,
+.departure-day[data-phase='waiting'] .departure-day__canvas { filter: brightness(.55) saturate(.85); }
+
+.departure-day__picker {
+  position: relative;
+  display: grid;
+  gap: .6rem;
+  width: min(380px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  box-sizing: border-box;
+  padding: 1.1rem 1rem 1rem;
+  overflow: hidden auto;
+  border: 1px solid rgba(242, 200, 103, .45);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(20, 34, 72, .94), rgba(9, 14, 30, .96));
+  box-shadow: 0 28px 70px rgba(0, 0, 0, .55), inset 0 1px rgba(255, 255, 255, .1);
+  animation: departure-day-in .45s cubic-bezier(.2, 1.1, .3, 1) both;
+}
+@keyframes departure-day-in { from { opacity: 0; transform: translateY(18px) scale(.94); } }
+.departure-day__eyebrow { margin: 0; color: #f2c867; font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.departure-day__picker h2 { margin: 0; font: 700 1.3rem/1.15 Georgia, 'Times New Roman', serif; color: #fff4d6; }
+.departure-day__lede { margin: 0; color: #c9d3ea; font-size: .86rem; line-height: 1.4; }
+
+.departure-day__pieces {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .45rem;
+  margin: .2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+/* Starters get the top row; locked pieces sit smaller underneath. */
+.departure-day__piece {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 3px;
+  width: 100%;
+  height: 100%;
+  padding: .5rem .3rem .55rem;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 16px;
+  color: inherit;
+  text-align: center;
+  background: rgba(255, 255, 255, .05);
+  cursor: pointer;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.departure-day__piece .player-piece-icon { width: 54px; height: 54px; }
+.departure-day__piece strong { font-size: .78rem; line-height: 1.15; }
+.departure-day__piece small { color: #a9b6d3; font-size: .64rem; line-height: 1.25; }
+.departure-day__piece.is-selected {
+  border-color: var(--piece-accent, #f2c867);
+  background: color-mix(in srgb, var(--piece-accent, #f2c867) 16%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--piece-accent, #f2c867) 35%, transparent);
+  transform: translateY(-2px);
+}
+.departure-day__locked { display: grid; gap: .35rem; }
+.departure-day__locked > span { color: #9fb0d4; font-size: .66rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.departure-day__locked ul { display: flex; flex-wrap: wrap; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+.departure-day__locked li {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .05);
+}
+.departure-day__locked .player-piece-icon { width: 32px; height: 32px; }
+.departure-day__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.departure-day__confirm {
+  min-height: 48px;
+  margin-top: .3rem;
+  border: 0;
+  border-radius: 999px;
+  color: #1c1406;
+  font-weight: 800;
+  font-size: 1rem;
+  background: linear-gradient(180deg, #ffe08a, #efb13a);
+  box-shadow: 0 8px 20px rgba(239, 177, 58, .3);
+  cursor: pointer;
+}
+.departure-day__confirm:disabled { cursor: progress; }
+.departure-day__preparing { display: grid; justify-items: center; gap: 5px; font-size: .9rem; }
+.departure-day__preparing i {
+  display: block;
+  width: 140px;
+  height: 3px;
+  border-radius: 999px;
+  background: #5a3e0c;
+  transform-origin: left center;
+  transition: transform .3s ease;
+}
+
+.departure-day__caption {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: max(28px, env(safe-area-inset-bottom, 0px));
+  margin: 0;
+  padding: .6rem .9rem;
+  border-radius: 14px;
+  text-align: center;
+  font: 600 .95rem/1.3 Georgia, 'Times New Roman', serif;
+  color: #fff4d6;
+  background: linear-gradient(180deg, rgba(8, 12, 26, .1), rgba(8, 12, 26, .72));
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .6);
+  animation: departure-day-caption .7s ease both;
+}
+@keyframes departure-day-caption { from { opacity: 0; transform: translateY(6px); } }
+.departure-day__replay-loading {
+  position: relative;
+  margin: 0;
+  padding: .6rem 1.1rem;
+  border: 1px solid rgba(242, 200, 103, .4);
+  border-radius: 999px;
+  color: #fff4d6;
+  font: 600 .95rem/1.2 Georgia, 'Times New Roman', serif;
+  background: rgba(9, 14, 30, .85);
+}
+.departure-day__skip {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top, 0px));
+  right: 16px;
+  min-height: 36px;
+  padding: 0 1rem;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(8, 12, 26, .55);
+  font-weight: 700;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  .departure-day__picker, .departure-day__caption { animation: none; }
+  .departure-day__piece { transition: none; }
+}

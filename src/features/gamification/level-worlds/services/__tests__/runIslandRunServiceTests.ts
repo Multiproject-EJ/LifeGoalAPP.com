@@ -15,6 +15,12 @@ import { buildStylesTests } from './buildStyles.test';
 import { precisionBuildJuiceTests } from './precisionBuildJuice.test';
 import { companionPairingSurpriseTests } from './companionPairingSurprise.test';
 import { todayPetBehaviourTests } from './todayPetBehaviour.test';
+import { island001AtmosphereTests } from './island001Atmosphere.test';
+import { archetypeCupTests } from './archetypeCup.test';
+import { islandRunDiceSkinsTests } from './islandRunDiceSkins.test';
+import { islandRunDepartureDayTests } from './islandRunDepartureDay.test';
+import { islandRunTreasuresTests } from './islandRunTreasures.test';
+import { island001AssemblyInvitationsTests } from './island001AssemblyInvitations.test';
 import { fishermansDragonPreludeTests } from './fishermansDragonPrelude.test';
 import { controllerDiceTiersTests } from './controllerDiceTiers.test';
 import { controllerSunlightTests } from './controllerSunlight.test';
@@ -330,6 +336,12 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'precisionBuildJuice', tests: precisionBuildJuiceTests },
   { label: 'companionPairingSurprise', tests: companionPairingSurpriseTests },
   { label: 'todayPetBehaviour', tests: todayPetBehaviourTests },
+  { label: 'island001Atmosphere', tests: island001AtmosphereTests },
+  { label: 'archetypeCup', tests: archetypeCupTests },
+  { label: 'islandRunDiceSkins', tests: islandRunDiceSkinsTests },
+  { label: 'islandRunDepartureDay', tests: islandRunDepartureDayTests },
+  { label: 'islandRunTreasures', tests: islandRunTreasuresTests },
+  { label: 'island001AssemblyInvitations', tests: island001AssemblyInvitationsTests },
   { label: 'fishermansDragonPrelude', tests: fishermansDragonPreludeTests },
   { label: 'controllerDiceTiers', tests: controllerDiceTiersTests },
   { label: 'controllerSunlight', tests: controllerSunlightTests },

@@ -1,11 +1,15 @@
 import { forwardRef, memo, useCallback, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import type { TokenAnimState } from './useTokenAnimation';
 import type { TileAnchor } from '../../services/islandBoardLayout';
+import type { PlayerPieceId } from '../../services/islandRunPlayerPieces';
+import { PlayerPieceIcon } from '../PlayerPieceIcon';
 
 export interface BoardTokenProps {
   animState: TokenAnimState;
   /** The z-band of the tile the token is currently on */
   zBand: TileAnchor['zBand'];
+  /** The chosen board piece; null or the Explorer Ship keep the classic ship. */
+  pieceId?: PlayerPieceId | null;
 }
 
 export interface BoardTokenHandle {
@@ -25,7 +29,7 @@ const resolveTokenTransform = (x: number, y: number) => (
  * elevation) and shrinks/fades with height, then snaps back under the ship on
  * landing — that separation is what sells the jump as 3D.
  */
-export const BoardToken = memo(forwardRef<BoardTokenHandle, BoardTokenProps>(function BoardToken({ animState, zBand }, ref) {
+export const BoardToken = memo(forwardRef<BoardTokenHandle, BoardTokenProps>(function BoardToken({ animState, zBand, pieceId = null }, ref) {
   const { x, y, scaleX, scaleY, elevation, isMoving, isLanding } = animState;
   const rootRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLSpanElement>(null);
@@ -82,11 +86,17 @@ export const BoardToken = memo(forwardRef<BoardTokenHandle, BoardTokenProps>(fun
         aria-hidden="true"
         style={{ transform: `scale(var(--token-depth-scale, 1)) scaleX(${scaleX.toFixed(3)}) scaleY(${scaleY.toFixed(3)})` }}
       >
-        <div className="island-token__ship-body"/>
-        <div className="island-token__ship-fin island-token__ship-fin--left"/>
-        <div className="island-token__ship-fin island-token__ship-fin--right"/>
-        <div className="island-token__ship-thruster"/>
-        <div className="island-token__ship-window"/>
+        {pieceId && pieceId !== 'explorer_ship' ? (
+          <span className="island-token__piece"><PlayerPieceIcon pieceId={pieceId} /></span>
+        ) : (
+          <>
+            <div className="island-token__ship-body"/>
+            <div className="island-token__ship-fin island-token__ship-fin--left"/>
+            <div className="island-token__ship-fin island-token__ship-fin--right"/>
+            <div className="island-token__ship-thruster"/>
+            <div className="island-token__ship-window"/>
+          </>
+        )}
       </div>
 
       {/* Landing ripple effect */}

@@ -49,12 +49,12 @@ export function ArenaStadiumActivity({ session, client, gameOpen, onComplete, on
   return <>
     {intro || pair ? <ArenaJourneyDialog required games={intro ? [intro] : pair!} comparison={!intro}
       busy={busy} error={error} onChoose={id => void choose(id)} onClose={() => {}} /> : <>
-      <p>Finish one round to complete this stadium visit. A loss counts; leaving before a round settles does not.</p>
+      <p className="arena-stadium__rule">Finish one round to complete this stadium visit. A loss counts; leaving before a round settles does not.</p>
       {!visit?.playedAtMs && children}
       {!(state.activeTimedEvent && (state.minigameTicketsByEvent[state.activeTimedEvent.eventId] ?? 0) > 0) && !visit?.playedAtMs
-        ? <button type="button" onClick={onEarnTickets}>Earn tickets on the board · stadium still required</button> : null}
-      {error && <p role="alert">{error} <button type="button" onClick={() => setError(null)}>Retry save</button></p>}
-      {busy && <p role="status">Saving stadium progress…</p>}
+        ? <button type="button" className="arena-stadium__earn" onClick={onEarnTickets}>Earn tickets on the board · stadium still required</button> : null}
+      {error && <p className="arena-stadium__status" role="alert">{error} <button type="button" onClick={() => setError(null)}>Retry save</button></p>}
+      {busy && <p className="arena-stadium__status" role="status">Saving stadium progress…</p>}
     </>}
   </>;
 }

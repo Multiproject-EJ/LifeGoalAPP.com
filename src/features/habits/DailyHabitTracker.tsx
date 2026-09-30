@@ -659,6 +659,9 @@ type DailyHabitTrackerProps = {
   deferDailyLifeUpgradeModal?: boolean;
   deferYesterdayTodoCleanupModal?: boolean;
   dayOneFocusMode?: boolean;
+  /** The Today pet only lives on the visible Today screen; overlays such as
+   * Two Tracks, Island Run or the Zen garden hide it. */
+  showTodayPet?: boolean;
 };
 
 type HabitCompletionState = {
@@ -1299,6 +1302,7 @@ export function DailyHabitTracker({
   deferDailyLifeUpgradeModal = false,
   deferYesterdayTodoCleanupModal = false,
   dayOneFocusMode = false,
+  showTodayPet = true,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const sparkHandEnabled = isPlayersHandSparkResultEnabled();
@@ -13796,7 +13800,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   // The paired companion lives on the Today screen as a small pet; its Feed
   // bubble is the same once-a-day +15 dice claim as the Feed Pet offer.
   const todayPetCompanion = resolveTodayPetCompanion(islandRunState);
-  const todayPet = todayPetCompanion ? (
+  const todayPet = showTodayPet && todayPetCompanion ? (
     <TodayPet
       companion={todayPetCompanion}
       fedToday={hasClaimedFeedCreaturesToday}
@@ -13857,7 +13861,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {yesterdaySundownTodoPortal}
         {zenTreePortal}
         {feedCreaturesPortal}
-      {todayPet}
         {todayPet}
         {eggHatchMoviePortal}
         {weeklyHabitReviewModal}

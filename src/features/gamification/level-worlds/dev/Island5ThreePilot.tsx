@@ -348,6 +348,19 @@ import {
   ISLAND_17_TITANS_REST_WORLD_NAME,
 } from './Island17TitansRestThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
+import { IslandRunLoadingScreen, markIslandRunLoadingScreenDone } from '../components/IslandRunLoadingScreen';
+import { createIsland001AtmosphereThree } from './Island001AtmosphereThree';
+import {
+  resolveIsland001DayPosition,
+  resolveIsland001Lighting,
+  resolveIsland001PathGlow,
+  resolveIsland001StreetlightCount,
+  stepIsland001DayPosition,
+  type Island001AtmosphereProgress,
+} from '../services/island001Atmosphere';
+import { playIslandRunBubblePop, triggerIslandRunHaptic } from '../services/islandRunAudio';
+import { createPlayerPieceRelic } from './PlayerPieceRelicThree';
+import type { PlayerPieceId } from '../services/islandRunPlayerPieces';
 import {
   createIslandStagedRestorationThreePresentation,
   type IslandStagedRestorationPresentation,
@@ -472,6 +485,20 @@ interface Island5ThreePilotProps {
   onAssemblyMeetingComplete?: () => void;
   /** An explore point view opened (id) or closed (null). */
   onExplorePointChange?: (id: string | null) => void;
+  /**
+   * False hides this island's signature mission items (e.g. Island 001
+   * dynamite) until the first mission message is read. Turning it true while
+   * the scene is live plays the popcorn reveal with a close-up. Default true.
+   */
+  missionItemsRevealed?: boolean;
+  /**
+   * Island 001 only: progress that drives time of day (sunrise → daylight →
+   * golden hour → night), street lamps and the route glow. `dayPositionOverride`
+   * (0..3) is a dev/evidence seam.
+   */
+  island001Atmosphere?: Island001AtmosphereProgress & { dayPositionOverride?: number | null };
+  /** The player's chosen board piece; null keeps the classic figure. */
+  playerPieceId?: PlayerPieceId | null;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
   interactionPaused?: boolean;
@@ -3501,7 +3528,34 @@ function createIslandPlayerPiece(quality: Island3DQuality) {
   shadow.name = 'ISLAND_5_PLAYER_TOKEN_SHADOW';
   shadow.rotation.x = -Math.PI / 2;
 
-  return { root, shadow, compassLight, shadowMaterial };
+  const figureParts: THREE.Object3D[] = [cloak, collar, head, compassLight, frontSigil];
+  return { root, shadow, compassLight, shadowMaterial, figureParts };
+}
+
+type IslandPlayerPieceToken = ReturnType<typeof createIslandPlayerPiece>;
+
+/**
+ * Show the player's chosen piece on the token's gold base. No choice yet keeps
+ * the classic figure, so existing players see no change. Themed tokens whose
+ * geometry was batched (Island 20) keep their themed figure.
+ */
+function applyIslandPlayerPieceChoice(token: IslandPlayerPieceToken, pieceId: PlayerPieceId | null | undefined) {
+  const previous = token.root.userData.playerPieceRelic as ReturnType<typeof createPlayerPieceRelic> | undefined;
+  if (previous) {
+    if (previous.root.userData.pieceId === pieceId) return;
+    token.root.remove(previous.root);
+    previous.dispose();
+    token.root.userData.playerPieceRelic = undefined;
+  }
+  const usePiece = Boolean(pieceId) && !token.root.userData.island20ThemedScale;
+  token.figureParts.forEach((part) => { part.visible = !usePiece; });
+  if (!usePiece || !pieceId) return;
+  const relic = createPlayerPieceRelic(pieceId);
+  relic.root.userData.pieceId = pieceId;
+  relic.root.scale.setScalar(1.05);
+  relic.root.position.y = 0.1;
+  token.root.add(relic.root);
+  token.root.userData.playerPieceRelic = relic;
 }
 
 function disposeScene(scene: THREE.Scene) {
@@ -3666,6 +3720,9 @@ export default function Island5ThreePilot({
   onSignatureMissionClick,
   onAssemblyMeetingComplete,
   onExplorePointChange,
+  missionItemsRevealed = true,
+  island001Atmosphere,
+  playerPieceId = null,
   caretakerEncounterOpen = false,
   onCaretakerClick,
   interactionPaused = false,
@@ -3932,18 +3989,58 @@ export default function Island5ThreePilot({
   const exploreDotRefs = useRef(new Map<IslandExplorePointId, HTMLButtonElement>());
   const exploreRequestRef = useRef<{ kind: 'enter'; id: IslandExplorePointId } | { kind: 'exit' } | null>(null);
   const [activeExplorePointId, setActiveExplorePointId] = useState<IslandExplorePointId | null>(null);
+  const island001AtmosphereRef = useRef(island001Atmosphere);
+  island001AtmosphereRef.current = island001Atmosphere;
+  // The chosen board piece; swapped live on the token without rebuilding the scene.
+  const playerPieceIdRef = useRef(playerPieceId);
+  playerPieceIdRef.current = playerPieceId;
+  const playerPieceTokenRef = useRef<IslandPlayerPieceToken | null>(null);
+  useEffect(() => {
+    if (playerPieceTokenRef.current) applyIslandPlayerPieceChoice(playerPieceTokenRef.current, playerPieceId);
+  }, [playerPieceId]);
+  // Mission items: hidden until the first mission message is read, then popped in.
+  const missionItemsRevealedRef = useRef(missionItemsRevealed);
+  const missionItemRevealRequestRef = useRef(false);
+  useEffect(() => {
+    if (missionItemsRevealed && !missionItemsRevealedRef.current) missionItemRevealRequestRef.current = true;
+    missionItemsRevealedRef.current = missionItemsRevealed;
+  }, [missionItemsRevealed]);
   const onExplorePointChangeRef = useRef(onExplorePointChange);
   onExplorePointChangeRef.current = onExplorePointChange;
   useEffect(() => { onExplorePointChangeRef.current?.(activeExplorePointId); }, [activeExplorePointId]);
+  // The parent hides the controller while a view is open. Always hand it back
+  // when the scene unmounts mid-view (leaving the island, reload, quality swap).
+  useEffect(() => () => { onExplorePointChangeRef.current?.(null); }, []);
+  // A view whose point disappeared (point set changed) has no Back button;
+  // return to the island instead of leaving the player without a controller.
+  useEffect(() => {
+    if (activeExplorePointId && !explorePoints.some((point) => point.id === activeExplorePointId)) {
+      exploreRequestRef.current = { kind: 'exit' };
+      setActiveExplorePointId(null);
+    }
+  }, [activeExplorePointId, explorePoints]);
   useEffect(() => {
     if (!activeExplorePointId) return undefined;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
+    const exit = () => {
       exploreRequestRef.current = { kind: 'exit' };
       setActiveExplorePointId(null);
     };
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') exit(); };
+    // Tapping any other game control (zoom glass, top bar, …) leaves the view
+    // first, so the player is never stuck in a point of view. Drags on the 3D
+    // canvas look around instead.
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (!target || target.closest('.island-explore-exit-layer')) return;
+      if (target instanceof HTMLCanvasElement) return;
+      if (target.closest('button, a, [role="button"], input, select')) exit();
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('pointerdown', onPointerDown, true);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('pointerdown', onPointerDown, true);
+    };
   }, [activeExplorePointId]);
   const greatHoneyfallPresentationRef = useRef(greatHoneyfallPresentation);
   greatHoneyfallPresentationRef.current = greatHoneyfallPresentation;
@@ -5964,6 +6061,7 @@ export default function Island5ThreePilot({
     tileRewardObjects.setStagedRestorationClaimedTiles(
       stagedRestorationPresentationRef.current?.claimedPickupTileIndices ?? [],
     );
+    tileRewardObjects.setMissionItemsHidden(!missionItemsRevealedRef.current);
     if (isCoasterCarnival && !isCircuitFPreviewEnabled && !isCircuitGBoardPreviewEnabled) tileRewardObjects.root.scale.setScalar(0.62);
     if (isLavaLabyrinth) {
       tileRewardObjects.root.children.forEach((reward) => {
@@ -5972,6 +6070,22 @@ export default function Island5ThreePilot({
       });
     }
     scene.add(tileRewardObjects.root);
+
+    // Island 001: time of day, street lamps and route glow follow progress.
+    const island001AtmosphereRuntime = isAssemblyCraterFirstLight
+      ? createIsland001AtmosphereThree({ tileTransforms, quality: qualityProfile.id })
+      : null;
+    const island001DayTarget = () => {
+      const progress = island001AtmosphereRef.current;
+      if (!progress) return 1;
+      return progress.dayPositionOverride ?? resolveIsland001DayPosition(progress);
+    };
+    // The scene opens at its current time of day; later progress moves the sun.
+    let island001PresentedDay = island001DayTarget();
+    if (island001AtmosphereRuntime) {
+      scene.add(island001AtmosphereRuntime.root);
+      if (island001AtmosphereRuntime.backdrop) scene.background = island001AtmosphereRuntime.backdrop;
+    }
 
     const playerPiece = createIslandPlayerPiece(qualityProfile.id);
     if (isLavaLabyrinth) {
@@ -5996,6 +6110,8 @@ export default function Island5ThreePilot({
     playerPiece.root.position.set(...startingTokenPosition);
     playerPiece.shadow.position.set(startingTokenPosition[0], startingTokenPosition[1] + 0.012, startingTokenPosition[2]);
     scene.add(playerPiece.shadow, playerPiece.root);
+    applyIslandPlayerPieceChoice(playerPiece, playerPieceIdRef.current);
+    playerPieceTokenRef.current = playerPiece;
 
     const caretakerFootplateMaterial = new THREE.MeshStandardMaterial({
       color: 0x9fb7b7,
@@ -6665,7 +6781,7 @@ export default function Island5ThreePilot({
         ? landmarkRootsById.get(mappedStopId as Island5LandmarkId)
         : undefined;
       const nextKey = next
-        ? [next.active, next.working, next.phase, next.progress.toFixed(4), next.sequence, next.sourceLevel, next.commissioning, next.cloudCover.toFixed(3), mappedStopId, next.targetLevel, next.completionCelebration, next.reducedMotion].join(':')
+        ? [next.active, next.working, next.phase, next.progress.toFixed(4), next.sequence, next.sourceLevel, next.commissioning, next.cloudCover.toFixed(3), mappedStopId, next.targetLevel, next.completionCelebration, next.quietLevelUp, next.reducedMotion].join(':')
         : 'inactive';
       if (nextKey === appliedConstructionKey) return;
       appliedConstructionKey = nextKey;
@@ -6677,10 +6793,11 @@ export default function Island5ThreePilot({
         )
         : null;
       constructionAnchor.visible = isActive;
-      constructionFamily.root.visible = isActive && !next?.commissioning && !next?.completionCelebration && !next?.fastBuild;
+      constructionFamily.root.visible = isActive && !next?.commissioning && !next?.completionCelebration && !next?.fastBuild && !next?.quietLevelUp;
       constructionStageBuilding.visible = isActive;
       constructionTheatre.setPresentation({
-        active: isActive,
+        // Level 1/2: the building is the reward; the robot crew stays off stage.
+        active: isActive && !next?.quietLevelUp,
         working: next?.working ?? false,
         completionCelebration: next?.completionCelebration ?? false,
         phase: next?.phase ?? 'arrive',
@@ -7410,6 +7527,11 @@ export default function Island5ThreePilot({
     } | null = null;
     let idleOverviewAt: number | null = null;
     let exploreActive: IslandExplorePoint | null = null;
+    // Look-around inside an explore view: once the camera arrives, dragging
+    // turns the view in place (orbit around a point just in front of the lens).
+    let exploreLookArmed = false;
+    let exploreSavedMaxDistance: number | null = null;
+    const exploreLookDirection = new THREE.Vector3();
     const exploreProjection = new THREE.Vector3();
     let ambientCameraContext: 'board' | 'build-modal' = constructionPresentationRef.current?.active
       ? 'build-modal'
@@ -9310,6 +9432,7 @@ export default function Island5ThreePilot({
           assemblyPresentation.chargesDetonated,
           assemblyPresentation.completed ? 1 : 0,
           assemblyPresentation.constructionSequence ?? 0,
+          assemblyPresentation.invitationsSent === false ? 0 : 1,
           ...(assemblyPresentation.claimedDynamiteTileIndices ?? []),
         ].join(':');
         if (presentationKey !== firstLightAssemblyPresentationKey) {
@@ -9712,7 +9835,14 @@ export default function Island5ThreePilot({
             idleOverviewAt = null;
             applyPreset('boss', 0.55);
           }
-          if (marina.active && !activeTour && !activeProfiler) {
+          const marinaAwaitingInvitations = Boolean(firstLightAssemblyCrater.root.userData.marinaAwaitingInvitations);
+          if (marinaAwaitingInvitations && wasMarinaArrivalActive) {
+            // The marina is built; hand the island back while it waits for invitations.
+            wasMarinaArrivalActive = false;
+            controls.enabled = true;
+            applyPreset('overview', 0.8);
+          }
+          if (marina.active && !marinaAwaitingInvitations && !activeTour && !activeProfiler) {
             if (!wasMarinaArrivalActive) {
               setBoardActorsVisibleForPreset('manual');
               marinaInspectionActive = true;
@@ -9766,6 +9896,7 @@ export default function Island5ThreePilot({
         materials.voiceGlow.emissiveIntensity = 0.96 + Math.sin(elapsed * 1.35) * 0.14;
         materials.pearlAccent.emissiveIntensity = 0.36 + Math.sin(elapsed * 1.08 + 0.7) * 0.1;
         playerPiece.compassLight.rotation.y += frameDeltaSeconds * 1.8;
+        (playerPiece.root.userData.playerPieceRelic as ReturnType<typeof createPlayerPieceRelic> | undefined)?.update(elapsed, false);
       } else {
         // Reduced motion freezes bob/spin at a deterministic pose while still
         // reflecting canonical token occupancy so the landed-on reward does
@@ -10890,6 +11021,8 @@ export default function Island5ThreePilot({
         applyPreset('overview', ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE);
       }
       const ambientCameraAllowed = !isEvidenceCapture
+        // An explore view belongs to the player: no ambient drift while looking around.
+        && !exploreActive
         && !activeWonderRide
         && !activeTrainRide
         && !isReducedMotion
@@ -11079,6 +11212,80 @@ export default function Island5ThreePilot({
           renderCamera = plantingMicroscopeCamera;
         }
       }
+      if (island001AtmosphereRuntime) {
+        const progress = island001AtmosphereRef.current ?? { buildLevels: [], assemblyComplete: false };
+        island001PresentedDay = isReducedMotion
+          ? island001DayTarget()
+          : stepIsland001DayPosition(island001PresentedDay, island001DayTarget(), frameDeltaSeconds);
+        const lighting = resolveIsland001Lighting(island001PresentedDay);
+        hemisphere.color.setHex(lighting.hemisphereSky);
+        hemisphere.groundColor.setHex(lighting.hemisphereGround);
+        hemisphere.intensity = lighting.hemisphereIntensity;
+        sunlight.color.setHex(lighting.sunColor);
+        sunlight.intensity = lighting.sunIntensity;
+        sunlight.position.set(...lighting.sunPosition);
+        renderer.toneMappingExposure = lighting.exposure;
+        if (scene.environment) scene.environmentIntensity = lighting.environment;
+        if (scene.fog instanceof THREE.FogExp2) scene.fog.color.setHex(lighting.fogColor);
+        island001AtmosphereRuntime.update({
+          lighting,
+          streetlights: resolveIsland001StreetlightCount(progress, island001AtmosphereRuntime.lampCapacity),
+          pathGlow: resolveIsland001PathGlow(progress, lighting.lampGlow),
+          elapsed: timer.getElapsed(),
+          reducedMotion: isReducedMotion,
+        });
+        canvas.dataset.island001DayPosition = island001PresentedDay.toFixed(2);
+      }
+      // Mission items pop in (after the first mission message is read): a
+      // close-up on the first item while they burst out of their tiles.
+      if (missionItemRevealRequestRef.current) {
+        missionItemRevealRequestRef.current = false;
+        if (isReducedMotion) {
+          tileRewardObjects.setMissionItemsHidden(false);
+        } else {
+          const reveal = tileRewardObjects.startMissionItemReveal(timer.getElapsed(), tokenIndexRef.current);
+          canvas.dataset.missionItemReveal = String(reveal.popOffsets.length);
+          reveal.popOffsets.forEach((offset, index) => {
+            window.setTimeout(() => {
+              playIslandRunBubblePop(index);
+              triggerIslandRunHaptic('mission_item_pop');
+            }, offset * 1000 + 60);
+          });
+          // Takes over from ambient drift; never from an explore view or a build lock.
+          if (reveal.focus && !exploreActive && ambientCameraEligibleAt !== Number.POSITIVE_INFINITY) {
+            idleOverviewAt = null;
+            ambientCameraEligibleAt = Number.POSITIVE_INFINITY;
+            // Loosen the orbit clamps for the close-up (applyPreset restores them).
+            marinaInspectionActive = true;
+            controls.minDistance = 0.5;
+            controls.minPolarAngle = 0;
+            controls.maxPolarAngle = Math.PI;
+            controls.enabled = false;
+            const toTarget = reveal.focus.clone();
+            const toPosition = toTarget.clone().add(new THREE.Vector3(0, 3.4, 5.4));
+            const controlPosition = camera.position.clone().lerp(toPosition, 0.5);
+            controlPosition.y += 2;
+            const holdMs = Math.min(3200, 900 + reveal.popOffsets.length * 140);
+            transition = {
+              startedAt: performance.now(),
+              durationMs: 900,
+              fromPosition: camera.position.clone(),
+              fromTarget: controls.target.clone(),
+              controlPosition,
+              toPosition,
+              toTarget,
+              onComplete: () => {
+                window.setTimeout(() => {
+                  if (exploreActive) return;
+                  controls.enabled = true;
+                  applyPreset('overview', 0.9);
+                  ambientCameraEligibleAt = performance.now() + ISLAND_3D_BOARD_POV_IDLE_DELAY_MS;
+                }, holdMs);
+              },
+            };
+          }
+        }
+      }
       // Explore points: enter/exit requests from the dots and the Back button.
       const exploreRequest = exploreRequestRef.current;
       if (exploreRequest) {
@@ -11111,9 +11318,30 @@ export default function Island5ThreePilot({
           };
         } else if (exploreActive) {
           exploreActive = null;
+          exploreLookArmed = false;
+          if (exploreSavedMaxDistance !== null) controls.maxDistance = exploreSavedMaxDistance;
+          exploreSavedMaxDistance = null;
+          controls.enableZoom = true;
+          controls.enablePan = cameraAuthoringEnabledRef.current;
+          controls.rotateSpeed = 0.56;
           controls.enabled = true;
           applyPreset('overview', 0.8);
         }
+      }
+      if (exploreActive && !exploreLookArmed && !transition) {
+        exploreLookArmed = true;
+        exploreLookDirection.copy(controls.target).sub(camera.position).normalize();
+        controls.target.copy(camera.position).addScaledVector(exploreLookDirection, 0.05);
+        exploreSavedMaxDistance ??= controls.maxDistance;
+        controls.minDistance = 0.01;
+        controls.maxDistance = 0.1;
+        controls.minPolarAngle = THREE.MathUtils.degToRad(12);
+        controls.maxPolarAngle = THREE.MathUtils.degToRad(168);
+        controls.enableZoom = false;
+        controls.enablePan = false;
+        controls.rotateSpeed = 0.24;
+        controls.enabled = true;
+        controls.update();
       }
       if (exploreActive) idleOverviewAt = null;
       canvas.dataset.explorePoint = exploreActive?.id ?? '';
@@ -11276,6 +11504,7 @@ export default function Island5ThreePilot({
       if (!firstFrameRendered && renderer.info.render.calls > 0) {
         firstFrameRendered = true;
         setHasRenderedFrame(true);
+        markIslandRunLoadingScreenDone();
       }
 
       if (activeTour && now >= activeTour.nextStepAt) {
@@ -11429,6 +11658,7 @@ export default function Island5ThreePilot({
       departureCinematic?.dispose();
       livingAmbience.root.userData.disposeAwakening?.();
       tileRewardObjects.disposeFragments();
+      island001AtmosphereRuntime?.dispose();
       pawnTileTrail.dispose();
       moonwellThermalAnimator?.dispose();
       applyEvidenceOrbitRef.current = () => undefined;
@@ -11487,6 +11717,8 @@ export default function Island5ThreePilot({
       }
       cancelConstructionCrewWarmup();
       discardPreparedNextConstructionPreview();
+      (playerPieceTokenRef.current?.root.userData.playerPieceRelic as ReturnType<typeof createPlayerPieceRelic> | undefined)?.dispose();
+      playerPieceTokenRef.current = null;
       disposeScene(scene);
       if (rootheartDayBackdrop && rootheartDayBackdrop !== disposedSceneBackground) rootheartDayBackdrop.dispose();
       if (rootheartNightBackdrop && rootheartNightBackdrop !== disposedSceneBackground) rootheartNightBackdrop.dispose();
@@ -11669,25 +11901,26 @@ export default function Island5ThreePilot({
         const point = explorePoints.find((entry) => entry.id === activeExplorePointId);
         if (!point) return null;
         const exitExplore = () => { exploreRequestRef.current = { kind: 'exit' }; setActiveExplorePointId(null); };
-        // Viewport-level layer above the controller/footer: Back, a tap anywhere
-        // or Escape always returns to the island (the footer used to swallow Back).
+        // Viewport layer above the controller/footer. It only catches its own
+        // buttons, so dragging the scene looks around; Back, Escape or tapping
+        // any other game control (zoom glass, top bar…) returns to the island.
         const layer = (
-          <div className="island-explore-exit-layer" role="dialog" aria-label={`${point.label} view`} onClick={exitExplore}>
+          <div className="island-explore-exit-layer" role="dialog" aria-label={`${point.label} view`}>
+            <button type="button" className="island-explore-exit-layer__back" autoFocus onClick={exitExplore}>
+              <span aria-hidden="true">←</span> Back to island
+            </button>
             <div className="island-explore-caption" role="status">
               <span><small>🔭 Explore</small><strong>{point.label}</strong><em>{point.blurb}</em></span>
-              <button type="button" autoFocus onClick={(event) => { event.stopPropagation(); exitExplore(); }}
-                onKeyDown={(event) => { if (event.key === 'Escape') exitExplore(); }}>Back</button>
+              <button type="button" onClick={exitExplore}>Back</button>
             </div>
-            <p className="island-explore-exit-layer__hint">Tap anywhere to return</p>
+            <p className="island-explore-exit-layer__hint">Drag to look around</p>
           </div>
         );
         return typeof document === 'undefined' ? layer : createPortal(layer, document.body);
       })() : null}
       {!hasRenderedFrame ? (
-        <div className="island-5-three-pilot__loading" role="status" aria-live="polite">
-          <span aria-hidden="true" />
-          <strong>Entering {worldName}</strong>
-          <small>Awakening the living world…</small>
+        <div className="island-5-three-pilot__loading">
+          <IslandRunLoadingScreen title={`Entering ${worldName}`} detail="Awakening the living world…" />
         </div>
       ) : null}
       {isCactusCanyon && hasRenderedFrame && trainRidePhase === 'idle' && !isEvidenceCapture ? (

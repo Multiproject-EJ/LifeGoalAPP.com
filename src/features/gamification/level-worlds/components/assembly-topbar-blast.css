@@ -1,39 +1,63 @@
-/* Big middle Assembly blast hits the top bar (5 s total):
-   0–0.9 s rattle · 0.25 s power out · crack + sag · 1.5–3.7 s robot welds ·
-   3.7 s power-on flicker · 4.3 s robot leaves. */
+/* Big middle Assembly blast hits the top bar — 9 s, beats in ASSEMBLY_TOPBAR_BEATS:
+   0–0.35 s shockwave rattle · to 1.5 s tears loose and falls, hanging from the
+   right · neon segments die · 0.2–2.6 s smoke rolls over, leaves it dusty ·
+   2.4–4.6 s Heavy Worker lifts it level · 4.4–6.2 s Project Manager rewires,
+   power back · 6.3–7.8 s Mini Artist sweeps the dust off · 8.4–9 s crew leaves.
+   Percent = seconds / 9. */
 .island-run-board__topbar.island-run-board__topbar--assembly-blast {
-  /* The helper robot flies in from below the bar. */
   overflow: visible;
-  animation: assembly-topbar-hit 5s ease-in-out both;
-}
-.island-run-board__topbar--assembly-blast > :not(.assembly-topbar-blast) {
-  animation: assembly-topbar-power 5s steps(1, end) both;
+  transform-origin: 96% 20%;
+  animation: assembly-topbar-hang 9s ease-in-out both;
 }
 
-/* One timeline on translate/rotate (never transform, so layout transforms
-   stay intact): hard rattle, sag while broken, lift when repaired. */
-@keyframes assembly-topbar-hit {
+/* translate/rotate only (never transform) so layout transforms stay intact. */
+@keyframes assembly-topbar-hang {
   0% { translate: 0 0; rotate: 0deg; }
-  1.5% { translate: -9px 4px; rotate: -2.4deg; }
-  3% { translate: 8px -3px; rotate: 2deg; }
-  5% { translate: -7px 5px; rotate: -1.6deg; }
-  7.5% { translate: 6px -2px; rotate: 1.2deg; }
-  10% { translate: -4px 3px; rotate: -0.7deg; }
-  13% { translate: 2px 2px; rotate: 0.3deg; }
-  22%, 70% { translate: 0 12px; rotate: -1.8deg; }
-  74% { translate: 0 -3px; rotate: 0.4deg; }
-  80%, 100% { translate: 0 0; rotate: 0deg; }
+  1.2% { translate: -7px 3px; rotate: -1.4deg; }
+  2.4% { translate: 6px -2px; rotate: 1.2deg; }
+  3.9% { translate: -4px 2px; rotate: -0.6deg; }
+  /* Tears loose on the left and swings down, hanging from the right bracket. */
+  9% { translate: 0 10px; rotate: -3deg; }
+  14% { translate: 0 30px; rotate: -9.5deg; }
+  16.7% { translate: 0 26px; rotate: -8deg; }
+  20% { translate: 0 29px; rotate: -9deg; }
+  /* Hanging with a small swing until the Heavy Worker takes the weight. */
+  26% { translate: 0 28px; rotate: -8.3deg; }
+  32% { translate: 0 29px; rotate: -8.8deg; }
+  37.8% { translate: 0 28px; rotate: -8.5deg; }
+  /* Lifted level (3.4–4.6 s). */
+  46% { translate: 0 8px; rotate: -2deg; }
+  51.1% { translate: 0 -2px; rotate: 0.4deg; }
+  54% , 100% { translate: 0 0; rotate: 0deg; }
 }
 
-/* Power: out at 5%, flickers back at 74–86%. */
-@keyframes assembly-topbar-power {
-  0%, 4% { filter: none; opacity: 1; }
-  5%, 73% { filter: grayscale(1) brightness(0.32); opacity: 0.85; }
-  75% { filter: brightness(1.6); opacity: 1; }
-  77% { filter: grayscale(1) brightness(0.32); }
-  80% { filter: brightness(1.4); }
-  82% { filter: grayscale(1) brightness(0.4); }
-  86%, 100% { filter: none; opacity: 1; }
+/* Neon: the wallet and audio segments die; everything else browns out and
+   flickers. Power returns at 6.2 s (68.9%) with a couple of flickers. */
+.island-run-board__topbar--assembly-blast > :not(.assembly-topbar-blast) {
+  animation: assembly-topbar-brownout 9s steps(1, end) both;
+}
+.island-run-board__topbar--assembly-blast > .island-run-board__topbar-wallet,
+.island-run-board__topbar--assembly-blast > .island-run-board__topbar-audio-toggle {
+  animation-name: assembly-topbar-neon-dead;
+}
+@keyframes assembly-topbar-brownout {
+  0%, 3% { filter: none; }
+  4%, 6% { filter: brightness(0.45) saturate(0.4); }
+  7% { filter: brightness(0.9); }
+  8%, 68% { filter: brightness(0.55) saturate(0.5); }
+  69%, 71% { filter: brightness(1.4); }
+  70% { filter: brightness(0.55); }
+  72%, 100% { filter: none; }
+}
+@keyframes assembly-topbar-neon-dead {
+  0%, 3% { filter: none; opacity: 1; }
+  4% { filter: grayscale(1) brightness(0.25); opacity: 0.75; }
+  5% { filter: brightness(1.2); }
+  6%, 68% { filter: grayscale(1) brightness(0.22); opacity: 0.7; }
+  69% { filter: brightness(1.6); opacity: 1; }
+  70% { filter: grayscale(1) brightness(0.3); }
+  71.5% { filter: brightness(1.3); }
+  73%, 100% { filter: none; opacity: 1; }
 }
 
 .assembly-topbar-blast {
@@ -43,11 +67,32 @@
   pointer-events: none;
 }
 
+/* Dust: settles as the smoke passes (1.4–2.4 s), swept left→right 6.3–7.8 s. */
+.assembly-topbar-blast__dust {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 18% 40%, rgba(92, 64, 38, 0.55) 0 2px, transparent 3px) 0 0 / 23px 17px,
+    radial-gradient(circle at 70% 60%, rgba(70, 48, 30, 0.5) 0 1.5px, transparent 2.5px) 0 0 / 31px 13px,
+    linear-gradient(180deg, rgba(150, 112, 70, 0.62), rgba(96, 68, 42, 0.7));
+  mix-blend-mode: multiply;
+  opacity: 0;
+  animation: assembly-topbar-dust 9s linear both;
+}
+@keyframes assembly-topbar-dust {
+  0%, 15.5% { opacity: 0; clip-path: inset(0 0 0 0); }
+  27% { opacity: 1; clip-path: inset(0 0 0 0); }
+  70% { opacity: 1; clip-path: inset(0 0 0 0); }
+  86.7% { opacity: 1; clip-path: inset(0 0 0 100%); }
+  87%, 100% { opacity: 0; clip-path: inset(0 0 0 100%); }
+}
+
 .assembly-topbar-blast__crack {
   position: absolute;
-  left: 38%;
+  left: 8%;
   top: 8%;
-  width: 26%;
+  width: 34%;
   height: 84%;
   fill: none;
   stroke: rgba(255, 255, 255, 0.92);
@@ -55,19 +100,19 @@
   stroke-linejoin: round;
   filter: drop-shadow(0 0 2px rgba(15, 23, 42, 0.9));
   opacity: 0;
-  animation: assembly-topbar-crack 5s ease both;
+  animation: assembly-topbar-crack 9s ease both;
 }
-
 @keyframes assembly-topbar-crack {
-  0%, 5% { opacity: 0; clip-path: inset(0 100% 0 0); }
-  12% { opacity: 1; clip-path: inset(0 0 0 0); }
-  62% { opacity: 1; }
-  /* Welded shut: the crack glows gold then fades. */
-  66% { opacity: 1; stroke: #fde047; filter: drop-shadow(0 0 4px #facc15); }
-  76%, 100% { opacity: 0; }
+  0%, 3% { opacity: 0; clip-path: inset(0 100% 0 0); }
+  9% { opacity: 1; clip-path: inset(0 0 0 0); }
+  /* Closed as it is lifted level; the seam glows gold, then fades. */
+  48% { opacity: 1; stroke: rgba(255, 255, 255, 0.92); }
+  52% { opacity: 1; stroke: #fde047; filter: drop-shadow(0 0 4px #facc15); }
+  58%, 100% { opacity: 0; }
 }
 
-.assembly-topbar-blast__sparks { position: absolute; left: 51%; top: 50%; }
+/* Shockwave sparks from the torn bracket. */
+.assembly-topbar-blast__sparks { position: absolute; left: 12%; top: 50%; }
 .assembly-topbar-blast__sparks i {
   position: absolute;
   width: 3px;
@@ -76,46 +121,66 @@
   background: #fde047;
   box-shadow: 0 0 5px #f59e0b;
   opacity: 0;
-  animation: assembly-topbar-spark 5s linear both;
+  animation: assembly-topbar-spark 9s linear both;
 }
 @keyframes assembly-topbar-spark {
-  0%, 4% { opacity: 0; transform: none; }
-  6% { opacity: 1; transform: none; }
-  14% { opacity: 0; transform: rotate(calc(var(--i) * 45deg)) translateX(34px); }
-  /* Welding sparks while the robot works. */
-  44%, 64% { opacity: 0; }
-  46%, 50%, 54%, 58%, 62% { opacity: 1; transform: rotate(calc(var(--i) * 45deg + 20deg)) translateX(9px); }
-  48%, 52%, 56%, 60% { opacity: 0.2; transform: rotate(calc(var(--i) * 45deg)) translateX(14px); }
-  66%, 100% { opacity: 0; }
+  0%, 2% { opacity: 0; transform: none; }
+  3% { opacity: 1; transform: none; }
+  10% { opacity: 0; transform: rotate(calc(var(--i) * 36deg)) translateX(44px) translateY(18px); }
+  100% { opacity: 0; }
 }
 
-.assembly-topbar-blast__robot {
+/* Rewiring: blue electric crackle in the middle while power is restored. */
+.assembly-topbar-blast__rewire { position: absolute; left: 50%; top: 50%; }
+.assembly-topbar-blast__rewire i {
   position: absolute;
-  left: calc(51% - 16px);
-  top: 0;
-  width: 32px;
-  height: 42px;
+  width: 2px;
+  height: 12px;
+  border-radius: 2px;
+  background: #a5f3fc;
+  box-shadow: 0 0 6px #22d3ee, 0 0 12px #0ea5e9;
   opacity: 0;
-  animation: assembly-topbar-robot 5s cubic-bezier(0.45, 0, 0.3, 1) both;
+  transform-origin: 50% 100%;
+  animation: assembly-topbar-rewire 9s linear both;
 }
-.assembly-topbar-blast__robot svg { width: 100%; height: 100%; overflow: visible; }
-.assembly-topbar-blast__flame { fill: #fb923c; animation: assembly-topbar-flame 120ms linear infinite alternate; transform-origin: 20px 40px; }
-@keyframes assembly-topbar-flame { to { transform: scaleY(1.35); fill: #fde047; } }
-.assembly-topbar-blast__eye { fill: #22d3ee; }
-.assembly-topbar-blast__torch { fill: #fde047; filter: drop-shadow(0 0 3px #facc15); animation: assembly-topbar-torch 90ms steps(2) infinite; }
-@keyframes assembly-topbar-torch { 50% { opacity: 0.3; } }
+@keyframes assembly-topbar-rewire {
+  0%, 55% { opacity: 0; }
+  56%, 60%, 64%, 68% { opacity: 1; transform: rotate(calc(var(--i) * 60deg)) translateY(-8px) scaleY(1.2); }
+  58%, 62%, 66% { opacity: 0.15; transform: rotate(calc(var(--i) * 60deg + 25deg)) translateY(-4px); }
+  69%, 100% { opacity: 0; }
+}
 
-@keyframes assembly-topbar-robot {
-  0%, 26% { opacity: 0; transform: translate(0, 240px) rotate(8deg); }
-  30% { opacity: 1; transform: translate(-6px, 150px) rotate(6deg); }
-  38% { opacity: 1; transform: translate(4px, 22px) rotate(-4deg); }
-  44%, 64% { opacity: 1; transform: translate(0, 6px) rotate(0deg); }
-  50% { transform: translate(-3px, 4px) rotate(-3deg); }
-  58% { transform: translate(3px, 7px) rotate(3deg); }
-  /* Job done: a little hop of joy, then off-screen. */
-  72% { opacity: 1; transform: translate(0, -6px) rotate(-10deg) scale(1.08); }
-  78% { opacity: 1; transform: translate(0, 8px) rotate(0deg); }
-  90%, 100% { opacity: 0; transform: translate(120px, 260px) rotate(24deg); }
+/* Big smoke cloud rolling across (0.2–2.6 s), much larger than the bar. */
+.assembly-topbar-blast__smoke { position: absolute; inset: -40px -10%; overflow: visible; }
+.assembly-topbar-blast__smoke i {
+  position: absolute;
+  left: calc(var(--i) * 11% - 12%);
+  top: calc(12% + var(--i) * 5%);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(88, 76, 66, 0.9) 0%, rgba(116, 100, 84, 0.6) 42%, rgba(140, 124, 106, 0) 70%);
+  filter: blur(6px);
+  opacity: 0;
+  animation: assembly-topbar-smoke 9s ease-out both;
+  animation-delay: calc(var(--i) * 0.05s);
+}
+@keyframes assembly-topbar-smoke {
+  0%, 2% { opacity: 0; transform: translate(-60px, 50px) scale(0.35); }
+  8% { opacity: 1; transform: translate(-20px, 10px) scale(1); }
+  20% { opacity: 0.95; transform: translate(30px, -10px) scale(1.5); }
+  29% { opacity: 0; transform: translate(80px, -30px) scale(1.9); }
+  100% { opacity: 0; transform: translate(80px, -30px) scale(1.9); }
+}
+
+/* The crew canvas hangs just under the bar so the robots reach it. */
+.assembly-topbar-blast__crew {
+  position: absolute;
+  top: 40%;
+  left: -4%;
+  width: 108%;
+  height: 170px;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

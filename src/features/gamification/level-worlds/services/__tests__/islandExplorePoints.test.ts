@@ -28,16 +28,19 @@ export const islandExplorePointsTests: TestCase[] = [
     },
   },
   {
-    name: 'the explore view always has a way back above the controller (Back, tap anywhere, Escape)',
+    name: 'the explore view always has a way back and lets the player look around (Back, other controls, Escape, drag)',
     run: async () => {
       // @ts-ignore Node-only source contract check.
       const fs = await import('fs');
       const pilot = fs.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const css = fs.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
       assert(pilot.includes('className="island-explore-exit-layer"') && pilot.includes('createPortal(layer, document.body)'), 'explore exit layer renders at the viewport, not under the footer');
-      assert(pilot.includes('onClick={exitExplore}'), 'a tap anywhere returns to the island');
-      assert(/if \(event\.key !== 'Escape'\) return;/.test(pilot), 'Escape returns to the island');
-      assert(/\.island-explore-exit-layer \{[^}]*position: fixed;[^}]*z-index: 9000;/.test(css), 'the layer is viewport-fixed above the controller');
+      assert(pilot.includes('className="island-explore-exit-layer__back"') && pilot.includes('onClick={exitExplore}'), 'a Back to island button returns to the island');
+      assert(/if \(event\.key === 'Escape'\) exit\(\);/.test(pilot), 'Escape returns to the island');
+      assert(/target\.closest\('button, a, \[role="button"\], input, select'\)\) exit\(\);/.test(pilot), 'tapping any other game control (zoom glass, top bar) leaves the view');
+      assert(/exploreActive && !exploreLookArmed && !transition/.test(pilot) && /controls\.enableZoom = false;/.test(pilot), 'dragging looks around in place once the camera arrives');
+      assert(/&& !exploreActive\n/.test(pilot), 'the ambient camera never drifts an explore view');
+      assert(/\.island-explore-exit-layer \{[^}]*position: fixed;[^}]*z-index: 9000;[^}]*pointer-events: none;/.test(css), 'the layer sits above the controller but lets drags reach the scene');
     },
   },
 ];

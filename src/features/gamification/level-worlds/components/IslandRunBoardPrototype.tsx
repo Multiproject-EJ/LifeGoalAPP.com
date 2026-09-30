@@ -237,6 +237,13 @@ import { isIslandFragmentAnsweredForUser } from '../../../compass-book/services/
 import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
 import { useIslandRunState } from '../hooks/useIslandRunState';
+import { DepartureDayScene } from './DepartureDayScene';
+import { isPlayerPieceId } from '../services/islandRunPlayerPieces';
+import { resolveTreasureIslandWealth } from '../services/islandRunTreasures';
+import { readExpeditionShipGarageQualityPreference, resolveExpeditionShipGarageQuality } from './expeditionShipGarageQuality';
+import { resolveDepartureDaySeenKey, resolveDepartureDaySkip } from '../services/islandRunDepartureDay';
+import { purchaseDiceSkin, resolveDiceSkinProgress, selectDiceSkin } from '../services/islandRunDiceSkinActions';
+import { resolveDiceSkin, type DiceSkinId } from '../services/islandRunDiceSkins';
 import { WorldPortalCouncilControl } from './WorldPortalCouncil';
 import { canAttendWorldPortalCouncil, resolveWorldPortalProgress } from '../services/worldPortalProgress';
 import {
@@ -349,6 +356,7 @@ import {
   SPACE_EXCAVATOR_TOTAL_BOARDS,
   ISLAND_RUN_MAX_ISLAND,
   travelToNextIsland,
+  selectPlayerPiece,
   setActiveCompanionId as commitActiveCompanionId,
   clearActiveCompanionId as commitClearActiveCompanionId,
 } from '../services/islandRunStateActions';
@@ -484,6 +492,16 @@ import {
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
+import { EventArenaLandmarkModal } from './EventArenaLandmarkModal';
+import { AssemblyInvitationPhone } from './AssemblyInvitationPhone';
+import { IslandRunLoadingScreen } from './IslandRunLoadingScreen';
+import { IslandRunWalletPanel } from './IslandRunWalletPanel';
+import { getVaultIslandTotalInvested } from '../services/islandRunVaultProgress';
+import {
+  readIsland001AssemblyInvitationsSent,
+  resolveIsland001AssemblyInvitationState,
+  writeIsland001AssemblyInvitationsSent,
+} from '../services/island001AssemblyInvitations';
 import { CompassBookIcon } from './CompassBookIcon';
 import { resolveIslandBuildStyle } from '../services/buildStyles';
 import { CompassPairingTip } from './CompassPairingTip';
@@ -520,8 +538,8 @@ import { resolvePairingUpgradeSuggestion, rollCompanionPairingPerk } from '../se
 import { FishermansDragonPrelude } from './FishermansDragonPrelude';
 import { FishermansEggRumour } from './FishermansEggRumour';
 import { isDragonPreludeActive } from '../services/fishermansDragonPrelude';
-import { AssemblyTopbarBlast } from './AssemblyTopbarBlast';
-import { ASSEMBLY_TOPBAR_BLAST_MS, shouldAssemblyBlastHitTopbar } from '../services/assemblyTopbarBlast';
+import { AssemblyTopbarBlast, prefetchAssemblyTopbarCrew } from './AssemblyTopbarBlast';
+import { ASSEMBLY_TOPBAR_BLAST_MS, resolveAssemblyBlastBoardWaitMs, shouldAssemblyBlastHitTopbar } from '../services/assemblyTopbarBlast';
 import { FishingCastMeter } from './FishingCastMeter';
 import { isFishingCastHit } from '../services/fishingCastSkill';
 import { compassIslandKey, hasUnseenCompassInsight, readSeenCompassIsland, writeSeenCompassIsland } from '../services/compassBookIconCue';
@@ -679,6 +697,7 @@ import {
   resolveCoasterOrderStatus,
   WONDER_CIRCUIT_ISLAND_NUMBER,
   FISHERMANS_VILLAGE_ISLAND_NUMBER,
+  getIslandRunSignatureMissionKey,
 } from '../services/islandRunSignatureMissions';
 import {
   getIslandMissionBriefingBeatId,
@@ -2660,6 +2679,12 @@ export function IslandRunBoardPrototype({
   const [showTravelOverlay, setShowTravelOverlay] = useState(false);
   // An island explore-point view is open: the controller steps aside.
   const [exploreViewActive, setExploreViewActive] = useState(false);
+  // An explore view never outlives its 3D scene or island; otherwise the
+  // controller stays hidden with no Back button to restore it.
+  useEffect(() => {
+    if (!shouldRenderIsland5Three) setExploreViewActive(false);
+  }, [shouldRenderIsland5Three]);
+  useEffect(() => { setExploreViewActive(false); }, [islandNumber]);
   // In-game Scoreboard (Adventure League, archetype quiz first).
   const [showScoreboard, setShowScoreboard] = useState(false);
   // Island departure cinematic (Island Complete, part B): ship folds, lifts
@@ -2773,7 +2798,7 @@ export function IslandRunBoardPrototype({
       dicePool?: number;
     };
   } | null>(null);
-  const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'ship-name' | 'mission' | 'launch'>('celebration');
+  const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'ship-name' | 'departure' | 'mission' | 'launch'>('celebration');
   const [firstRunShipName, setFirstRunShipName] = useState(
     () => readIslandRunGuestFunnelState().shipName?.trim() || 'Starling',
   );
@@ -3098,6 +3123,13 @@ export function IslandRunBoardPrototype({
   const compassBookCeremonyTimerRef = useRef<number | null>(null);
   const compassBookCeremonyGenerationRef = useRef(0);
   const [walletStoreModalKind, setWalletStoreModalKind] = useState<WalletStoreModalKind | null>(null);
+  // Top-bar wallet mini modal (non-null while open; the rect is where it grows from).
+  const [walletPanelOriginRect, setWalletPanelOriginRect] = useState<DOMRect | null>(null);
+  const openWalletPanel = useCallback(() => {
+    setShowTopbarMenu(false);
+    setShowAudioMenu(false);
+    setWalletPanelOriginRect(moneyWalletRef.current?.getBoundingClientRect() ?? new DOMRect());
+  }, []);
   const [isRewardBarDetailsExpanded, setIsRewardBarDetailsExpanded] = useState(false);
   const [selectedEventInfoEventId, setSelectedEventInfoEventId] = useState<EventId | null>(null);
   const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
@@ -3244,9 +3276,12 @@ export function IslandRunBoardPrototype({
       buildLevelCompletionRef.current = ready;
       setBuildLevelCompletion(ready);
     }, Math.max(0, buildLevelCompletion.minAdvanceAtMs - Date.now()));
-    const autoAdvanceTimeoutId = window.setTimeout(() => {
-      clearBuildLevelReview(reviewId);
-    }, Math.max(0, buildLevelCompletion.autoAdvanceAtMs - Date.now()));
+    // setTimeout overflows past ~24.8 days, so an open-ended review sets no timer.
+    const autoAdvanceTimeoutId = Number.isFinite(buildLevelCompletion.autoAdvanceAtMs)
+      ? window.setTimeout(() => {
+        clearBuildLevelReview(reviewId);
+      }, Math.max(0, buildLevelCompletion.autoAdvanceAtMs - Date.now()))
+      : undefined;
     return () => {
       window.clearTimeout(markReadyTimeoutId);
       window.clearTimeout(autoAdvanceTimeoutId);
@@ -8921,6 +8956,12 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
         }
+        if (rollResult.islandTreasurePickup) {
+          const treasure = rollResult.islandTreasurePickup;
+          setLandingText(`💎 Treasure found: ${treasure.name}! Treasure Island is worth ${treasure.value.toLocaleString()} more.`);
+          playIslandRunSound('market_purchase_success');
+          triggerIslandRunHaptic('reward_claim');
+        }
         if (rollResult.rootheartPowerComponentPickup) {
           const component = ROOTHEART_POWER_COMPONENTS.find(
             (entry) => entry.id === rollResult.rootheartPowerComponentPickup,
@@ -11553,6 +11594,43 @@ export function IslandRunBoardPrototype({
     setLandingText(message);
   };
 
+  // The chosen board piece (set on Departure Day); null keeps the classic token.
+  // Dev seam: ?playerPiecePreview=<pieceId> shows a piece without choosing it.
+  const playerPiecePreviewId = import.meta.env.DEV && typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('playerPiecePreview') : null;
+  const boardPlayerPieceId = isPlayerPieceId(playerPiecePreviewId) ? playerPiecePreviewId
+    : isPlayerPieceId(__storeState.selectedPlayerPieceId) ? __storeState.selectedPlayerPieceId : null;
+  const diceSkinProgress = useMemo(
+    () => resolveDiceSkinProgress(__storeState),
+    [__storeState.signatureMissionProgressByIsland],
+  );
+  const [pendingDiceSkinId, setPendingDiceSkinId] = useState<DiceSkinId | null>(null);
+  const handleDiceSkinChoice = async (skinId: DiceSkinId, mode: 'buy' | 'equip') => {
+    if (pendingDiceSkinId) return;
+    setPendingDiceSkinId(skinId);
+    const skin = resolveDiceSkin(skinId);
+    try {
+      if (mode === 'buy') {
+        playIslandRunSound('market_purchase_attempt');
+        const result = await purchaseDiceSkin({ session, client, skinId });
+        if (result.applied) {
+          playIslandRunSound('market_purchase_success');
+          setMarketPurchaseFeedback(`${skin.name} dice unlocked and equipped.`);
+        } else {
+          if (result.reason === 'insufficient_money') playIslandRunSound('market_insufficient_coins');
+          setMarketPurchaseFeedback(result.reason === 'insufficient_money'
+            ? `Not enough money for ${skin.name} (${skin.price.toLocaleString()} needed).`
+            : `${skin.name} is already yours.`);
+        }
+      } else {
+        const result = await selectDiceSkin({ session, client, skinId });
+        if (result.applied) setMarketPurchaseFeedback(`Rolling with ${skin.name} dice.`);
+      }
+    } finally {
+      setPendingDiceSkinId(null);
+    }
+  };
+
   const handleMarketPrototypePurchase = (bundle: 'dice_bundle') => {
     if (marketOwnedBundles[bundle]) {
       emitMarketPurchaseMarker({
@@ -12116,8 +12194,10 @@ export function IslandRunBoardPrototype({
       const stopEntry = islandStopPlan[stopIndex];
       const stopLabel = stopEntry?.title ?? stopEntry?.stopId ?? `Stop ${stopIndex + 1}`;
       const leveledUp = nextBuildState.buildLevel > currentBuildState.buildLevel;
-      if (leveledUp) playIslandRunSound('reward_bar_claim_burst');
-      triggerIslandRunHaptic(leveledUp ? 'build_level_complete' : 'build_part');
+      // Level 1/2 stay quiet (the build sound already played); Level 3 is the milestone.
+      const reachedMaxLevel = leveledUp && nextBuildState.buildLevel >= MAX_BUILD_LEVEL;
+      if (reachedMaxLevel) playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic(reachedMaxLevel ? 'build_level_complete' : 'build_part');
 
       const completionPresentation = resolveBuildLevelCompletionPresentation({
         title: stopLabel,
@@ -12134,7 +12214,12 @@ export function IslandRunBoardPrototype({
           stopIndex,
           stopId: stopEntry?.stopId ?? '',
           minAdvanceAtMs: startedAtMs + BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
-          autoAdvanceAtMs: startedAtMs + BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS,
+          // No automatic jump to the next target: after the ~1 s beat the
+          // player continues (tap, or hold to keep building). The first
+          // Hatchery tutorial keeps its guided automatic flow.
+          autoAdvanceAtMs: isBuildModalHatcheryGuidanceActive
+            ? startedAtMs + BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS
+            : Number.POSITIVE_INFINITY,
           isAdvanceReady: false,
           isAdvanceQueued: false,
         };
@@ -12163,7 +12248,7 @@ export function IslandRunBoardPrototype({
     } finally {
       isBuildSpendInFlightRef.current = false;
     }
-  }, [islandNumber, activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
+  }, [islandNumber, activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, isBuildModalHatcheryGuidanceActive, playIslandRunSound, session]);
 
   const resolveQueuedBuildPartSteps = useCallback((stopIndex: number, targetPartNumber: 1 | 2 | 3 | 4 | 5): number => {
     const latestRuntimeState = getIslandRunStateSnapshot(session);
@@ -13445,7 +13530,7 @@ export function IslandRunBoardPrototype({
       const guestShipName = readIslandRunGuestFunnelState().shipName?.trim();
       if (guestShipName) {
         setFirstRunShipName(guestShipName);
-        setFirstRunStep('mission');
+        setFirstRunStep('departure');
       } else {
         setFirstRunStep('ship-name');
       }
@@ -13467,7 +13552,7 @@ export function IslandRunBoardPrototype({
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(`island_run_spaceship_name_${session.user.id}`, normalizedShipName);
       }
-      setFirstRunStep('mission');
+      setFirstRunStep('departure');
       return;
     }
 
@@ -14237,11 +14322,19 @@ export function IslandRunBoardPrototype({
       showJourneyDiscConcourseInvitation ||
       showTravelOverlay ||
       showIsland20Arrival ||
-      walletStoreModalKind !== null,
+      walletStoreModalKind !== null ||
+      walletPanelOriginRect !== null,
   );
   // Island 001 Assembly blast/build beat: everything stays visible but inert
   // (controller, floating buttons, top bar, explore dots) so it plays through.
   const firstLightAssemblyAnimating = firstLightAssemblyPendingSector !== null;
+  // Load the top-bar repair crew ahead of the charge-8 shockwave so the robots
+  // are on time (prefetch only; nothing renders until the blast).
+  const shouldPrefetchTopbarCrew = islandNumber === 1 && !isIslandVisualPreview
+    && firstLightAssemblyProgress.chargesDetonated >= 3 && firstLightAssemblyProgress.chargesDetonated < 8;
+  useEffect(() => {
+    if (shouldPrefetchTopbarCrew) prefetchAssemblyTopbarCrew();
+  }, [shouldPrefetchTopbarCrew]);
   useEffect(() => {
     if (!firstLightAssemblyAnimating) return;
     stopAutoRoll();
@@ -14249,10 +14342,50 @@ export function IslandRunBoardPrototype({
     setShowAudioMenu(false);
     if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) document.activeElement.blur();
   }, [firstLightAssemblyAnimating, stopAutoRoll]);
+  // Island 001 finale: marina built + every building Level 3 → Mission Phone
+  // invitations → "ETA… NOW." → the delegates arrive for the night meeting.
+  const [assemblyInvitationsSent, setAssemblyInvitationsSent] = useState(
+    () => readIsland001AssemblyInvitationsSent(session.user.id, cycleIndex),
+  );
+  useEffect(() => {
+    setAssemblyInvitationsSent(readIsland001AssemblyInvitationsSent(session.user.id, cycleIndex));
+  }, [cycleIndex, session.user.id]);
+  const assemblyInvitationState = islandNumber === 1 && !isIslandVisualPreview
+    ? resolveIsland001AssemblyInvitationState({
+      assemblyComplete: firstLightAssemblyCompleted,
+      buildLevels: [0, 1, 2, 3].map((index) => __storeState.stopBuildStateByIndex[index]?.buildLevel ?? 0),
+      invitationsSent: assemblyInvitationsSent,
+      maxLevel: MAX_BUILD_LEVEL,
+    })
+    : 'not_ready';
   const missionOwnsController = worldMissionPresentationActive || firstArrivalActive || islandDeparture !== null || exploreViewActive
     || openingCeremonyPlayback !== null || isCompassBookCeremonyPlaying
     || moonwellThawActive || frostwellSequence.phase === 'drilling'
     || frostwellSequence.phase === 'commissioning' || isBuildSequenceActive;
+  // The phone opens a moment after everything is ready (and nothing else is
+  // on screen), so night has settled over the island first.
+  const [assemblyInvitationPhoneOpen, setAssemblyInvitationPhoneOpen] = useState(false);
+  const assemblyInvitationScreenBusy = doesModalOwnAttention || missionOwnsController || isRolling || pendingHopSequence !== null;
+  useEffect(() => {
+    if (assemblyInvitationState !== 'ready_to_send' || assemblyInvitationScreenBusy || assemblyInvitationPhoneOpen) return undefined;
+    const timer = window.setTimeout(() => {
+      stopAutoRoll();
+      setAssemblyInvitationPhoneOpen(true);
+    }, 2_400);
+    return () => window.clearTimeout(timer);
+  }, [assemblyInvitationPhoneOpen, assemblyInvitationScreenBusy, assemblyInvitationState, stopAutoRoll]);
+  const assemblyNeedsBuildingsHintShownRef = useRef(false);
+  useEffect(() => {
+    if (assemblyInvitationState !== 'needs_buildings' || assemblyNeedsBuildingsHintShownRef.current || assemblyInvitationScreenBusy) return;
+    assemblyNeedsBuildingsHintShownRef.current = true;
+    setLandingText('🏛️ The Assembly and marina are ready. Bring every building to Level 3 to send the invitations.');
+  }, [assemblyInvitationScreenBusy, assemblyInvitationState]);
+  const handleAssemblyInvitationsSent = useCallback(() => {
+    writeIsland001AssemblyInvitationsSent(session.user.id, cycleIndex, Date.now());
+    setAssemblyInvitationsSent(true);
+    setAssemblyInvitationPhoneOpen(false);
+    setLandingText('🚀 Invitations sent. The delegates are arriving for tonight\'s Assembly.');
+  }, [cycleIndex, session.user.id]);
   // Egg Mania announces itself once per island visit while its triple set is unused.
   const eggManiaPopupSeenKey = getEggManiaPopupSeenKey(session.user.id, cycleIndex, islandNumber);
   const eggManiaScreenBusy = doesModalOwnAttention || missionOwnsController || isRolling
@@ -14506,6 +14639,52 @@ export function IslandRunBoardPrototype({
   const handleMissionMessageRead = useCallback((messageId: string) => {
     updateMissionInbox((inbox) => markMissionPhoneMessageRead(inbox, messageId, Date.now()));
   }, [updateMissionInbox]);
+  // The island's signature mission items (Island 001 dynamite etc.) stay off
+  // the board until its first mission message has been read and the phone is
+  // closed; then they pop in. Saves that already have mission progress, or no
+  // message at all, keep their items visible.
+  // Dev: ?timeOfDay=sunrise|daylight|golden|night (or 0..3) pins Island 001's time of day.
+  const island001TimeOfDayOverride = useMemo(() => {
+    if (!import.meta.env.DEV || typeof window === 'undefined') return null;
+    const requested = new URLSearchParams(window.location.search).get('timeOfDay');
+    if (!requested) return null;
+    const named = ['sunrise', 'daylight', 'golden', 'night'].indexOf(requested);
+    if (named >= 0) return named;
+    const numeric = Number(requested);
+    return Number.isFinite(numeric) ? Math.max(0, Math.min(3, numeric)) : null;
+  }, []);
+  // Departure Day (pre-Island-001 send-off). Dev preview: ?departureDayPreview=1
+  // opens the picker and film; add &departureDayTime=<s> to hold one frame.
+  const [departureDayPreview, setDepartureDayPreview] = useState<{ timeSeconds: number | null } | null>(() => {
+    if (typeof window === 'undefined' || !import.meta.env.DEV) return null;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('departureDayPreview') !== '1') return null;
+    const time = Number(params.get('departureDayTime'));
+    return { timeSeconds: params.has('departureDayTime') && Number.isFinite(time) ? time : null };
+  });
+  const hasSeenDepartureDay = useMemo(() => {
+    try { return typeof window !== 'undefined' && window.localStorage.getItem(resolveDepartureDaySeenKey(session.user.id)) === '1'; } catch { return false; }
+  }, [session.user.id]);
+
+  // Dev visual preview: ?missionItemPopPreview=1 hides the items, then pops them in.
+  const [missionItemPopPreviewRevealed, setMissionItemPopPreviewRevealed] = useState(() => !(
+    isIslandVisualPreview && typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('missionItemPopPreview') === '1'));
+  useEffect(() => {
+    if (missionItemPopPreviewRevealed) return undefined;
+    const timer = window.setTimeout(() => setMissionItemPopPreviewRevealed(true), 20_000);
+    return () => window.clearTimeout(timer);
+  }, [missionItemPopPreviewRevealed]);
+  const missionItemsAwaitingFirstMessage = (() => {
+    const isThisIsland = (trigger: IslandMissionBriefingTrigger | null) => Boolean(trigger
+      && trigger.islandNumber === islandNumber && trigger.cycleIndex === cycleIndex);
+    if (__storeState.signatureMissionProgressByIsland[getIslandRunSignatureMissionKey(cycleIndex, islandNumber)]) return false;
+    if (isThisIsland(pendingMissionBriefing) || isThisIsland(incomingMissionBriefing) || isThisIsland(activeMissionBriefing)) return true;
+    const firstMessage = missionInbox
+      .filter((message) => message.islandNumber === islandNumber && message.cycleIndex === cycleIndex)
+      .sort((a, b) => a.receivedAtMs - b.receivedAtMs)[0];
+    return Boolean(firstMessage && firstMessage.readAtMs === null);
+  })();
   const openIncomingMissionBriefing = useCallback(() => {
     if (!incomingMissionBriefing) return false;
     // Opening the message launches missions that start with it (Island 006 fishing).
@@ -14878,16 +15057,19 @@ export function IslandRunBoardPrototype({
       setFirstLightAssemblyConstructionSequence((value) => value + 1);
       setBuildCameraFocusRequest({ preset: result.sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 'boss' : 'overview', transition: 'quick' });
       playIslandRunSound('boss_trial_resolve');
-      triggerIslandRunHaptic('boss_trial_resolve');
       const prefersReducedMotion = typeof window !== 'undefined'
         && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (!prefersReducedMotion && shouldAssemblyBlastHitTopbar(result.sectorAfter)) {
+      const topbarHit = !prefersReducedMotion && shouldAssemblyBlastHitTopbar(result.sectorAfter);
+      // The shockwave that tears the top bar loose gets its own haptic shape.
+      triggerIslandRunHaptic(topbarHit ? 'assembly_topbar_blast' : 'boss_trial_resolve');
+      if (topbarHit) {
         const blastId = Date.now();
         setAssemblyTopbarBlastId(blastId);
         window.setTimeout(() => setAssemblyTopbarBlastId((current) => (current === blastId ? null : current)), ASSEMBLY_TOPBAR_BLAST_MS);
       }
-      if (!prefersReducedMotion) {
-        await new Promise<void>((resolve) => window.setTimeout(resolve, result.sectorAfter >= FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET ? 13_400 : 5_400));
+      const boardWaitMs = resolveAssemblyBlastBoardWaitMs(result.sectorAfter, prefersReducedMotion);
+      if (boardWaitMs > 0) {
+        await new Promise<void>((resolve) => window.setTimeout(resolve, boardWaitMs));
       }
       refreshIslandRunStateFromLocal(session);
       const fresh = getIslandRunStateSnapshot(session);
@@ -16255,7 +16437,20 @@ export function IslandRunBoardPrototype({
                 (session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()
               )}
             </button>
-            <div ref={moneyWalletRef} className="island-run-board__topbar-wallet" aria-label="Money wallet">
+            <div
+              ref={moneyWalletRef}
+              className="island-run-board__topbar-wallet island-run-board__topbar-wallet--button"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="dialog"
+              aria-label={`Open wallet. Money ${formatFullWalletValue(runtimeState.essence)}`}
+              onClick={openWalletPanel}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                openWalletPanel();
+              }}
+            >
               <IslandMoneyNote
                 islandNumber={islandNumber}
                 tone={2}
@@ -16263,14 +16458,10 @@ export function IslandRunBoardPrototype({
               />
               <strong title={formatFullWalletValue(runtimeState.essence)}>{formatFullWalletValue(runtimeState.essence)}</strong>
             </div>
-            <div className="island-run-board__topbar-chip island-run-board__topbar-chip--shards" aria-label="Shard wallet">
-              <img
-                className="island-run-board__topbar-currency-icon"
-                src="/assets/spin-wheel/daily-momentum/prizes/prize-shards-orb-transparent.png"
-                alt=""
-                aria-hidden="true"
-              />
-              <span className="island-run-themed-topbar__amount" title={formatFullWalletValue(shards)}>{formatFullWalletValue(shards)}</span>
+            {/* Essence lives in the wallet now; this slot shows the dice you can roll. */}
+            <div className="island-run-board__topbar-chip island-run-board__topbar-chip--shards island-run-board__topbar-chip--dice" aria-label={`Dice ${formatFullWalletValue(dicePool)}`}>
+              <span className="island-run-board__topbar-currency-icon island-run-board__topbar-dice-icon" aria-hidden="true">🎲</span>
+              <span className="island-run-themed-topbar__amount" title={formatFullWalletValue(dicePool)}>{formatFullWalletValue(dicePool)}</span>
             </div>
             <button
               type="button"
@@ -16986,6 +17177,8 @@ export function IslandRunBoardPrototype({
           }}
           isRolling={shouldRenderIsland5Three ? false : isRolling}
           diceFaces={rollingDiceFaces}
+          diceSkin={diceSkinProgress.selectedSkinId}
+          playerPieceId={boardPlayerPieceId}
           onDiceRollComplete={shouldRenderIsland5Three ? undefined : () => {
             diceRollCompleteAlreadyFiredRef.current = true;
             diceRollCompleteResolverRef.current?.();
@@ -16996,8 +17189,8 @@ export function IslandRunBoardPrototype({
           <div className={`island-run-board__three-preview${firstArrivalActive || islandDeparture ? " island-run-board__three-preview--arrival" : ""}${islandDeparture ? " island-run-board__three-preview--departure" : ""}`}>
             <Suspense
               fallback={(
-                <div className="island-run-board__three-preview-loading" role="status">
-                  Loading Island {islandArtPreviewNumber} in 3D…
+                <div className="island-run-board__three-preview-loading">
+                  <IslandRunLoadingScreen title={`Island ${islandArtPreviewNumber}`} detail="Building the 3D world…" />
                 </div>
               )}
             >
@@ -17143,6 +17336,7 @@ export function IslandRunBoardPrototype({
                     : firstLightAssemblyCompleted || firstLightAssemblyPendingSector === FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
                   claimedDynamiteTileIndices: visibleClaimedDynamiteTilesRef.current,
                   constructionSequence: firstLightAssemblyConstructionSequence,
+                  invitationsSent: isIslandVisualPreview || assemblyInvitationsSent,
                 }}
                 greatHoneyfallPresentation={{
                   activatedReservoirs: isIslandVisualPreview && islandArtPreviewNumber === 14
@@ -17167,6 +17361,16 @@ export function IslandRunBoardPrototype({
                 onIsland20SkiffRunComplete={handleLavaSkiffRunComplete}
                 onAssemblyMeetingComplete={isIslandVisualPreview ? undefined : openAssemblyMandate}
                 onExplorePointChange={(id) => setExploreViewActive(id !== null)}
+                playerPieceId={boardPlayerPieceId}
+                island001Atmosphere={islandNumber === 1 ? {
+                  buildLevels: isIslandVisualPreview
+                    ? [0, 1, 2, 3].map(() => island5ThreePreviewLevel)
+                    : [0, 1, 2, 3].map((index) => __storeState.stopBuildStateByIndex[index]?.buildLevel ?? 0),
+                  assemblyComplete: isIslandVisualPreview ? island5ThreePreviewLevel >= 3 : firstLightAssemblyCompleted,
+                  // Previews keep today's daylight look unless ?timeOfDay= asks otherwise.
+                  dayPositionOverride: island001TimeOfDayOverride ?? (isIslandVisualPreview ? 1 : null),
+                } : undefined}
+                missionItemsRevealed={isIslandVisualPreview ? missionItemPopPreviewRevealed : !missionItemsAwaitingFirstMessage}
                 fishermansFishingPresentation={{
                   rodsRevealedAtMs: fishermansRodsRevealedAtMs,
                   fishCaughtKg: isIslandVisualPreview && islandArtPreviewNumber === FISHERMANS_VILLAGE_ISLAND_NUMBER
@@ -17337,6 +17541,7 @@ export function IslandRunBoardPrototype({
           isRolling={isRolling}
           throwStrength={diceThrowStrength}
           landingVariant={rollIndexRef.current}
+          skin={diceSkinProgress.selectedSkinId}
           onTopBarImpact={() => {
             triggerImpactHaptic('strong', {
               channel: 'gamification',
@@ -17751,6 +17956,34 @@ export function IslandRunBoardPrototype({
         document.body,
       ) : null}
 
+      {walletPanelOriginRect !== null ? (
+        <IslandRunWalletPanel
+          userId={session.user.id}
+          money={runtimeState.essence}
+          essence={runtimeState.shards ?? 0}
+          dice={dicePool}
+          tickets={activeTimedEventId ? activeEventTickets : null}
+          wealth={resolveTreasureIslandWealth({
+            ledger: __storeState.signatureMissionProgressByIsland,
+            vaultInvested: getVaultIslandTotalInvested(runtimeState.vaultIslandProgress),
+            currentIslandNumber: islandNumber,
+          })}
+          vault={{
+            unlocked: isVaultIslandUnlocked,
+            relics: vaultIslandCollection.unlockedCount,
+            relicTotal: vaultIslandCollection.collectionSize,
+          }}
+          originRect={walletPanelOriginRect}
+          onClose={() => setWalletPanelOriginRect(null)}
+          onGetMoney={() => { setWalletPanelOriginRect(null); setWalletStoreModalKind('essence'); }}
+          onGetEssence={() => { setWalletPanelOriginRect(null); setWalletStoreModalKind('shards'); }}
+        />
+      ) : null}
+
+      {assemblyInvitationPhoneOpen && assemblyInvitationState === 'ready_to_send' ? (
+        <AssemblyInvitationPhone onSent={handleAssemblyInvitationsSent} />
+      ) : null}
+
       {techCompletionCelebration ? (
         <IslandTechCompletionCelebration
           result={techCompletionCelebration}
@@ -17787,7 +18020,26 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {shouldRenderFirstRunCelebration({
+      {(departureDayPreview || (showFirstRunCelebration && firstRunStep === 'departure')) ? (
+        <DepartureDayScene
+          shipName={(departureDayPreview ? firstRunShipName || 'Starling' : firstRunShipName) || 'Starling'}
+          initialPieceId={__storeState.selectedPlayerPieceId}
+          quality={resolveExpeditionShipGarageQuality(readExpeditionShipGarageQualityPreference())}
+          skippable={departureDayPreview !== null || resolveDepartureDaySkip({ hasSeenBefore: hasSeenDepartureDay }).skippable}
+          previewTimeSeconds={departureDayPreview?.timeSeconds ?? null}
+          onChoosePiece={(pieceId) => {
+            if (departureDayPreview) return;
+            selectPlayerPiece({ session, client, pieceId, triggerSource: 'departure_day_piece' });
+          }}
+          onComplete={() => {
+            if (departureDayPreview) { setDepartureDayPreview(null); return; }
+            try { window.localStorage.setItem(resolveDepartureDaySeenKey(session.user.id), '1'); } catch { /* storage unavailable */ }
+            setFirstRunStep('mission');
+          }}
+        />
+      ) : null}
+
+      {firstRunStep !== 'departure' && shouldRenderFirstRunCelebration({
         requested: showFirstRunCelebration,
         storyReaderOpen: showStoryReader,
       }) && (
@@ -17799,7 +18051,7 @@ export function IslandRunBoardPrototype({
                   <p className="island-stop-modal__eyebrow">First-run setup</p>
                   <h3 className="island-stop-modal__title">🎉 Welcome to Island Run</h3>
                   <p className="island-stop-modal__copy">Claim your starter gifts to begin your first island.</p>
-                  <p><strong>Starter gifts:</strong> 💰 250 money + 🎲 three 500-dice caretaker packs</p>
+                  <p><strong>Starter gifts:</strong> 💰 250 money + 🎲 three 500-dice crew supply packs</p>
                   <p>✨ 🎊 ✨</p>
                 </div>
                 <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
@@ -17817,7 +18069,7 @@ export function IslandRunBoardPrototype({
               <>
                 <div className="island-stop-modal__context">
                   <p className="island-stop-modal__eyebrow">Name your ship</p>
-                  <h3 className="island-stop-modal__title">🚀 The caretaker is ready to hand over your ship</h3>
+                  <h3 className="island-stop-modal__title">🚀 The garage crew is ready to hand over your ship</h3>
                   <p className="island-stop-modal__copy">Choose the name that will appear in your first mission briefing.</p>
                   <label className="island-stop-modal__copy" htmlFor="first-run-ship-name"><strong>Spaceship name</strong></label>
                   <input
@@ -17840,7 +18092,7 @@ export function IslandRunBoardPrototype({
                 <div className="island-stop-modal__context">
                   <p className="island-stop-modal__eyebrow">Mission briefing</p>
                   <h3 className="island-stop-modal__title">🛸 {firstRunShipName} begins the first descent</h3>
-                  <p className="island-stop-modal__copy">The caretaker has loaded three emergency dice packs — 500 dice each — so your first route has room to breathe.</p>
+                  <p className="island-stop-modal__copy">The garage crew loaded three supply packs of dice — 500 dice each — so your first route has room to breathe.</p>
                   <p className="island-stop-modal__copy">Your starting rank is Explorer. Complete landmarks, hatch companions, and let real-life progress help your world grow.</p>
                   <p className="island-stop-modal__copy">The ship is entering Island 1 atmosphere. When it lands, start rolling.</p>
                 </div>
@@ -18055,6 +18307,66 @@ export function IslandRunBoardPrototype({
           && (openedStopIsPlayable || openedStopIsCompleted)) {
           return <IslandRunArenaOrientationModal key={`${cycleIndex}:${islandNumber}`} session={session} client={client}
             onClose={() => setActiveStopId(null)} />;
+        }
+        if (activeStop.stopId === 'mystery' && openedStopIsPlayable && typeof document !== 'undefined') {
+          return createPortal((
+            <EventArenaLandmarkModal
+              championship={championshipPresentation}
+              onOpenCeremony={openCurrentChampionshipCeremony}
+              boostStatus={arenaBoostStatus}
+              ordinaryEvents={featureAccess.ordinaryEvents}
+              doorRequired={activeStopId === requiredDoorStopId && isDoorLandmarkCompletionRequired}
+              canClose={!isActiveBehaviorStopNonDismissable}
+              onClose={() => setActiveStopId(null)}
+              onFinishOrientation={() => {
+                setArenaSoftSaveValueMomentReached(true);
+                handleCompleteActiveStop('🎪 Arena orientation complete! Wisdom landmark unlocked.');
+              }}
+              onJoinOpeningGames={featureAccess.inauguralRound || (featureAccess.gradual && islandNumber === 2)
+                ? () => setShowOpeningGamesCeremony(true) : undefined}
+            >
+              {featureAccess.ordinaryEvents ? (
+                  <ArenaStadiumActivity key={`${session.user.id}:${arenaStadiumVisitKey(__storeState)}`}
+                    session={session} client={client} gameOpen={!!activeLaunchedMinigameId}
+                    onComplete={() => {
+                      if (arenaLaunchOwnerRef.current !== session.user.id
+                        || arenaStadiumVisitKey(getIslandRunStateSnapshot(session)) !== arenaStadiumVisitKey(__storeState)) return;
+                      setArenaSoftSaveValueMomentReached(true);
+                      setLandingText('Stadium activity complete — your round and any required comparisons are saved.');
+                      setActiveStopId(null);
+                    }}
+                    onEarnTickets={() => {
+                      setRequiredDoorStopId(null);
+                      setActiveStopId(null);
+                      setLandingText('Earn event tickets on the board, then return to finish the stadium.');
+                    }}>
+                  {effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType) ? (
+                  <IslandRunArenaChoice
+                    key={session.user.id}
+                    compact
+                    allowedGameIds={introducedArenaGameIds}
+                    playerKey={session.user.id}
+                    islandNumber={islandNumber}
+                    activeEventId={effectiveActiveTimedEvent.eventType}
+                    activeEventRuntimeId={effectiveActiveTimedEvent.eventId}
+                    preferences={{ ...arenaPreferences, disabledEventIds: [] }}
+                    tickets={activeEventTickets}
+                    activeEventName={activeEventSurfaceMeta?.displayName ?? 'Active event'}
+                    activeEventIcon={activeEventSurfaceMeta?.icon ?? '✦'}
+                    eventTicketIcon={eventSurfaceTicketIcon}
+                    rewardProgress={rewardBarProgress}
+                    rewardThreshold={rewardBarThreshold}
+                    nextRewardIcon={nextRewardIcon}
+                    nextRewardLabel={nextRewardKind.replace(/_/g, ' ')}
+                    onLaunch={handleLaunchArenaGame}
+                    finishedGameIds={arenaFinishedGameIds}
+                    nextEventLabel={timedEventRemainingLabel}
+                    onDevSkipEvent={isDevModeEnabled ? handleDevSkipToNextTimedEvent : undefined}
+                  />) : <p role="status">Waiting for the shared event channel.</p>}
+                  </ArenaStadiumActivity>
+              ) : null}
+            </EventArenaLandmarkModal>
+          ), document.body);
         }
         const stopModal = (
         <div className={`island-run-overlay-root island-stop-modal-backdrop${isFocusedBehaviorEncounter ? ' island-stop-modal-backdrop--world-visible' : ''}`} role="presentation">
@@ -18341,109 +18653,6 @@ export function IslandRunBoardPrototype({
                 )}
                 </div>
               </>
-            )}
-
-            {/* ── Stop 3: Event Arena (timed-event mini-game launcher) ── */}
-            {activeStopId === 'mystery' && openedStopIsPlayable && (
-              <div className="island-hatchery-card island-event-arena-card">
-                {championshipPresentation ? (
-                  <IslandChampionshipBanner
-                    championship={championshipPresentation}
-                    onOpenCeremony={openCurrentChampionshipCeremony}
-                  />
-                ) : null}
-                <div className="island-event-arena-card__visual" aria-hidden="true">
-                  <img src="/assets/island-run/tickets/event-arena-pass-emblem.webp" alt="" />
-                  <span>🎪</span>
-                  <i>→</i>
-                  <span>🔓</span>
-                </div>
-                {arenaBoostStatus === 'claimed' ? (
-                  <>
-                    <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena opened</strong></p>
-                    <p>The host invites every visiting crew to participate. Accepting one challenge is part of the Reconstruction Accord.</p>
-                    <div className="island-event-arena-card__ticket-row" aria-live="polite">
-                      <span>Reward</span>
-                      <strong>+3 Event Tickets</strong>
-                    </div>
-                  </>
-                ) : arenaBoostStatus === 'no_active_event' ? (
-                  <>
-                    <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
-                    <p>{featureAccess.ordinaryEvents ? 'The event channel is reconnecting. Your stadium activity remains saved.' : 'Finish the quick orientation to unlock Wisdom.'}</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
-                    <p>Spend one ticket. Your island build waits for you.</p>
-                  </>
-                )}
-                {arenaBoostStatus === 'no_active_event' ? (
-                  <div className="island-event-arena-card__ticket-row" aria-live="polite">
-                    <span>Timed event</span>
-                    <strong>Orientation</strong>
-                  </div>
-                ) : null}
-                {!featureAccess.ordinaryEvents && arenaBoostStatus === 'no_active_event' ? (
-                  <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                    <button
-                      type="button"
-                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                      onClick={() => {
-                        setArenaSoftSaveValueMomentReached(true);
-                        handleCompleteActiveStop('🎪 Arena orientation complete! Wisdom landmark unlocked.');
-                      }}
-                    >
-                      Finish orientation
-                    </button>
-                  </div>
-                ) : featureAccess.ordinaryEvents ? (
-                  <ArenaStadiumActivity key={`${session.user.id}:${arenaStadiumVisitKey(__storeState)}`}
-                    session={session} client={client} gameOpen={!!activeLaunchedMinigameId}
-                    onComplete={() => {
-                      if (arenaLaunchOwnerRef.current !== session.user.id
-                        || arenaStadiumVisitKey(getIslandRunStateSnapshot(session)) !== arenaStadiumVisitKey(__storeState)) return;
-                      setArenaSoftSaveValueMomentReached(true);
-                      setLandingText('Stadium activity complete — your round and any required comparisons are saved.');
-                      setActiveStopId(null);
-                    }}
-                    onEarnTickets={() => {
-                      setRequiredDoorStopId(null);
-                      setActiveStopId(null);
-                      setLandingText('Earn event tickets on the board, then return to finish the stadium.');
-                    }}>
-                  {effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType) ? (
-                  <IslandRunArenaChoice
-                    key={session.user.id}
-                    allowedGameIds={introducedArenaGameIds}
-                    playerKey={session.user.id}
-                    islandNumber={islandNumber}
-                    activeEventId={effectiveActiveTimedEvent.eventType}
-                    activeEventRuntimeId={effectiveActiveTimedEvent.eventId}
-                    preferences={{ ...arenaPreferences, disabledEventIds: [] }}
-                    tickets={activeEventTickets}
-                    activeEventName={activeEventSurfaceMeta?.displayName ?? 'Active event'}
-                    activeEventIcon={activeEventSurfaceMeta?.icon ?? '✦'}
-                    eventTicketIcon={eventSurfaceTicketIcon}
-                    rewardProgress={rewardBarProgress}
-                    rewardThreshold={rewardBarThreshold}
-                    nextRewardIcon={nextRewardIcon}
-                    nextRewardLabel={nextRewardKind.replace(/_/g, ' ')}
-                    onLaunch={handleLaunchArenaGame}
-                    finishedGameIds={arenaFinishedGameIds}
-                    nextEventLabel={timedEventRemainingLabel}
-                    onDevSkipEvent={isDevModeEnabled ? handleDevSkipToNextTimedEvent : undefined}
-                  />) : <p role="status">Waiting for the shared event channel.</p>}
-                  </ArenaStadiumActivity>
-                ) : featureAccess.inauguralRound || (featureAccess.gradual && islandNumber === 2) ? (
-                  <button type="button" onClick={() => setShowOpeningGamesCeremony(true)}>Join the opening games</button>
-                ) : null}
-                <div className="island-event-arena-card__outcome" aria-label="Finish one Arena challenge to unlock Wisdom. Live games also add event-bar progress.">
-                  <span><b aria-hidden="true">🎪</b> Finish</span>
-                  <i aria-hidden="true">→</i>
-                  <span><b aria-hidden="true">🔓</b> Wisdom</span>
-                </div>
-              </div>
             )}
 
             {/* ── Stop 2: Habit (deterministic no-AI intake MVP) ── */}
@@ -19770,6 +19979,9 @@ export function IslandRunBoardPrototype({
             onSelectDicePack={(packId) => void handleStartDiceCheckout('market_panel', packId)}
             onStartCreaturePackCheckout={() => void handleStartCreaturePackCheckout()}
             onBuyEarnedDiceBundle={() => handleMarketPrototypePurchase('dice_bundle')}
+            diceSkinProgress={diceSkinProgress}
+            pendingDiceSkinId={pendingDiceSkinId}
+            onDiceSkinChoice={(skinId, mode) => void handleDiceSkinChoice(skinId, mode)}
             onClose={() => {
               setShowShopPanel(false);
               setMarketPurchaseFeedback(null);

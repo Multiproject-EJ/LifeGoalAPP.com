@@ -6257,6 +6257,16 @@
   will-change: transform;
 }
 
+/* A chosen player piece replaces the classic ship on 2D boards. */
+.island-token__piece {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 30px; height: 30px;
+  transform: translate(-50%, -58%);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35));
+}
+.island-token__piece .player-piece-icon { display: block; width: 100%; height: 100%; }
+
 .island-token__ship-body {
   position: absolute;
   left: 50%; top: 50%;
@@ -7491,16 +7501,31 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
     linear-gradient(180deg, rgba(255, 60, 60, 0.18), rgba(255, 60, 60, 0.04));
 }
 
-.island-mission-tracker__stat--stance > strong > i {
+.island-mission-tracker__stance-face {
   flex: 0 0 auto;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--mission-signal);
-  box-shadow: 0 0 8px var(--mission-signal);
+  width: 17px;
+  height: 17px;
+  overflow: visible;
+  color: var(--mission-signal);
+  filter: drop-shadow(0 0 5px var(--mission-signal));
 }
 
-.island-mission-tracker__stat--stance[data-stance='war'] > strong > i {
+.island-mission-tracker__stance-face circle:first-child {
+  fill: color-mix(in srgb, var(--mission-signal), transparent 82%);
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.island-mission-tracker__stance-face path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+.island-mission-tracker__stance-face .island-mission-tracker__stance-eye { fill: currentColor; }
+
+.island-mission-tracker__stat--stance[data-stance='war'] .island-mission-tracker__stance-face {
   animation: island-mission-phone-alert 900ms ease-in-out infinite;
 }
 
@@ -7650,33 +7675,44 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 }
 
 .island-mission-tracker__close {
-  position: relative;
-  flex: 0 0 auto;
-  z-index: 5;
-  width: 30px;
-  height: 30px;
+  /* Hangs on the phone's top-right corner, outside the screen glass. */
+  position: absolute;
+  top: calc(var(--mission-phone-w) * -0.035);
+  right: calc(var(--mission-phone-w) * -0.035);
+  z-index: 20;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
   padding: 0 0 2px;
-  border: 1px solid rgba(229, 192, 112, 0.5);
+  border: 2.5px solid #ff4d5e;
   border-radius: 50%;
-  color: #e8eee9;
-  background:
-    radial-gradient(circle at 50% 48%, transparent 56%, rgba(221, 171, 76, 0.18) 57% 61%, transparent 62%),
-    linear-gradient(180deg, rgba(75, 82, 84, 0.96), rgba(19, 26, 30, 0.98));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -2px 5px rgba(0, 0, 0, 0.48), 0 4px 10px rgba(0, 0, 0, 0.4);
-  font-size: 1.15rem;
-  font-weight: 850;
+  color: #fff;
+  background: linear-gradient(180deg, #3a3f45, #14181c);
+  box-shadow: 0 0 0 2px rgba(10, 12, 16, 0.85), 0 0 12px rgba(255, 77, 94, 0.45), 0 6px 14px rgba(0, 0, 0, 0.5);
+  font-size: 1.35rem;
+  font-weight: 800;
   line-height: 1;
   cursor: pointer;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.island-mission-tracker[data-phase='open'] .island-mission-tracker__close {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .island-mission-tracker__close:hover,
 .island-mission-tracker__close:focus-visible {
   outline: none;
-  color: #fff;
-  border-color: #f0c56e;
-  box-shadow: 0 0 0 3px rgba(50, 222, 232, 0.22), 0 5px 14px rgba(0, 0, 0, 0.42);
+  background: linear-gradient(180deg, #5a2129, #2a0d12);
+  box-shadow: 0 0 0 2px rgba(10, 12, 16, 0.85), 0 0 0 5px rgba(255, 77, 94, 0.3), 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-mission-tracker__close { transition: none; }
 }
 
 .island-mission-tracker__close:disabled {
@@ -25378,13 +25414,7 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 .island-run-board__three-preview-loading {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  color: #fff7d6;
-  font: 700 0.78rem/1.2 ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: linear-gradient(180deg, #65bdd2 0%, #318ca7 100%);
+  background: #060d22;
 }
 
 .island-run-board__three-preview-badge {
@@ -28494,13 +28524,33 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 9000;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  /* Only the buttons catch taps: drags reach the 3D scene to look around. */
+  pointer-events: none;
 }
-.island-explore-exit-layer .island-explore-caption { cursor: default; }
+.island-explore-exit-layer .island-explore-caption,
+.island-explore-exit-layer button { pointer-events: auto; }
+.island-explore-exit-layer__back {
+  position: absolute;
+  top: max(84px, calc(env(safe-area-inset-top) + 78px));
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(159, 240, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(8, 22, 40, 0.82);
+  color: #eef8ff;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
 .island-explore-exit-layer__hint {
   position: absolute;
-  top: max(84px, calc(env(safe-area-inset-top) + 76px));
+  top: max(140px, calc(env(safe-area-inset-top) + 134px));
   left: 50%;
   translate: -50% 0;
   margin: 0;
@@ -28643,3 +28693,38 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   .island-mission-tracker__message,
   .island-mission-tracker__inbox { animation: none; }
 }
+
+/* Level 1/2 quiet level-up: the building is the reward. A small warm chip
+   rises and fades over the island; the dock keeps a calm Continue. */
+.bm2-quiet-level-up {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  z-index: 4;
+  padding: .42rem .9rem;
+  border: 1px solid rgba(255, 223, 150, .55);
+  border-radius: 999px;
+  color: #fff4cf;
+  background: rgba(22, 30, 44, .52);
+  box-shadow: 0 0 22px rgba(255, 196, 102, .45);
+  font-size: .86rem;
+  font-weight: 750;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: bm2-quiet-level-up 1.6s ease-out both;
+}
+.bm2-quiet-level-up span { color: #ffd776; }
+@keyframes bm2-quiet-level-up {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(.94); }
+  18% { opacity: 1; transform: translate(-50%, 0) scale(1); box-shadow: 0 0 34px rgba(255, 206, 120, .7); }
+  75% { opacity: 1; }
+  100% { opacity: .0; transform: translate(-50%, -10px); box-shadow: 0 0 12px rgba(255, 196, 102, .2); }
+}
+@media (prefers-reduced-motion: reduce) { .bm2-quiet-level-up { animation: none; } }
+
+/* Top-bar wallet opens the wallet mini modal; the dice chip replaces essence. */
+.island-run-board__topbar-wallet--button { cursor: pointer; }
+.island-run-board__topbar-wallet--button:focus-visible { outline: 3px solid rgba(255, 224, 150, .85); outline-offset: 2px; border-radius: 999px; }
+.island-run-board__topbar-wallet--button:active { transform: scale(.97); }
+.island-run-board__topbar-dice-icon { display: inline-grid; place-items: center; font-size: 1.05rem; line-height: 1; }

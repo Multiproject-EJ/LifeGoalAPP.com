@@ -28,6 +28,7 @@
 .arena-choice__cost { position: relative; display: flex; width: calc(100% - 2px); min-height: 30px; align-items: center; justify-content: center; gap: 4px; margin-top: auto; border: 1px solid color-mix(in srgb, var(--arena-choice-accent), white 10%); border-radius: 999px; color: #f6dda0; background: color-mix(in srgb, var(--arena-choice-accent), transparent 84%); box-shadow: inset 0 1px rgba(255,255,255,.08); font-size: 10px; font-weight: 900; text-transform: uppercase; }
 .arena-choice__cost i { color: #fff5d5; font-size: 10px; font-style: normal; }
 .arena-choice__or { position: absolute; z-index: 3; top: 50%; left: 50%; display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(238,213,151,.35); border-radius: 50%; color: #ddcc9e; background: #0a1323; font-family: Georgia, serif; font-size: 9px; transform: translate(-50%,-50%); }
+.arena-choice__cover { width: 100%; height: 94px; object-fit: contain; }
 .arena-choice__note { margin: 0; color: #d8c58d; font-size: 9px; font-weight: 800; line-height: 1.35; text-align: center; }
 
 .arena-choice__miniature { position: relative; display: grid; width: 100%; height: 74px; margin: 2px 0; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, var(--arena-choice-accent), transparent 67%); border-radius: 15px; background: radial-gradient(circle, color-mix(in srgb, var(--arena-choice-accent), transparent 76%), rgba(2,9,20,.7) 72%); box-shadow: inset 0 0 20px rgba(0,0,0,.24); }
@@ -74,3 +75,33 @@
 .arena-choice__finished button,
 .arena-choice__dev-skip { justify-self: center; margin-top: 4px; padding: 4px 10px; border: 1px dashed rgba(251, 191, 36, .7); border-radius: 999px; background: rgba(15, 23, 42, .6); color: #fde68a; font-size: 10px; font-weight: 800; cursor: pointer; }
 .arena-choice__dev-skip { display: block; margin: 8px auto 0; }
+
+/* Landmark modal layout: readable type (no sub-10px labels), short cards and
+   no oval clipping, so the whole choice fits a phone without scrolling. */
+.arena-choice--compact { gap: 9px; margin-top: 0; }
+.arena-choice--compact .arena-choice__event { gap: 6px; padding: 10px 12px; border-radius: 16px; }
+.arena-choice--compact .arena-choice__event-heading span { font-size: 14px; }
+.arena-choice--compact .arena-choice__event-heading > strong { font-size: 13px; }
+.arena-choice--compact .arena-choice__event-track { height: 16px; }
+.arena-choice--compact .arena-choice__event-track b { font-size: 10px; }
+.arena-choice--compact .arena-choice__event > small { font-size: 11px; }
+.arena-choice--compact .arena-choice__heading h3 { font-size: 17px; }
+.arena-choice--compact .arena-choice__card { display: flex; flex-direction: column; align-items: center; min-height: 0; gap: 4px; padding: 10px 8px 9px; border-radius: 18px; }
+.arena-choice--compact .arena-choice__glow { top: -70px; }
+.arena-choice--compact .arena-choice__icon { width: 36px; height: 36px; border-radius: 12px; font-size: 16px; }
+.arena-choice--compact .arena-choice__new { top: 6px; right: 6px; font-size: 9px; }
+.arena-choice--compact .arena-choice__card small { font-size: 10px; letter-spacing: 0.03em; }
+.arena-choice--compact .arena-choice__card strong { font-size: 17px; }
+.arena-choice--compact .arena-choice__miniature,
+.arena-choice--compact .arena-choice__cover { height: 56px; }
+.arena-choice--compact .arena-choice__card p {
+  display: -webkit-box; overflow: hidden; font-size: 12px; line-height: 1.3;
+  -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+.arena-choice--compact .arena-choice__cost { flex: 0 0 auto; min-height: 34px; margin-top: auto; padding-inline: 6px; box-sizing: border-box; font-size: 12px; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.arena-choice--compact .arena-choice__cost i { font-size: 12px; }
+.arena-choice--compact .arena-choice__or { width: 26px; height: 26px; font-size: 11px; }
+.arena-choice--compact .arena-choice__note { font-size: 12px; }
+.arena-choice--compact .arena-choice__finished { margin-top: 0; font-size: 12px; }
+.arena-choice--compact .arena-choice__miniature, .arena-choice--compact .arena-choice__cover { flex: 0 0 auto; }
+.arena-choice--compact .arena-choice__card p { margin-bottom: 4px; }

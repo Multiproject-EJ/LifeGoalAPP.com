@@ -1,5 +1,6 @@
 import type { IslandTileMapEntry } from './islandBoardTileMap';
 import type { VisibleTechnologyFragment } from './islandTechnologyFragmentVisuals';
+import { ISLAND_TREASURES } from './islandRunTreasures';
 
 export interface IslandBoardTileInfo {
   title: string;
@@ -49,6 +50,14 @@ export function resolveIslandBoardTileInfo(options: ResolveIslandBoardTileInfoOp
     return {
       title: 'Dormant Signal',
       description: 'This route powers on after the first Concord field order.',
+    };
+  }
+
+  if (entry?.islandTreasureId) {
+    const treasure = ISLAND_TREASURES.find((candidate) => candidate.id === entry.islandTreasureId);
+    return {
+      title: treasure ? `Treasure: ${treasure.name}` : 'Island Treasure',
+      description: `Land exactly here to claim it for Treasure Island${treasure ? ` (worth ${treasure.value.toLocaleString()})` : ''}.`,
     };
   }
 

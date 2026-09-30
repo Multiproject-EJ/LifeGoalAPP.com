@@ -36,11 +36,13 @@ interface IslandRunArenaChoiceProps {
   nextEventLabel?: string;
   /** Verified-dev only: rotate to the next timed event now. */
   onDevSkipEvent?: () => void;
+  /** Landmark modal layout: short cards, one heading, no scrolling on phones. */
+  compact?: boolean;
 }
 
 function ArenaChoiceMiniature({ game }: { game: ArenaGameDefinition }) {
   if (game.id === 'crystal_miners') {
-    return <img src="/assets/event-games/crystal-miners/cover.svg" alt="" style={{height:94,width:'100%',objectFit:'contain'}}/>;
+    return <img className="arena-choice__cover" src="/assets/event-games/crystal-miners/cover.svg" alt="" />;
   }
   if (game.id === 'lucky_spin') {
     return <span className="arena-choice__miniature arena-choice__miniature--wheel" aria-hidden="true"><i /><i /><b>✦</b></span>;
@@ -93,7 +95,7 @@ function ArenaChoiceCard(props: {
       <strong>{props.game.displayName}</strong>
       <ArenaChoiceMiniature game={props.game} />
       <p>{props.game.description}</p>
-      <span className="arena-choice__cost"><i>{props.game.id === 'crystal_miners' ? 'Open workshop' : 'Play'}</i> · {props.game.id === 'crystal_miners' ? '1 🎟️ per drop' : props.game.id === 'journey_disc_arena' ? '1–4 ◉' : '1 🎟️'}</span>
+      <span className="arena-choice__cost"><i>{props.game.id === 'crystal_miners' ? 'Workshop' : 'Play'}</i> · {props.game.id === 'crystal_miners' ? '1 🎟️/drop' : props.game.id === 'journey_disc_arena' ? '1–4 ◉' : '1 🎟️'}</span>
     </button>
   );
 }
@@ -120,7 +122,7 @@ export function IslandRunArenaChoice(props: IslandRunArenaChoiceProps) {
     : 0;
 
   return (
-    <section className="arena-choice" aria-labelledby="arena-choice-title">
+    <section className={`arena-choice${props.compact ? ' arena-choice--compact' : ''}`} aria-labelledby="arena-choice-title">
       <div className="arena-choice__event">
         <div className="arena-choice__event-heading">
           <span><b aria-hidden="true">{props.activeEventIcon}</b>{props.activeEventName}</span>
@@ -141,9 +143,9 @@ export function IslandRunArenaChoice(props: IslandRunArenaChoiceProps) {
       </div>
       <div className="arena-choice__heading">
         <div>
-          <span>Host challenge</span>
-          <h3 id="arena-choice-title">Choose your Arena game</h3>
-          <p>{pair.alternative ? 'Choose an introduced game.' : pair.primary ? 'Your first Arena game.' : 'Meet your next game in the catalogue.'}</p>
+          {props.compact ? null : <span>Host challenge</span>}
+          <h3 id="arena-choice-title">{props.compact ? 'Choose your game' : 'Choose your Arena game'}</h3>
+          {props.compact ? null : <p>{pair.alternative ? 'Choose an introduced game.' : pair.primary ? 'Your first Arena game.' : 'Meet your next game in the catalogue.'}</p>}
         </div>
         {props.onTune && <button type="button" onClick={props.onTune}>Tune</button>}
       </div>

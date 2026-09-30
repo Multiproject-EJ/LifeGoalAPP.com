@@ -235,6 +235,25 @@ function resolveMissionPhoneSignals(stats: IslandMissionStats): Record<'island' 
   };
 }
 
+// The stance reads as a face in the same traffic-light colour as its signal:
+// a friendly smile, a level diplomatic mouth, a frown, or furrowed brows.
+function MissionPhoneStanceFace({ stance }: { stance: IslandMissionStats['stance'] }): React.JSX.Element {
+  const mouth = stance === 'friendly'
+    ? 'M5.2 10.6 Q9 14.2 12.8 10.6'
+    : stance === 'diplomatic'
+      ? 'M5.6 11.6 H12.4'
+      : 'M5.4 13 Q9 9.8 12.6 13';
+  return (
+    <svg className="island-mission-tracker__stance-face" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+      <circle cx="9" cy="9" r="7.6" />
+      <circle className="island-mission-tracker__stance-eye" cx="6.3" cy="7.2" r="1.15" />
+      <circle className="island-mission-tracker__stance-eye" cx="11.7" cy="7.2" r="1.15" />
+      {stance === 'war' ? <path d="M4.4 4.6 7.6 6 M13.6 4.6 10.4 6" /> : null}
+      <path d={mouth} />
+    </svg>
+  );
+}
+
 function MissionPhoneStats({ stats }: { stats: IslandMissionStats }): React.JSX.Element {
   const difficultyLevel = MISSION_PHONE_DIFFICULTY_LEVELS[stats.difficulty];
   const egg = stats.egg;
@@ -250,7 +269,7 @@ function MissionPhoneStats({ stats }: { stats: IslandMissionStats }): React.JSX.
       </li>
       <li className="island-mission-tracker__stat island-mission-tracker__stat--stance" data-stance={stats.stance} data-signal={signals.stance}>
         <small>Island stance</small>
-        <strong><i aria-hidden="true" />{MISSION_PHONE_STANCE_LABELS[stats.stance]}</strong>
+        <strong><MissionPhoneStanceFace stance={stats.stance} />{MISSION_PHONE_STANCE_LABELS[stats.stance]}</strong>
         <span className="island-mission-tracker__stat-note">{stats.stance === 'war' ? 'Emergency status' : 'Toward the expedition'}</span>
       </li>
       <li className="island-mission-tracker__stat" data-signal={signals.difficulty} aria-label={`Difficulty: ${stats.difficulty}, ${difficultyLevel} of 5`}>
@@ -621,6 +640,18 @@ export function IslandMissionBriefingModal({
         aria-labelledby={titleId}
       >
         <span className="island-mission-tracker__phone-shadow" aria-hidden="true" />
+        {/* Close sits on the phone's top-right corner, outside the screen. */}
+        <button
+          ref={acknowledgeRef}
+          type="button"
+          className="island-mission-tracker__close"
+          aria-label={acknowledgeLabel}
+          title={acknowledgeLabel}
+          onClick={requestClose}
+          disabled={phase !== 'open'}
+        >
+          <span aria-hidden="true">×</span>
+        </button>
         <div className="island-mission-tracker__device">
           <span className="island-mission-tracker__edge island-mission-tracker__edge--left" aria-hidden="true"><i /></span>
           <span className="island-mission-tracker__edge island-mission-tracker__edge--right" aria-hidden="true"><i /></span>
@@ -657,17 +688,6 @@ export function IslandMissionBriefingModal({
                   >
                     <span aria-hidden="true">✉</span>
                     {unreadCount > 0 ? <b aria-hidden="true">{unreadCount}</b> : null}
-                  </button>
-                  <button
-                    ref={acknowledgeRef}
-                    type="button"
-                    className="island-mission-tracker__close"
-                    aria-label={acknowledgeLabel}
-                    title={acknowledgeLabel}
-                    onClick={requestClose}
-                    disabled={phase !== 'open'}
-                  >
-                    ×
                   </button>
                 </div>
               </header>

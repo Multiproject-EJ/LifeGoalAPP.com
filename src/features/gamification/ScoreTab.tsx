@@ -70,9 +70,11 @@ import { CreatureCard } from './level-worlds/components/CreatureCard';
 import { getCreatureCardMetadata } from './level-worlds/services/creatureCardCatalog';
 import {
   readExpeditionShipGarageQualityPreference,
+  resolveExpeditionShipGarageQuality,
   writeExpeditionShipGarageQualityPreference,
   type ExpeditionShipGarageQualityPreference,
 } from './level-worlds/components/expeditionShipGarageQuality';
+import { readIslandRunGameStateRecord } from './level-worlds/services/islandRunGameStateStore';
 import {
   DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
   readPerfectCompanionRuntimeConfig,
@@ -87,6 +89,10 @@ import scoreZenGarden from '../../assets/Score_zengarden.webp';
 
 const ExpeditionShipGarageShowcase = lazy(
   () => import('./level-worlds/components/ExpeditionShipGarageShowcase'),
+);
+
+const DepartureDayScene = lazy(
+  () => import('./level-worlds/components/DepartureDayScene').then((module) => ({ default: module.DepartureDayScene })),
 );
 
 const ExpeditionShipGarageEntrance = lazy(
@@ -416,6 +422,20 @@ export function ScoreTab({
     setGarageModalOpen(false);
     setGarageEntering(false);
   }, []);
+
+  // "Relive departure day": the garage closes (one 3D scene at a time), the
+  // send-off replays skippable, then the player is back in the garage.
+  const [departureReplay, setDepartureReplay] = useState<{ shipName: string; pieceId: string | null } | null>(null);
+  const reliveDeparture = useCallback(() => {
+    let shipName = 'Starling';
+    let pieceId: string | null = null;
+    try {
+      if (userId) shipName = window.localStorage.getItem(`island_run_spaceship_name_${userId}`)?.trim() || shipName;
+      if (session) pieceId = readIslandRunGameStateRecord(session).selectedPlayerPieceId;
+    } catch { /* storage unavailable: defaults are fine */ }
+    setGarageModalOpen(false);
+    setDepartureReplay({ shipName, pieceId });
+  }, [session, userId]);
 
   const leaderboardArchetypes = useMemo(() => {
     const archetypes = new Set<string>();
@@ -1560,12 +1580,30 @@ export function ScoreTab({
                         setGarageShipTab('cosmetics');
                         setGarageExperience('legacy');
                       }}
+                      onReliveDeparture={reliveDeparture}
                     />
                   </Suspense>
                 </main>
               </div>
             </div>
           ), document.body) : null}
+
+          {departureReplay ? (
+            <Suspense fallback={null}>
+              <DepartureDayScene
+                replay
+                skippable
+                shipName={departureReplay.shipName}
+                initialPieceId={departureReplay.pieceId}
+                quality={resolveExpeditionShipGarageQuality(garageQualityPreference)}
+                onChoosePiece={() => undefined}
+                onComplete={() => {
+                  setDepartureReplay(null);
+                  setGarageModalOpen(true);
+                }}
+              />
+            </Suspense>
+          ) : null}
 
           {garageExperience === 'legacy' && garageShipTab === 'companions' ? (
             <section className="score-tab__card">

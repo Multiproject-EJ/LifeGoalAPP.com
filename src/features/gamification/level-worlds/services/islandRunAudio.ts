@@ -23,6 +23,7 @@ import { getHapticMode } from '../../../../utils/completionHaptics';
 import audioAssetManifest from './islandRunAudioAssets.json';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { ASSEMBLY_TOPBAR_BLAST_HAPTIC_PATTERN } from './assemblyTopbarBlast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -103,7 +104,12 @@ export type IslandRunHapticEvent =
   // Mission phone: a tiny latch tick as the pack unlocks, a firmer dock click.
   | 'mission_phone_latch'
   | 'mission_phone_dock'
-  | 'tech_item_poof';
+  | 'tech_item_poof'
+  // Mission items popping onto the board after the first mission message.
+  | 'mission_item_pop'
+  // Island 001 shockwave tearing the top bar loose: rattle series, one long
+  // hard buzz, one small tick.
+  | 'assembly_topbar_blast';
 
 export type IslandRunSoundPlaybackStatus =
   | 'idle'
@@ -255,6 +261,8 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   // Traffic light coin reveal: a celebratory triple buzz on landing.
   coin_reveal: [25, 35, 25, 45, 30],
   tech_item_poof: [12, 18, 12],
+  mission_item_pop: [9],
+  assembly_topbar_blast: [...ASSEMBLY_TOPBAR_BLAST_HAPTIC_PATTERN],
   // Deliberately asymmetric: arming is the lightest pulse in the whole map so
   // it reads as "held, not yet committed"; engaging lands harder so the player
   // can lift their eyes off the button once it fires.
@@ -361,6 +369,105 @@ export function playIslandRunSound(eventId: IslandRunSoundEvent): void {
     recordIslandRunSoundDiagnostics(eventId, 'play_failed');
     // Browser autoplay policy, missing files, and decode failures are non-fatal.
   });
+}
+
+let bubblePopContext: AudioContext | null = null;
+
+/**
+ * Original synthesized bubble pop (no recording, so no licence to track): a
+ * short sine chirp that sweeps upward with a fast pluck envelope. `step`
+ * nudges the pitch so a run of pops sounds like popcorn, not a loop.
+ */
+export function playIslandRunBubblePop(step = 0): void {
+  if (!getIslandRunAudioEnabled() || typeof window === 'undefined') return;
+  const Context = window.AudioContext
+    ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Context) return;
+  try {
+    bubblePopContext ??= new Context();
+    const context = bubblePopContext;
+    if (context.state === 'suspended') void context.resume();
+    const now = context.currentTime;
+    const base = 420 + ((step * 97) % 260);
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(base, now);
+    oscillator.frequency.exponentialRampToValueAtTime(base * 2.6, now + 0.07);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(ISLAND_RUN_SFX_VOLUME * 0.55, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.12);
+  } catch {
+    // Audio unavailable: the pop stays visual.
+  }
+}
+
+/**
+ * Synthesised hangar crowd for Departure Day (no audio asset): a warm roar
+ * from band-passed noise plus scattered claps, both following `setEnergy`.
+ */
+export function startIslandRunCrowdAmbience(): { setEnergy: (energy: number) => void; stop: () => void } {
+  const silent = { setEnergy: () => undefined, stop: () => undefined };
+  if (!getIslandRunAudioEnabled() || typeof window === 'undefined') return silent;
+  const Context = window.AudioContext
+    ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Context) return silent;
+  try {
+    bubblePopContext ??= new Context();
+    const context = bubblePopContext;
+    if (context.state === 'suspended') void context.resume();
+    const buffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
+    const roar = context.createBufferSource();
+    roar.buffer = buffer;
+    roar.loop = true;
+    const band = context.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = 900;
+    band.Q.value = 0.6;
+    const roarGain = context.createGain();
+    roarGain.gain.value = 0.0001;
+    roar.connect(band).connect(roarGain).connect(context.destination);
+    roar.start();
+    let energy = 0;
+    let stopped = false;
+    const clap = () => {
+      if (stopped) return;
+      if (energy > 0.25) {
+        const now = context.currentTime;
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        const high = context.createBiquadFilter();
+        high.type = 'highpass';
+        high.frequency.value = 1400 + Math.random() * 900;
+        const gain = context.createGain();
+        gain.gain.setValueAtTime(ISLAND_RUN_SFX_VOLUME * 0.12 * energy, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+        source.connect(high).connect(gain).connect(context.destination);
+        source.start(now, Math.random() * 1.5, 0.06);
+      }
+      window.setTimeout(clap, 25 + Math.random() * (160 - energy * 120));
+    };
+    clap();
+    return {
+      setEnergy(next) {
+        energy = Math.min(1, Math.max(0, next));
+        roarGain.gain.setTargetAtTime(Math.max(0.0001, ISLAND_RUN_SFX_VOLUME * 0.22 * energy), context.currentTime, 0.25);
+      },
+      stop() {
+        if (stopped) return;
+        stopped = true;
+        roarGain.gain.setTargetAtTime(0.0001, context.currentTime, 0.3);
+        window.setTimeout(() => { try { roar.stop(); } catch { /* already stopped */ } }, 1200);
+      },
+    };
+  } catch {
+    return silent;
+  }
 }
 
 /**
@@ -474,7 +581,8 @@ export function triggerIslandRunHaptic(eventId: IslandRunHapticEvent): void {
 
   if (typeof window === 'undefined') return;
   const nativeControllerLanding = eventId === 'controller_land' && Capacitor.isNativePlatform();
-  if (!nativeControllerLanding && !navigator.vibrate) return;
+  const nativeTopbarBlast = eventId === 'assembly_topbar_blast' && Capacitor.isNativePlatform();
+  if (!nativeControllerLanding && !nativeTopbarBlast && !navigator.vibrate) return;
 
   // Accessibility: skip haptics when user prefers reduced motion.
   if (typeof window.matchMedia === 'function'
@@ -495,6 +603,26 @@ export function triggerIslandRunHaptic(eventId: IslandRunHapticEvent): void {
 
   const rawPattern = HAPTIC_PATTERNS[eventId];
   const pattern = mode === 'subtle' ? attenuatePattern(rawPattern) : rawPattern;
+
+  if (nativeTopbarBlast) {
+    // iOS has no Vibration API: the same shape as impacts. Rattle, one heavy
+    // hit, then a light settle. Subtle mode keeps only the heavy hit.
+    void (async () => {
+      const wait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms));
+      if (mode === 'subtle') { await Haptics.impact({ style: ImpactStyle.Medium }); return; }
+      for (let pulse = 0; pulse < 6; pulse += 1) {
+        await Haptics.impact({ style: ImpactStyle.Light });
+        await wait(66);
+      }
+      for (let pulse = 0; pulse < 3; pulse += 1) {
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+        await wait(120);
+      }
+      await wait(260);
+      await Haptics.impact({ style: ImpactStyle.Light });
+    })().catch(() => { /* Unsupported device: presentation remains usable. */ });
+    return;
+  }
 
   if (nativeControllerLanding) {
     // iOS has no Vibration API. Keep the native landing feedback inside the

@@ -1,6 +1,8 @@
 import {
+  hasTodayPet3dModel,
   planTodayPetAction,
   resolveTodayPetCompanion,
+  resolveTodayPetPose,
   todayPetBubbles,
   TODAY_PET_SIZE_PX,
 } from '../../../../habits/todayPet/todayPetBehaviour';
@@ -38,6 +40,18 @@ export const todayPetBehaviourTests: TestCase[] = [
       assert(planTodayPetAction(0.5, seq([0.95]), true).kind !== 'away', 'reduced motion: stays put');
       assertEqual(todayPetBubbles(true).join(','), 'feed,pet,play', 'paired: Feed, Pet, Play');
       assertEqual(todayPetBubbles(false).join(','), 'pair,pet,play', 'unpaired: Make my pet first');
+    },
+  },
+  {
+    name: 'Today pet 3D: only creatures with a real model render in 3D; moods read clearly',
+    run: () => {
+      assert(hasTodayPet3dModel('common-sproutling'), 'Sproutling has the canonical 3D model');
+      assert(!hasTodayPet3dModel('common-mossling'), 'creatures without a model keep their own 2D art');
+      assertEqual(resolveTodayPetPose('sleep', 1).eyesClosed, 1, 'sleeping eyes are closed');
+      const hops = [0.1, 0.2, 0.3].map((t) => resolveTodayPetPose('happy', t).lift);
+      assert(Math.max(...hops) > 0.1, 'happy hops');
+      assertEqual(resolveTodayPetPose('walk', 2, true).lift, 0, 'reduced motion: no bobbing');
+      assertEqual(resolveTodayPetPose('sleep', 2, true).eyesClosed, 1, 'reduced motion still shows sleep');
     },
   },
 ];

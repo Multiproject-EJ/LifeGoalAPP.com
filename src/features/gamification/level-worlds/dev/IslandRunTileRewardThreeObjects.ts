@@ -20,6 +20,27 @@ export interface IslandRunTileRewardThreeRuntime {
   setFishermansRodsRevealedAtMs: (revealedAtMs: number | null) => void;
   setFirstLightClaimedDynamiteTiles: (tileIndices: readonly number[]) => void;
   setStagedRestorationClaimedTiles: (tileIndices: readonly number[]) => void;
+  /** Hide the island's signature mission items until the first mission message is read. */
+  setMissionItemsHidden: (hidden: boolean) => void;
+  /**
+   * Pop the mission items in, popcorn style, starting at `elapsed` (scene
+   * clock). Returns the pop schedule (seconds after start, per item) and the
+   * world position of the first item for a close-up camera.
+   */
+  startMissionItemReveal: (elapsed: number, tokenIndex?: number) => { popOffsets: number[]; focus: THREE.Vector3 | null };
+}
+
+/** Seconds between consecutive pops and how long one pop takes. */
+export const MISSION_ITEM_POP_STAGGER_S = 0.14;
+export const MISSION_ITEM_POP_DURATION_S = 0.42;
+
+/** 0 → 1 with a springy overshoot, like a kernel bursting open. */
+export function missionItemPopScale(t: number): number {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const c1 = 2.4;
+  const c3 = c1 + 1;
+  return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
 }
 
 function compactRewardToVertexColorMesh(root: THREE.Group, material: THREE.MeshStandardMaterial, name: string) {
@@ -84,8 +105,10 @@ export type IslandRunTileRewardObjectKind =
   | 'active_landmark_door';
 
 export function resolveIslandRunTileRewardObjectKind(
-  entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster' | 'signatureMissionKind'>,
+  entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster' | 'signatureMissionKind' | 'islandTreasureId'>,
 ): IslandRunTileRewardObjectKind | null {
+  // An island treasure (see islandRunTreasures.ts) waits on this tile.
+  if (entry.islandTreasureId) return 'treasure_chest';
   if (entry.signatureMissionKind === 'first_light_dynamite') return 'first_light_dynamite';
   if (entry.signatureMissionKind === 'frostwell_drill') return 'frostwell_drill';
   if (entry.signatureMissionKind === 'moonwell_heat') return 'moonwell_heat';
@@ -832,6 +855,11 @@ export function createIslandRunTileRewardThreeObjects(options: {
   };
   let firstLightClaimedDynamiteTiles = new Set<number>();
   let stagedRestorationClaimedTiles = new Set<number>();
+  let missionItemsHidden = false;
+  let missionReveal: { startedAt: number; orderByTile: Map<number, number> } | null = null;
+  const missionEntries = () => entries
+    .filter((entry) => entry.signatureMissionKind && entry.tileType !== 'traffic_light')
+    .sort((a, b) => a.tileIndex - b.tileIndex);
   const update = (elapsed: number, tokenIndex: number) => {
     entries.forEach((entry) => {
       // A real collectible owns its tile; don't stack a generic money icon beneath it.
@@ -872,10 +900,29 @@ export function createIslandRunTileRewardThreeObjects(options: {
         entry.root.visible = false;
         return;
       }
+      let popScale = 1;
+      let popLift = 0;
+      if (entry.signatureMissionKind) {
+        if (missionItemsHidden) {
+          entry.root.visible = false;
+          return;
+        }
+        const order = missionReveal?.orderByTile.get(entry.tileIndex);
+        if (missionReveal && order !== undefined) {
+          const t = (elapsed - missionReveal.startedAt - order * MISSION_ITEM_POP_STAGGER_S) / MISSION_ITEM_POP_DURATION_S;
+          if (t <= 0) {
+            entry.root.visible = false;
+            return;
+          }
+          popScale = missionItemPopScale(t);
+          // A little hop as it bursts out of the tile.
+          popLift = t < 1 ? Math.sin(Math.min(1, t) * Math.PI) * 0.35 : 0;
+        }
+      }
       const occupied = entry.tileIndex === tokenIndex;
-      const collectScale = occupied ? 0.08 : 1;
+      const collectScale = (occupied ? 0.08 : 1) * popScale;
       const bob = entry.tileType === 'hazard' ? 0.025 : 0.055;
-      entry.root.position.y = entry.baseY + Math.sin(elapsed * 1.55 + entry.phase) * bob;
+      entry.root.position.y = entry.baseY + Math.sin(elapsed * 1.55 + entry.phase) * bob + popLift;
       entry.root.rotation.y = -((transformByIndex.get(entry.tileIndex)?.rotationYRad) ?? 0) + elapsed * entry.spinRate;
       const pulse = 1 + Math.sin(elapsed * 2.1 + entry.phase) * (entry.tileType === 'free_ticket' ? 0.08 : 0.035);
       const pop = entry.signatureMissionKind === 'fishermans_rod' ? resolveRodPop(entry.tileIndex) : 1;
@@ -898,6 +945,20 @@ export function createIslandRunTileRewardThreeObjects(options: {
     },
     setStagedRestorationClaimedTiles: (tileIndices) => {
       stagedRestorationClaimedTiles = new Set(tileIndices);
+    },
+    setMissionItemsHidden: (hidden) => { missionItemsHidden = hidden; },
+    startMissionItemReveal: (elapsed, tokenIndex = -1) => {
+      missionItemsHidden = false;
+      const available = missionEntries().filter((entry) => !firstLightClaimedDynamiteTiles.has(entry.tileIndex)
+        && !stagedRestorationClaimedTiles.has(entry.tileIndex));
+      // Start just ahead of the player (never under the piece) and pop around the route.
+      const start = available.findIndex((entry) => entry.tileIndex > tokenIndex);
+      const ordered = start <= 0 ? available : [...available.slice(start), ...available.slice(0, start)];
+      if (ordered[0]?.tileIndex === tokenIndex && ordered.length > 1) ordered.push(ordered.shift()!);
+      missionReveal = { startedAt: elapsed, orderByTile: new Map(ordered.map((entry, index) => [entry.tileIndex, index])) };
+      const first = ordered[0];
+      const focus = first ? first.root.getWorldPosition(new THREE.Vector3()) : null;
+      return { popOffsets: ordered.map((_, index) => index * MISSION_ITEM_POP_STAGGER_S), focus };
     },
   };
 }

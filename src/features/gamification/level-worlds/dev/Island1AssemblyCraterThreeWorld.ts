@@ -37,7 +37,16 @@ export interface Island1AssemblyCraterPresentation {
   completed: boolean;
   claimedDynamiteTileIndices?: readonly number[];
   constructionSequence?: number;
+  /**
+   * The Assembly invitations have been sent from the Mission Phone. Until
+   * then the marina is built but no delegates arrive (default true so older
+   * saves and previews keep the full film).
+   */
+  invitationsSent?: boolean;
 }
+
+/** Marina progress where construction ends and the delegates' arrival begins. */
+export const ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS = 0.18;
 
 export interface Island1AssemblyCraterRuntime {
   root: THREE.Group;
@@ -374,36 +383,90 @@ export function createIsland1AssemblyCraterRuntime(
   foundationGeometry.rotateX(-Math.PI / 2);
   const rawExcavation = new THREE.Group();
   rawExcavation.name = 'ISLAND_1_ASSEMBLY_TWENTY_STAGE_EXCAVATION_VOLUME';
+  // Blasted, not machined: the mouth, wall and floor share one deterministic
+  // lumpy radius profile, and the rock darkens with depth so the hole reads as
+  // a hole from a bird's-eye view.
+  const excavationRadiusNoise = (angle: number, depth01: number) => (
+    Math.sin(angle * 3 + 1.3) * 0.055
+    + Math.sin(angle * 7 + depth01 * 2.1 + 0.4) * 0.04
+    + Math.sin(angle * 13 + 2.7 + depth01 * 5.3) * 0.022
+    + Math.sin(angle * 29 + depth01 * 9.1) * 0.01
+  );
+  const excavationRockTop = new THREE.Color(0x9a8e72);
+  const excavationRockMid = new THREE.Color(0x5e4b39);
+  const excavationRockDeep = new THREE.Color(0x261c15);
   const rawExcavationWallMaterial = cutawayStoneMaterial.clone();
   rawExcavationWallMaterial.name = 'ISLAND_1_ASSEMBLY_RAW_EXCAVATION_WALL_MATERIAL';
   rawExcavationWallMaterial.side = THREE.BackSide;
-  const rawExcavationWall = new THREE.Mesh(
-    new THREE.CylinderGeometry(
-      ISLAND_1_ASSEMBLY_CRATER_RADIUS,
-      ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS,
-      ISLAND_1_ASSEMBLY_CRATER_DEPTH,
-      radialSegments * 3,
-      7,
-      true,
-    ),
-    rawExcavationWallMaterial,
+  rawExcavationWallMaterial.color.setHex(0xffffff);
+  rawExcavationWallMaterial.vertexColors = true;
+  const rawExcavationWallGeometry = new THREE.CylinderGeometry(
+    ISLAND_1_ASSEMBLY_CRATER_RADIUS,
+    ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS,
+    ISLAND_1_ASSEMBLY_CRATER_DEPTH,
+    radialSegments * 4,
+    14,
+    true,
   );
+  {
+    const position = rawExcavationWallGeometry.attributes.position as THREE.BufferAttribute;
+    const colors = new Float32Array(position.count * 3);
+    const color = new THREE.Color();
+    for (let index = 0; index < position.count; index += 1) {
+      const x = position.getX(index), y = position.getY(index), z = position.getZ(index);
+      const depth01 = THREE.MathUtils.clamp(0.5 - y / ISLAND_1_ASSEMBLY_CRATER_DEPTH, 0, 1);
+      const angle = Math.atan2(z, x);
+      // Strata ledges: small steps in and out so the wall is broken, not smooth.
+      const ledge = Math.sin(depth01 * Math.PI * 7 + angle * 2) * 0.018;
+      const scale = 1 + excavationRadiusNoise(angle, depth01) + ledge;
+      position.setX(index, x * scale);
+      position.setZ(index, z * scale);
+      if (depth01 < 0.45) color.copy(excavationRockTop).lerp(excavationRockMid, depth01 / 0.45);
+      else color.copy(excavationRockMid).lerp(excavationRockDeep, (depth01 - 0.45) / 0.55);
+      color.multiplyScalar(0.92 + Math.sin(angle * 17 + depth01 * 23) * 0.08);
+      colors.set([color.r, color.g, color.b], index * 3);
+    }
+    rawExcavationWallGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    rawExcavationWallGeometry.computeVertexNormals();
+  }
+  const rawExcavationWall = new THREE.Mesh(rawExcavationWallGeometry, rawExcavationWallMaterial);
   rawExcavationWall.name = 'ISLAND_1_ASSEMBLY_PROGRESSIVE_RAW_EXCAVATION_WALL';
   rawExcavationWall.receiveShadow = true;
   rawExcavation.add(rawExcavationWall);
-  const rawShoulder=new THREE.Mesh(new THREE.RingGeometry(.001,ISLAND_1_ASSEMBLY_CRATER_RADIUS,72),rawExcavationWallMaterial.clone());
-  (rawShoulder.material as THREE.Material).side=THREE.DoubleSide;
+  const rawShoulderMaterial = cutawayStoneMaterial.clone();
+  rawShoulderMaterial.name = 'ISLAND_1_ASSEMBLY_RAW_EXCAVATION_SHOULDER_MATERIAL';
+  rawShoulderMaterial.color.copy(excavationRockTop);
+  rawShoulderMaterial.side = THREE.DoubleSide;
+  const rawShoulder=new THREE.Mesh(new THREE.RingGeometry(.001,ISLAND_1_ASSEMBLY_CRATER_RADIUS,72),rawShoulderMaterial);
   rawShoulder.name='ISLAND_001_RAW_EXCAVATION_ROCK_SHOULDER';rawShoulder.rotation.x=-Math.PI/2;rawShoulder.position.y=ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y-.035;rawExcavation.add(rawShoulder);
   const shoulderVertices=rawShoulder.geometry.attributes.position as THREE.BufferAttribute;
 
+  // Dark, uneven rubble floor whose edge follows the wall's lumpy base; the
+  // rim is darkest so the pit reads deep from above.
+  const rawExcavationFloorGeometry = new THREE.CircleGeometry(ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS, radialSegments * 4);
+  rawExcavationFloorGeometry.rotateX(-Math.PI / 2);
+  {
+    const position = rawExcavationFloorGeometry.attributes.position as THREE.BufferAttribute;
+    const colors = new Float32Array(position.count * 3);
+    const color = new THREE.Color();
+    const floorCentre = new THREE.Color(0x3d2e22);
+    for (let index = 0; index < position.count; index += 1) {
+      const x = position.getX(index), z = position.getZ(index);
+      const radius01 = Math.hypot(x, z) / ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS;
+      const angle = Math.atan2(z, x);
+      const edgeScale = 1 + excavationRadiusNoise(angle, 1) * THREE.MathUtils.smoothstep(radius01, 0.7, 1);
+      position.setX(index, x * edgeScale);
+      position.setZ(index, z * edgeScale);
+      position.setY(index, (Math.sin(x * 5.1 + z * 2.3) * 0.5 + Math.sin(x * 11.7 - z * 9.4) * 0.5) * 0.035 * radius01);
+      color.copy(floorCentre).lerp(excavationRockDeep, THREE.MathUtils.smoothstep(radius01, 0.35, 1) * 0.85);
+      colors.set([color.r, color.g, color.b], index * 3);
+    }
+    rawExcavationFloorGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    rawExcavationFloorGeometry.computeVertexNormals();
+  }
   const rawExcavationFloor = new THREE.Mesh(
-    new THREE.CylinderGeometry(
-      ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS,
-      ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS,
-      0.12,
-      radialSegments * 3,
-    ),
-    cutawayStoneMaterial,
+    rawExcavationFloorGeometry,
+    new THREE.MeshStandardMaterial({ name: 'ISLAND_1_ASSEMBLY_RAW_EXCAVATION_FLOOR_MATERIAL', color: 0xffffff, vertexColors: true, roughness: 1 }),
   );
   rawExcavationFloor.name = 'ISLAND_1_ASSEMBLY_PROGRESSIVE_RAW_EXCAVATION_FLOOR';
   rawExcavationFloor.receiveShadow = true;
@@ -686,6 +749,9 @@ export function createIsland1AssemblyCraterRuntime(
   let marinaBuildQueued = false;
   let marinaProgress = 0;
   let marinaManualProgress: number | null = null;
+  // True while the finished marina waits for the Mission Phone invitations.
+  let marinaAwaitingInvitations = false;
+  const invitationsSent = () => currentPresentation.invitationsSent !== false;
   let excavationVisualProgress = 0;
   let excavationAnimationFromProgress = 0;
   let excavationAnimationToProgress = 0;
@@ -739,7 +805,8 @@ export function createIsland1AssemblyCraterRuntime(
     });
     rawExcavation.visible = excavationProgress > 0 && assemblyBuildProgress <= 0;
     const mouth=ISLAND_1_ASSEMBLY_CRATER_RADIUS*excavationRadiusProgress;
-    for(let i=0;i<73;i++){const a=i/72*Math.PI*2;shoulderVertices.setXY(i,Math.cos(a)*mouth,Math.sin(a)*mouth);}
+    // Mouth follows the wall's lumpy top edge (the shoulder ring is in the XY plane, rotated flat).
+    for(let i=0;i<73;i++){const a=i/72*Math.PI*2,m=mouth*(1+excavationRadiusNoise(-a,0));shoulderVertices.setXY(i,Math.cos(a)*m,Math.sin(a)*m);}
     shoulderVertices.needsUpdate=true;
 
     rawExcavationWall.scale.set(
@@ -919,8 +986,11 @@ export function createIsland1AssemblyCraterRuntime(
       assemblyBuildProgress = currentPresentation.completed ? 1 : 0;
       marinaBuildQueued = false;
       marinaStartedAt = Number.NEGATIVE_INFINITY;
-      marinaManualProgress = currentPresentation.completed ? 1 : 0;
-      marinaProgress = currentPresentation.completed ? 1 : 0;
+      const settledMarina = currentPresentation.completed
+        ? invitationsSent() ? 1 : ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS
+        : 0;
+      marinaManualProgress = settledMarina;
+      marinaProgress = settledMarina;
       excavationVisualProgress = nextExcavationTarget;
       excavationAnimationFromProgress = nextExcavationTarget;
       excavationAnimationToProgress = nextExcavationTarget;
@@ -982,13 +1052,28 @@ export function createIsland1AssemblyCraterRuntime(
         updateInstances();
       }
     }
+    // Invitations sent after a reload that settled the marina at its hold:
+    // resume the film from the hold point on the live clock.
+    if (invitationsSent() && marinaManualProgress === ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS && currentPresentation.completed) {
+      marinaManualProgress = null;
+      marinaStartedAt = elapsed - ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS * ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS;
+    }
     if (currentPresentation.completed && marinaManualProgress === null && Number.isFinite(marinaStartedAt)) {
       marinaProgress = THREE.MathUtils.clamp(
         (elapsed - marinaStartedAt) / ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS,
         0,
         1,
       );
+      if (!invitationsSent() && marinaProgress >= ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS) {
+        // Hold the finished marina; keep the start pinned so the film resumes
+        // exactly here once the invitations go out.
+        marinaProgress = ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS;
+        marinaStartedAt = elapsed - ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS * ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS;
+      }
     }
+    marinaAwaitingInvitations = currentPresentation.completed && !invitationsSent()
+      && (marinaManualProgress ?? marinaProgress) >= ISLAND_1_MARINA_INVITATION_HOLD_PROGRESS;
+    root.userData.marinaAwaitingInvitations = marinaAwaitingInvitations;
     materials.warmGlow.emissiveIntensity = 1.02 + Math.sin(elapsed * 1.8) * 0.18;
     speakingLight.rotation.y = elapsed * 0.45;
     const blastAge = elapsed - blastStartedAt;
@@ -996,7 +1081,7 @@ export function createIsland1AssemblyCraterRuntime(
     root.userData.missionPresentationActive = activeBlast
       || (Number.isFinite(assemblyBuildStartedAt) && elapsed >= assemblyBuildStartedAt
         && elapsed < assemblyBuildStartedAt + ISLAND_1_ASSEMBLY_BUILD_DURATION_SECONDS)
-      || (Number.isFinite(marinaStartedAt) && elapsed >= marinaStartedAt
+      || (!marinaAwaitingInvitations && Number.isFinite(marinaStartedAt) && elapsed >= marinaStartedAt
         && elapsed < marinaStartedAt + ISLAND_1_MARINA_ANIMATION_DURATION_SECONDS);
     waterImpacts.visible = activeBlast && currentPresentation.chargesDetonated === 8;
     if (waterImpacts.visible) {
@@ -1035,7 +1120,10 @@ export function createIsland1AssemblyCraterRuntime(
         ISLAND_1_ASSEMBLY_UNDERGROUND_RADIUS * (0.3 + excavationSpread * 0.42),
         internalDigProgress,
       );
-      const intensity = act === 2 ? 2.4 : act === 1 ? 1.35 : 1.1;
+      // Charge 8 is the shockwave that tears the HUD top bar loose: the
+      // biggest blast of the island, with the tallest smoke column.
+      const topbarShock = act === 2 && currentPresentation.chargesDetonated === 8 ? 1.3 : 1;
+      const intensity = (act === 2 ? 2.4 : act === 1 ? 1.35 : 1.1) * topbarShock;
       const progress = Math.min(1, blastAge / ISLAND_1_ASSEMBLY_BLAST_DURATION_SECONDS);
       const excavationBeat = THREE.MathUtils.smoothstep(
         THREE.MathUtils.clamp((progress - 0.1) / 0.76, 0, 1),
@@ -1125,11 +1213,11 @@ export function createIsland1AssemblyCraterRuntime(
         const spread = head ? (.55 + dustProgress * 3.2) * Math.sqrt(((index * 17) % 37 + .5)/37) : .15 + dustProgress * .5;
         if (act === 2) {
           dummy.position.set(Math.sin(dustAngle) * spread,
-            0.3 + rise * (head ? 4.8 + (index % 3) * 0.35 : 1 + (index % 5) * 0.6),
+            0.3 + rise * (head ? (4.8 + (index % 3) * 0.35) * topbarShock : 1 + (index % 5) * 0.6),
             Math.cos(dustAngle) * spread);
-          dummy.scale.set(head ? 1.9 + dustProgress * 2.8 : 1 + dustProgress,
-            head ? 1.25 + dustProgress * 1.8 : 1.8 + dustProgress,
-            head ? 1.9 + dustProgress * 2.8 : 1 + dustProgress);
+          dummy.scale.set(head ? (1.9 + dustProgress * 2.8) * topbarShock : 1 + dustProgress,
+            head ? (1.25 + dustProgress * 1.8) * topbarShock : 1.8 + dustProgress,
+            head ? (1.9 + dustProgress * 2.8) * topbarShock : 1 + dustProgress);
         } else {
           const travel = dustProgress * (0.72 + (index % 4) * 0.32) * intensity;
           dummy.position.set(THREE.MathUtils.lerp(impactPosition.x,ventPosition.x,THREE.MathUtils.smoothstep(dustProgress,0,.6)) + Math.sin(dustAngle) * travel,
@@ -1141,7 +1229,7 @@ export function createIsland1AssemblyCraterRuntime(
         dummy.updateMatrix();
         blastDust.setMatrixAt(index, dummy.matrix);
       }
-      dustMaterial.opacity = Math.max(0, Math.pow(1-dustProgress,.65)*(act===2?.78:.48));
+      dustMaterial.opacity = Math.max(0, Math.pow(1-dustProgress,topbarShock>1?.45:.65)*(act===2?(topbarShock>1?.9:.78):.48));
       blastDust.instanceMatrix.needsUpdate = true;
       for (let index = 0; index < blastSparks.count; index += 1) {
         const sparkAngle = angle + index * 2.399963;

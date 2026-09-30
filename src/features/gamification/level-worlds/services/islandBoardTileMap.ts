@@ -17,6 +17,7 @@ import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
 import { resolveIslandRunFeatureAccess, type IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
 import { isCaretakerClueIsland } from './islandRunCardDrawCadence';
 import { getMoonwellHeatTileIndex } from './islandRunMoonwellThermal';
+import { getPendingTileTreasure } from './islandRunTreasures';
 import {
   getCactusCanyonDynamiteQuantityForTile,
   getGreatHoneyfallNectarQuantityForTile,
@@ -46,6 +47,8 @@ export type IslandTileMapEntry = {
   signatureMissionKind?: 'moonwell_heat' | 'first_light_dynamite' | 'frostwell_drill' | 'rootheart_power_component' | 'cactus_canyon_dynamite' | 'great_honeyfall_nectar' | 'fishermans_rod' | 'coaster_director' | StagedRestorationPickupKind;
   /** Authored quantity represented by a signature-mission pickup. */
   signatureMissionAmount?: number;
+  /** An island treasure waits here (collected by landing exactly on it). */
+  islandTreasureId?: string;
 };
 
 export type IslandLandmarkDoorTileConfig = {
@@ -323,7 +326,7 @@ export function generateTileMap(
     tiles.push({ index: tileIndex, tileType: TILE_POOL[poolIndex] });
   }
 
-  return tiles.map((entry) => {
+  const withMissionTiles = tiles.map((entry): IslandTileMapEntry => {
     if (islandNumber === 3 && entry.index === getMoonwellHeatTileIndex(tileCount)) {
       return { ...entry, signatureMissionKind: 'moonwell_heat' };
     }
@@ -370,4 +373,49 @@ export function generateTileMap(
     }
     return entry;
   });
+  return applyIslandTreasureTile(withMissionTiles, islandNumber, options?.signatureMissionProgressByIsland);
+}
+
+/** Pool tiles only: never a door, discount, ticket, card, encounter or mission tile. */
+const TREASURE_TILE_TYPES: ReadonlySet<IslandTileType> = new Set(['currency', 'chest', 'micro']);
+const TREASURE_TILE_START_FRACTION = 0.62;
+
+/**
+ * Place this island's pending tile treasure on one ordinary tile, a little
+ * past the halfway point of the ring and never next to a landmark door (door
+ * clusters expand onto their neighbours).
+ */
+function applyIslandTreasureTile(
+  entries: IslandTileMapEntry[],
+  islandNumber: number,
+  ledger: IslandRunFeatureAccessContext['signatureMissionProgressByIsland'],
+): IslandTileMapEntry[] {
+  const treasure = getPendingTileTreasure(ledger, islandNumber);
+  if (!treasure || entries.length < 3) return entries;
+  const doorNeighbourhood = new Set<number>();
+  for (const door of LANDMARK_DOOR_TILE_CONFIGS) {
+    for (const offset of [-1, 0, 1]) doorNeighbourhood.add((door.tileIndex + offset + entries.length) % entries.length);
+  }
+  const start = Math.floor(TREASURE_TILE_START_FRACTION * entries.length);
+  for (let step = 0; step < entries.length; step += 1) {
+    const index = (start + step) % entries.length;
+    const entry = entries[index];
+    if (!entry || index === 0 || doorNeighbourhood.has(index)) continue;
+    if (entry.signatureMissionKind || !TREASURE_TILE_TYPES.has(entry.tileType)) continue;
+    return entries.map((candidate) => (candidate.index === index ? { ...candidate, islandTreasureId: treasure.id } : candidate));
+  }
+  return entries;
+}
+
+/**
+ * The tile holding this island's pending treasure, or null. The roll action
+ * uses this so the canonical pickup always matches the rendered tile.
+ */
+export function getIslandTreasureTileIndex(
+  islandNumber: number,
+  options: { profileId?: IslandBoardProfileId; signatureMissionProgressByIsland?: IslandRunFeatureAccessContext['signatureMissionProgressByIsland'] },
+): number | null {
+  if (!getPendingTileTreasure(options.signatureMissionProgressByIsland, islandNumber)) return null;
+  const map = generateTileMap(islandNumber, getIslandRarity(islandNumber), '', 0, options);
+  return map.find((entry) => entry.islandTreasureId)?.index ?? null;
 }

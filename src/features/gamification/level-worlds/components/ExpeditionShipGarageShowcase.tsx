@@ -28,6 +28,8 @@ const VIEW_OPTIONS: Array<{id: ExpeditionShipPov; label: string}> = [
 interface ExpeditionShipGarageShowcaseProps {
   onOpenUpgrades: () => void;
   onOpenCosmetics: () => void;
+  /** Replays the Departure Day send-off (skippable). Hidden when absent. */
+  onReliveDeparture?: () => void;
   qualityPreference?: ExpeditionShipGarageQualityPreference;
   onQualityPreferenceChange?: (preference: ExpeditionShipGarageQualityPreference) => void;
 }
@@ -35,6 +37,7 @@ interface ExpeditionShipGarageShowcaseProps {
 export default function ExpeditionShipGarageShowcase({
   onOpenUpgrades,
   onOpenCosmetics,
+  onReliveDeparture,
   qualityPreference: controlledQualityPreference,
   onQualityPreferenceChange,
 }: ExpeditionShipGarageShowcaseProps) {
@@ -182,6 +185,11 @@ export default function ExpeditionShipGarageShowcase({
       <div className="expedition-ship-garage__actions">
         <button type="button" onClick={onOpenUpgrades}>Browse ship upgrades</button>
         <button type="button" onClick={onOpenCosmetics}>Plan colours &amp; interiors</button>
+        {onReliveDeparture ? (
+          <button type="button" className="expedition-ship-garage__relive" onClick={onReliveDeparture}>
+            Relive departure day
+          </button>
+        ) : null}
       </div>
     </section>
   );
