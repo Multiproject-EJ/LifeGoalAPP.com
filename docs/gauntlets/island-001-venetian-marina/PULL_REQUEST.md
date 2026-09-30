@@ -45,6 +45,11 @@ Intended destination: draft pull request from
 `codex/island-001-venetian-marina-20260930` into `main` in
 `Multiproject-EJ/LifeGoalAPP.com` (public repository).
 
-Publishing is pending explicit user approval. Automatic approval review
-blocked the push; no branch was uploaded and no PR was created. Merging into
-main would trigger the repository's separate deployment workflow.
+The user authorized uploading this branch and creating the draft PR.
+A fresh check found this worktree clean, its branch used by this worktree
+only, no overlapping uncommitted marina paths in 81 other existing
+worktrees, and no overlapping files in open PRs #3346, #3345 and #3261.
+Only this marina branch is to be pushed, using an explicit commit and
+non-forced destination ref. Other agents' branches and working files remain
+untouched. Main remains unchanged; merging it would trigger the separate
+deployment workflow.
