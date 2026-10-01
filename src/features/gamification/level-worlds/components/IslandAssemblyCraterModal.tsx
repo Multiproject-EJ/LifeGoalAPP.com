@@ -58,7 +58,7 @@ export function IslandAssemblyCraterModal({ open, used, available, nextCost, com
         </ol>
         <div className="assembly-v2__supplies">
           <span className="assembly-v2__dynamite" aria-hidden="true"><i /><i /><i /><b /></span>
-          <span><strong>{available}<small> charges ready</small></strong><span className="assembly-v2__supply-caption">{complete ? 'Excavation complete' : `${Math.min(available, nextCost)} of ${nextCost} needed for this blast`}</span></span>
+          <span><strong>{available}<small> {available === 1 ? 'charge' : 'charges'} ready</small></strong><span className="assembly-v2__supply-caption">{complete ? 'Excavation complete' : `${Math.min(available, nextCost)} of ${nextCost} needed for this blast`}</span></span>
           <span className="assembly-v2__total">{used}<small> / {FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET}<br />used</small></span>
         </div>
         <div className="assembly-v2__track" role="progressbar" aria-label="Excavation progress" aria-valuemin={0} aria-valuemax={FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET} aria-valuenow={used}><i style={{ width: `${used / FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET * 100}%` }} /></div>

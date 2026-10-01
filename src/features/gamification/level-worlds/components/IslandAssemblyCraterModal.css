@@ -3,7 +3,7 @@
 .assembly-v2__header{position:relative;padding:26px 24px 12px;text-align:center}
 .assembly-v2__eyebrow{display:block;color:#d4b677;font-size:10px;letter-spacing:2.5px;font-weight:800;padding:0 28px}
 .assembly-v2__close{position:absolute;right:10px;top:10px;display:grid;place-items:center;width:40px;height:40px;border:1px solid #ddc48c55;border-radius:50%;background:#0b1e2fd9;color:#ffedc3;font-size:26px;cursor:pointer}
-.assembly-v2 h2{font-family:Georgia,serif;font-size:clamp(27px,5.8vw,38px);font-weight:600;line-height:1.05;letter-spacing:-.6px;margin:14px 0 9px;text-shadow:0 2px 20px #f5bd4840}
+.assembly-v2 h2{font-family:Georgia,serif;font-size:clamp(27px,5.8vw,38px);font-weight:600;color:#fff4dc;line-height:1.05;letter-spacing:-.6px;margin:14px 0 9px;text-shadow:0 2px 20px #f5bd4840}
 .assembly-v2__header p{font-size:12px;line-height:1.4;color:#c6d8dd;margin:0}
 .assembly-v2__scene{position:relative;min-height:0;margin:4px 18px;pointer-events:none;border-radius:40%;background:radial-gradient(ellipse at center,transparent 50%,#11293916 70%)}
 .assembly-v2__scene-label{position:absolute;top:4px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:5px 12px;border:1px solid #e3c78955;border-radius:20px;background:#0a263077;color:#fff0c4;font-size:8px;font-weight:800;letter-spacing:2px}

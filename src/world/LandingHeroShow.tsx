@@ -63,13 +63,13 @@ export function LandingHeroShow() {
 
   return (
     <div className="lp-hero-art lp-show-wrap">
-      <div key={run} className="lp-show" aria-hidden="true">
+      <div key={`show-${run}`} className="lp-show" aria-hidden="true">
         <div className="lp-show-caretaker">
           <img
             className="lp-show-caretaker__img"
             src="/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp"
             alt=""
-            fetchPriority="high"
+            {...{ fetchpriority: 'high' }}
             decoding="async"
           />
           <img
@@ -138,7 +138,7 @@ export function LandingHeroShow() {
           ))}
         </div>
       </div>
-      <button key={run} className="lp-show-replay" type="button" aria-label="Replay the intro animation" onClick={() => setRun((value) => value + 1)}>
+      <button key={`replay-${run}`} className="lp-show-replay" type="button" aria-label="Replay the intro animation" onClick={() => setRun((value) => value + 1)}>
         Replay
       </button>
     </div>

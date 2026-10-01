@@ -41741,7 +41741,7 @@ body.habit-wizard-open .mobile-footer-nav {
   height: 9.1rem;
 }
 
-+.guest-free-play-modal__audio-scene {
+.guest-free-play-modal__audio-scene {
   position: relative;
   min-height: 8.35rem;
   display: grid;
