@@ -902,6 +902,8 @@ import { registerCrashContext } from '../../../../services/crashReports';
 import { IslandRunScoreboardModal } from './IslandRunScoreboardModal';
 import { MISSION_MESSAGE_AFTER_LANDING_MS, MISSION_MESSAGE_CONTROLLER_LANDING_FALLBACK_MS, MISSION_MESSAGE_NUDGE_INTERVAL_MS, playMissionMessageRing, shouldDeliverMissionMessage } from '../services/islandRunMissionMessage';
 import { ISLAND_DEPARTURE_FALLBACK_MS, shouldPlayIslandDepartureCinematic } from '../services/islandRunDepartureCinematic';
+import { TRAVEL_INTERLUDE_FALLBACK_MS, resolveTravelInterludePlan, type TravelInterludePlan } from '../services/islandTravelInterlude';
+import { IslandTravelInterlude } from './IslandTravelInterlude';
 
 // The legacy Island Mission narrative was designed around unsolicited story
 // interruptions. Keep its authored data for future reuse, but do not surface
@@ -2767,6 +2769,9 @@ export function IslandRunBoardPrototype({
   // off and streaks away before the travel overlay. Presentation only.
   const [islandDeparture, setIslandDeparture] = useState<{ fromIsland: number; toIsland: number } | null>(null);
   const islandDepartureFinishRef = useRef<(() => void) | null>(null);
+  // Cozy ship-interior interlude shown while the canonical travel runs.
+  const [travelInterlude, setTravelInterlude] = useState<{ plan: TravelInterludePlan; key: number } | null>(null);
+  const travelInterludeFinishRef = useRef<(() => void) | null>(null);
   const [travelOverlayDestinationIsland, setTravelOverlayDestinationIsland] = useState(2);
   const [travelOverlayMode, setTravelOverlayMode] = useState<'advance' | 'retry'>('advance');
   const [isIslandTimerPendingStart, setIsIslandTimerPendingStart] = useState(false);
@@ -7568,7 +7573,7 @@ export function IslandRunBoardPrototype({
       islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
       isIslandTimerPendingStart,
       timeLeftSec,
-      showTravelOverlay,
+      showTravelOverlay: showTravelOverlay || travelInterlude !== null,
     })) {
       return;
     }
@@ -7587,7 +7592,7 @@ export function IslandRunBoardPrototype({
     }, 1800);
 
     return () => window.clearTimeout(timeout);
-  }, [islandNumber, isIslandTimerPendingStart, showTravelOverlay, timeLeftSec]);
+  }, [islandNumber, isIslandTimerPendingStart, showTravelOverlay, timeLeftSec, travelInterlude]);
 
   const timerDisplay = isIslandTimerPendingStart ? 'Ready' : formatIslandCountdown(timeLeftSec);
   const audioMenuIcon = ambienceEnabled || musicEnabled || sfxEnabled
@@ -12221,20 +12226,45 @@ export function IslandRunBoardPrototype({
     setIsIslandClearCelebrationDeparting(true);
     const resolvedDestination = nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland;
     const startTravel = () => {
-      setShowTravelOverlay(true);
       setIslandDeparture(null);
-      window.setTimeout(() => {
-        setShowTravelOverlay(false);
-        void performIslandTravel(nextIsland, { startTimer: true, completedVisitKey: completion.visitKey }).then(() => {
-          const resolvedNextIsland = nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland;
-          setActiveStoryEpisode({
-            kind: 'island_travel_arrival',
-            manifestPath: resolveIslandTravelArrivalManifestPath(resolvedNextIsland),
-          });
-        }).catch(() => {
+      // The interlude covers the board while the canonical travel commits and
+      // the next island mounts; arrival waits for both.
+      const plan = resolveTravelInterludePlan({
+        fromIslandNumber: stats.islandNumber,
+        toIslandNumber: resolvedDestination,
+        reducedMotion: typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches),
+      });
+      let sceneDone = false;
+      let travelOutcome: 'pending' | 'ok' | 'failed' = 'pending';
+      const maybeArrive = () => {
+        if (!sceneDone || travelOutcome === 'pending') return;
+        setTravelInterlude(null);
+        if (travelOutcome === 'failed') {
           setLandingText('Departure could not finish. Your progress is safe — tap Finish Island to try again.');
+          return;
+        }
+        setActiveStoryEpisode({
+          kind: 'island_travel_arrival',
+          manifestPath: resolveIslandTravelArrivalManifestPath(resolvedDestination),
         });
-      }, 1400);
+      };
+      const finishScene = () => {
+        if (sceneDone) return;
+        sceneDone = true;
+        travelInterludeFinishRef.current = null;
+        window.clearTimeout(sceneFallback);
+        maybeArrive();
+      };
+      const sceneFallback = window.setTimeout(finishScene, TRAVEL_INTERLUDE_FALLBACK_MS);
+      travelInterludeFinishRef.current = finishScene;
+      setTravelInterlude({ plan, key: Date.now() });
+      void performIslandTravel(nextIsland, { startTimer: true, completedVisitKey: completion.visitKey }).then(() => {
+        travelOutcome = 'ok';
+        maybeArrive();
+      }).catch(() => {
+        travelOutcome = 'failed';
+        maybeArrive();
+      });
     };
     window.setTimeout(() => {
       setShowIslandClearCelebration(false);
@@ -18787,6 +18817,14 @@ export function IslandRunBoardPrototype({
           </section>
         </div>
       )}
+
+      {travelInterlude ? (
+        <IslandTravelInterlude
+          key={travelInterlude.key}
+          plan={travelInterlude.plan}
+          onComplete={() => travelInterludeFinishRef.current?.()}
+        />
+      ) : null}
 
       {showTravelOverlay && (
         <div className="island-run-overlay-root island-travel-overlay" role="status" aria-live="polite">

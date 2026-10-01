@@ -1,0 +1,178 @@
+.island-travel-interlude {
+  --travel-route-progress: 0;
+  --travel-route-lift: 0;
+  --travel-interlude-progress: 0;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  overflow: hidden;
+  background: radial-gradient(120% 80% at 50% 20%, #2a1d4a 0%, #0b1024 70%);
+  color: #fff7ea;
+  animation: island-travel-interlude-in 520ms ease-out both;
+}
+
+.island-travel-interlude__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.island-travel-interlude[data-webgl='failed'] .island-travel-interlude__canvas {
+  display: none;
+}
+
+/* Soft cinematic vignette and letterbox-free warmth at the edges. */
+.island-travel-interlude__vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(130% 90% at 50% 45%, transparent 55%, rgba(8, 6, 20, 0.62) 100%),
+    linear-gradient(to bottom, rgba(8, 6, 20, 0.35), transparent 18%, transparent 62%, rgba(8, 6, 20, 0.72));
+}
+
+.island-travel-interlude__skip {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: 16px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 247, 234, 0.35);
+  border-radius: 999px;
+  background: rgba(16, 12, 32, 0.45);
+  color: inherit;
+  font: 600 14px/1 system-ui, sans-serif;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.island-travel-interlude__caption {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 132px);
+  margin: 0 auto;
+  max-width: 30rem;
+  text-align: center;
+  font: italic 500 16px/1.45 Georgia, 'Times New Roman', serif;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  animation: island-travel-interlude-caption 1400ms 500ms ease-out both;
+}
+
+.island-travel-interlude__route {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+  margin: 0 auto;
+  max-width: 30rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.island-travel-interlude__node {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 84px;
+  text-align: center;
+}
+
+.island-travel-interlude__node img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--node-tint, #fff);
+  box-shadow: 0 0 0 3px rgba(16, 12, 32, 0.55), 0 6px 18px rgba(0, 0, 0, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.island-travel-interlude__node--from img {
+  opacity: 0.78;
+  filter: saturate(0.8);
+}
+
+.island-travel-interlude__node--to img {
+  box-shadow: 0 0 0 3px rgba(16, 12, 32, 0.55), 0 0 calc(6px + var(--travel-route-progress) * 18px) var(--node-tint, #fff);
+}
+
+.island-travel-interlude__node figcaption {
+  font: 600 12px/1.2 system-ui, sans-serif;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+  overflow-wrap: anywhere;
+}
+
+.island-travel-interlude__node figcaption small {
+  display: block;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.island-travel-interlude__track {
+  position: relative;
+  height: 56px;
+  margin-bottom: 30px;
+}
+
+.island-travel-interlude__track svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.island-travel-interlude__path,
+.island-travel-interlude__path-lit {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.island-travel-interlude__path {
+  vector-effect: non-scaling-stroke;
+  stroke: rgba(255, 247, 234, 0.35);
+  stroke-width: 2;
+  stroke-dasharray: 2 4;
+}
+
+.island-travel-interlude__path-lit {
+  stroke: #ffd38a;
+  stroke-width: 1.6;
+  stroke-dasharray: 100 100;
+  stroke-dashoffset: 100;
+  filter: drop-shadow(0 0 4px rgba(255, 211, 138, 0.9));
+}
+
+.island-travel-interlude__ship {
+  position: absolute;
+  left: calc(2% + var(--travel-route-progress) * 96%);
+  top: calc(75% - var(--travel-route-lift) * 50%);
+  transform: translate(-50%, -50%) rotate(calc(45deg + (var(--travel-route-progress) - 0.5) * 70deg));
+  font-size: 20px;
+  filter: drop-shadow(0 0 6px rgba(255, 211, 138, 0.8));
+}
+
+@keyframes island-travel-interlude-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes island-travel-interlude-caption {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-travel-interlude,
+  .island-travel-interlude__caption {
+    animation: none;
+  }
+}
