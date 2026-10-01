@@ -4132,6 +4132,14 @@ export function IslandRunBoardPrototype({
     }, (reducedMotion ? JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS : JUNGLE_COMPASS_CEREMONY_DURATION_MS) + 300);
   }, []);
 
+  // Dev visual preview: ?assemblyChargesPreview=N shows Island 001 mid-excavation.
+  const assemblyChargesPreview = useMemo(() => {
+    if (!isIslandVisualPreview || typeof window === 'undefined') return null;
+    const raw = new URLSearchParams(window.location.search).get('assemblyChargesPreview');
+    const value = raw === null ? Number.NaN : Number(raw);
+    return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : null;
+  }, [isIslandVisualPreview]);
+
   // Dev visual preview: ?playerCheerPreview=1 cheers on a finished landmark every 6 s.
   useEffect(() => {
     if (!isIslandVisualPreview || new URLSearchParams(window.location.search).get('playerCheerPreview') !== '1') return undefined;
@@ -17804,11 +17812,11 @@ export function IslandRunBoardPrototype({
                 }}
                 firstLightAssemblyCraterPresentation={{
                   chargesDetonated: isIslandVisualPreview && islandArtPreviewNumber === 1
-                    ? FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
+                    ? assemblyChargesPreview ?? FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET
                     : firstLightAssemblyPendingSector ?? firstLightAssemblyProgress.chargesDetonated,
                   targetCharges: FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
                   completed: isIslandVisualPreview && islandArtPreviewNumber === 1
-                    ? true
+                    ? assemblyChargesPreview === null
                     : firstLightAssemblyCompleted || firstLightAssemblyPendingSector === FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET,
                   claimedDynamiteTileIndices: visibleClaimedDynamiteTilesRef.current,
                   constructionSequence: firstLightAssemblyConstructionSequence,

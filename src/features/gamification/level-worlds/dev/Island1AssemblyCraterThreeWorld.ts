@@ -12,6 +12,7 @@ import {
   type Island1MarinaPresentation,
 } from './Island1AssemblyMarina';
 import { FIRST_LIGHT_ASSEMBLY_CHARGE_TARGET } from '../services/islandRunSignatureMissions';
+import { createIsland1ExcavationSafety } from './Island1ExcavationSafety';
 import type { Island3DQuality, Island5LandmarkDefinition } from './island5ThreePilotContract';
 import {
   buildIsland1Landmark,
@@ -272,6 +273,8 @@ export function createIsland1AssemblyCraterRuntime(
 
   const heroCoast = createAssemblyHeroCoast(quality, materials);
   root.add(heroCoast.root);
+  const excavationSafety = createIsland1ExcavationSafety(quality);
+  root.add(excavationSafety.root);
 
   const segmentAngle = Math.PI * 2 / ISLAND_1_ASSEMBLY_CRATER_SECTOR_COUNT;
   const radialSegments = quality === 'high' ? 18 : quality === 'medium' ? 14 : 10;
@@ -437,7 +440,30 @@ export function createIsland1AssemblyCraterRuntime(
   rawShoulderMaterial.name = 'ISLAND_1_ASSEMBLY_RAW_EXCAVATION_SHOULDER_MATERIAL';
   rawShoulderMaterial.color.copy(excavationRockTop);
   rawShoulderMaterial.side = THREE.DoubleSide;
-  const rawShoulder=new THREE.Mesh(new THREE.RingGeometry(.001,ISLAND_1_ASSEMBLY_CRATER_RADIUS,72),rawShoulderMaterial);
+  // Broken-dirt apron: 8 rows from the lumpy mouth out to the crater edge,
+  // mottled soil with darker cracks and surviving grass near the rim.
+  const SHOULDER_ROWS = 8;
+  rawShoulderMaterial.vertexColors = true;
+  rawShoulderMaterial.color.setHex(0xffffff);
+  const rawShoulderGeometry = new THREE.RingGeometry(.001, ISLAND_1_ASSEMBLY_CRATER_RADIUS, 72, SHOULDER_ROWS);
+  {
+    const shoulderColors = new Float32Array(rawShoulderGeometry.attributes.position.count * 3);
+    const dirt = new THREE.Color(0x7a5a3c), dirtLight = new THREE.Color(0x9c7a52), crack = new THREE.Color(0x4a3524), grass = new THREE.Color(0x6f9d45);
+    const shade = new THREE.Color();
+    for (let row = 0; row <= SHOULDER_ROWS; row += 1) {
+      for (let i = 0; i < 73; i += 1) {
+        const a = (i / 72) * Math.PI * 2, t = row / SHOULDER_ROWS;
+        const mottle = Math.sin(a * 13 + row * 1.7) * 0.5 + Math.sin(a * 29 - row * 2.3) * 0.5;
+        shade.copy(dirt).lerp(dirtLight, 0.5 + mottle * 0.5);
+        if (Math.sin(a * 7 + row * 3.1) > 0.82 && row > 0) shade.lerp(crack, 0.7);
+        const grassPatch = Math.sin(a * 5 + 1.3) * 0.5 + Math.sin(a * 11 + 0.4) * 0.5;
+        if (t > 0.6 && grassPatch > 0.35) shade.lerp(grass, THREE.MathUtils.smoothstep(t, 0.6, 1) * 0.9);
+        shoulderColors.set([shade.r, shade.g, shade.b], (row * 73 + i) * 3);
+      }
+    }
+    rawShoulderGeometry.setAttribute('color', new THREE.BufferAttribute(shoulderColors, 3));
+  }
+  const rawShoulder=new THREE.Mesh(rawShoulderGeometry,rawShoulderMaterial);
   rawShoulder.name='ISLAND_001_RAW_EXCAVATION_ROCK_SHOULDER';rawShoulder.rotation.x=-Math.PI/2;rawShoulder.position.y=ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y-.035;rawExcavation.add(rawShoulder);
   const shoulderVertices=rawShoulder.geometry.attributes.position as THREE.BufferAttribute;
 
@@ -806,8 +832,24 @@ export function createIsland1AssemblyCraterRuntime(
     rawExcavation.visible = excavationProgress > 0 && assemblyBuildProgress <= 0;
     const mouth=ISLAND_1_ASSEMBLY_CRATER_RADIUS*excavationRadiusProgress;
     // Mouth follows the wall's lumpy top edge (the shoulder ring is in the XY plane, rotated flat).
-    for(let i=0;i<73;i++){const a=i/72*Math.PI*2,m=mouth*(1+excavationRadiusNoise(-a,0));shoulderVertices.setXY(i,Math.cos(a)*m,Math.sin(a)*m);}
+    for (let i = 0; i < 73; i += 1) {
+      const a = i / 72 * Math.PI * 2, m = mouth * (1 + excavationRadiusNoise(-a, 0));
+      for (let row = 0; row <= SHOULDER_ROWS; row += 1) {
+        const t = row / SHOULDER_ROWS;
+        const r = m + (ISLAND_1_ASSEMBLY_CRATER_RADIUS - m) * t;
+        // Lumpy broken ground (a little lower right at the lip).
+        const bump = row === 0 || row === SHOULDER_ROWS ? 0 : (Math.sin(a * 9 + row * 2.1) * 0.5 + Math.sin(a * 23 - row) * 0.5) * 0.018;
+        shoulderVertices.setXYZ(row * 73 + i, Math.cos(a) * r, Math.sin(a) * r, bump);
+      }
+    }
     shoulderVertices.needsUpdate=true;
+    rawShoulder.geometry.computeVertexNormals();
+    excavationSafety.update({
+      mouthAt: (angle) => mouth * (1 + excavationRadiusNoise(angle, 0)),
+      visible: rawExcavation.visible && mouth > 0.05,
+      maxRadius: ISLAND_1_ASSEMBLY_CRATER_RADIUS,
+      surfaceY: ISLAND_1_ASSEMBLY_CRATER_SURFACE_Y - 0.03,
+    });
 
     rawExcavationWall.scale.set(
       Math.max(0.001, excavationRadiusProgress),
@@ -1286,6 +1328,7 @@ export function createIsland1AssemblyCraterRuntime(
     marina.update(marinaManualProgress ?? marinaProgress, elapsed);
     const admission=marina.getPresentation();
     heroCoast.animate(elapsed,admission.waterfallFlow,admission.waterfallDraining);
+    excavationSafety.animate(elapsed, false);
   };
 
   updateAssemblyCrater(currentPresentation, true);
