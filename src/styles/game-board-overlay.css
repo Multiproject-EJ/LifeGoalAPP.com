@@ -2269,3 +2269,93 @@ span.game-board-overlay__hub-ring {
 }
 @keyframes game-board-overlay-nudge-in { from { opacity: 0; transform: translateY(6px) scale(0.96); } }
 @media (prefers-reduced-motion: reduce) { .game-board-overlay__balance-nudge { animation: none; } }
+
+/* Two Tracks: dice engine history and path forward. */
+.dice-engine-journey {
+  margin: 10px 0 0;
+  border-radius: 16px;
+  background: rgba(16, 24, 48, 0.72);
+  border: 1px solid rgba(140, 190, 255, 0.28);
+  color: #fff;
+  overflow: hidden;
+}
+.dice-engine-journey__summary {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dice-engine-journey__icon { font-size: 1.4rem; }
+.dice-engine-journey__copy strong { display: block; font-size: 0.92rem; }
+.dice-engine-journey__copy small { display: block; font-size: 0.74rem; opacity: 0.8; }
+.dice-engine-journey__next {
+  font-size: 0.74rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 211, 77, 0.18);
+  color: #ffe08a;
+  white-space: nowrap;
+}
+.dice-engine-journey__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0 12px 12px;
+  display: grid;
+  gap: 5px;
+}
+.dice-engine-journey__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  min-height: 22px;
+}
+.dice-engine-journey__step-level { opacity: 0.85; font-weight: 700; }
+.dice-engine-journey__step-bar {
+  position: absolute;
+  left: 60px;
+  top: 3px;
+  bottom: 3px;
+  max-width: calc(100% - 60px);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.dice-engine-journey__step-value { position: relative; padding-left: 6px; }
+.dice-engine-journey__step--reached .dice-engine-journey__step-bar { background: rgba(88, 244, 166, 0.28); }
+.dice-engine-journey__step--current .dice-engine-journey__step-bar { background: rgba(88, 244, 166, 0.55); box-shadow: 0 0 10px rgba(88, 244, 166, 0.45); }
+.dice-engine-journey__step--next .dice-engine-journey__step-bar { background: rgba(255, 211, 77, 0.35); }
+.dice-engine-journey__step--future { opacity: 0.6; }
+/* In the header: a compact chip; the steps drop down over the road. */
+.game-board-overlay__header .dice-engine-journey {
+  position: relative;
+  z-index: 6;
+  margin: 6px auto 4px;
+  width: min(360px, 100%);
+  overflow: visible;
+}
+.game-board-overlay__header .dice-engine-journey__summary { padding: 7px 10px; }
+.game-board-overlay__header .dice-engine-journey__steps {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  padding: 10px 12px 12px;
+  border-radius: 14px;
+  background: rgba(12, 18, 38, 0.96);
+  border: 1px solid rgba(140, 190, 255, 0.28);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+.game-board-overlay__header--road { position: relative; z-index: 30; }
+.game-board-overlay__header .dice-engine-journey__copy strong { font-size: 0.82rem; }
+.game-board-overlay__header .dice-engine-journey__copy small { font-size: 0.68rem; }
+.game-board-overlay__header .dice-engine-journey__icon { font-size: 1.1rem; }
+.dice-engine-journey__steps { text-align: left; }

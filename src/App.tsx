@@ -6280,6 +6280,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {appPreviewOverlay}
         {firstRunOverlay}
         <GameBoardOverlay
+          diceRegenLevel={currentLevel}
           isOpen={showGameBoardOverlay}
           spotlightPlay={firstRunStep === 'spotlight-play'}
           onClose={() => setShowGameBoardOverlay(false)}
@@ -6633,6 +6634,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
       {/* Game Board Overlay */}
       <GameBoardOverlay
+        diceRegenLevel={currentLevel}
         isOpen={showGameBoardOverlay}
         spotlightPlay={firstRunStep === 'spotlight-play'}
         onClose={() => setShowGameBoardOverlay(false)}
