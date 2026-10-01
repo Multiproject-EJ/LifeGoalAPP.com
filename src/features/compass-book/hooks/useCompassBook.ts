@@ -56,6 +56,10 @@ export type UseCompassBook = {
     activityId: string,
     entries: CompassAnswerEntry[],
   ) => Promise<void>;
+  saveManyActivityAnswers: (
+    chapterId: CompassBookChapterId,
+    items: Array<{ activityId: string; entries: CompassAnswerEntry[] }>,
+  ) => Promise<void>;
   /** Seal a chapter: run its projector, snapshot confirmed output, mark complete. */
   sealChapter: (chapterId: CompassBookChapterId) => Promise<void>;
   /** Adopt the latest chapter method without changing its sealed snapshot. */
@@ -151,10 +155,10 @@ export function useCompassBook(
     [userId, demo],
   );
 
-  const saveActivityAnswers = useCallback(
-    async (chapterId: CompassBookChapterId, activityId: string, entries: CompassAnswerEntry[]) => {
+  /** Merge one activity's entries into a chapter state (completion + seal rules). */
+  const applyActivityAnswers = useCallback(
+    (base: CompassChapterState, chapterId: CompassBookChapterId, activityId: string, entries: CompassAnswerEntry[]): CompassChapterState => {
       const now = new Date().toISOString();
-      const base = states[chapterId] ?? emptyChapterState(chapterId);
 
       let answers = base.answers;
       for (const entry of entries) {
@@ -207,9 +211,27 @@ export function useCompassBook(
         }
       }
 
+      return next;
+    },
+    [],
+  );
+
+  const saveActivityAnswers = useCallback(
+    async (chapterId: CompassBookChapterId, activityId: string, entries: CompassAnswerEntry[]) => {
+      const base = states[chapterId] ?? emptyChapterState(chapterId);
+      await persist(applyActivityAnswers(base, chapterId, activityId, entries));
+    },
+    [states, persist, applyActivityAnswers],
+  );
+
+  /** Dev long form: many activities of one chapter in a single persist. */
+  const saveManyActivityAnswers = useCallback(
+    async (chapterId: CompassBookChapterId, items: Array<{ activityId: string; entries: CompassAnswerEntry[] }>) => {
+      let next = states[chapterId] ?? emptyChapterState(chapterId);
+      for (const item of items) next = applyActivityAnswers(next, chapterId, item.activityId, item.entries);
       await persist(next);
     },
-    [states, userId, persist],
+    [states, persist, applyActivityAnswers],
   );
 
   const sealChapter = useCallback(
@@ -249,6 +271,7 @@ export function useCompassBook(
     getChapterState,
     getProgress,
     saveActivityAnswers,
+    saveManyActivityAnswers,
     sealChapter,
     beginChapterMethodRevisit,
   };

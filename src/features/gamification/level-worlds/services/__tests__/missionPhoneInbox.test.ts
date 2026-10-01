@@ -72,11 +72,16 @@ export const missionPhoneInboxTests: TestCase[] = [
       const fs = await import('fs');
       const modal = fs.readFileSync('src/features/gamification/level-worlds/components/IslandMissionBriefingModal.tsx', 'utf8');
       assert(!modal.includes('pictureMessage ?'), 'the picture message is no longer drawn on the mission screen');
-      assert(modal.includes('island-mission-tracker__inbox-button'), 'the phone header has an Inbox button');
-      assert(modal.includes("Got it · file to Inbox"), 'a message is filed to the inbox once read');
+      assert(modal.includes('island-mission-tracker__messages-button'), 'the phone header has a Messages button');
+      assert(modal.includes("Got it · let's go"), 'a message is filed once read');
+      assert(modal.includes('island-mission-tracker__message--fullscreen'), 'an incoming message is fullscreen on the phone');
+      assert(modal.includes('{!showMessageView ? (\n              <header className="island-mission-tracker__header">'), 'the dashboard header hides for 100% focus');
+      assert(modal.includes('className="island-mission-messages" role="dialog" aria-modal="true"'), 'filed messages open in their own Messages modal');
+      assert(!modal.includes("setScreen({ kind: 'inbox' })"), 'messages never render on the dashboard');
+      assert(modal.includes('<MissionPictureMessage labels={openMessage.stepLabels} variant="boxed" />'), 'missions read as boxed 1 · 2 · 3 steps');
       assert(modal.includes('fileOpenMessage();\n    requestFold'), 'closing the phone also files the open message');
       const board = fs.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
-      assert(board.includes('openMessageId={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing ? openMissionMessageId : null}'), 'the incoming briefing opens its message view');
+      assert(board.includes('openMessageId={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing ? openMissionMessageId : showMissionPhoneBriefing ? phoneCallMessageId : null}'), 'the incoming briefing opens its message view');
       assert(board.includes('addMissionPhoneMessage(inbox, {'), 'arriving messages are filed in the inbox');
     },
   },

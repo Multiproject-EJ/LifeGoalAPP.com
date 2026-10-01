@@ -21,6 +21,7 @@ import type { ControllerMenuFaces } from '../features/gamification/level-worlds/
 import type { TwoTracksToday } from '../features/gamification/level-worlds/services/twoTracksDaily';
 import { buildTwoTracksRoad } from '../features/gamification/level-worlds/services/twoTracksRoad';
 import { TwoTracksRoad } from './two-tracks/TwoTracksRoad';
+import { DiceEngineJourney } from './two-tracks/DiceEngineJourney';
 
 /**
  * Presentational-only memory of the last island the dual-track ladder was shown for,
@@ -111,6 +112,8 @@ type GameBoardOverlayProps = {
   earnedXpFloor?: number;
   /** Stable per-viewer id used to scope the "catch-up climb" memory (presentational only). */
   viewerId?: string;
+  /** Player level driving passive dice regeneration (shows the dice engine card). */
+  diceRegenLevel?: number;
   /** Claimable Combined Journey Level chest (R5); null/omitted hides the CTA. */
   journeyChest?: JourneyChestClaimViewModel | null;
   /** True while a chest claim is in flight. */
@@ -381,6 +384,7 @@ function HorizonChest({
 
 export function GameBoardOverlay({
   isOpen,
+  diceRegenLevel,
   onClose,
   onPlayClick,
   spotlightPlay = false,
@@ -616,6 +620,7 @@ export function GameBoardOverlay({
           <section className="game-board-overlay__quest-progress" aria-labelledby="game-board-overlay-title">
             <header className="game-board-overlay__header game-board-overlay__header--road">
               <p className="game-board-overlay__eyebrow">Two tracks · one climb</p>
+              {diceRegenLevel !== undefined ? <DiceEngineJourney level={diceRegenLevel} /> : null}
               <h2 id="game-board-overlay-title" className="game-board-overlay__title game-board-overlay__title--sr-only">
                 {dualTrackViewModel.title}
               </h2>

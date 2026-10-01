@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createIsland18BlossomPass } from './Island18BlossomPass';
 import { JUNGLE_COMPASS_CEREMONY_DURATION_MS } from '../services/islandRunJungleMissionPresentation';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -97,6 +98,10 @@ export interface Island18JungleExpeditionMaterials {
   flower: THREE.MeshStandardMaterial;
   flowerSun: THREE.MeshStandardMaterial;
   flowerCyan: THREE.MeshStandardMaterial;
+  /** Blossoming canopy clusters (Island 008 colour pass). */
+  blossomPink: THREE.MeshStandardMaterial;
+  blossomOrange: THREE.MeshStandardMaterial;
+  blossomViolet: THREE.MeshStandardMaterial;
   biolume: THREE.MeshStandardMaterial;
   basinGround: THREE.MeshStandardMaterial;
   canopyVolume: THREE.ShaderMaterial;
@@ -645,6 +650,9 @@ export function createIsland18JungleExpeditionMaterials(): Island18JungleExpedit
     flower: new THREE.MeshStandardMaterial({ color: 0xed64c6, roughness: 0.46, emissive: 0x71175d, emissiveIntensity: 0.26, side: THREE.DoubleSide }),
     flowerSun: new THREE.MeshStandardMaterial({ color: 0xffd452, roughness: 0.42, emissive: 0x9b5607, emissiveIntensity: 0.28, side: THREE.DoubleSide }),
     flowerCyan: new THREE.MeshStandardMaterial({ color: 0x6cf1e5, roughness: 0.38, emissive: 0x09897d, emissiveIntensity: 0.32, side: THREE.DoubleSide }),
+    blossomPink: new THREE.MeshStandardMaterial({ color: 0xff8cc3, roughness: 0.55, emissive: 0x6b1840, emissiveIntensity: 0.18, side: THREE.DoubleSide }),
+    blossomOrange: new THREE.MeshStandardMaterial({ color: 0xffa64a, roughness: 0.55, emissive: 0x6b3000, emissiveIntensity: 0.18, side: THREE.DoubleSide }),
+    blossomViolet: new THREE.MeshStandardMaterial({ color: 0xb894ff, roughness: 0.55, emissive: 0x35206b, emissiveIntensity: 0.18, side: THREE.DoubleSide }),
     biolume: new THREE.MeshStandardMaterial({ color: 0x9dff9a, roughness: 0.26, emissive: 0x28d76d, emissiveIntensity: 0.72, side: THREE.DoubleSide }),
     basinGround: new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.92, metalness: 0, flatShading: true }),
     canopyVolume: new THREE.ShaderMaterial({
@@ -1338,8 +1346,11 @@ function createInstancedCanopyField(
   const root = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   root.name = 'ISLAND_18_INSTANCED_JUNGLE_CANOPY_FIELD';
   const leafGeometries = JUNGLE_LEAF_SILHOUETTES.map((silhouette) => createBroadLeafGeometry(silhouette));
-  const materialList = [materials.leafLight, materials.leaf, materials.leafDeep] as const;
-  const placements: Array<Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }>> = [[], [], []];
+  // Batches 0-2 are the green leaves; 3-5 are blossoming clusters (every 4th
+  // cluster), reusing leaf silhouettes so the triangle budget is unchanged.
+  const materialList = [materials.leafLight, materials.leaf, materials.leafDeep, materials.blossomPink, materials.blossomOrange, materials.blossomViolet] as const;
+  const geometryForBatch = [0, 1, 2, 0, 1, 2] as const;
+  const placements: Array<Array<{ position: THREE.Vector3; quaternion: THREE.Quaternion; scale: THREE.Vector3 }>> = [[], [], [], [], [], []];
   const euler = new THREE.Euler();
   for (let clusterIndex = 0; clusterIndex < clusterCount; clusterIndex += 1) {
     const rawAngle = clusterIndex / clusterCount * Math.PI * 2 + (clusterIndex % 5) * 0.08;
@@ -1354,7 +1365,11 @@ function createInstancedCanopyField(
     );
     for (let leafIndex = 0; leafIndex < 7; leafIndex += 1) {
       const leafAngle = leafIndex / 7 * Math.PI * 2 + (leafIndex % 2) * 0.22;
-      const materialIndex = leafIndex % 3 === 0 ? 0 : leafIndex % 2 === 0 ? 1 : 2;
+      const greenIndex = leafIndex % 3 === 0 ? 0 : leafIndex % 2 === 0 ? 1 : 2;
+      const blossoming = clusterIndex % 4 === 1;
+      // Keep each leaf's silhouette (same geometry, same triangles); blossom
+      // colour follows the silhouette: pink banana, orange monstera, violet heartleaf.
+      const materialIndex = blossoming ? 3 + greenIndex : greenIndex;
       placements[materialIndex].push({
         position: clusterPosition.clone().add(new THREE.Vector3(
           Math.cos(leafAngle) * 0.24 * clusterScale,
@@ -1372,7 +1387,7 @@ function createInstancedCanopyField(
   }
   const matrix = new THREE.Matrix4();
   const meshes = placements.map((entries, materialIndex) => {
-    const mesh = new THREE.InstancedMesh(leafGeometries[materialIndex], materialList[materialIndex], entries.length);
+    const mesh = new THREE.InstancedMesh(leafGeometries[geometryForBatch[materialIndex]], materialList[materialIndex], entries.length);
     mesh.name = `ISLAND_18_CANOPY_LEAF_BATCH_${materialIndex + 1}`;
     entries.forEach((entry, index) => {
       matrix.compose(entry.position, entry.quaternion, entry.scale);
@@ -3337,7 +3352,7 @@ export function buildIsland18JungleExpeditionLandmark(
   return architecture;
 }
 
-function sampleJungleBasinHeight(radius: number, angle: number) {
+export function sampleJungleBasinHeight(radius: number, angle: number) {
   const rise = THREE.MathUtils.smoothstep(radius, 5.1, 46);
   const ridgeStrength = THREE.MathUtils.smoothstep(radius, 7, 17);
   const ridge = (
@@ -5419,6 +5434,8 @@ export function createIsland18JungleExpeditionLivingAmbience(
   root.add(templeOvergrowth.root);
   const detailGarden = createJungleDetailGarden(profile, materials);
   root.add(detailGarden.root);
+  const blossomPass = createIsland18BlossomPass({ quality: profile.id, sampleGroundY: sampleJungleBasinHeight });
+  root.add(blossomPass.root);
 
   const hangingVines = registerIsland18RuntimePart('jungle-canopy-and-vines', new THREE.Group(), 'foliage');
   hangingVines.name = 'ISLAND_18_HANGING_VINES';

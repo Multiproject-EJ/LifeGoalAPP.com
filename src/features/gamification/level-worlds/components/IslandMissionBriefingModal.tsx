@@ -7,6 +7,7 @@ import { formatMissionPhoneMessageTime, type MissionPhoneMessage } from '../serv
 import type { IslandMissionBriefingPresentation } from '../services/islandRunMissionBriefing';
 import type { IslandMissionStats, IslandMissionTrackerObjective } from '../services/islandRunMissionTracker';
 import type { resolveIslandRunCompletion } from '../services/islandRunCompletion';
+import { LANDMARK_FLAG_LABEL, type LandmarkFlag } from '../services/landmarkFlags';
 
 export type MissionObjectiveAction = 'launch' | 'details';
 
@@ -34,6 +35,15 @@ export interface IslandMissionBriefingModalProps {
   stats?: IslandMissionStats | null;
   objectiveActions?: readonly MissionObjectiveAction[];
   objectiveDetails?: readonly string[];
+  /** One flag per landmark: red = still needs work, green = 100% done. */
+  landmarkFlags?: ReadonlyArray<{ id: string; title: string; flag: LandmarkFlag }>;
+  /** An add-on mission (Island 002 Stormfront) with its own flagged structures. */
+  addOnMission?: {
+    title: string;
+    items: ReadonlyArray<{ id: string; title: string; flag: LandmarkFlag; percent: number }>;
+    actionLabel: string;
+    onAction: () => void;
+  };
   acknowledgeLabel?: string;
   /** Filed Mission Phone messages, newest first. */
   messages?: readonly MissionPhoneMessage[];
@@ -385,17 +395,17 @@ function MissionMessagePicture({ kind }: { kind: MissionMessageStepKind }): Reac
   }
 }
 
-function MissionPictureMessage({ labels }: { labels: readonly string[] }): React.JSX.Element {
+function MissionPictureMessage({ labels, variant = 'compact' }: { labels: readonly string[]; variant?: 'compact' | 'boxed' }): React.JSX.Element {
   const steps = buildMissionMessageSteps(labels);
   return (
-    <section className="island-mission-tracker__picture-message" aria-label="What to do on this island">
+    <section className={`island-mission-tracker__picture-message island-mission-tracker__picture-message--${variant}`} aria-label="What to do on this island">
       <p className="island-mission-tracker__picture-message-kicker">Here&apos;s what to do</p>
       <ol>
         {steps.map((step, index) => (
-          <li key={`${step.kind}-${index}`} data-kind={step.kind}>
-            <span className="island-mission-tracker__picture-message-art"><MissionMessagePicture kind={step.kind} /></span>
+          <li key={`${step.kind}-${index}`} data-kind={step.kind} style={{ '--mission-step-index': index } as React.CSSProperties}>
             <b aria-hidden="true">{index + 1}</b>
-            <small>{step.label}</small>
+            <span className="island-mission-tracker__picture-message-art"><MissionMessagePicture kind={step.kind} /></span>
+            <small><span className="island-mission-tracker__step-kicker">Step {index + 1}</span>{step.label}</small>
           </li>
         ))}
       </ol>
@@ -446,6 +456,8 @@ export function IslandMissionBriefingModal({
   stats = null,
   objectiveActions = [],
   objectiveDetails = [],
+  landmarkFlags,
+  addOnMission,
   acknowledgeLabel = 'Accept field order',
   messages = [],
   openMessageId = null,
@@ -463,10 +475,14 @@ export function IslandMissionBriefingModal({
 }: IslandMissionBriefingModalProps): React.JSX.Element | null {
   const [phase, setPhase] = React.useState<MissionPhonePhase>('unfolding');
   const [selectedObjectiveIndex, setSelectedObjectiveIndex] = React.useState<number | null>(null);
-  // Mission screen, the inbox list, or one message's own view.
-  const [screen, setScreen] = React.useState<{ kind: 'mission' } | { kind: 'inbox' } | { kind: 'message'; id: string }>(
+  // Mission dashboard, or an incoming message shown fullscreen (100% focus).
+  // Filed messages live in their own Messages modal, never on the dashboard.
+  const [screen, setScreen] = React.useState<{ kind: 'mission' } | { kind: 'message'; id: string }>(
     openMessageId ? { kind: 'message', id: openMessageId } : { kind: 'mission' },
   );
+  const [messagesModal, setMessagesModal] = React.useState<null | { view: 'list' } | { view: 'read'; id: string }>(null);
+  const messagesModalRef = React.useRef(messagesModal);
+  messagesModalRef.current = messagesModal;
   const onMessageReadRef = React.useRef(onMessageRead);
   onMessageReadRef.current = onMessageRead;
   const screenRef = React.useRef(screen);
@@ -550,11 +566,15 @@ export function IslandMissionBriefingModal({
       return undefined;
     }
     setScreen(openMessageId ? { kind: 'message', id: openMessageId } : { kind: 'mission' });
+    setMessagesModal(null);
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     updatePhase(reduceMotion ? 'open' : 'unfolding');
     const unlockScroll = lockPageScroll();
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') requestClose();
+      if (event.key !== 'Escape') return;
+      // The Messages modal sits on top of the phone: Escape closes it first.
+      if (messagesModalRef.current) { setMessagesModal(null); return; }
+      requestClose();
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -628,7 +648,14 @@ export function IslandMissionBriefingModal({
   const openMessage = screen.kind === 'message' ? messages.find((entry) => entry.id === screen.id) ?? null : null;
   const nowMs = Date.now();
   const showMessageView = screen.kind === 'message' && openMessage !== null;
-  const showInbox = screen.kind === 'inbox';
+  const showInbox = false;
+  const modalMessage = messagesModal?.view === 'read' ? messages.find((entry) => entry.id === messagesModal.id) ?? null : null;
+  const openMessagesModal = () => { fileOpenMessage(); setSelectedObjectiveIndex(null); setScreen({ kind: 'mission' }); setMessagesModal({ view: 'list' }); };
+  const readInModal = (id: string) => {
+    const message = messages.find((entry) => entry.id === id);
+    if (message && message.readAtMs === null) onMessageReadRef.current?.(message.id);
+    setMessagesModal({ view: 'read', id });
+  };
 
   return createPortal(
     <div className="island-mission-tracker" data-phase={phase} data-variant={variant} data-objective-count={normalizedProgress.length} role="presentation">
@@ -672,6 +699,7 @@ export function IslandMissionBriefingModal({
             <MissionPhoneLockScreen status={deviceStatus} onSkip={skipUnlock} />
 
             <div className="island-mission-tracker__phone-screen" style={islandCompletion ? { overflowY: 'auto' } : undefined}>
+              {!showMessageView ? (
               <header className="island-mission-tracker__header">
                 {stats ? <MissionPhoneStats stats={stats} /> : null}
                 <div className="island-mission-tracker__mission-caption">
@@ -681,64 +709,41 @@ export function IslandMissionBriefingModal({
                   </span>
                   <button
                     type="button"
-                    className={`island-mission-tracker__inbox-button${unreadCount > 0 ? ' island-mission-tracker__inbox-button--unread' : ''}`}
-                    aria-label={unreadCount > 0 ? `Inbox, ${unreadCount} unread` : 'Inbox'}
-                    onClick={() => { fileOpenMessage(); setSelectedObjectiveIndex(null); setScreen({ kind: 'inbox' }); }}
+                    className={`island-mission-tracker__inbox-button island-mission-tracker__messages-button${unreadCount > 0 ? ' island-mission-tracker__inbox-button--unread' : ''}`}
+                    aria-label={unreadCount > 0 ? `Messages, ${unreadCount} unread` : 'Messages'}
+                    onClick={openMessagesModal}
                     disabled={phase !== 'open'}
                   >
                     <span aria-hidden="true">✉</span>
+                    <em>Messages</em>
                     {unreadCount > 0 ? <b aria-hidden="true">{unreadCount}</b> : null}
                   </button>
                 </div>
               </header>
+              ) : null}
 
               {showMessageView && openMessage ? (
-                <section className="island-mission-tracker__message" aria-label={`Message from ${openMessage.sender}`}>
+                <section className="island-mission-tracker__message island-mission-tracker__message--fullscreen" aria-label={`Message from ${openMessage.sender}`}>
                   <p className="island-mission-tracker__message-meta">
-                    <span aria-hidden="true">📡</span> {openMessage.sender} · Island {String(openMessage.islandNumber).padStart(3, '0')} · {formatMissionPhoneMessageTime(openMessage.receivedAtMs, nowMs)}
+                    <span className="island-mission-tracker__message-pulse" aria-hidden="true">📡</span>
+                    <span>Incoming · {openMessage.sender}</span>
+                    <time>{formatMissionPhoneMessageTime(openMessage.receivedAtMs, nowMs)}</time>
                   </p>
+                  <h2 id={titleId} className="island-mission-tracker__message-title">{openMessage.title}</h2>
                   {openMessage.body ? <p className="island-mission-tracker__message-body">{openMessage.body}</p> : null}
-                  {openMessage.stepLabels.length > 0 ? <MissionPictureMessage labels={openMessage.stepLabels} /> : null}
+                  {openMessage.stepLabels.length > 0 ? <MissionPictureMessage labels={openMessage.stepLabels} variant="boxed" /> : null}
                   <div className="island-mission-tracker__message-actions">
                     <button
                       type="button"
                       className="island-mission-tracker__message-file"
                       onClick={() => { fileOpenMessage(); setScreen({ kind: 'mission' }); }}
                     >
-                      {openMessage.readAtMs === null ? 'Got it · file to Inbox' : 'Back to mission'}
+                      {openMessage.readAtMs === null ? "Got it · let's go" : 'Back to mission'}
                     </button>
-                    <button type="button" className="island-mission-tracker__message-inbox" onClick={() => { fileOpenMessage(); setScreen({ kind: 'inbox' }); }}>
-                      Inbox
+                    <button type="button" className="island-mission-tracker__message-inbox" onClick={openMessagesModal}>
+                      All messages
                     </button>
                   </div>
-                </section>
-              ) : showInbox ? (
-                <section className="island-mission-tracker__inbox" aria-label="Inbox">
-                  <button type="button" className="island-mission-tracker__objective-back" onClick={() => setScreen({ kind: 'mission' })}>
-                    <span aria-hidden="true">‹</span> Mission
-                  </button>
-                  {messages.length === 0 ? (
-                    <p className="island-mission-tracker__inbox-empty">No messages yet. Central Command will ping you here.</p>
-                  ) : (
-                    <ul>
-                      {messages.map((entry) => (
-                        <li key={entry.id}>
-                          <button
-                            type="button"
-                            className={entry.readAtMs === null ? 'is-unread' : undefined}
-                            onClick={() => setScreen({ kind: 'message', id: entry.id })}
-                          >
-                            <span className="island-mission-tracker__inbox-dot" aria-hidden="true" />
-                            <span className="island-mission-tracker__inbox-copy">
-                              <strong>{entry.title}</strong>
-                              <small>{entry.sender} · Island {String(entry.islandNumber).padStart(3, '0')}</small>
-                            </span>
-                            <time>{formatMissionPhoneMessageTime(entry.receivedAtMs, nowMs)}</time>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </section>
               ) : selectedObjective ? (
                 <section className="island-mission-tracker__objective-detail" aria-label={`${selectedObjective.label} mission information`}>
@@ -806,6 +811,45 @@ export function IslandMissionBriefingModal({
                     );
                   })}
                 </ol>
+                {landmarkFlags && landmarkFlags.length > 0 ? (
+                  <section className="island-mission-tracker__flags" aria-label="Landmark flags">
+                    <header>
+                      <small>Landmark flags</small>
+                      <span><i className="island-landmark-flag island-landmark-flag--green" aria-hidden="true" /> green flag = landmark done</span>
+                    </header>
+                    <ul>
+                      {landmarkFlags.map((landmark) => (
+                        <li key={landmark.id} data-flag={landmark.flag}>
+                          {landmark.flag === 'none'
+                            ? <span className="island-mission-tracker__flag-empty" aria-hidden="true" />
+                            : <i className={`island-landmark-flag island-landmark-flag--${landmark.flag}`} aria-hidden="true" />}
+                          <strong>{landmark.title}</strong>
+                          <small>{LANDMARK_FLAG_LABEL[landmark.flag]}</small>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+                {addOnMission ? (
+                  <section className="island-mission-tracker__flags island-mission-tracker__addon" aria-label={`Add-on mission: ${addOnMission.title}`}>
+                    <header>
+                      <small>⚡ Add-on mission</small>
+                      <span>{addOnMission.title}</span>
+                    </header>
+                    <ul>
+                      {addOnMission.items.map((item) => (
+                        <li key={item.id} data-flag={item.flag}>
+                          {item.flag === 'none'
+                            ? <span className="island-mission-tracker__flag-empty" aria-hidden="true" />
+                            : <i className={`island-landmark-flag island-landmark-flag--${item.flag}`} aria-hidden="true" />}
+                          <strong>{item.title}</strong>
+                          <small>{LANDMARK_FLAG_LABEL[item.flag]} · {item.percent}%</small>
+                        </li>
+                      ))}
+                    </ul>
+                    <button type="button" className="island-mission-tracker__addon-action" onClick={addOnMission.onAction}>{addOnMission.actionLabel}</button>
+                  </section>
+                ) : null}
                 </>
               )}
 
@@ -848,7 +892,7 @@ export function IslandMissionBriefingModal({
                 </span>
               </footer>
               ) : null}
-              {islandCompletion ? (
+              {islandCompletion && !showMessageView ? (
                 <details style={{ fontSize: 11, lineHeight: 1.5, marginTop: 8, maxHeight: 135, overflowY: 'auto', flexShrink: 0 }}>
                   <summary aria-label={`Island completion ${islandCompletion.percent}%`} style={{ cursor: 'pointer' }}>
                     Island {islandCompletion.percent}% · {islandCompletion.complete ? 'Ready to travel' : 'View remaining requirements'}
@@ -865,6 +909,50 @@ export function IslandMissionBriefingModal({
           </div>
         </div>
       </section>
+      {messagesModal ? (
+        <div className="island-mission-messages" role="dialog" aria-modal="true" aria-label={modalMessage ? modalMessage.title : 'Messages'}>
+          <button type="button" className="island-mission-messages__backdrop" aria-label="Close messages" onClick={() => setMessagesModal(null)} />
+          <section className="island-mission-messages__sheet">
+            <header className="island-mission-messages__header">
+              {modalMessage ? (
+                <button type="button" className="island-mission-messages__back" onClick={() => setMessagesModal({ view: 'list' })}>
+                  <span aria-hidden="true">‹</span> Messages
+                </button>
+              ) : <h2>Messages</h2>}
+              <button type="button" className="island-mission-messages__close" aria-label="Close messages" onClick={() => setMessagesModal(null)}>×</button>
+            </header>
+            {modalMessage ? (
+              <article className="island-mission-messages__read">
+                <p className="island-mission-tracker__message-meta">
+                  <span aria-hidden="true">📡</span>
+                  <span>{modalMessage.sender} · Island {String(modalMessage.islandNumber).padStart(3, '0')}</span>
+                  <time>{formatMissionPhoneMessageTime(modalMessage.receivedAtMs, nowMs)}</time>
+                </p>
+                <h3>{modalMessage.title}</h3>
+                {modalMessage.body ? <p className="island-mission-tracker__message-body">{modalMessage.body}</p> : null}
+                {modalMessage.stepLabels.length > 0 ? <MissionPictureMessage labels={modalMessage.stepLabels} variant="boxed" /> : null}
+              </article>
+            ) : messages.length === 0 ? (
+              <p className="island-mission-tracker__inbox-empty">No messages yet. Central Command will ping you here.</p>
+            ) : (
+              <ul className="island-mission-messages__list">
+                {messages.map((entry) => (
+                  <li key={entry.id}>
+                    <button type="button" className={entry.readAtMs === null ? 'is-unread' : undefined} onClick={() => readInModal(entry.id)}>
+                      <span className="island-mission-tracker__inbox-dot" aria-hidden="true" />
+                      <span className="island-mission-tracker__inbox-copy">
+                        <strong>{entry.title}</strong>
+                        <small>{entry.sender} · Island {String(entry.islandNumber).padStart(3, '0')}</small>
+                      </span>
+                      <time>{formatMissionPhoneMessageTime(entry.receivedAtMs, nowMs)}</time>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      ) : null}
     </div>,
     document.body,
   );

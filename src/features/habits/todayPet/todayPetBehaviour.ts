@@ -69,7 +69,7 @@ export type TodayPetMood = 'walk' | 'idle' | 'sleep' | 'play' | 'away' | 'happy'
  * keeps its 2D cutout until its 3D model is produced; the registry grows as
  * creature models land, so a creature is never shown with another's body.
  */
-export const TODAY_PET_3D_CREATURE_IDS: readonly string[] = ['common-sproutling'];
+export const TODAY_PET_3D_CREATURE_IDS: readonly string[] = ['common-sproutling', 'common-garden-puff', 'rare-crown-drifter'];
 
 export function hasTodayPet3dModel(creatureId: string): boolean {
   return TODAY_PET_3D_CREATURE_IDS.includes(creatureId);

@@ -35,6 +35,7 @@ export default function GameBoardOverlayPreview() {
       onGarageClick={log('garage')}
       onCompassClick={log('menu')}
       islandNumber={island}
+      diceRegenLevel={Number(params.get('level') ?? 12)}
       islandDisplayName={`Island ${String(island).padStart(3, '0')}`}
       essenceBalance={1240}
       spotlightPlay={params.get('spotlight') === '1'}

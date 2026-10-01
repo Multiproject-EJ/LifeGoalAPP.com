@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { createSproutlingPetThreeModel, type SproutlingPetThreeModel } from '../../gamification/level-worlds/dev/EggHatchThreeModel';
+import { createSproutlingPetThreeModel } from '../../gamification/level-worlds/dev/EggHatchThreeModel';
+import { createGardenPuffThreeModel } from '../../gamification/level-worlds/dev/GardenPuffThreeModel';
+import { createCrownDrifterModel } from '../../gamification/level-worlds/dev/CrownDrifterThreeModel';
 import { resolveTodayPetPose, type TodayPetMood } from './todayPetBehaviour';
 
 type Props = {
@@ -15,8 +17,39 @@ type Props = {
 
 const FRAME_MS = 1000 / 30;
 
-function createPetModel(creatureId: string): SproutlingPetThreeModel | null {
+/** The pose rig every Today pet model provides (the Sproutling's rig shape). */
+type TodayPetRig = {
+  root: THREE.Object3D;
+  head: THREE.Object3D;
+  armPivots: THREE.Object3D[];
+  leafPivots: THREE.Object3D[];
+  eyePivots: THREE.Object3D[];
+  /** Fit the model into the stage by its bounds (models not built for it). */
+  fitToStage?: boolean;
+  update?: (elapsedSeconds: number, deltaSeconds: number, reducedMotion: boolean) => void;
+  dispose: () => void;
+};
+
+function createPetModel(creatureId: string): TodayPetRig | null {
   if (creatureId === 'common-sproutling') return createSproutlingPetThreeModel('low');
+  if (creatureId === 'common-garden-puff') {
+    const puff = createGardenPuffThreeModel('low');
+    return { ...puff, update: (t, _dt, reduced) => puff.update(t, reduced) };
+  }
+  if (creatureId === 'rare-crown-drifter') {
+    // The same Crown Drifter that lives on Island 005.
+    const drifter = createCrownDrifterModel({ lod: 'board', quality: 'low' });
+    return {
+      root: drifter.root,
+      head: drifter.bodyPivot,
+      armPivots: [drifter.leftWingPivot, drifter.rightWingPivot],
+      leafPivots: drifter.finPivots,
+      eyePivots: [],
+      fitToStage: true,
+      update: (t, dt, reduced) => drifter.update(t, dt, reduced, 1),
+      dispose: drifter.dispose,
+    };
+  }
   return null;
 }
 
@@ -76,6 +109,15 @@ export default function TodayPetThreeStage({ creatureId, mood, facing, sizePx, r
     pivot.add(model.root);
     // Rig origin sits mid-body; the feet rest near y = -1.35.
     model.root.position.y = 0.1;
+    if (model.fitToStage) {
+      // Scale any other rig to the Sproutling's ~3 unit height, centred.
+      const bounds = new THREE.Box3().setFromObject(model.root);
+      const size = bounds.getSize(new THREE.Vector3());
+      const fit = 2.9 / Math.max(0.001, Math.max(size.x, size.y, size.z));
+      model.root.scale.setScalar(fit);
+      const centre = bounds.getCenter(new THREE.Vector3()).multiplyScalar(fit);
+      model.root.position.set(-centre.x, 0.1 - centre.y, -centre.z);
+    }
     scene.add(pivot);
     const restLeaf = model.leafPivots.map((leaf) => leaf.rotation.z);
     const restArm = model.armPivots.map((arm) => arm.rotation.z);
@@ -91,8 +133,10 @@ export default function TodayPetThreeStage({ creatureId, mood, facing, sizePx, r
     const render = (now: number) => {
       frame = requestAnimationFrame(render);
       if (document.visibilityState === 'hidden' || now - last < FRAME_MS) return;
+      const delta = last ? (now - last) / 1000 : FRAME_MS / 1000;
       last = now;
       const t = (now - started) / 1000;
+      model.update?.(t, delta, reduced);
       const pose = resolveTodayPetPose(moodRef.current, t, reduced);
       const targetYaw = (facingRef.current === 1 ? 0.55 : -0.55) + pose.spin;
       yaw += (targetYaw - yaw) * (reduced ? 1 : 0.18);

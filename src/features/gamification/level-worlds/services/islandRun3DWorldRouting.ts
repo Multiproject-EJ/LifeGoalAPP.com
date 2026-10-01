@@ -1,4 +1,4 @@
-// Source 040 is explicitly temporary; it is not the Cosmic Outpost production pack.
+// Island 040 is an explicit stand-in (a visual copy of source 004), not the Cosmic Outpost production pack.
 export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 17 | 18 | 19 | 20 | 22 | 40;
 
 export interface IslandRun3DWorldRoute {
@@ -57,7 +57,10 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   // Eivind reassigned that death/Titan world to runtime Island 017 so runtime
   // Island 016 can remain Fisherman's Village.
   { runtimeIslandNumber: 17, worldSourceNumber: 17, role: 'ordinary' },
-  { runtimeIslandNumber: 40, worldSourceNumber: 40, role: 'arena', presentationStatus: 'placeholder' },
+  // Island 040 reuses the Crown Citadel look (source 004, what new-campaign
+  // players see on Island 002) instead of the temporary placeholder pack.
+  // Visual only: Island 040 keeps its own story, missions and Arena cadence.
+  { runtimeIslandNumber: 40, worldSourceNumber: 4, role: 'arena', presentationStatus: 'placeholder' },
 ];
 
 const ROUTES_BY_RUNTIME_ISLAND = new Map(

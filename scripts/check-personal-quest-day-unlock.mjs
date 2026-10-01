@@ -64,7 +64,7 @@ const clientBody = functionBody(
 );
 requireOrder(
   clientBody,
-  'progress.last_opened_date === todayStr',
+  'progress.last_opened_date >= todayStr',
   'const nextSequentialDay =',
   'computePersonalQuestTodayIndex',
 );
@@ -101,9 +101,22 @@ const edgeBody = functionBody(
 );
 requireOrder(
   edgeBody,
-  'progress?.last_opened_date === today',
+  'progress.last_opened_date >= today',
   'const nextSequentialDay =',
   'personalQuestTodayIndex',
+);
+
+// --- Same-day bonus after today's free door ---------------------------------
+// Opening today's free door moves the sequential "today" on; the bonus for the
+// door just opened must stay openable (bug: "You can only open today's hatch
+// (day 3), not day 2").
+assert(
+  edge.includes('day_index !== currentOpenableDay && !isSameDayBonus'),
+  'Edge function must allow the same-day bonus for the latest opened free door.',
+);
+assert(
+  edge.includes('day_index === Math.max(...openedDays)') && edge.includes('!openedBonusDays.includes(day_index)'),
+  'The same-day bonus is limited to the latest opened free door, once.',
 );
 
 console.log('personal-quest-day-unlock: all assertions passed');

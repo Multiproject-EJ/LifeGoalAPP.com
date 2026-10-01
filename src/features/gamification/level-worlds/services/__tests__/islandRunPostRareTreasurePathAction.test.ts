@@ -138,6 +138,12 @@ function makeBankedTreasurePathSession(options: {
   };
 }
 
+/** A cleared island: every landmark built to L3 with its activity done. */
+const CLEARED_ISLAND_STATE: Partial<IslandRunGameStateRecord> = {
+  stopStatesByIndex: Array.from({ length: 5 }, () => ({ objectiveComplete: true, buildComplete: true })),
+  stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ requiredEssence: 100, spentEssence: 100, buildLevel: 3 })),
+} as Partial<IslandRunGameStateRecord>;
+
 function seedCompletedTreasurePath(options: {
   cycleIndex: number;
   targetIslandNumber: number;
@@ -158,6 +164,7 @@ function seedCompletedTreasurePath(options: {
     activeEggHatchDurationMs: null,
     activeEggIsDormant: false,
     perIslandEggs: {},
+    ...CLEARED_ISLAND_STATE,
     luckyRollSessionsByMilestone: {
       [sessionKey]: makeCompletedTreasurePathSession({
         cycleIndex: options.cycleIndex,
@@ -170,6 +177,40 @@ function seedCompletedTreasurePath(options: {
 }
 
 export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
+  {
+    name: 'Collect Treasure on an unfinished milestone island banks rewards and stays (no Island 006 teleport)',
+    run: async () => {
+      resetEnvironment();
+      const sessionKey = seedCompletedTreasurePath({
+        cycleIndex: 0,
+        targetIslandNumber: 5,
+        state: { stopStatesByIndex: [], stopBuildStateByIndex: [] } as Partial<IslandRunGameStateRecord>,
+      });
+      const collected = await collectPostRareTreasurePathAndTravel({
+        session: makeSession(), client: null, completedIslandNumber: 5, cycleIndex: 0,
+        startTimer: true, nowMs: 5_000, getIslandDurationMs: () => 60_000, islandRunContractV2Enabled: false,
+      });
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(collected.status, 'banked_island_not_cleared', 'rewards bank, travel waits for the island clear');
+      assertEqual(persisted.currentIslandNumber, 5, 'the player stays on Island 005');
+      assertEqual(persisted.dicePool, 25, 'dice still bank');
+      assertEqual(persisted.luckyRollSessionsByMilestone[sessionKey].status, 'banked', 'the session is banked once');
+      assertEqual(resolvePendingTreasurePathResume({ record: persisted }), null, 'no pinned Collect Treasure button while the island is unfinished');
+    },
+  },
+  {
+    name: 'Collect Treasure for another island never teleports the player',
+    run: async () => {
+      resetEnvironment();
+      seedCompletedTreasurePath({ cycleIndex: 0, targetIslandNumber: 5, state: { currentIslandNumber: 2 } });
+      const collected = await collectPostRareTreasurePathAndTravel({
+        session: makeSession(), client: null, completedIslandNumber: 5, cycleIndex: 0,
+        startTimer: true, nowMs: 5_000, getIslandDurationMs: () => 60_000, islandRunContractV2Enabled: false,
+      });
+      assertEqual(collected.status, 'banked_island_not_cleared', 'banks without travel');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).currentIslandNumber, 2, 'still on Island 002, not 006');
+    },
+  },
   {
     name: 'Treasure Path resolver returns not_applicable for non-milestone islands',
     run: () => {
@@ -340,6 +381,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
       seedState({
         currentIslandNumber: 30,
         cycleIndex: 0,
+        ...CLEARED_ISLAND_STATE,
         luckyRollSessionsByMilestone: {
           [sessionKey]: makeBankedTreasurePathSession({ cycleIndex: 0, targetIslandNumber: 30 }),
         },
@@ -530,6 +572,7 @@ export const islandRunPostRareTreasurePathActionTests: TestCase[] = [
         essenceLifetimeEarned: 40,
         shards: 50,
         eggRewardInventory: [],
+        ...CLEARED_ISLAND_STATE,
         luckyRollSessionsByMilestone: {
           [sessionKey]: makeBankedTreasurePathSession({ cycleIndex: 0, targetIslandNumber: 30 }),
         },

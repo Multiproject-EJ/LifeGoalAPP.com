@@ -89,6 +89,8 @@ export interface PerIslandEggEntry {
   openedAt?: number;
   /** Unix ms timestamp when the hatched animal was collected from the egg. */
   animalCollectedAtMs?: number;
+  /** A gifted egg (e.g. the Island 001 mandate basket): never gates island clear. */
+  gift?: 'mandate-basket';
 }
 
 /** Key = island number (as string), value = egg entry */

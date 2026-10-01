@@ -6,6 +6,8 @@ import { applyEggPlacement, applyEggPlacementBatch, claimArenaFirstTicketBoost, 
 import { createOpeningGamesCampaignLedger } from '../islandRunSignatureMissions';
 import { createOpeningGamesCeremonyProgress, OPENING_GAMES_CEREMONY_KEY } from '../islandRunOpeningGames';
 import { resolveIslandRunCompletion } from '../islandRunCompletion';
+import { createStormfrontProgress, getStormfrontKey } from '../island2Stormfront';
+import { createOpeningArenaProgress, getOpeningArenaKey } from '../island2OpeningArena';
 import { completeIslandRunWelcomeCheckIn } from '../islandRunWelcomeCheckInAction';
 import { completeIslandRunArenaOrientation } from '../islandRunArenaOrientationAction';
 import { resolveIslandRunContractV2Stops } from '../islandRunContractV2StopResolver';
@@ -193,7 +195,9 @@ export const islandRunEarlyProgressionTests: TestCase[] = [
     assert(omittedKeyRejected,'omitting the optional legacy visit key cannot bypass new-campaign gates');
     assertEqual(getIslandRunStateSnapshot(session),before,'failed travel changes nothing');
     const done={...before,signatureMissionProgressByIsland:{...before.signatureMissionProgressByIsland,
-      [OPENING_GAMES_CEREMONY_KEY]:{...createOpeningGamesCeremonyProgress(),rollsCompleted:12,venuesPreparedAtMs:1,teamsWelcomedAtMs:2,beaconLitAtMs:3,completedAtMs:4}}};
+      [OPENING_GAMES_CEREMONY_KEY]:{...createOpeningGamesCeremonyProgress(),rollsCompleted:12,venuesPreparedAtMs:1,teamsWelcomedAtMs:2,beaconLitAtMs:3,completedAtMs:4},
+      [getOpeningArenaKey(0)]:{...createOpeningArenaProgress(),orderedAtMs:1,anchoredAtMs:2,arenaLevel:3,completedAtMs:3},
+      [getStormfrontKey(0)]:{...createStormfrontProgress(),struckAtMs:5,cinematicSeenAtMs:6,levels:{'lightning-grid':3,'sky-hangar':3},completedAtMs:7}}};
     resetIslandRunStateSnapshot(session,done);
     assert(resolveIslandRunCompletion(done).complete,'real ceremony completion enables departure');
     assertEqual((await travel(2)).resolvedIsland,3,'normal travel succeeds');

@@ -1,5 +1,5 @@
 import type { BonusTileChargeByIsland } from './islandRunBonusTile';
-import type { IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
+import { GRADUAL_PUZZLE_INTRODUCTION_ISLAND, type IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
 import { getBonusTileCharge } from './islandRunBonusTile';
 import {
   isPuzzleCollectionAvailableForIsland,
@@ -12,6 +12,16 @@ import {
 // tiles (build_discount/free_ticket/card/encounter).
 export const TRAFFIC_LIGHT_TILE_INDEX = 19;
 export const TRAFFIC_LIGHT_CHARGE_TARGET = 8;
+/** Lamps left when the beacon starts glowing in excitement ("2 laps left"). */
+export const TRAFFIC_LIGHT_EXCITEMENT_LAMPS_LEFT = 2;
+
+/** 0 = calm, 1 = full excitement (one lamp left); presentation only. */
+export function resolveTrafficLightExcitement(litCount: number): number {
+  const lit = Math.max(0, Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, Math.floor(Number.isFinite(litCount) ? litCount : 0)));
+  const left = TRAFFIC_LIGHT_CHARGE_TARGET - lit;
+  if (left <= 0 || left > TRAFFIC_LIGHT_EXCITEMENT_LAMPS_LEFT) return 0;
+  return left === 1 ? 1 : 0.6;
+}
 
 export type TrafficLightCoinSide = 'heads' | 'tails';
 export type TrafficLightMysteryBoxId = 'box_1' | 'box_2';
@@ -119,7 +129,7 @@ export function resolveTrafficLightCoinFlipReward(input: {
     0,
     Math.min(STICKER_FRAGMENTS_PER_STICKER, STICKER_FRAGMENTS_PER_STICKER - Math.max(0, Math.floor(input.stickerFragments))),
   );
-  const grantsPuzzlePieces = isPuzzleCollectionAvailableForIsland(input.islandNumber ?? 2, input.signatureMissionProgressByIsland)
+  const grantsPuzzlePieces = isPuzzleCollectionAvailableForIsland(input.islandNumber ?? GRADUAL_PUZZLE_INTRODUCTION_ISLAND, input.signatureMissionProgressByIsland)
     && missingFragments > 0
     && seededRandom(input.seed + 7919) < 0.35;
 

@@ -33,7 +33,7 @@ export const luckySpinTileTests: TestCase[] = [
     },
   },
   {
-    name: 'lucky spin tile: the board badge replaces the side button and only launches the existing wheel',
+    name: 'lucky spin tile: a real 3D wheel on the tile replaces the side button and only launches the existing wheel',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
@@ -41,9 +41,12 @@ export const luckySpinTileTests: TestCase[] = [
       assert(board.includes('featureAccess.dailyWheel && !luckySpinBoardReady ?'), 'side button hides while the badge rides the board');
       assert(board.includes('window.setTimeout(() => onOpenDailySpinWheel(), LUCKY_SPIN_LAUNCH_OPEN_MS)'), 'launch opens the existing daily wheel');
       assert(board.includes('luckySpinLandRef.current(tileIndex);'), 'landing on the tile launches too');
-      assert(board.includes('tileBadgeAnchor={showLuckySpinBadge'), 'the 3D scene pins the badge to its tile');
+      assert(board.includes('luckySpinTileIndex={showLuckySpinBadge ? luckySpinTileIndex : null}'), 'the 3D scene gets the spin tile');
+      assert(!board.includes('className="island-run-lucky-spin-badge"'), 'no DOM badge floats over menus any more');
+      assert(board.includes('className="island-run-lucky-spin-a11y"'), 'a visually hidden button keeps it keyboard/screen-reader reachable');
       const pilot = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
-      assert(pilot.includes('tileBadge.element.style.transform = `translate3d('), 'badge follows the tile every frame without React updates');
+      assert(pilot.includes('function createLuckySpinWheelObject()') && pilot.includes('scene.add(luckySpinWheel.root)'), 'the wheel is a real 3D object in the scene');
+      assert(pilot.includes('raycaster.intersectObject(luckySpinWheel.root, true)'), 'tapping the 3D wheel launches the spin');
     },
   },
 ];

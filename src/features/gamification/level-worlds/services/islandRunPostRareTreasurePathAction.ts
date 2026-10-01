@@ -18,6 +18,7 @@ import {
   ISLAND_RUN_MAX_ISLAND,
   resolveIslandRunTravelState,
 } from './islandRunStateActions';
+import { resolveIslandRunCompletion } from './islandRunCompletion';
 
 export type PostRareTreasurePathStateStatus =
   | 'not_applicable'
@@ -90,7 +91,7 @@ export interface CollectPostRareTreasurePathAndTravelOptions {
 }
 
 export interface CollectPostRareTreasurePathAndTravelResult {
-  status: 'banked_and_traveled' | 'already_traveled' | 'not_applicable' | 'not_found' | 'not_completed' | 'expired';
+  status: 'banked_and_traveled' | 'banked_island_not_cleared' | 'already_traveled' | 'not_applicable' | 'not_found' | 'not_completed' | 'expired';
   record: IslandRunGameStateRecord;
   state: ResolvePostRareTreasurePathStateResult;
   diceAwarded: number;
@@ -214,6 +215,9 @@ export function resolvePendingTreasurePathResume(
     })
     .filter((state): state is ResolvePostRareTreasurePathStateResult => {
       if (!state) return false;
+      // Banked treasure only waits on travel, and travel waits on clearing
+      // the island: no pinned "Collect Treasure" button until then.
+      if (state.status === 'collected_banked' && !resolveIslandRunCompletion(options.record).complete) return false;
       return RESUMABLE_TREASURE_PATH_STATUSES.has(state.status);
     });
 
@@ -317,6 +321,29 @@ export function collectPostRareTreasurePathAndTravel(
 
     const justBanked = banking.status === 'banked';
     const bankedRecord = banking.record;
+    // Travel is the reward for clearing the milestone island. Never jump from
+    // another island, or from an unfinished one (e.g. a Treasure Path session
+    // started early): bank the treasure and stay put (bug: "Collect Treasure"
+    // teleported players to Island 006 from an unfinished Island 005).
+    if (!isRecordAtIsland(bankedRecord, state.completedIslandNumber, state.cycleIndex)
+      || !resolveIslandRunCompletion(bankedRecord).complete) {
+      if (justBanked) {
+        await commitIslandRunState({
+          session: options.session,
+          client: options.client,
+          record: bankedRecord,
+          triggerSource: options.triggerSource ?? 'collect_post_rare_treasure_path_bank_only',
+        });
+      }
+      return {
+        status: 'banked_island_not_cleared',
+        record: bankedRecord,
+        state: resolvePostRareTreasurePathState({ record: bankedRecord, completedIslandNumber: state.completedIslandNumber, cycleIndex: state.cycleIndex }),
+        diceAwarded: justBanked ? banking.diceAwarded : 0,
+        essenceAwarded: justBanked ? banking.essenceAwarded : 0,
+        shardsAwarded: justBanked ? banking.shardsAwarded : 0,
+      };
+    }
     const travel = resolveIslandRunTravelState({
       current: bankedRecord,
       nextIsland: state.completedIslandNumber + 1,

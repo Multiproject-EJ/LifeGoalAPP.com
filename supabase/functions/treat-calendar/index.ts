@@ -61,7 +61,9 @@ function personalQuestTodayIndex(
   // the next day would unlock immediately on the same day, letting the user
   // chain every door up to day 7 in one sitting.
   const today = new Date().toISOString().split('T')[0];
-  if (progress?.last_opened_date === today) {
+  // ">=": a door opened "today" in the player's time zone can carry a date one
+  // day ahead of UTC (client-synced rows); it still counts as today.
+  if (typeof progress?.last_opened_date === 'string' && progress.last_opened_date >= today) {
     return Math.min(maxOpened, totalDays);
   }
 
@@ -72,6 +74,14 @@ function personalQuestTodayIndex(
   }
 
   return Math.min(maxOpened + 1, totalDays);
+}
+
+/** Opened today or yesterday in UTC terms (tolerates the player's time zone). */
+function isRecentOpenDate(lastOpenedDate: string | null): boolean {
+  if (!lastOpenedDate) return false;
+  const yesterday = new Date();
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  return lastOpenedDate >= yesterday.toISOString().split('T')[0];
 }
 
 Deno.serve(async (req) => {
@@ -217,7 +227,17 @@ Deno.serve(async (req) => {
       ? personalQuestTodayIndex(progress, totalDays)
       : todayDayIndex(season.starts_on);
 
-    if (day_index !== currentOpenableDay) {
+    // The same-day bonus belongs to the free door the player just opened, so
+    // it stays openable for that day even if the sequential "today" moved on
+    // (bug: "You can only open today's hatch (day 3), not day 2" right after
+    // opening day 2's free door).
+    const isSameDayBonus = season.season_type === 'personal_quest'
+      && validatedDoorType === 'bonus'
+      && openedDays.length > 0
+      && day_index === Math.max(...openedDays)
+      && !openedBonusDays.includes(day_index)
+      && isRecentOpenDate(progress?.last_opened_date ?? null);
+    if (day_index !== currentOpenableDay && !isSameDayBonus) {
       return err(`You can only open today's hatch (day ${currentOpenableDay}), not day ${day_index}`, 400);
     }
 

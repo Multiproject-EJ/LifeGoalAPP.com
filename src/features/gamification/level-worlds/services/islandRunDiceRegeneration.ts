@@ -49,6 +49,50 @@ export function resolveDiceRegenConfig(playerLevel: number, bonusMaxDice = 0): D
   };
 }
 
+export interface DiceRegenJourneyStep {
+  minLevel: number;
+  maxDice: number;
+  regenIntervalMinutes: number;
+  status: 'reached' | 'current' | 'next' | 'future';
+}
+
+export interface DiceRegenJourney {
+  level: number;
+  current: DiceRegenJourneyStep;
+  next: DiceRegenJourneyStep | null;
+  /** Levels still to go until the next tank upgrade. */
+  levelsToNext: number | null;
+  /** How much the tank has grown since level 1. */
+  maxDiceGainedSinceStart: number;
+  steps: DiceRegenJourneyStep[];
+}
+
+/**
+ * The dice engine's history and path forward for the Two Tracks screen
+ * (user request 2026-09-30): which level bands the player has already
+ * unlocked and what the next upgrade brings. Read-only.
+ */
+export function resolveDiceRegenJourney(playerLevel: number): DiceRegenJourney {
+  const level = Number.isFinite(playerLevel) ? Math.max(1, Math.floor(playerLevel)) : 1;
+  let currentIndex = 0;
+  DICE_REGEN_LEVEL_BANDS.forEach((band, index) => { if (level >= band.minLevel) currentIndex = index; });
+  const steps: DiceRegenJourneyStep[] = DICE_REGEN_LEVEL_BANDS.map((band, index) => ({
+    minLevel: band.minLevel,
+    maxDice: band.maxDice,
+    regenIntervalMinutes: band.regenIntervalMinutes,
+    status: index < currentIndex ? 'reached' : index === currentIndex ? 'current' : index === currentIndex + 1 ? 'next' : 'future',
+  }));
+  const next = steps[currentIndex + 1] ?? null;
+  return {
+    level,
+    current: steps[currentIndex]!,
+    next,
+    levelsToNext: next ? next.minLevel - level : null,
+    maxDiceGainedSinceStart: steps[currentIndex]!.maxDice - steps[0]!.maxDice,
+    steps,
+  };
+}
+
 export function resolveDiceRegenMinDice(playerLevel: number, bonusMaxDice = 0): number {
   return resolveDiceRegenConfig(playerLevel, bonusMaxDice).maxDice;
 }

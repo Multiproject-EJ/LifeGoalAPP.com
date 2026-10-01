@@ -35,7 +35,7 @@ export const islandRunMissionMessageTests: TestCase[] = [
       assert((board.match(/island-run-mission-phone__message-badge/g) ?? []).length === 2, 'both phone buttons show the red badge');
       assert((board.match(/onClick=\{handleMissionPhoneButton\}/g) ?? []).length === 2, 'tapping either phone opens the waiting message');
       assert(board.includes('className="island-run-mission-message-banner" onClick={openIncomingMissionBriefing}'), 'the notification banner opens it too');
-      assert(board.includes('openMessageId={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing ? openMissionMessageId : null}'), 'the opened message leads with its own picture view');
+      assert(board.includes('openMessageId={Boolean(activeMissionBriefing) && !showMissionPhoneBriefing ? openMissionMessageId : showMissionPhoneBriefing ? phoneCallMessageId : null}'), 'the opened message leads with its own picture view');
       assert(modal.includes('<MissionPictureMessage labels='), 'the briefing renders the picture message');
     },
   },

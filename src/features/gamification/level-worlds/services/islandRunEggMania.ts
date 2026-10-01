@@ -79,7 +79,8 @@ export function areAllEggSlotsTerminalForIsland(
   perIslandEggs: PerIslandEggsLedger | null | undefined,
   islandNumber: number,
 ): boolean {
-  const slots = getEggSlotsForIsland(perIslandEggs, islandNumber);
+  // Gifted eggs travel with the player and never gate the island's Hatchery.
+  const slots = getEggSlotsForIsland(perIslandEggs, islandNumber).filter(({ entry }) => !entry.gift);
   return slots.length > 0 && slots.every(({ entry }) => entry.status === 'collected' || entry.status === 'sold');
 }
 

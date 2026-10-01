@@ -178,3 +178,6 @@
   transform: translateX(-50%);
   pointer-events: none;
 }
+
+/* In-tree marker: lets the one displayed Today tracker own the pet. */
+.today-pet-anchor { display: inline-block; width: 0; height: 0; overflow: hidden; }

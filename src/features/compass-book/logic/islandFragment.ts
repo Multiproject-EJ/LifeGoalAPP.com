@@ -16,7 +16,7 @@ import type {
   CompassBookActivityDefinition,
   CompassBookChapterId,
 } from '../types';
-import { getActivityForIsland } from '../content/compassBookCurriculum';
+import { getActivityDefinition, getActivityForIsland } from '../content/compassBookCurriculum';
 import { isAnswerValuePresent } from './progress';
 
 /** Authoring quality gate: one island reflection should never exceed four compact inputs. */
@@ -71,6 +71,27 @@ export function splitIslandInputs(activity: CompassBookActivityDefinition): {
 /** The fragment for an island, or null if the island has no authored activity. */
 export function getIslandFragment(islandNumber: number): IslandFragment | null {
   const activity = getActivityForIsland(islandNumber);
+  if (!activity) return null;
+  const { inputs, wisdom, habitOverflow } = splitIslandInputs(activity);
+  return {
+    islandNumber,
+    activityId: activity.id,
+    chapterId: activity.chapterId,
+    title: activity.title,
+    shortTitle: activity.shortTitle,
+    description: activity.description,
+    inputs,
+    wisdom,
+    habitOverflow,
+  };
+}
+
+/**
+ * A Wisdom-stop fragment for any Compass activity (the rotating "Come back
+ * later" prompts), shown on `islandNumber`.
+ */
+export function getActivityFragment(activityId: string, islandNumber: number): IslandFragment | null {
+  const activity = getActivityDefinition(activityId);
   if (!activity) return null;
   const { inputs, wisdom, habitOverflow } = splitIslandInputs(activity);
   return {

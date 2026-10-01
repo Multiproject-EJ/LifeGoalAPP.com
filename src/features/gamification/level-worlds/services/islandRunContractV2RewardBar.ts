@@ -1,5 +1,5 @@
 import type { IslandRunRuntimeState } from './islandRunRuntimeState';
-import { resolveIslandRunFeatureAccess, type IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
+import { GRADUAL_PUZZLE_INTRODUCTION_ISLAND, resolveIslandRunFeatureAccess, type IslandRunFeatureAccessContext } from './islandRunFeatureAccess';
 
 export type IslandRunTimedEvent = NonNullable<IslandRunRuntimeState['activeTimedEvent']>;
 
@@ -215,7 +215,7 @@ const REWARD_ROTATION: readonly RewardBarRewardKind[] = [
   'sticker_fragments',
 ];
 
-export const FIRST_PUZZLE_COLLECTION_ISLAND = 2;
+export const FIRST_PUZZLE_COLLECTION_ISLAND = GRADUAL_PUZZLE_INTRODUCTION_ISLAND;
 
 /**
  * Legacy journeys introduce puzzles on Island002. Explicit opening-games
@@ -422,8 +422,8 @@ export function applyMultiplierToProgress(baseProgress: number, multiplier: numb
 
 // ── Sticker completion bonus ─────────────────────────────────────────────────
 
-const STICKER_COMPLETION_BONUS_DICE = 100;
-const STICKER_COMPLETION_BONUS_ESSENCE = 50;
+export const STICKER_COMPLETION_BONUS_DICE = 100;
+export const STICKER_COMPLETION_BONUS_ESSENCE = 50;
 export const STICKER_FRAGMENTS_PER_STICKER = 5;
 
 // ── Core functions ───────────────────────────────────────────────────────────

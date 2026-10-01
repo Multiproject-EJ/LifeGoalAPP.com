@@ -1,4 +1,4 @@
-import { TRAFFIC_LIGHT_CHARGE_TARGET } from '../services/islandRunTrafficLightTile';
+import { TRAFFIC_LIGHT_CHARGE_TARGET, resolveTrafficLightExcitement } from '../services/islandRunTrafficLightTile';
 import * as THREE from 'three';
 import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragmentVisuals';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -13,6 +13,8 @@ export interface IslandRunTileRewardThreeRuntime {
   setTechnologyFragments: (fragments: readonly VisibleTechnologyFragment[]) => void;
   setTrafficLightCharge: (charge: number) => void;
   setCactusCanyonMissionStarted: (started: boolean) => void;
+  /** Hide staged-restoration pickups while landing cannot collect them yet. */
+  setStagedPickupsHidden: (hidden: boolean) => void;
   /**
    * Pops the Island 006 rod stations in, one after another, when the fishing
    * mission has just started (wall-clock ms, or null for no animation).
@@ -393,7 +395,7 @@ function createTrafficBeacon(materials: RewardMaterials, quality: Island3DQualit
   const housing = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.82, 0.14), materials.midnight);
   for (let index = 0; index < TRAFFIC_LIGHT_CHARGE_TARGET; index++) {
     const material = index < 3 ? materials.hazard : index < 6 ? materials.amber : materials.green;
-    const light = new THREE.Mesh(new THREE.SphereGeometry(.034, qualitySegments(quality), 7), material.clone());
+    const light = new THREE.Mesh(new THREE.SphereGeometry(.042, qualitySegments(quality), 7), material.clone());
     light.name = `TRAFFIC_LAMP_${index}`;
     light.position.set(0, .315 - index * .09, .085);
     light.userData.baseColor = material.color.clone();
@@ -404,7 +406,14 @@ function createTrafficBeacon(materials: RewardMaterials, quality: Island3DQualit
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(.028,.04,.52,8),materials.midnight);
   pole.position.y=-.45;
   const foot = new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.05,8),materials.gold);foot.position.y=-.72;
-  root.add(housing, cap, pole, foot);
+  // Warm halo that breathes when only a couple of lamps are left to light.
+  const halo = new THREE.Mesh(
+    new THREE.SphereGeometry(0.5, qualitySegments(quality), 10),
+    new THREE.MeshBasicMaterial({ color: 0xffd34d, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }),
+  );
+  halo.name = 'TRAFFIC_BEACON_EXCITEMENT_HALO';
+  halo.scale.set(0.55, 1.05, 0.55);
+  root.add(housing, cap, pole, foot, halo);
   return root;
 }
 
@@ -833,7 +842,11 @@ export function createIslandRunTileRewardThreeObjects(options: {
     }
   };
   let trafficCharge=0;
+  // Lamp-pop bookkeeping: a newly lit lamp swells briefly so the fill reads.
+  let trafficLitCount = -1;
+  let trafficLampPopAt = new Map<number, number>();
   let cactusCanyonMissionStarted = true;
+  let stagedPickupsHidden = false;
   let fishermansRodsRevealedAtMs: number | null = null;
   // Reveal order: each rod pops shortly after the previous one.
   const fishermansRodOrder = new Map(
@@ -869,14 +882,33 @@ export function createIslandRunTileRewardThreeObjects(options: {
         entry.root.position.y=entry.baseY+.4;
         entry.root.scale.setScalar(entry.baseScale);
         entry.root.userData.charge=trafficCharge;
+        const litCount = Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, Math.max(0, Math.floor(trafficCharge)));
+        const nowMs = performance.now();
+        if (trafficLitCount >= 0 && litCount > trafficLitCount) {
+          for (let lamp = trafficLitCount; lamp < litCount; lamp += 1) trafficLampPopAt.set(lamp, nowMs);
+        } else if (litCount < trafficLitCount) {
+          trafficLampPopAt = new Map();
+        }
+        trafficLitCount = litCount;
+        const excitement = resolveTrafficLightExcitement(litCount);
+        const pulse = excitement > 0 ? (Math.sin(elapsed * 6) * 0.5 + 0.5) : 0;
+        entry.root.scale.setScalar(entry.baseScale * (1 + excitement * pulse * 0.08));
         entry.root.traverse(child=>{
-          if(!(child instanceof THREE.Mesh)||!child.name.startsWith('TRAFFIC_LAMP_'))return;
+          if(!(child instanceof THREE.Mesh))return;
+          if (child.name === 'TRAFFIC_BEACON_EXCITEMENT_HALO') {
+            (child.material as THREE.MeshBasicMaterial).opacity = excitement * (0.12 + pulse * 0.18);
+            return;
+          }
+          if(!child.name.startsWith('TRAFFIC_LAMP_'))return;
           const index=Number(child.name.slice(-1));
-          const lit = index < Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, Math.max(0, Math.floor(trafficCharge)));
+          const lit = index < litCount;
           const material=child.material as THREE.MeshPhysicalMaterial;
           if (!material.color || !(child.userData.baseColor instanceof THREE.Color)) return;
-          material.emissiveIntensity=lit?2:.02;
-          material.color.copy(child.userData.baseColor as THREE.Color).multiplyScalar(lit?1:.28);
+          const popAt = trafficLampPopAt.get(index);
+          const popT = popAt === undefined ? 1 : Math.min(1, (nowMs - popAt) / 520);
+          child.scale.setScalar(lit ? 1 + Math.sin(popT * Math.PI) * 0.8 : 0.82);
+          material.emissiveIntensity=lit ? 2.6 + (1 - popT) * 3 + excitement * pulse * 1.2 : 0;
+          material.color.copy(child.userData.baseColor as THREE.Color).multiplyScalar(lit?1:.18);
         });
         return;
       }
@@ -896,7 +928,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
         || entry.signatureMissionKind === 'heatshield_plate'
         || entry.signatureMissionKind === 'golden_ride_ticket'
         || entry.signatureMissionKind === 'titan_soul_bolt')
-        && stagedRestorationClaimedTiles.has(entry.tileIndex)) {
+        && (stagedPickupsHidden || stagedRestorationClaimedTiles.has(entry.tileIndex))) {
         entry.root.visible = false;
         return;
       }
@@ -939,6 +971,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
     disposeFragments: () => { for(const sprite of fragmentSprites.values()){sprite.material.map?.dispose();sprite.material.dispose();root.remove(sprite);}fragmentSprites.clear(); },
     setTrafficLightCharge: (charge) => { trafficCharge=charge; },
     setCactusCanyonMissionStarted: (started) => { cactusCanyonMissionStarted = started; },
+    setStagedPickupsHidden: (hidden) => { stagedPickupsHidden = hidden; },
     setFishermansRodsRevealedAtMs: (revealedAtMs) => { fishermansRodsRevealedAtMs = revealedAtMs; },
     setFirstLightClaimedDynamiteTiles: (tileIndices) => {
       firstLightClaimedDynamiteTiles = new Set(tileIndices);

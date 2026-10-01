@@ -20,6 +20,26 @@ import { archetypeCupTests } from './archetypeCup.test';
 import { islandRunDiceSkinsTests } from './islandRunDiceSkins.test';
 import { islandRunDepartureDayTests } from './islandRunDepartureDay.test';
 import { islandRunTreasuresTests } from './islandRunTreasures.test';
+import { landmarkFlagsTests } from './landmarkFlags.test';
+import { island2StormfrontTests } from './island2Stormfront.test';
+import { island2StormfrontCinematicTests } from './island2StormfrontCinematic.test';
+import { skyHangarArenaSyncTests } from './skyHangarArenaSync.test';
+import { devMenuAutoCollapseTests } from './devMenuAutoCollapse.test';
+import { puzzleCollectionTests } from './puzzleCollection.test';
+import { missionPickupLandingAuditTests } from './missionPickupLandingAudit.test';
+import { island8BaselineActionTests, island8BaselineCheckTests } from './island8BaselineCheck.test';
+import { diceRegenJourneyTests } from './diceRegenJourney.test';
+import { trafficLightIntroductionTests } from './trafficLightIntroduction.test';
+import { buildHoldContinuityTests } from './buildHoldContinuity.test';
+import { island1ExcavationSafetyTests } from './island1ExcavationSafety.test';
+import { islandAffirmationsTests } from './islandAffirmations.test';
+import { landmarkDoorLandingTests } from './landmarkDoorLanding.test';
+import { compassCeremonyFullscreenTests, missionMessageDeliveryTests } from './missionMessageDelivery.test';
+import { wisdomDeferralTests } from './wisdomDeferral.test';
+import { landmarkSightCutawayTests } from './landmarkSightCutaway.test';
+import { mandateEggBasketTests } from './mandateEggBasket.test';
+import { minigameFeedbackTests } from './minigameFeedback.test';
+import { island2OpeningArenaTests } from './island2OpeningArena.test';
 import { island001AssemblyInvitationsTests } from './island001AssemblyInvitations.test';
 import { fishermansDragonPreludeTests } from './fishermansDragonPrelude.test';
 import { controllerDiceTiersTests } from './controllerDiceTiers.test';
@@ -341,6 +361,28 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunDiceSkins', tests: islandRunDiceSkinsTests },
   { label: 'islandRunDepartureDay', tests: islandRunDepartureDayTests },
   { label: 'islandRunTreasures', tests: islandRunTreasuresTests },
+  { label: 'landmarkFlags', tests: landmarkFlagsTests },
+  { label: 'island2Stormfront', tests: island2StormfrontTests },
+  { label: 'island2StormfrontCinematic', tests: island2StormfrontCinematicTests },
+  { label: 'skyHangarArenaSync', tests: skyHangarArenaSyncTests },
+  { label: 'devMenuAutoCollapse', tests: devMenuAutoCollapseTests },
+  { label: 'puzzleCollection', tests: puzzleCollectionTests },
+  { label: 'missionPickupLandingAudit', tests: missionPickupLandingAuditTests },
+  { label: 'island8BaselineCheck', tests: island8BaselineCheckTests },
+  { label: 'island8BaselineAction', tests: island8BaselineActionTests },
+  { label: 'diceRegenJourney', tests: diceRegenJourneyTests },
+  { label: 'trafficLightIntroduction', tests: trafficLightIntroductionTests },
+  { label: 'buildHoldContinuity', tests: buildHoldContinuityTests },
+  { label: 'island1ExcavationSafety', tests: island1ExcavationSafetyTests },
+  { label: 'islandAffirmations', tests: islandAffirmationsTests },
+  { label: 'landmarkDoorLanding', tests: landmarkDoorLandingTests },
+  { label: 'missionMessageDelivery', tests: missionMessageDeliveryTests },
+  { label: 'compassCeremonyFullscreen', tests: compassCeremonyFullscreenTests },
+  { label: 'wisdomDeferral', tests: wisdomDeferralTests },
+  { label: 'landmarkSightCutaway', tests: landmarkSightCutawayTests },
+  { label: 'mandateEggBasket', tests: mandateEggBasketTests },
+  { label: 'minigameFeedback', tests: minigameFeedbackTests },
+  { label: 'island2OpeningArena', tests: island2OpeningArenaTests },
   { label: 'island001AssemblyInvitations', tests: island001AssemblyInvitationsTests },
   { label: 'fishermansDragonPrelude', tests: fishermansDragonPreludeTests },
   { label: 'controllerDiceTiers', tests: controllerDiceTiersTests },

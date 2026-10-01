@@ -4,6 +4,10 @@ import { ARENA_JOURNEY_KEY, sanitizeArenaJourney, mergeArenaJourney, type ArenaJ
 import { ARCHETYPE_CUP_KEY, mergeArchetypeCupProgress, sanitizeArchetypeCupProgress, type ArchetypeCupProgress } from './archetypeCup';
 import { DICE_SKINS_KEY, mergeDiceSkinProgress, sanitizeDiceSkinProgress, type DiceSkinProgress } from './islandRunDiceSkins';
 import { ISLAND_TREASURES_KEY, mergeIslandTreasureCollections, sanitizeIslandTreasureCollection, type IslandTreasureCollection } from './islandRunTreasures';
+import { STORMFRONT_KEY_PATTERN, mergeStormfrontProgress, sanitizeStormfrontProgress, type StormfrontProgress } from './island2Stormfront';
+import { OPENING_ARENA_KEY_PATTERN, mergeOpeningArenaProgress, sanitizeOpeningArenaProgress, type OpeningArenaProgress } from './island2OpeningArena';
+import { ISLAND8_BASELINE_KEY_PATTERN, mergeIsland8BaselineProgress, sanitizeIsland8BaselineProgress, type Island8BaselineProgress } from './island8BaselineCheck';
+import { WISDOM_DEFERRAL_KEY_PATTERN, mergeWisdomDeferral, sanitizeWisdomDeferral, type WisdomDeferral } from './wisdomDeferral';
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import {
   OPENING_GAMES_CAMPAIGN_KEY, OPENING_GAMES_CEREMONY_KEY,
@@ -227,6 +231,9 @@ export function getStagedRestorationPickupTileIndices(
   const descriptor = getStagedRestorationMissionDescriptor(islandNumber, ledger);
   // Island 019 no longer scatters ride tickets: the Director sells the coaster.
   if (descriptor?.islandNumber === WONDER_CIRCUIT_ISLAND_NUMBER) return [];
+  // Island 008 no longer scatters Wayfinder Glyphs: the masked caretaker's
+  // baseline questions light the Living Compass seals.
+  if (descriptor?.missionId === 'jungle-expedition-living-compass') return [];
   return descriptor
     ? resolveCollisionFreeTileIndices({ tileCount, preferredFractions: descriptor.preferredPickupFractions })
     : [];
@@ -453,6 +460,10 @@ export type IslandRunSignatureMissionProgress =
   | ArchetypeCupProgress
   | DiceSkinProgress
   | IslandTreasureCollection
+  | StormfrontProgress
+  | WisdomDeferral
+  | OpeningArenaProgress
+  | Island8BaselineProgress
   | OpeningGamesCampaignMarker
   | OpeningGamesCeremonyProgress
   | MoonwellThermalProgress
@@ -525,6 +536,22 @@ export function sanitizeIslandRunSignatureMissionProgress(
     }
     if (record.missionId === 'island-treasures') {
       if (key === ISLAND_TREASURES_KEY && record.version === 1) result[key] = sanitizeIslandTreasureCollection(record);
+      return;
+    }
+    if (record.missionId === 'island2-stormfront') {
+      if (STORMFRONT_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeStormfrontProgress(record);
+      return;
+    }
+    if (record.missionId === 'island2-opening-arena') {
+      if (OPENING_ARENA_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeOpeningArenaProgress(record);
+      return;
+    }
+    if (record.missionId === 'island8-baseline-check') {
+      if (ISLAND8_BASELINE_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeIsland8BaselineProgress(record);
+      return;
+    }
+    if (record.missionId === 'wisdom-deferral') {
+      if (WISDOM_DEFERRAL_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeWisdomDeferral(record);
       return;
     }
     if (record.missionId === 'opening-games-campaign') {
@@ -1162,15 +1189,9 @@ export function collectStagedRestorationPickupForRoute(options: {
   if (landing.pickupCollected > 0) {
     return { ...landing, collectedTileIndex: options.landingTileIndex, collectionKind: 'landing', pickupKind: descriptor.pickupKind };
   }
-  const visited = new Set<number>();
-  for (const tileIndex of options.routeTileIndices) {
-    if (tileIndex === options.landingTileIndex || visited.has(tileIndex)) continue;
-    visited.add(tileIndex);
-    const routePass = collectStagedRestorationPickupForLanding({ ...options, ledger: options.ledger, tileIndex });
-    if (routePass.pickupCollected > 0) {
-      return { ...routePass, collectedTileIndex: tileIndex, collectionKind: 'route_pass', pickupKind: descriptor.pickupKind };
-    }
-  }
+  // Mission pickups are collected only by landing exactly on their tile
+  // (user decision 2026-10-01); passing over a pickup does nothing.
+  void options.routeTileIndices;
   return { ledger: options.ledger, pickupCollected: 0, collectedTileIndex: null, collectionKind: null, pickupKind: null };
 }
 
@@ -1341,11 +1362,8 @@ export function collectFirstLightAssemblyDynamiteForLanding(options: {
 }
 
 /**
- * Resolves one finite Assembly Crater cache reached during a completed roll.
- * An exact landing always wins. When the pawn passes an unclaimed cache on the
- * way, that cache is secured instead so the mission begins with the route
- * rather than depending on repeated exact-land RNG. At most one charge is
- * collected per roll.
+ * Resolves the Assembly Crater cache for a completed roll: only an exact
+ * landing on a dynamite tile collects it (one charge at most per roll).
  */
 export function collectFirstLightAssemblyDynamiteForRoute(options: {
   ledger: IslandRunSignatureMissionProgressByIsland;
@@ -1375,25 +1393,9 @@ export function collectFirstLightAssemblyDynamiteForRoute(options: {
     };
   }
 
-  const visited = new Set<number>();
-  for (const tileIndex of options.routeTileIndices) {
-    if (tileIndex === options.landingTileIndex || visited.has(tileIndex)) continue;
-    visited.add(tileIndex);
-    const routePass = collectFirstLightAssemblyDynamiteForLanding({
-      ledger: options.ledger,
-      islandNumber: options.islandNumber,
-      cycleIndex: options.cycleIndex,
-      tileIndex,
-      nowMs: options.nowMs,
-    });
-    if (routePass.dynamiteCollected > 0) {
-      return {
-        ...routePass,
-        collectedTileIndex: tileIndex,
-        collectionKind: 'route_pass',
-      };
-    }
-  }
+  // Dynamite is collected only by landing exactly on its tile (user decision
+  // 2026-10-01); passing over a cache does nothing.
+  void options.routeTileIndices;
 
   return {
     ledger: options.ledger,
@@ -1774,6 +1776,22 @@ export function mergeIslandRunSignatureMissionProgress(
     }
     if (a.missionId === 'island-treasures' || b.missionId === 'island-treasures') {
       merged[key] = mergeIslandTreasureCollections(sanitizeIslandTreasureCollection(a), sanitizeIslandTreasureCollection(b));
+      return;
+    }
+    if (a.missionId === 'island2-stormfront' || b.missionId === 'island2-stormfront') {
+      merged[key] = mergeStormfrontProgress(sanitizeStormfrontProgress(a), sanitizeStormfrontProgress(b));
+      return;
+    }
+    if (a.missionId === 'island2-opening-arena' || b.missionId === 'island2-opening-arena') {
+      merged[key] = mergeOpeningArenaProgress(sanitizeOpeningArenaProgress(a), sanitizeOpeningArenaProgress(b));
+      return;
+    }
+    if (a.missionId === 'island8-baseline-check' || b.missionId === 'island8-baseline-check') {
+      merged[key] = mergeIsland8BaselineProgress(sanitizeIsland8BaselineProgress(a), sanitizeIsland8BaselineProgress(b));
+      return;
+    }
+    if (a.missionId === 'wisdom-deferral' || b.missionId === 'wisdom-deferral') {
+      merged[key] = mergeWisdomDeferral(sanitizeWisdomDeferral(a), sanitizeWisdomDeferral(b));
       return;
     }
     if (a.missionId === 'opening-games-campaign' || b.missionId === 'opening-games-campaign') {

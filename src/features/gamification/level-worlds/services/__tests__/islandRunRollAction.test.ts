@@ -214,7 +214,7 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 001 first replay roll secures one crossed Assembly cache when the final tile is not dynamite',
+    name: 'Island 001: passing over a dynamite cache collects nothing; only landing on it does',
     run: async () => {
       resetEnvironment();
       seedState({
@@ -229,15 +229,13 @@ export const islandRunRollActionTests: TestCase[] = [
         session: makeSession(), client: null, diceMultiplier: 1,
       }));
       assertEqual(result.newTokenIndex, 4, 'two twos finish on the non-cache tile 4');
-      assertEqual(result.firstLightAssemblyDynamiteCollected, 1, 'the first roll secures one reached route cache');
-      assertEqual(result.firstLightAssemblyDynamiteCollectionKind, 'route_pass', 'the renderer can explain the en-route pickup');
+      assertEqual(result.firstLightAssemblyDynamiteCollected, 0, 'crossing cache tile 1 does not collect it');
       const progress = resolveFirstLightAssemblyCraterProgress({
         ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
         islandNumber: 1,
         cycleIndex: 0,
       });
-      assertEqual(progress.claimedDynamiteTileIndices.length, 1, 'the route pickup commits atomically with movement');
-      assertEqual(progress.claimedDynamiteTileIndices[0], 1, 'only the first crossed cache is consumed');
+      assertEqual(progress.claimedDynamiteTileIndices.length, 0, 'no cache claimed by a pass');
     },
   },
   {
@@ -769,8 +767,8 @@ export const islandRunRollActionTests: TestCase[] = [
         runtimeVersion: 5,
         dicePool: 30,
         tokenIndex: TRAFFIC_LIGHT_TILE_INDEX - 1,
-        currentIslandNumber: 2,
-        bonusTileChargeByIsland: { '2': { [TRAFFIC_LIGHT_TILE_INDEX]: 6 } },
+        currentIslandNumber: 3,
+        bonusTileChargeByIsland: { '3': { [TRAFFIC_LIGHT_TILE_INDEX]: 6 } },
       });
 
       const passSeven = await withMockedRandom([0, 0], () =>
@@ -779,7 +777,7 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(passSeven.trafficLightPass?.chargeAfter, 7, 'First traversal advances 6 → 7');
       assertEqual(passSeven.trafficLightPass?.unlocked, false, '7/8 must not unlock the reward');
       assertEqual(
-        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 2),
+        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 3),
         7,
         '7/8 is persisted in the same record as the roll',
       );
@@ -791,7 +789,7 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(unlock.trafficLightPass?.chargeAfter, 8, 'Next traversal reaches the final green light');
       assertEqual(unlock.trafficLightPass?.unlocked, true, 'Only 8/8 unlocks the modal');
       assertEqual(
-        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 2),
+        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 3),
         0,
         'Unlock resets the persisted counter',
       );

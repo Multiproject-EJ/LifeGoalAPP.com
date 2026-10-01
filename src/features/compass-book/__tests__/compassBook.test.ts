@@ -3,6 +3,7 @@
  * Run via `npm run test:compass-book`.
  */
 
+import { buildDevSampleActivityAnswers } from '../logic/devLongFormSamples';
 import {
   COMPASS_BOOK_ACTIVITIES,
   COMPASS_BOOK_CHAPTERS,
@@ -1682,7 +1683,31 @@ function testDeviceProfiling(): void {
   assert(failed.rating === 'fail' && failed.sampleCount === 0, 'Empty evidence can never pass');
 }
 
+function testDevLongFormSamplesCompleteTheBook(): void {
+  // Dev long form: "Fill everything" must complete every authored activity.
+  const now = new Date(0).toISOString();
+  const chapterValues = new Map<string, Record<string, CompassAnswerValue | undefined>>();
+  for (const activity of [...COMPASS_BOOK_ACTIVITIES].sort((a, b) => a.islandNumber - b.islandNumber)) {
+    const chapterContext = chapterValues.get(activity.chapterId) ?? {};
+    chapterValues.set(activity.chapterId, chapterContext);
+    const samples = buildDevSampleActivityAnswers(activity.blocks, {}, chapterContext);
+    Object.assign(chapterContext, samples);
+    const answers = Object.entries(samples).map(([questionId, value]) => ({
+      activityId: activity.id,
+      questionId,
+      value,
+      sourceMode: 'fixed_guided' as const,
+      curriculumVersion: 'test',
+      answeredAt: now,
+      updatedAt: now,
+      confirmed: true,
+    }));
+    assert(isActivityComplete(activity, answers), `dev sample answers complete ${activity.id}`);
+  }
+}
+
 export function runAllCompassBookTests(): void {
+  testDevLongFormSamplesCompleteTheBook();
   testCurriculum();
   testUnlock();
   testJourneyRevealLanguage();

@@ -13,6 +13,12 @@ import {FIRST_ARRIVAL_WELCOME_TIME,advanceFirstArrivalTime} from '../services/is
 import type {VisibleTechnologyFragment} from '../services/islandTechnologyFragmentVisuals';
 import {createIsland001FirstArrival} from './Island001FirstArrival';
 import { createIslandDepartureCinematic } from './IslandDepartureCinematic';
+import { createIsland2StormfrontCinematic } from './StormfrontCinematic';
+import { createStormfrontStructures } from './StormfrontStructures';
+import { OPENING_ARENA_ARRIVAL_SECONDS, createOpeningArenaHoverBase, type OpeningArenaVisualStage } from './OpeningArenaHoverBase';
+import { createGoldenSkyLift } from './GoldenSkyLift';
+import { createCrystalDropZones } from './CrystalDropZones';
+import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
 import { buildIsland40PlaceholderLandmark, createIsland40PlaceholderWorld, ISLAND_40_PLACEHOLDER_LABEL } from './Island40PlaceholderThreeWorld';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -24,6 +30,7 @@ import { WONDER_RIDE_SPEED_SCALE } from './island19WonderRidePacing';
 import { createIsland19CoasterHelicopter } from './Island19CoasterHelicopter';
 import { WonderRideOfferModal } from './WonderRideOfferModal';
 import { resolveUnoccludedCameraPosition } from './islandCameraOcclusion';
+import { createLandmarkSightCutaway } from './landmarkSightCutaway';
 import { getIslandExplorePoints, type IslandExplorePoint, type IslandExplorePointId } from '../services/islandExplorePoints';
 import * as THREE from 'three';
 import { choosePawnCamera, shortestPawnAngle, pawnSightBlocked, completedPawnHops, type PawnObstacle, type PawnPoint } from './islandPawnPresentation';
@@ -91,6 +98,7 @@ import {
   type Island5TileTransform,
 } from './island5ThreePilotContract';
 import { createCaretakerMaster, type CaretakerModel } from './CaretakerThreeModel';
+import { createWizardMask, createWizardZapEffect } from './MaskedWizardVisit';
 import { createCrownDrifterModel } from './CrownDrifterThreeModel';
 import { createIsland4OpeningPalaceModel } from './Island4OpeningPalaceThreeModel';
 import { createPalaceBalconyPlanting } from './PalaceBalconyPlanting';
@@ -362,6 +370,7 @@ import {
 } from '../services/island001Atmosphere';
 import { playIslandRunBubblePop, triggerIslandRunHaptic } from '../services/islandRunAudio';
 import { createPlayerPieceRelic } from './PlayerPieceRelicThree';
+import { resolveLandmarkFlag, type LandmarkFlag, LANDMARK_FLAG_LABEL } from '../services/landmarkFlags';
 import type { PlayerPieceId } from '../services/islandRunPlayerPieces';
 import {
   createIslandStagedRestorationThreePresentation,
@@ -431,6 +440,26 @@ interface Island5ThreePilotProps {
   /** Island departure (after the completion signal): ship folds, lifts off, streaks away. */
   departureCinematicActive?: boolean;
   onDepartureCinematicComplete?: () => void;
+  /** Island 002 Stormfront: plays the storm and the central strike (presentation only). */
+  stormfrontCinematicActive?: boolean;
+  onStormfrontCinematicComplete?: () => void;
+  onStormfrontCinematicBeat?: (beat: StormfrontCinematicBeat) => void;
+  /** Island 002 storm-safe add-on structures (null hides them). */
+  stormfrontStructureLevels?: { grid: number; hangar: number } | null;
+  onStormfrontStructureClick?: (structure: 'grid' | 'hangar') => void;
+  /** Event Arena sync: the banner the hangar's plane tows (null: none). */
+  skyHangarBanner?: { text: string; accent: string } | null;
+  /** Bump to make the hangar's plane take off right away. */
+  skyHangarLaunchKey?: number;
+  /** Island 002 Opening Arena hover base (null hides it). */
+  openingArena?: { stage: OpeningArenaVisualStage; arenaLevel: number; rollsUntilDelivery: number } | null;
+  onOpeningArenaArrivalComplete?: () => void;
+  onOpeningArenaClick?: () => void;
+  /** Island 002 (new campaign): the centre landmark is the Golden Sky Lift. */
+  centreLandmarkVariant?: 'golden-sky-lift' | null;
+  /** Island 002: four Crystal Miners drop zones beside the outer landmarks. */
+  crystalDropZonesVisible?: boolean;
+  onCrystalDropZoneClick?: () => void;
   firstArrivalSkip?: boolean;
   onFirstArrivalComplete?: () => void;
   onFirstArrivalBeat?: (beat: string) => void;
@@ -463,6 +492,14 @@ interface Island5ThreePilotProps {
    * frame, no React updates). Presentation only; used by the Lucky Spin badge.
    */
   tileBadgeAnchor?: { tileIndex: number; element: HTMLElement | null } | null;
+  /** Bumping `key` makes the player piece jump and spin for joy; `element` rides above it. */
+  playerPieceCheer?: { key: number; element: HTMLElement | null } | null;
+  /** Island 008: the masked wizard caretaker zaps onto this tile (bump key to re-zap). */
+  caretakerTileVisit?: { tileIndex: number; key: number } | null;
+  /** Today's Lucky Spin waits on this tile as a 3D wheel (null hides it). */
+  luckySpinTileIndex?: number | null;
+  /** Tapping the 3D Lucky Spin wheel (screen point for the launch burst). */
+  onLuckySpinClick?: (origin: { x: number; y: number }) => void;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
   signatureMissionPresentation?: FrostwellIceworksPresentation;
   moonwellThermalPresentation?: MoonwellThermalPresentation;
@@ -550,6 +587,7 @@ interface ActiveTileImpact {
   strength: number;
 }
 
+const PLAYER_PIECE_CHEER_MS = 950;
 const ISLAND_1_ASSEMBLY_POV_TOUR_STEPS: readonly {
   position: readonly [number, number, number];
   target: readonly [number, number, number];
@@ -3538,6 +3576,132 @@ function createIslandPlayerPiece(quality: Island3DQuality) {
 type IslandPlayerPieceToken = ReturnType<typeof createIslandPlayerPiece>;
 
 /**
+ * Lucky Spin on the board as a real 3D object: a small prize wheel on a gold
+ * stand with a glowing ring on the tile. It lives in the scene, so it scales
+ * with zoom and sits under every menu (it used to be a DOM badge floating
+ * above the page).
+ */
+/**
+ * A landmark flag (see services/landmarkFlags.ts): a pole with a waving,
+ * glowing cloth planted beside the landmark. Red while it still needs work,
+ * green once it is built to Level 3.
+ */
+const LANDMARK_FLAG_COLORS = {
+  red: { cloth: 0xd0141c, glow: 0xff1f1f },
+  green: { cloth: 0x0f9d45, glow: 0x19d85c },
+} as const;
+let landmarkFlagGlowTexture: THREE.CanvasTexture | null = null;
+function getLandmarkFlagGlowTexture(): THREE.CanvasTexture | null {
+  if (landmarkFlagGlowTexture || typeof document === 'undefined') return landmarkFlagGlowTexture;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.35, 'rgba(255,255,255,0.45)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 64, 64);
+  landmarkFlagGlowTexture = new THREE.CanvasTexture(canvas);
+  return landmarkFlagGlowTexture;
+}
+function createLandmarkFlagObject() {
+  const root = new THREE.Group();
+  root.name = 'LANDMARK_FLAG';
+  const metal = new THREE.MeshStandardMaterial({ color: 0xe9e4d6, metalness: 0.6, roughness: 0.35 });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 1, 8), metal);
+  pole.position.y = 0.5;
+  root.add(pole);
+  const finial = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), new THREE.MeshStandardMaterial({ color: 0xf2c14e, metalness: 0.8, roughness: 0.25 }));
+  finial.position.y = 1.02;
+  root.add(finial);
+  const clothMaterial = new THREE.MeshStandardMaterial({ color: LANDMARK_FLAG_COLORS.red.cloth, emissive: LANDMARK_FLAG_COLORS.red.glow, emissiveIntensity: 0.35, roughness: 0.6, side: THREE.DoubleSide });
+  const clothGeometry = new THREE.PlaneGeometry(0.6, 0.38, 10, 2);
+  clothGeometry.translate(0.3, 0, 0);
+  const clothBase = Float32Array.from(clothGeometry.attributes.position.array as Float32Array);
+  const cloth = new THREE.Mesh(clothGeometry, clothMaterial);
+  cloth.position.y = 0.82;
+  root.add(cloth);
+  const glowMaterial = new THREE.SpriteMaterial({ map: getLandmarkFlagGlowTexture(), color: LANDMARK_FLAG_COLORS.red.glow, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending });
+  const glow = new THREE.Sprite(glowMaterial);
+  glow.scale.setScalar(0.9);
+  glow.position.set(0.3, 0.82, 0);
+  root.add(glow);
+  const wave = (time: number) => {
+    const position = clothGeometry.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < position.count; i += 1) {
+      const x = clothBase[i * 3]!;
+      position.setZ(i, Math.sin(time * 5 - x * 9) * 0.06 * (x / 0.6));
+    }
+    position.needsUpdate = true;
+  };
+  const setColor = (flag: 'red' | 'green') => {
+    clothMaterial.color.setHex(LANDMARK_FLAG_COLORS[flag].cloth);
+    clothMaterial.emissive.setHex(LANDMARK_FLAG_COLORS[flag].glow);
+    glowMaterial.color.setHex(LANDMARK_FLAG_COLORS[flag].glow);
+  };
+  // The glow texture is shared and cached; everything else is per flag.
+  const dispose = () => root.traverse((node) => {
+    const mesh = node as THREE.Mesh | THREE.Sprite;
+    if ((mesh as THREE.Mesh).isMesh) (mesh as THREE.Mesh).geometry.dispose();
+    const material = (mesh as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+    (Array.isArray(material) ? material : material ? [material] : []).forEach((entry) => entry.dispose());
+  });
+  return { root, cloth, glowMaterial, clothMaterial, wave, setColor, dispose };
+}
+
+function createLuckySpinWheelObject() {
+  const root = new THREE.Group();
+  root.name = 'LUCKY_SPIN_TILE_WHEEL';
+  const gold = new THREE.MeshStandardMaterial({ color: 0xf2c14e, metalness: 0.75, roughness: 0.28, emissive: 0x3a2400, emissiveIntensity: 0.25 });
+  const hub = new THREE.MeshStandardMaterial({ color: 0xfff4d0, emissive: 0xffd36b, emissiveIntensity: 0.6, roughness: 0.3 });
+  const glow = new THREE.MeshBasicMaterial({ color: 0x7fe3ff, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.4, 40), glow);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.02;
+  root.add(ring);
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.07, 0.42, 10), gold);
+  stand.position.y = 0.21;
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.06, 20), gold);
+  foot.position.y = 0.03;
+  root.add(stand, foot);
+  // The wheel faces the camera-side of the tile and spins around its axle.
+  const face = new THREE.Group();
+  face.position.y = 0.66;
+  root.add(face);
+  const wheel = new THREE.Group();
+  face.add(wheel);
+  const colors = [0xf87171, 0xfacc15, 0x38bdf8, 0xa3e635, 0xc084fc, 0xfb923c];
+  colors.forEach((color, index) => {
+    const slice = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.27, 0.27, 0.05, 12, 1, false, (index / colors.length) * Math.PI * 2, (Math.PI * 2) / colors.length),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.45, emissive: color, emissiveIntensity: 0.12 }),
+    );
+    slice.rotation.x = Math.PI / 2;
+    wheel.add(slice);
+  });
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.03, 10, 40), gold);
+  wheel.add(rim);
+  const pegs = new THREE.Group();
+  for (let i = 0; i < 12; i += 1) {
+    const peg = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), hub);
+    const angle = (i / 12) * Math.PI * 2;
+    peg.position.set(Math.cos(angle) * 0.28, Math.sin(angle) * 0.28, 0.03);
+    pegs.add(peg);
+  }
+  wheel.add(pegs);
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.055, 14, 10), hub);
+  cap.position.z = 0.04;
+  wheel.add(cap);
+  const pointer = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.11, 3), gold);
+  pointer.rotation.z = Math.PI;
+  pointer.position.set(0, 0.33, 0.03);
+  face.add(pointer);
+  return { root, face, wheel, ring, glow };
+}
+
+/**
  * Show the player's chosen piece on the token's gold base. No choice yet keeps
  * the classic figure, so existing players see no change. Themed tokens whose
  * geometry was batched (Island 20) keep their themed figure.
@@ -3670,6 +3834,19 @@ export default function Island5ThreePilot({
   onCelebrationSnapshot,
   departureCinematicActive = false,
   onDepartureCinematicComplete,
+  stormfrontCinematicActive = false,
+  onStormfrontCinematicComplete,
+  onStormfrontCinematicBeat,
+  stormfrontStructureLevels = null,
+  onStormfrontStructureClick,
+  skyHangarBanner = null,
+  skyHangarLaunchKey = 0,
+  openingArena = null,
+  onOpeningArenaArrivalComplete,
+  onOpeningArenaClick,
+  centreLandmarkVariant = null,
+  crystalDropZonesVisible = false,
+  onCrystalDropZoneClick,
   openingCeremonyPlayback = null,
   islandNumber = 5,
   worldSourceNumber,
@@ -3692,6 +3869,10 @@ export default function Island5ThreePilot({
   onTokenHop,
   onTokenLand,
   tileBadgeAnchor,
+  playerPieceCheer = null,
+  caretakerTileVisit = null,
+  luckySpinTileIndex = null,
+  onLuckySpinClick,
   onLandmarkClick,
   signatureMissionPresentation = { metersDrilled: 0, built: false, constructionSequence: 0 },
   moonwellThermalPresentation = { heated: false, running: false, sequence: 0 },
@@ -3924,9 +4105,29 @@ export default function Island5ThreePilot({
   const onCelebrationSnapshotRef = useRef(onCelebrationSnapshot);
   onCelebrationSnapshotRef.current = onCelebrationSnapshot;
   const tileBadgeAnchorRef = useRef(tileBadgeAnchor);
+  const playerPieceCheerRef = useRef(playerPieceCheer);
+  const caretakerTileVisitRef = useRef(caretakerTileVisit);
+  caretakerTileVisitRef.current = caretakerTileVisit;
+  playerPieceCheerRef.current = playerPieceCheer;
   tileBadgeAnchorRef.current = tileBadgeAnchor;
+  const luckySpinTileIndexRef = useRef(luckySpinTileIndex);
+  luckySpinTileIndexRef.current = luckySpinTileIndex;
+  const stormfrontStructureLevelsRef = useRef(stormfrontStructureLevels);
+  stormfrontStructureLevelsRef.current = stormfrontStructureLevels;
+  const onStormfrontStructureClickRef = useRef(onStormfrontStructureClick);
+  onStormfrontStructureClickRef.current = onStormfrontStructureClick;
+  const skyHangarBannerRef = useRef(skyHangarBanner);
+  skyHangarBannerRef.current = skyHangarBanner;
+  const skyHangarLaunchKeyRef = useRef(skyHangarLaunchKey);
+  skyHangarLaunchKeyRef.current = skyHangarLaunchKey;
+  const openingArenaRef = useRef({ state: openingArena, onArrivalComplete: onOpeningArenaArrivalComplete, onClick: onOpeningArenaClick });
+  openingArenaRef.current = { state: openingArena, onArrivalComplete: onOpeningArenaArrivalComplete, onClick: onOpeningArenaClick };
+  const onLuckySpinClickRef = useRef(onLuckySpinClick);
+  onLuckySpinClickRef.current = onLuckySpinClick;
   const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
   departureCinematicRef.current = { active: departureCinematicActive, onComplete: onDepartureCinematicComplete };
+  const stormfrontCinematicRef = useRef({ active: stormfrontCinematicActive, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat });
+  stormfrontCinematicRef.current = { active: stormfrontCinematicActive, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat };
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
   constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
@@ -4123,11 +4324,15 @@ export default function Island5ThreePilot({
       .join('|'),
     [sceneTileMap],
   );
+  const crystalDropZonesRef = useRef({ visible: crystalDropZonesVisible, onClick: onCrystalDropZoneClick });
+  crystalDropZonesRef.current = { visible: crystalDropZonesVisible, onClick: onCrystalDropZoneClick };
+  const centreLandmarkVariantRef = useRef(centreLandmarkVariant);
+  centreLandmarkVariantRef.current = centreLandmarkVariant;
   const landmarkBuildLevelsKey = useMemo(
-    () => ISLAND_5_LANDMARKS
+    () => `${ISLAND_5_LANDMARKS
       .map((landmark) => `${landmark.id}:${landmarkBuildLevels?.[landmark.id] ?? buildLevel}`)
-      .join('|'),
-    [buildLevel, landmarkBuildLevels],
+      .join('|')}|centre:${centreLandmarkVariant ?? 'authored'}`,
+    [buildLevel, centreLandmarkVariant, landmarkBuildLevels],
   );
   // Island 015 build levels mutate semantic GLB groups through the binder.
   // Other worlds still rebuild their authored procedural geometry as before.
@@ -5671,6 +5876,22 @@ export default function Island5ThreePilot({
         : [];
 
     const tileBadgeProjection = new THREE.Vector3();
+    const cheerProjection = new THREE.Vector3();
+    let lastPlayerPieceCheerKey: number | null = null;
+    let playerPieceCheerStartedAt = -Infinity;
+    const luckySpinWheel = createLuckySpinWheelObject();
+    luckySpinWheel.root.visible = false;
+    scene.add(luckySpinWheel.root);
+    const stormfrontStructures = createStormfrontStructures();
+    scene.add(stormfrontStructures.root);
+    let lastSkyHangarLaunchKey: number | null = null;
+    const openingArenaBase = createOpeningArenaHoverBase();
+    scene.add(openingArenaBase.root);
+    let openingArenaArrivalNotified = false;
+    const crystalDropZones = createCrystalDropZones();
+    scene.add(crystalDropZones.root);
+    let openingArenaArrivalCamera: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
+    const stormfrontStructureFlags = new Map<'grid' | 'hangar', { object: ReturnType<typeof createLandmarkFlagObject>; shown: LandmarkFlag; changedAt: number }>();
     const sharedTileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileTransforms = isFishermansVillage
       ? sharedTileTransforms.map((transform) => ({
@@ -6189,6 +6410,14 @@ export default function Island5ThreePilot({
     boardCaretaker.setAnimation('idle', 0, true);
     boardCaretaker.setEmotion('calm');
     scene.add(caretakerFootplate, caretakerContactShadow, caretakerHitTarget, boardCaretaker.root);
+    // Island 008 masked wizard: mask on the head, zap effect at the tile.
+    const wizardMask = createWizardMask();
+    wizardMask.root.visible = false;
+    boardCaretaker.rig.head.add(wizardMask.root);
+    const wizardZap = createWizardZapEffect();
+    scene.add(wizardZap.root);
+    let wizardVisitKey: number | null = null;
+    let wizardVisitStartedAt = -Infinity;
     if (!caretakerBoardAvailable) {
       caretakerHitTarget.visible = false;
       boardCaretaker.root.visible = false;
@@ -6343,14 +6572,38 @@ export default function Island5ThreePilot({
     const clickableLandmarks: THREE.Object3D[] = [];
     const landmarkRootsById = new Map<Island5LandmarkDefinition['id'], THREE.Object3D>();
     const attentionVisuals = new Map<string, { root: THREE.Object3D; level: number; visual: ReturnType<typeof createLandmarkAttentionVisual> }>();
+    // One flag per landmark, placed from the landmark's bounds (recomputed only
+    // when the landmark model is rebuilt).
+    const landmarkFlags = new Map<string, {
+      object: ReturnType<typeof createLandmarkFlagObject>;
+      root: THREE.Object3D | null;
+      shown: LandmarkFlag;
+      changedAt: number;
+    }>();
+    const landmarkFlagBounds = new THREE.Box3();
+    const landmarkFlagSize = new THREE.Vector3();
+    const landmarkFlagCentre = new THREE.Vector3();
     const landmarkLabelAnchors = new WeakMap<THREE.Object3D, THREE.Vector3>();
     const projectedLandmarkLabel = new THREE.Vector3();
     const island15FallbackRoot = new THREE.Group();
     island15FallbackRoot.name = 'ISLAND_15_CRYSTAL_PALACE_V4_LOADING_FALLBACK';
     if (isCrystalGlacier) scene.add(island15FallbackRoot);
+    const goldenSkyLifts: ReturnType<typeof createGoldenSkyLift>[] = [];
     for (const landmark of ISLAND_5_LANDMARKS) {
       const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevelRef.current;
       const landmarkRoot = buildAuthoredLandmark(landmark, resolvedBuildLevel);
+      if (landmark.id === 'boss' && centreLandmarkVariantRef.current === 'golden-sky-lift' && resolvedBuildLevel > 0) {
+        // Island 002: the Golden Sky Lift replaces the authored centre building.
+        landmarkRoot.updateMatrixWorld(true);
+        const authoredBox = new THREE.Box3().setFromObject(landmarkRoot);
+        const authoredSize = authoredBox.getSize(new THREE.Vector3());
+        landmarkRoot.children.forEach((child) => { child.visible = false; });
+        const liftRadius = THREE.MathUtils.clamp(Math.max(authoredSize.x, authoredSize.z) * 0.42, 0.8, 4);
+        const lift = createGoldenSkyLift({ level: resolvedBuildLevel, radius: liftRadius, height: Math.max(authoredSize.y * 1.5, liftRadius * 4.2) });
+        lift.root.position.y = authoredBox.isEmpty() ? 0 : authoredBox.min.y - landmarkRoot.position.y;
+        landmarkRoot.add(lift.root);
+        goldenSkyLifts.push(lift);
+      }
       if (landmark.id === 'boss' && !isCrystalGlacier) makeLandmarkMaterialsIndependent(landmarkRoot);
       // The representative Island 019 gate intentionally shows only the
       // approved p08/p09/p10/p24 geometry. Generic Crown-of-Tides landmarks
@@ -7462,6 +7715,17 @@ export default function Island5ThreePilot({
     const bossOcclusionCenter = bossOcclusionBounds?.getCenter(new THREE.Vector3()) ?? null;
     const bossOcclusionSize = bossOcclusionBounds?.getSize(new THREE.Vector3()) ?? null;
     canvas.dataset.centralLandmarkOcclusion = 'opaque';
+    // Ordinary worlds mute only the part of the centre landmark that blocks the
+    // view (a soft see-through tunnel); Jungle/Frostmoon keep their full hide.
+    const bossSightCutaway = bossRootForOcclusion && !isJungleExpedition && !isFrostmoonHaven
+      ? createLandmarkSightCutaway(bossRootForOcclusion, {
+        // Worlds that batch landmark surfaces draw the palace from these roots.
+        extraRoots: () => scene.children.filter((child) => /_SURFACE_BATCHES$/.test(child.name)),
+      })
+      : null;
+    const bossSightCutawayEnd = new THREE.Vector3();
+    const sightCutawayPreviewEnabled = typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('sightCutawayPreview') === '1';
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const pointerDown = new THREE.Vector2();
@@ -9224,6 +9488,34 @@ export default function Island5ThreePilot({
         -((event.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.setFromCamera(pointer, camera);
+      if (luckySpinWheel.root.visible && raycaster.intersectObject(luckySpinWheel.root, true).length > 0) {
+        onLuckySpinClickRef.current?.({ x: event.clientX, y: event.clientY });
+        return;
+      }
+      if (crystalDropZones.root.visible && raycaster.intersectObjects(crystalDropZones.hitTargets, true).length > 0) {
+        crystalDropZonesRef.current.onClick?.();
+        return;
+      }
+      if (openingArenaBase.root.visible && openingArenaRef.current.state?.stage === 'anchored'
+        && raycaster.intersectObjects(openingArenaBase.hitTargets, true).some((hit) => {
+          for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
+          return true;
+        })) {
+        openingArenaRef.current.onClick?.();
+        return;
+      }
+      const stormfrontHit = stormfrontStructures.root.visible
+        ? raycaster.intersectObjects(stormfrontStructures.hitTargets, true).find((hit) => {
+          // Raycasts ignore visibility, so skip parts that are not built yet.
+          for (let node: THREE.Object3D | null = hit.object; node; node = node.parent) if (!node.visible) return false;
+          return true;
+        })
+        : undefined;
+      const stormfrontHitStructure = stormfrontHit ? stormfrontStructures.structureOf(stormfrontHit.object) : null;
+      if (stormfrontHitStructure) {
+        onStormfrontStructureClickRef.current?.(stormfrontHitStructure);
+        return;
+      }
       const trainIntersection = raycaster.intersectObjects(clickableRideTrain, true)[0];
       if (trainIntersection) {
         const tappedAt = performance.now();
@@ -9348,6 +9640,10 @@ export default function Island5ThreePilot({
     let departureCinematic: ReturnType<typeof createIslandDepartureCinematic> | null = null;
     let departureCinematicTime = 0;
     let departureCinematicNotified = false;
+    let stormfrontCinematic: ReturnType<typeof createIsland2StormfrontCinematic> | null = null;
+    let stormfrontCinematicTime = 0;
+    let stormfrontCinematicNotified = false;
+    let stormfrontCinematicBeat = '';
     const openingCeremonyFx = isDriftwoodIsle ? createOpeningGamesCeremonyThree() : null;
     if (openingCeremonyFx) {
       openingCeremonyFx.bindPalace(scene.getObjectByName('OPENING_PALACE'),
@@ -9371,6 +9667,7 @@ export default function Island5ThreePilot({
       const elapsed = timer.getElapsed();
       tileRewardObjects.setTechnologyFragments(tilePresentationRef.current.fragments);
       tileRewardObjects.setTrafficLightCharge(tilePresentationRef.current.trafficLightCharge);
+      tileRewardObjects.setStagedPickupsHidden(stagedRestorationPresentationRef.current?.pickupsCollectible === false);
       const ceremonyPlayback = openingCeremonyPlaybackRef.current;
       const ceremonyElapsed = ceremonyPlayback ? Math.max(0, Date.now() - ceremonyPlayback.startedAtMs) : 0;
       openingCeremonyFx?.update(ceremonyPlayback ? {
@@ -10336,6 +10633,47 @@ export default function Island5ThreePilot({
         }
       }
 
+      const wizardVisit = caretakerTileVisitRef.current;
+      const wizardVisiting = Boolean(wizardVisit && tileTransforms.length > 0 && !encounterCaretaker);
+      if (wizardVisit && wizardVisiting) {
+        if (wizardVisit.key !== wizardVisitKey) {
+          wizardVisitKey = wizardVisit.key;
+          wizardVisitStartedAt = elapsed;
+          boardCaretaker.setEmotion('curious');
+          boardCaretaker.setAnimation('greet', elapsed, true);
+        }
+        const visitTile = ((Math.floor(wizardVisit.tileIndex) % tileTransforms.length) + tileTransforms.length) % tileTransforms.length;
+        const ground = getIsland5TokenGroundPosition(tileTransforms, visitTile);
+        // Stand just inward of the tile so he never covers the player piece.
+        const inward = Math.hypot(ground[0], ground[2]) || 1;
+        const wx = ground[0] - (ground[0] / inward) * 0.55;
+        const wz = ground[2] - (ground[2] / inward) * 0.55;
+        boardCaretaker.root.visible = true;
+        boardCaretaker.root.position.set(wx, ground[1], wz);
+        boardCaretaker.root.rotation.y = Math.atan2(camera.position.x - wx, camera.position.z - wz);
+        wizardMask.root.visible = true;
+        const age = elapsed - wizardVisitStartedAt;
+        const pop = isReducedMotion ? 1 : Math.min(1, age / 0.45);
+        const easeOutBack = 1 + 2.70158 * (pop - 1) ** 3 + 1.70158 * (pop - 1) ** 2;
+        boardCaretaker.root.scale.setScalar(CARETAKER_BOARD_SCALE * 1.6 * Math.max(0.001, easeOutBack));
+        wizardZap.root.position.set(wx, ground[1], wz);
+        wizardZap.update(age, isReducedMotion);
+        if (age > 2.4 && boardCaretaker.animation === 'greet') boardCaretaker.setAnimation('talk-gentle', elapsed);
+        boardCaretaker.update(elapsed, frameDeltaSeconds, isReducedMotion);
+        canvas.dataset.caretakerWizardVisit = String(visitTile);
+        const wizardScreen = new THREE.Vector3(wx, ground[1] + 0.5, wz).project(camera);
+        canvas.dataset.caretakerWizardScreen = `${((wizardScreen.x + 1) / 2).toFixed(3)},${((1 - wizardScreen.y) / 2).toFixed(3)}`;
+      } else if (wizardVisitKey !== null) {
+        wizardVisitKey = null;
+        wizardMask.root.visible = false;
+        wizardZap.root.visible = false;
+        boardCaretaker.root.scale.setScalar(CARETAKER_BOARD_SCALE);
+        boardCaretaker.root.visible = caretakerBoardAvailable;
+        boardCaretaker.setEmotion('calm');
+        boardCaretaker.setAnimation('idle', elapsed, true);
+        delete canvas.dataset.caretakerWizardVisit;
+      }
+
       if (encounterCaretaker) {
         const encounterElapsed = elapsed - caretakerEncounterStartedAt;
         if (encounterElapsed > 2.25 && encounterCaretaker.animation === 'greet') {
@@ -10343,7 +10681,7 @@ export default function Island5ThreePilot({
           encounterCaretaker.setEmotion('curious');
         }
         encounterCaretaker.update(elapsed, frameDeltaSeconds, isReducedMotion);
-      } else if (caretakerBoardAvailable) {
+      } else if (caretakerBoardAvailable && !wizardVisiting) {
         const wanderCycle = elapsed % 18;
         const isWalking = !isReducedMotion && wanderCycle < 4.4;
         const wanderProgress = Math.min(1, wanderCycle / 4.4);
@@ -11140,6 +11478,116 @@ export default function Island5ThreePilot({
         delete canvas.dataset.departureShot;
         controls.enabled = true;
       }
+      if (stormfrontCinematicRef.current.active && !departureCinematicRef.current.active) {
+        if (!stormfrontCinematic) {
+          const outerIds: Island5LandmarkId[] = ['hatchery', 'habit', 'event', 'wisdom'];
+          const allRoots = [...landmarkRootsById.values()];
+          stormfrontCinematic = createIsland2StormfrontCinematic({
+            scene,
+            canvas,
+            start: { position: camera.position.clone(), target: controls.target.clone(), fov: camera.fov },
+            damagedRoots: outerIds.map((id) => landmarkRootsById.get(id)).filter((entry): entry is THREE.Object3D => Boolean(entry)),
+            allRoots,
+          });
+          stormfrontCinematicTime = 0;
+          stormfrontCinematicNotified = false;
+          stormfrontCinematicBeat = '';
+        }
+        stormfrontCinematicTime += Math.min(0.1, actualFrameDeltaSeconds);
+        transition = null;
+        controls.enabled = false;
+        const done = stormfrontCinematic.update(stormfrontCinematicTime, camera, isReducedMotion);
+        const beat = String(stormfrontCinematic.root.userData.beat ?? '');
+        canvas.dataset.stormfrontBeat = beat;
+        canvas.dataset.stormfrontTime = stormfrontCinematicTime.toFixed(2);
+        if (beat !== stormfrontCinematicBeat) {
+          stormfrontCinematicBeat = beat;
+          stormfrontCinematicRef.current.onBeat?.(beat as StormfrontCinematicBeat);
+        }
+        if (done && !stormfrontCinematicNotified) {
+          stormfrontCinematicNotified = true;
+          stormfrontCinematicRef.current.onComplete?.();
+        }
+      } else if (stormfrontCinematic) {
+        stormfrontCinematic.dispose();
+        stormfrontCinematic = null;
+        delete canvas.dataset.stormfrontBeat;
+        delete canvas.dataset.stormfrontTime;
+        controls.enabled = true;
+      }
+      // Island 002 Opening Arena hover base: towed in, anchored, built up.
+      const openingArenaState = openingArenaRef.current.state;
+      if (openingArenaState && openingArenaState.stage !== 'hidden' && !openingArenaBase.placed && landmarkRootsById.size > 0) {
+        const islandBox = new THREE.Box3();
+        landmarkRootsById.forEach((entry) => islandBox.expandByObject(entry));
+        if (!islandBox.isEmpty()) {
+          const size = islandBox.getSize(new THREE.Vector3());
+          const centre = islandBox.getCenter(new THREE.Vector3());
+          openingArenaBase.place({
+            centre,
+            islandRadius: THREE.MathUtils.clamp(Math.max(size.x, size.z) * 0.62, 8, 30),
+            groundY: islandBox.min.y,
+            viewFrom: camera.position.clone(),
+          });
+        }
+      }
+      if (openingArenaState && openingArenaBase.placed) {
+        if (openingArenaState.stage !== 'arriving') { openingArenaBase.resetArrival(); openingArenaArrivalNotified = false; }
+        openingArenaBase.setState(openingArenaState);
+        openingArenaBase.update(now / 1000, Math.min(0.1, actualFrameDeltaSeconds), isReducedMotion);
+        if (openingArenaState.stage === 'arriving') {
+          // Frame the island and the incoming base; hand the camera back after.
+          if (!openingArenaArrivalCamera) openingArenaArrivalCamera = { position: camera.position.clone(), target: controls.target.clone() };
+          const focus = openingArenaBase.focusPoint;
+          const u = THREE.MathUtils.smoothstep(openingArenaBase.arrivalProgress, 0, 0.25) * (1 - THREE.MathUtils.smoothstep(openingArenaBase.arrivalProgress, 0.88, 1));
+          const target = openingArenaArrivalCamera.target.clone().lerp(focus, 0.45 * u);
+          const eye = openingArenaArrivalCamera.position.clone().lerp(
+            target.clone().add(openingArenaArrivalCamera.position.clone().sub(openingArenaArrivalCamera.target).multiplyScalar(1.35)), u);
+          transition = null;
+          controls.enabled = false;
+          camera.position.copy(eye);
+          camera.lookAt(target);
+          if (openingArenaBase.arrivalProgress >= 1 && !openingArenaArrivalNotified) {
+            openingArenaArrivalNotified = true;
+            openingArenaRef.current.onArrivalComplete?.();
+          }
+        } else if (openingArenaArrivalCamera) {
+          camera.position.copy(openingArenaArrivalCamera.position);
+          controls.target.copy(openingArenaArrivalCamera.target);
+          camera.lookAt(controls.target);
+          openingArenaArrivalCamera = null;
+          controls.enabled = true;
+        }
+        canvas.dataset.openingArena = `${openingArenaState.stage}:${openingArenaState.arenaLevel}:${openingArenaBase.arrivalProgress.toFixed(2)}`;
+        // Guests walk from the Sky Lift towards the anchored arena.
+        const liftHost = landmarkRootsById.get('boss');
+        if (liftHost && goldenSkyLifts.length > 0) {
+          const arenaReady = openingArenaState.stage === 'anchored' && openingArenaState.arenaLevel >= 3;
+          const toward = liftHost.worldToLocal(openingArenaBase.focusPoint.clone());
+          toward.y = 0;
+          const reach = Math.min(toward.length(), openingArenaBase.radius * 1.6);
+          goldenSkyLifts.forEach((lift) => lift.setCrowdTarget(arenaReady && toward.lengthSq() > 1e-4 ? toward.normalize().multiplyScalar(reach) : null));
+        }
+      } else {
+        openingArenaBase.root.visible = false;
+        goldenSkyLifts.forEach((lift) => lift.setCrowdTarget(null));
+      }
+      goldenSkyLifts.forEach((lift) => lift.update(now / 1000, isReducedMotion));
+      // Crystal Miners drop zones: one pad beside each outer landmark, toward the centre.
+      if (crystalDropZonesRef.current.visible && !crystalDropZones.placed && landmarkRootsById.size >= 5) {
+        const centreBox = new THREE.Box3();
+        landmarkRootsById.forEach((entry) => centreBox.expandByObject(entry));
+        const centre = centreBox.getCenter(new THREE.Vector3());
+        crystalDropZones.place((['hatchery', 'habit', 'event', 'wisdom'] as const).map((id) => {
+          const box = new THREE.Box3().setFromObject(landmarkRootsById.get(id)!);
+          const mid = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          const inward = new THREE.Vector3(centre.x - mid.x, 0, centre.z - mid.z).normalize();
+          return mid.clone().addScaledVector(inward, Math.max(size.x, size.z) * 0.62).setY(box.min.y);
+        }));
+      }
+      crystalDropZones.root.visible = crystalDropZonesRef.current.visible && crystalDropZones.placed;
+      if (crystalDropZones.root.visible) crystalDropZones.update(now / 1000, isReducedMotion);
       publishCameraAuthoringPose(now);
 
       let restoreAssemblyCameraAfterRender = false;
@@ -11197,10 +11645,33 @@ export default function Island5ThreePilot({
             : undefined,
           centralOcclusionHeight: bossOcclusionSize?.y,
         }));
-        if (shouldFadeBoss !== isBossOcclusionFadeApplied) {
-          isBossOcclusionFadeApplied = shouldFadeBoss;
-          canvas.dataset.centralLandmarkOcclusion = shouldFadeBoss ? 'faded' : 'opaque';
-          const targetOpacity = shouldFadeBoss ? (isJungleExpedition || isFrostmoonHaven ? 0 : 0.16) : 1;
+        const useSightCutaway = Boolean(bossSightCutaway) && activeInspectionPreset !== 'frostwell';
+        if (bossSightCutaway) {
+          // Dev: ?sightCutawayPreview=1 aims the tunnel through the centre
+          // landmark as if the piece stood just behind it.
+          const cutawayPreview = import.meta.env.DEV && sightCutawayPreviewEnabled && bossOcclusionCenter && bossOcclusionSize;
+          if (cutawayPreview) {
+            const beyond = new THREE.Vector3(bossOcclusionCenter.x - camera.position.x, 0, bossOcclusionCenter.z - camera.position.z).normalize();
+            bossSightCutawayEnd.set(bossOcclusionCenter.x, bossOcclusionBounds!.min.y + 0.5, bossOcclusionCenter.z)
+              .addScaledVector(beyond, Math.max(bossOcclusionSize.x, bossOcclusionSize.z) * 0.75);
+          } else if (pawnNeedsClearView) bossSightCutawayEnd.set(playerPiece.root.position.x, playerPiece.root.position.y + 0.5, playerPiece.root.position.z);
+          else if (focusRoot) bossSightCutawayEnd.set(focusRoot.position.x, focusRoot.position.y + 1.2, focusRoot.position.z);
+          const strength = bossSightCutaway.update({
+            start: camera.position,
+            end: bossSightCutawayEnd,
+            radius: THREE.MathUtils.clamp((bossOcclusionSize ? Math.max(bossOcclusionSize.x, bossOcclusionSize.z) : 4) * 0.32, 1.1, 3.2),
+            active: useSightCutaway && (shouldFadeBoss || Boolean(cutawayPreview)),
+            deltaSeconds: Math.min(0.1, actualFrameDeltaSeconds),
+            reducedMotion: isReducedMotion,
+            box: bossOcclusionBounds,
+          });
+          if (useSightCutaway) canvas.dataset.centralLandmarkOcclusion = strength > 0.001 ? 'cutaway' : 'opaque';
+        }
+        const wholeLandmarkFade = shouldFadeBoss && !useSightCutaway;
+        if (wholeLandmarkFade !== isBossOcclusionFadeApplied) {
+          isBossOcclusionFadeApplied = wholeLandmarkFade;
+          canvas.dataset.centralLandmarkOcclusion = wholeLandmarkFade ? 'faded' : 'opaque';
+          const targetOpacity = wholeLandmarkFade ? (isJungleExpedition || isFrostmoonHaven ? 0 : 0.16) : 1;
           bossRoot.traverse((object) => {
             if (!(object instanceof THREE.Mesh)) return;
             const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
@@ -11213,8 +11684,8 @@ export default function Island5ThreePilot({
               }
               const originalOpacity = Number(material.userData.islandOriginalOpacity ?? 1);
               material.opacity = originalOpacity * targetOpacity;
-              material.transparent = shouldFadeBoss || Boolean(material.userData.islandOriginalTransparent);
-              material.depthWrite = shouldFadeBoss ? false : Boolean(material.userData.islandOriginalDepthWrite);
+              material.transparent = wholeLandmarkFade || Boolean(material.userData.islandOriginalTransparent);
+              material.depthWrite = wholeLandmarkFade ? false : Boolean(material.userData.islandOriginalDepthWrite);
               material.needsUpdate = true;
             });
           });
@@ -11398,12 +11869,129 @@ export default function Island5ThreePilot({
       }
       // DOM presentation follows the camera without React updates every frame.
       const occupiedLabelRects: Array<{ left: number; top: number; right: number; bottom: number }> = [];
+      // Landmark flags: red while unfinished, green at Level 3. They stay up
+      // during the build animation so the red flag pops up as building starts.
+      const flagTime = performance.now() / 1000;
+      const flagsHidden = (firstArrivalRef.current.active && !firstArrivalCompletedRef.current) || stormfrontCinematic !== null;
+      for (const item of landmarkProgressRef.current ?? []) {
+        const root = landmarkRootsById.get(item.id as Island5LandmarkId);
+        if (!root) continue;
+        let flag = landmarkFlags.get(item.id);
+        if (!flag) {
+          flag = { object: createLandmarkFlagObject(), root: null, shown: 'none', changedAt: 0 };
+          flag.object.root.visible = false;
+          scene.add(flag.object.root);
+          landmarkFlags.set(item.id, flag);
+        }
+        if (flag.root !== root) {
+          flag.root = root;
+          landmarkFlagBounds.setFromObject(root);
+          if (!landmarkFlagBounds.isEmpty()) {
+            landmarkFlagBounds.getSize(landmarkFlagSize);
+            landmarkFlagBounds.getCenter(landmarkFlagCentre);
+            const poleHeight = THREE.MathUtils.clamp(landmarkFlagSize.y * 0.55, 1.1, 2.4);
+            flag.object.root.position.set(
+              landmarkFlagCentre.x + landmarkFlagSize.x * 0.42,
+              landmarkFlagBounds.min.y,
+              landmarkFlagCentre.z + landmarkFlagSize.z * 0.42,
+            );
+            flag.object.root.userData.poleHeight = poleHeight;
+          }
+        }
+        const level = landmarkBuildLevelsRef.current?.[item.id as Island5LandmarkId] ?? buildLevelRef.current;
+        const target = resolveLandmarkFlag({ level, percent: item.percent });
+        if (target !== flag.shown) {
+          flag.shown = target;
+          flag.changedAt = flagTime;
+          if (target !== 'none') flag.object.setColor(target);
+        }
+        const baseScale = (flag.object.root.userData.poleHeight as number | undefined) ?? 1.4;
+        flag.object.root.visible = target !== 'none' && !flagsHidden && root.visible;
+        if (flag.object.root.visible) {
+          // Pop up with an overshoot when raised or when it turns green.
+          const age = flagTime - flag.changedAt;
+          const pop = isReducedMotion || age > 0.8 ? 1 : Math.min(1, age / 0.45) + Math.sin(Math.min(1, age / 0.8) * Math.PI) * 0.18;
+          flag.object.root.scale.setScalar(baseScale * pop);
+          if (!isReducedMotion) {
+            flag.object.wave(flagTime);
+            const pulse = 0.35 + Math.sin(flagTime * 3) * 0.15;
+            flag.object.glowMaterial.opacity = target === 'red' ? pulse + 0.15 : pulse;
+          }
+        }
+      }
+      // Island 002 storm-safe structures, each with its own flag.
+      const stormfrontLevels = stormfrontStructureLevelsRef.current;
+      stormfrontStructures.root.visible = Boolean(stormfrontLevels) && tileTransforms.length > 0 && stormfrontCinematic === null;
+      if (stormfrontStructures.root.visible && stormfrontLevels) {
+        if (!stormfrontStructures.placed) {
+          const eventRoot = landmarkRootsById.get('event');
+          const eventBox = eventRoot ? new THREE.Box3().setFromObject(eventRoot) : null;
+          const groundRay = new THREE.Raycaster();
+          // Sprites read the ray's camera; ground hits only use meshes anyway.
+          groundRay.camera = camera;
+          const down = new THREE.Vector3(0, -1, 0);
+          const groundTargets = scene.children.filter((child) => child !== stormfrontStructures.root && child !== luckySpinWheel.root && !(child instanceof THREE.Light));
+          stormfrontStructures.place({
+            tilePositions: tileTransforms.map((_, index) => getIsland5TokenGroundPosition(tileTransforms, index)),
+            eventCentre: eventBox && !eventBox.isEmpty() ? eventBox.getCenter(new THREE.Vector3()) : null,
+            viewFrom: camera.position.clone(),
+            blockers: [...landmarkRootsById.values()].map((entry) => new THREE.Box3().setFromObject(entry)).filter((box) => !box.isEmpty()),
+            groundAt: (x, z) => {
+              groundRay.set(new THREE.Vector3(x, 60, z), down);
+              const hit = groundRay.intersectObjects(groundTargets, true).find((entry) => {
+                const mesh = entry.object as THREE.Mesh;
+                const material = mesh.material as THREE.Material | undefined;
+                return mesh.isMesh && mesh.visible && !(material && material.transparent && material.opacity < 0.6);
+              });
+              return hit ? hit.point.y : null;
+            },
+          });
+        }
+        stormfrontStructures.setLevels(stormfrontLevels.grid, stormfrontLevels.hangar);
+        const hangarBanner = skyHangarBannerRef.current;
+        stormfrontStructures.setBanner(hangarBanner?.text ?? null, hangarBanner?.accent ?? null);
+        if (skyHangarLaunchKeyRef.current !== lastSkyHangarLaunchKey) {
+          if (lastSkyHangarLaunchKey !== null) stormfrontStructures.launch();
+          lastSkyHangarLaunchKey = skyHangarLaunchKeyRef.current;
+        }
+        stormfrontStructures.update(flagTime, isReducedMotion);
+      }
+      (['grid', 'hangar'] as const).forEach((id) => {
+        let entry = stormfrontStructureFlags.get(id);
+        if (!entry) {
+          entry = { object: createLandmarkFlagObject(), shown: 'none', changedAt: 0 };
+          entry.object.root.visible = false;
+          scene.add(entry.object.root);
+          stormfrontStructureFlags.set(id, entry);
+        }
+        const level = stormfrontLevels ? stormfrontLevels[id] : 0;
+        const target: LandmarkFlag = !stormfrontLevels ? 'none' : level >= 3 ? 'green' : 'red';
+        if (target !== entry.shown) {
+          entry.shown = target;
+          entry.changedAt = flagTime;
+          if (target !== 'none') entry.object.setColor(target);
+        }
+        entry.object.root.visible = target !== 'none' && stormfrontStructures.root.visible && stormfrontStructures.placed && !flagsHidden;
+        if (!entry.object.root.visible) return;
+        entry.object.root.position.copy(id === 'grid' ? stormfrontStructures.gridFlagAnchor : stormfrontStructures.hangarFlagAnchor);
+        const age = flagTime - entry.changedAt;
+        const pop = isReducedMotion || age > 0.8 ? 1 : Math.min(1, age / 0.45) + Math.sin(Math.min(1, age / 0.8) * Math.PI) * 0.18;
+        entry.object.root.scale.setScalar(1.3 * pop);
+        if (!isReducedMotion) {
+          entry.object.wave(flagTime);
+          entry.object.glowMaterial.opacity = 0.35 + Math.sin(flagTime * 3) * 0.15 + (target === 'red' ? 0.15 : 0);
+        }
+      });
+      canvas.dataset.stormfrontStructures = stormfrontStructures.root.visible && stormfrontLevels
+        ? `grid:${stormfrontLevels.grid},hangar:${stormfrontLevels.hangar},banner:${stormfrontStructures.bannerText ?? '-'},placement:${stormfrontStructures.root.userData.hangarPlacement ?? '-'},flags:${[...stormfrontStructureFlags.values()].map((f) => (f.object.root.visible ? f.shown : 'none')).join('/')}`
+        : 'hidden';
+      canvas.dataset.landmarkFlags = [...landmarkFlags.entries()].map(([id, f]) => `${id}:${f.object.root.visible ? f.shown : 'none'}`).join(',');
       for (const item of landmarkProgressRef.current ?? []) {
         const label = landmarkLabelRefs.current.get(item.id);
         const root = landmarkRootsById.get(item.id as Island5LandmarkId);
         if (!label || !root) continue;
         const presentationVisible = !(firstArrivalRef.current.active && !firstArrivalCompletedRef.current)
-          && !constructionPresentationRef.current?.active;
+          && !constructionPresentationRef.current?.active && stormfrontCinematic === null;
         let overlay = attentionVisuals.get(item.id);
         const visualLevel = landmarkBuildLevelsRef.current?.[item.id as Island5LandmarkId] ?? buildLevelRef.current;
         if (overlay?.root !== root || overlay?.level !== visualLevel) { overlay?.visual.dispose(); attentionVisuals.delete(item.id); overlay = undefined; }
@@ -11445,6 +12033,22 @@ export default function Island5ThreePilot({
           occupiedLabelRects.push({ left: x - width / 2, right: x + width / 2, top: bottom - height, bottom });
         }
       }
+      const luckySpinTile = luckySpinTileIndexRef.current;
+      luckySpinWheel.root.visible = luckySpinTile !== null && luckySpinTile !== undefined && tileTransforms.length > 0;
+      if (luckySpinWheel.root.visible) {
+        const wheelTile = ((Math.floor(luckySpinTile!) % tileTransforms.length) + tileTransforms.length) % tileTransforms.length;
+        const wheelPosition = getIsland5TokenGroundPosition(tileTransforms, wheelTile);
+        luckySpinWheel.root.position.set(wheelPosition[0], wheelPosition[1], wheelPosition[2]);
+        // Face the camera around the vertical axis, spin and breathe.
+        luckySpinWheel.face.rotation.y = Math.atan2(renderCamera.position.x - wheelPosition[0], renderCamera.position.z - wheelPosition[2]);
+        const wheelTime = performance.now() / 1000;
+        if (!isReducedMotion) {
+          luckySpinWheel.wheel.rotation.z = wheelTime * 1.6;
+          luckySpinWheel.face.position.y = 0.66 + Math.sin(wheelTime * 2.2) * 0.04;
+          luckySpinWheel.ring.scale.setScalar(1 + Math.sin(wheelTime * 3) * 0.08);
+          luckySpinWheel.glow.opacity = 0.4 + Math.sin(wheelTime * 3) * 0.2;
+        }
+      }
       const tileBadge = tileBadgeAnchorRef.current;
       if (tileBadge?.element && tileTransforms.length > 0) {
         const badgeTile = ((Math.floor(tileBadge.tileIndex) % tileTransforms.length) + tileTransforms.length) % tileTransforms.length;
@@ -11458,8 +12062,34 @@ export default function Island5ThreePilot({
         }px, ${badgeRect.top + (1 - tileBadgeProjection.y) * 0.5 * badgeRect.height}px, 0)`;
         tileBadge.element.style.visibility = badgeOnScreen ? 'visible' : 'hidden';
       }
+      // Landing on a finished (green-flag) landmark: a joyful hop and spin.
+      const cheer = playerPieceCheerRef.current;
+      if (cheer && cheer.key !== lastPlayerPieceCheerKey) {
+        if (lastPlayerPieceCheerKey !== null || cheer.key > 0) playerPieceCheerStartedAt = performance.now();
+        lastPlayerPieceCheerKey = cheer.key;
+      }
+      const cheerProgress = (performance.now() - playerPieceCheerStartedAt) / (isReducedMotion ? 1 : PLAYER_PIECE_CHEER_MS);
+      const cheerActive = cheerProgress >= 0 && cheerProgress < 1;
+      const cheerLift = cheerActive && !isReducedMotion ? Math.sin(Math.PI * cheerProgress) * 0.62 : 0;
+      const cheerSpin = cheerActive && !isReducedMotion ? cheerProgress * Math.PI * 2 : 0;
+      playerPiece.root.position.y += cheerLift;
+      playerPiece.root.rotation.y += cheerSpin;
+      if (cheerLift !== 0 || cheerSpin !== 0) playerPiece.root.updateMatrixWorld(true);
+      if (cheer?.element) {
+        cheerProjection.set(playerPiece.root.position.x, playerPiece.root.position.y + 1.25, playerPiece.root.position.z).project(renderCamera);
+        const cheerRect = canvas.getBoundingClientRect();
+        cheer.element.style.transform = `translate3d(${
+          cheerRect.left + (cheerProjection.x + 1) * 0.5 * cheerRect.width
+        }px, ${cheerRect.top + (1 - cheerProjection.y) * 0.5 * cheerRect.height}px, 0)`;
+        // The bubble's own CSS animation pops it in and fades it out.
+        cheer.element.style.visibility = cheerProjection.z < 1 ? 'visible' : 'hidden';
+      }
       try { renderer.render(scene, renderCamera); }
-      finally { scene.matrixWorldAutoUpdate = automaticWorldMatrices; }
+      finally {
+        scene.matrixWorldAutoUpdate = automaticWorldMatrices;
+        playerPiece.root.position.y -= cheerLift;
+        playerPiece.root.rotation.y -= cheerSpin;
+      }
       if (celebrationPhase === 'capture') {
         // Read back in the same task as the render (no preserveDrawingBuffer needed).
         try {
@@ -11693,6 +12323,13 @@ export default function Island5ThreePilot({
       window.cancelAnimationFrame(animationFrame);
       firstArrival?.dispose();
       departureCinematic?.dispose();
+      stormfrontCinematic?.dispose();
+      stormfrontStructures.dispose();
+      openingArenaBase.dispose();
+      goldenSkyLifts.forEach((lift) => lift.dispose());
+      crystalDropZones.dispose();
+      stormfrontStructureFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
+      landmarkFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
       livingAmbience.root.userData.disposeAwakening?.();
       if (isHeartshaftCrucible) stagedRestorationRuntime?.root.userData.dispose?.();
       tileRewardObjects.disposeFragments();
@@ -11724,6 +12361,8 @@ export default function Island5ThreePilot({
       }
       scene.remove(boardCaretaker.root);
       boardCaretaker.dispose();
+      wizardMask.dispose();
+      wizardZap.dispose();
       livingAmbience.dispose?.();
       openingCeremonyFx?.dispose();
       const disposedSceneBackground = scene.background;
@@ -11920,6 +12559,12 @@ export default function Island5ThreePilot({
           <span className="island-landmark-progress-ring" style={{ background: `conic-gradient(#70e6ad ${item.percent}%, #ffffff26 0)` }}>
             <span>{item.percent}%</span>
           </span>
+          {(() => {
+            const flag = resolveLandmarkFlag({ level: landmarkBuildLevels?.[item.id as Island5LandmarkId] ?? buildLevel ?? 0, percent: item.percent });
+            return flag === 'none' ? null : (
+              <span className={`island-landmark-flag island-landmark-flag--${flag}`} title={`${LANDMARK_FLAG_LABEL[flag]} flag`} aria-hidden="true" />
+            );
+          })()}
           {/* The name is earned: until the building is 100% built only its % shows. */}
           {item.percent >= 100 ? <span><strong>{item.title}</strong><small>{item.status}</small></span> : null}
         </button>)}

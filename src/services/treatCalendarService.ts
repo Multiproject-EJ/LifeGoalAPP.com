@@ -296,7 +296,8 @@ function computePersonalQuestTodayIndex(
   // this gate the calendar would immediately unlock the next day on the same
   // calendar day, letting the user chain all the way to day 7 in one sitting.
   const todayStr = formatLocalYmd(new Date());
-  if (progress.last_opened_date === todayStr) {
+  // ">=": a server-written (UTC) date can be a day ahead of local time.
+  if (typeof progress.last_opened_date === 'string' && progress.last_opened_date >= todayStr) {
     // Already opened a door today — stay on that day (shows as "opened")
     return Math.min(maxOpened, totalDays);
   }
@@ -1482,7 +1483,12 @@ export async function openTodayHatch(
       // Sequential: only the next available day can be opened
       const totalDays = computeTotalFreeDoors(cached?.hatches ?? []);
       const nextDay = computePersonalQuestTodayIndex(progress, totalDays);
-      if (dayIndex !== nextDay) {
+      // Same-day bonus for the free door just opened stays openable.
+      const isSameDayBonus = doorType === 'bonus'
+        && progress.opened_days.length > 0
+        && dayIndex === Math.max(...progress.opened_days)
+        && !(progress.opened_bonus_days ?? []).includes(dayIndex);
+      if (dayIndex !== nextDay && !isSameDayBonus) {
         return { data: null, error: new Error(`You can only open day ${nextDay} next`) };
       }
     } else {

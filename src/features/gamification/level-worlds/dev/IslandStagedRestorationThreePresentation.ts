@@ -11,6 +11,8 @@ export interface IslandStagedRestorationPresentation {
   stageCount: number;
   constructionSequence?: number;
   claimedPickupTileIndices?: readonly number[];
+  /** False while the pickups exist but landing cannot collect them yet (Island 020 before the Skiff mission). */
+  pickupsCollectible?: boolean;
   /** Island 019: bumps once per coaster section ordered from the Director. */
   coasterDeliverySequence?: number;
   /** Island 019: a delivered section is waiting on the station pad. */

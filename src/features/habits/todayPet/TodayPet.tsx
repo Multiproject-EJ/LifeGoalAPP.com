@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTodayPetOwnership } from './todayPetSingleton';
 import { getCreatureById } from '../../gamification/level-worlds/services/creatureCatalog';
 import { resolveCreatureArtManifest } from '../../gamification/level-worlds/services/creatureImageManifest';
 import {
@@ -44,6 +45,8 @@ function supportsWebGl(): boolean {
  * Pet (hearts) and Play (it chases a ball).
  */
 export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props) {
+  // One pet on screen, ever: only the displayed Today tracker's instance renders it.
+  const { anchorRef, owns } = useTodayPetOwnership();
   const creature = getCreatureById(companion.creatureId);
   const art = creature ? resolveCreatureArtManifest(creature) : null;
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -142,9 +145,10 @@ export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props
     return () => window.clearTimeout(close);
   }, [bubbles]);
 
-  if (!creature || !art || typeof document === 'undefined') return null;
+  const anchor = <span ref={anchorRef} className="today-pet-anchor" aria-hidden="true" />;
+  if (!owns || !creature || !art || typeof document === 'undefined') return anchor;
   const name = creature.name;
-  return createPortal(
+  return <>{anchor}{createPortal(
     <div className="today-pet-yard" aria-live="polite">
       {ball ? <span key={ball.id} className="today-pet__ball" style={{ left: `${ball.x * 100}%` }} aria-hidden="true" /> : null}
       <div
@@ -202,5 +206,5 @@ export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props
       </div>
     </div>,
     document.body,
-  );
+  )}</>;
 }

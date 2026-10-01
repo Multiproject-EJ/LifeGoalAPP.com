@@ -8,7 +8,10 @@ export interface IslandRunFeatureAccessContext {
   signatureMissionProgressByIsland?: IslandRunSignatureMissionProgressByIsland;
 }
 
-export const GRADUAL_PUZZLE_INTRODUCTION_ISLAND = 3;
+/** The Puzzle Collection opens on Island 015 for every save (user request
+ * 2026-09-30); traffic lights keep their own Island 003 introduction. */
+export const GRADUAL_PUZZLE_INTRODUCTION_ISLAND = 15;
+export const GRADUAL_TRAFFIC_LIGHT_INTRODUCTION_ISLAND = 3;
 export const GRADUAL_EGG_INTRODUCTION_ISLAND = 4;
 
 export function resolveIslandRunFeatureAccess(context: IslandRunFeatureAccessContext) {
@@ -34,8 +37,9 @@ export function resolveIslandRunFeatureAccess(context: IslandRunFeatureAccessCon
     eventLauncher: validIsland && !beginnerIsland && (!gradual || (island >= 2 && (games.ordinaryEvents || games.inauguralRound))),
     ordinaryEvents: validIsland && !beginnerIsland && (!gradual || (island >= 2 && games.ordinaryEvents)),
     inauguralRound: gradual && validIsland && games.inauguralRound,
-    puzzleCollection: gradual ? island >= GRADUAL_PUZZLE_INTRODUCTION_ISLAND : (!Number.isFinite(context.currentIslandNumber) || island >= 2),
-    trafficLight: !beginnerIsland && (!gradual || island >= GRADUAL_PUZZLE_INTRODUCTION_ISLAND),
+    puzzleCollection: !Number.isFinite(context.currentIslandNumber) ? !gradual : island >= GRADUAL_PUZZLE_INTRODUCTION_ISLAND,
+    // Island 003 introduces the Traffic Light for every save (none on 001/002).
+    trafficLight: !beginnerIsland && (!Number.isFinite(context.currentIslandNumber) ? !gradual : island >= GRADUAL_TRAFFIC_LIGHT_INTRODUCTION_ISLAND),
     eggs: island >= GRADUAL_EGG_INTRODUCTION_ISLAND,
     dailyWheel: !beginnerIsland && (!gradual || vault),
     vault,

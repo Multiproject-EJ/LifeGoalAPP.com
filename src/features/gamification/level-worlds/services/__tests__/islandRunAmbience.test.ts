@@ -115,4 +115,14 @@ export const islandRunAmbienceTests: TestCase[] = [
       }
     },
   },
+  {
+    name: 'ambience pauses whenever a music track plays, so two soundtracks never overlap (island clear celebration)',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fs = await import('fs');
+      const board = fs.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assertEqual(board.includes("const musicTrackActive = islandRunMusicContext.kind !== 'none';"), true, 'the board knows when music owns the channel');
+      assertEqual(board.includes('suspended: !isDocumentVisible || showStoryReader || musicTrackActive,'), true, 'the ambience bed pauses under any music track');
+    },
+  },
 ];

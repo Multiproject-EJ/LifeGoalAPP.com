@@ -686,7 +686,7 @@ export function IslandRunDebugPanel({
                   <button
                     type="button"
                     className="island-run-debug-panel__copy-btn"
-                    onClick={() => onSetDevTimedEventOverride(null)}
+                    onClick={() => { onSetDevTimedEventOverride(null); onClose(); }}
                     disabled={!devTimedEventOverrideType}
                   >
                     Clear override
@@ -781,7 +781,7 @@ export function IslandRunDebugPanel({
                       type="button"
                       className="island-run-debug-panel__copy-btn"
                       disabled={packGrantPending || !onGrantDevDemoCreaturePack}
-                      onClick={() => void runPackGrantAction(onGrantDevDemoCreaturePack)}
+                      onClick={() => { onClose(); void runPackGrantAction(onGrantDevDemoCreaturePack); }}
                     >
                       Grant demo Creature Pack
                     </button>
@@ -789,7 +789,7 @@ export function IslandRunDebugPanel({
                       type="button"
                       className="island-run-debug-panel__copy-btn"
                       disabled={packGrantPending || !onOpenDevDemoCreaturePackPrototype}
-                      onClick={() => void runPackGrantAction(onOpenDevDemoCreaturePackPrototype)}
+                      onClick={() => { onClose(); void runPackGrantAction(onOpenDevDemoCreaturePackPrototype); }}
                     >
                       Open Creature Pack prototype
                     </button>
@@ -797,7 +797,7 @@ export function IslandRunDebugPanel({
                       type="button"
                       className="island-run-debug-panel__copy-btn"
                       disabled={packGrantPending || !onOpenDevWelcomePackPrototype}
-                      onClick={() => void runPackGrantAction(onOpenDevWelcomePackPrototype)}
+                      onClick={() => { onClose(); void runPackGrantAction(onOpenDevWelcomePackPrototype); }}
                     >
                       Open Welcome Pack prototype
                     </button>
@@ -805,7 +805,7 @@ export function IslandRunDebugPanel({
                       type="button"
                       className="island-run-debug-panel__copy-btn"
                       disabled={packGrantPending || !onGrantDevDemoEggRewardPack}
-                      onClick={() => void runPackGrantAction(onGrantDevDemoEggRewardPack)}
+                      onClick={() => { onClose(); void runPackGrantAction(onGrantDevDemoEggRewardPack); }}
                     >
                       Grant demo Egg Reward Pack
                     </button>
@@ -813,7 +813,7 @@ export function IslandRunDebugPanel({
                       type="button"
                       className="island-run-debug-panel__copy-btn"
                       disabled={packGrantPending || !onResetWelcomePackDevFlags}
-                      onClick={() => void runPackGrantAction(onResetWelcomePackDevFlags)}
+                      onClick={() => { onClose(); void runPackGrantAction(onResetWelcomePackDevFlags); }}
                     >
                       Reset Welcome Pack flags
                     </button>
@@ -843,7 +843,7 @@ export function IslandRunDebugPanel({
                         type="button"
                         className="island-run-debug-panel__copy-btn"
                         disabled={!onOpenLuckyRollDevOverlay}
-                        onClick={() => onOpenLuckyRollDevOverlay?.(luckyRollTargetIslandNumber)}
+                        onClick={() => { onClose(); onOpenLuckyRollDevOverlay?.(luckyRollTargetIslandNumber); }}
                       >
                         Open Treasure Path overlay
                       </button>
@@ -975,7 +975,7 @@ export function IslandRunDebugPanel({
                       type="button"
                       className="island-run-debug-panel__copy-btn"
                       disabled={!onOpenPostRareTreasurePathOverlay || postRareState.status === 'not_applicable' || postRareState.status === 'already_traveled'}
-                      onClick={() => onOpenPostRareTreasurePathOverlay?.(postRareCompletedIslandNumber)}
+                      onClick={() => { onClose(); onOpenPostRareTreasurePathOverlay?.(postRareCompletedIslandNumber); }}
                     >
                       Open Treasure Path overlay
                     </button>
