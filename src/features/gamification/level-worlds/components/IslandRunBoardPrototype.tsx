@@ -241,6 +241,7 @@ import { DepartureDayScene } from './DepartureDayScene';
 import { isPlayerPieceId } from '../services/islandRunPlayerPieces';
 import { resolveTreasureIslandWealth } from '../services/islandRunTreasures';
 import { resolveLandmarkFlag } from '../services/landmarkFlags';
+import { resolveLandmarkDoorFlag, resolveLandmarkDoorLandingPresentation } from '../services/landmarkDoorLanding';
 import { readExpeditionShipGarageQualityPreference, resolveExpeditionShipGarageQuality } from './expeditionShipGarageQuality';
 import { resolveDepartureDaySeenKey, resolveDepartureDaySkip } from '../services/islandRunDepartureDay';
 import { purchaseDiceSkin, resolveDiceSkinProgress, selectDiceSkin } from '../services/islandRunDiceSkinActions';
@@ -3493,6 +3494,9 @@ export function IslandRunBoardPrototype({
 
   // ── Sticker album dialog ───────────────────────────────────────────────────
   const [showStickerAlbumDialog, setShowStickerAlbumDialog] = useState(false);
+  // Green-flag door landing: the player piece hops and says "Great job!!".
+  const [playerPieceCheer, setPlayerPieceCheer] = useState<{ key: number; title: string }>({ key: 0, title: '' });
+  const [playerPieceCheerElement, setPlayerPieceCheerElement] = useState<HTMLDivElement | null>(null);
   // Per-viewer UI hint only: the "NEW" badge until the collection is first opened.
   const [puzzleCollectionSeen, setPuzzleCollectionSeen] = useState(() => {
     try { return window.localStorage.getItem(PUZZLE_COLLECTION_SEEN_STORAGE_KEY) === '1'; } catch { return false; }
@@ -4122,6 +4126,13 @@ export function IslandRunBoardPrototype({
       if (showReceipt) setShowCompassBookReceiptModal(true);
     }, (reducedMotion ? JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS : JUNGLE_COMPASS_CEREMONY_DURATION_MS) + 300);
   }, []);
+
+  // Dev visual preview: ?playerCheerPreview=1 cheers on a finished landmark every 6 s.
+  useEffect(() => {
+    if (!isIslandVisualPreview || new URLSearchParams(window.location.search).get('playerCheerPreview') !== '1') return undefined;
+    const timer = window.setInterval(() => setPlayerPieceCheer((current) => ({ key: current.key + 1, title: 'Event Arena' })), 6_000);
+    return () => window.clearInterval(timer);
+  }, [isIslandVisualPreview]);
 
   // Dev visual preview: ?compassCeremonyPreview=1 replays the Living Compass awakening every 20 s.
   useEffect(() => {
@@ -6549,8 +6560,27 @@ export function IslandRunBoardPrototype({
     setTicketPromptStopId(null);
     setPrepayTicketPromptStopId(null);
     setIsTopbarMenuPrimed(false);
-    setFocusedStopId(doorStopId);
-    setCameraMode('stop_focus');
+    // Only an unfinished (red-flag) landmark zooms in and opens; a finished
+    // (green) one gets a cheer from the player piece and the roll goes on.
+    const doorBuild = typeof stopIndex === 'number' ? runtimeStateRef.current.stopBuildStateByIndex[stopIndex] : undefined;
+    const doorPresentation = resolveLandmarkDoorLandingPresentation(resolveLandmarkDoorFlag({
+      buildLevel: doorBuild?.buildLevel ?? 0,
+      spentTowardLevel: doorBuild?.spentEssence ?? 0,
+    }));
+    if (doorPresentation === 'celebrate') {
+      const doorTitle = typeof stopIndex === 'number' ? islandStopPlan[stopIndex]?.title ?? 'Landmark' : 'Landmark';
+      setRequiredDoorStopId(null);
+      requestActiveStopTransition(null, 'finished_landmark_door_cheer');
+      setPlayerPieceCheer((current) => ({ key: current.key + 1, title: doorTitle }));
+      setLandingText(`🎉 Great job!! ${doorTitle} is 100% done.`);
+      playIslandRunSound('reward_bar_claim_burst');
+      triggerIslandRunHaptic('reward_claim');
+      return;
+    }
+    if (doorPresentation === 'focus') {
+      setFocusedStopId(doorStopId);
+      setCameraMode('stop_focus');
+    }
 
     if (tapOutcome === 'open' && (stopStatus === 'active' || stopStatus === 'accessible' || stopStatus === 'postponed')) {
       setDormantDoorMiniGame(null);
@@ -17621,6 +17651,7 @@ export function IslandRunBoardPrototype({
                 onStormfrontStructureClick={handleStormfrontStructureClick}
                 skyHangarBanner={skyHangarFlight ? { text: skyHangarFlight.bannerText, accent: skyHangarFlight.accent } : null}
                 skyHangarLaunchKey={skyHangarLaunchKey}
+                playerPieceCheer={playerPieceCheer.key > 0 ? { key: playerPieceCheer.key, element: playerPieceCheerElement } : null}
                 openingArena={openingArenaVisual}
                 onOpeningArenaArrivalComplete={handleOpeningArenaArrivalComplete}
                 onOpeningArenaClick={isIslandVisualPreview ? undefined : () => setShowOpeningArenaBuild(true)}
@@ -21681,6 +21712,13 @@ export function IslandRunBoardPrototype({
             <span>Tap to answer Central Command</span>
           </span>
         </button>, document.body) : null}
+      {playerPieceCheer.key > 0 ? createPortal(
+        <div ref={setPlayerPieceCheerElement} className="island-run-player-cheer" role="status" aria-live="polite">
+          <span key={playerPieceCheer.key} className="island-run-player-cheer__bubble">
+            <strong>Great job!!</strong>
+            <small>{playerPieceCheer.title} · 100%</small>
+          </span>
+        </div>, document.body) : null}
       {incomingMissionBriefing && showMissionMessageBanner && !doesModalOwnAttention ? createPortal(
         <button type="button" className="island-run-mission-message-banner" onClick={openIncomingMissionBriefing}>
           <span className="island-run-mission-message-banner__icon" aria-hidden="true"><MissionPhoneRailIcon /></span>

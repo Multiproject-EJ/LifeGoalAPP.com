@@ -29322,3 +29322,52 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   pointer-events: none !important;
   transition: opacity 280ms ease, visibility 0s linear 280ms;
 }
+
+/* Green-flag door landing: a speech bubble riding above the player piece. */
+.island-run-player-cheer {
+  visibility: hidden;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 8600;
+  pointer-events: none;
+  will-change: transform;
+}
+.island-run-player-cheer__bubble {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 1px;
+  padding: 7px 12px 8px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff9d8, #ffe27a);
+  color: #3b2a00;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  animation: island-run-player-cheer-pop 1.9s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+.island-run-player-cheer__bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  background: #ffe27a;
+  transform: translateX(-50%) rotate(45deg);
+}
+.island-run-player-cheer__bubble strong { font-size: 1.05rem; }
+.island-run-player-cheer__bubble small { font-size: 0.7rem; opacity: 0.8; }
+@keyframes island-run-player-cheer-pop {
+  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.6); }
+  14% { opacity: 1; transform: translate(-50%, 0) scale(1.08); }
+  24% { transform: translate(-50%, 0) scale(1); }
+  82% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -14px) scale(0.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-run-player-cheer__bubble { animation-duration: 1.9s; animation-timing-function: linear; }
+}

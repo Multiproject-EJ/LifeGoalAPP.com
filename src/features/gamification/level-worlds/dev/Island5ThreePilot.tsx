@@ -489,6 +489,8 @@ interface Island5ThreePilotProps {
    * frame, no React updates). Presentation only; used by the Lucky Spin badge.
    */
   tileBadgeAnchor?: { tileIndex: number; element: HTMLElement | null } | null;
+  /** Bumping `key` makes the player piece jump and spin for joy; `element` rides above it. */
+  playerPieceCheer?: { key: number; element: HTMLElement | null } | null;
   /** Today's Lucky Spin waits on this tile as a 3D wheel (null hides it). */
   luckySpinTileIndex?: number | null;
   /** Tapping the 3D Lucky Spin wheel (screen point for the launch burst). */
@@ -579,6 +581,7 @@ interface ActiveTileImpact {
   strength: number;
 }
 
+const PLAYER_PIECE_CHEER_MS = 950;
 const ISLAND_1_ASSEMBLY_POV_TOUR_STEPS: readonly {
   position: readonly [number, number, number];
   target: readonly [number, number, number];
@@ -3860,6 +3863,7 @@ export default function Island5ThreePilot({
   onTokenHop,
   onTokenLand,
   tileBadgeAnchor,
+  playerPieceCheer = null,
   luckySpinTileIndex = null,
   onLuckySpinClick,
   onLandmarkClick,
@@ -4091,6 +4095,8 @@ export default function Island5ThreePilot({
   const onCelebrationSnapshotRef = useRef(onCelebrationSnapshot);
   onCelebrationSnapshotRef.current = onCelebrationSnapshot;
   const tileBadgeAnchorRef = useRef(tileBadgeAnchor);
+  const playerPieceCheerRef = useRef(playerPieceCheer);
+  playerPieceCheerRef.current = playerPieceCheer;
   tileBadgeAnchorRef.current = tileBadgeAnchor;
   const luckySpinTileIndexRef = useRef(luckySpinTileIndex);
   luckySpinTileIndexRef.current = luckySpinTileIndex;
@@ -5843,6 +5849,9 @@ export default function Island5ThreePilot({
         : [];
 
     const tileBadgeProjection = new THREE.Vector3();
+    const cheerProjection = new THREE.Vector3();
+    let lastPlayerPieceCheerKey: number | null = null;
+    let playerPieceCheerStartedAt = -Infinity;
     const luckySpinWheel = createLuckySpinWheelObject();
     luckySpinWheel.root.visible = false;
     scene.add(luckySpinWheel.root);
@@ -11960,8 +11969,34 @@ export default function Island5ThreePilot({
         }px, ${badgeRect.top + (1 - tileBadgeProjection.y) * 0.5 * badgeRect.height}px, 0)`;
         tileBadge.element.style.visibility = badgeOnScreen ? 'visible' : 'hidden';
       }
+      // Landing on a finished (green-flag) landmark: a joyful hop and spin.
+      const cheer = playerPieceCheerRef.current;
+      if (cheer && cheer.key !== lastPlayerPieceCheerKey) {
+        if (lastPlayerPieceCheerKey !== null || cheer.key > 0) playerPieceCheerStartedAt = performance.now();
+        lastPlayerPieceCheerKey = cheer.key;
+      }
+      const cheerProgress = (performance.now() - playerPieceCheerStartedAt) / (isReducedMotion ? 1 : PLAYER_PIECE_CHEER_MS);
+      const cheerActive = cheerProgress >= 0 && cheerProgress < 1;
+      const cheerLift = cheerActive && !isReducedMotion ? Math.sin(Math.PI * cheerProgress) * 0.62 : 0;
+      const cheerSpin = cheerActive && !isReducedMotion ? cheerProgress * Math.PI * 2 : 0;
+      playerPiece.root.position.y += cheerLift;
+      playerPiece.root.rotation.y += cheerSpin;
+      if (cheerLift !== 0 || cheerSpin !== 0) playerPiece.root.updateMatrixWorld(true);
+      if (cheer?.element) {
+        cheerProjection.set(playerPiece.root.position.x, playerPiece.root.position.y + 1.25, playerPiece.root.position.z).project(renderCamera);
+        const cheerRect = canvas.getBoundingClientRect();
+        cheer.element.style.transform = `translate3d(${
+          cheerRect.left + (cheerProjection.x + 1) * 0.5 * cheerRect.width
+        }px, ${cheerRect.top + (1 - cheerProjection.y) * 0.5 * cheerRect.height}px, 0)`;
+        // The bubble's own CSS animation pops it in and fades it out.
+        cheer.element.style.visibility = cheerProjection.z < 1 ? 'visible' : 'hidden';
+      }
       try { renderer.render(scene, renderCamera); }
-      finally { scene.matrixWorldAutoUpdate = automaticWorldMatrices; }
+      finally {
+        scene.matrixWorldAutoUpdate = automaticWorldMatrices;
+        playerPiece.root.position.y -= cheerLift;
+        playerPiece.root.rotation.y -= cheerSpin;
+      }
       if (celebrationPhase === 'capture') {
         // Read back in the same task as the render (no preserveDrawingBuffer needed).
         try {
