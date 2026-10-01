@@ -6,6 +6,7 @@
 | --- | --- |
 | Build first | **Drift Voyage**: the post-120 endgame loop |
 | Expansion packs | **Side voyage, any time**: owned packs are switched to from the voyage map, keep their own progress and never block the main path |
+| Pack availability | **Dev only until production ready** (user decision 2026-10-01): packs, their catalog and purchase stay behind the dev-mode gate and must not show for regular players |
 | Mega Museum mini-game | Open: decide later |
 
 ## Phase 1: Drift Voyage (shipped in this change)
@@ -37,6 +38,8 @@ The original idea was that players "play random islands again". Visiting islands
 This should be a separate, tested slice.
 
 ## Phase 3: Expansion pack foundation (proposed)
+
+> **Dev only.** Everything in this phase stays behind the existing dev-mode gate (`isDevModeEnabled`). The voyage switcher, pack catalog, shop entries and feature-pack offers render only in dev until a deliberate production-ready flip with its own tests.
 
 - **Voyage dimension.** Add a canonical `voyageId` (`main`, `beach-party`, `christmas-feels`, `meditation`, …) with per-voyage progress. Island numbers stay local to their voyage. Everything keyed by island number today (signature missions, stop plans, the voyage map) gains the voyage prefix.
 - **Pack catalog.** Each pack has an id, a title, an island count (15–20, or 5 for feature packs), a price (around 25 kr), an optional seasonal sale window and an unlock source:
