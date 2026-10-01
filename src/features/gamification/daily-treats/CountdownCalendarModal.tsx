@@ -41,7 +41,8 @@ import {
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
 import { getHolidayThemeAssets } from '../../../services/holidayThemeAssets';
-import { refreshQuestHabit, type QuestHabit } from '../../../services/questHabit';
+import { refreshQuestHabit, setQuestHabit as saveQuestHabit, type QuestHabit } from '../../../services/questHabit';
+import { listHabitsV2 } from '../../../services/habitsV2';
 
 type CountdownCalendarModalProps = {
   isOpen: boolean;
@@ -226,6 +227,9 @@ export const CountdownCalendarModal = ({
   const [symbolBonusNotification, setSymbolBonusNotification] = useState<string | null>(null);
   const [trackerExpanded, setTrackerExpanded] = useState(false);
   const [showBonusAwakenedPopup, setShowBonusAwakenedPopup] = useState(false);
+  // Quest Habit picker: the Personal Quest bonus asks for one first.
+  const [questHabitChoices, setQuestHabitChoices] = useState<Array<{ id: string; title: string; emoji: string | null }> | null>(null);
+  const [isSavingQuestHabit, setIsSavingQuestHabit] = useState(false);
   const modalOpenSfxPlayedRef = useRef(false);
 
   // App-level scroll locking owns the Daily Treats calendar lock so closing this
@@ -272,7 +276,9 @@ export const CountdownCalendarModal = ({
   useEffect(() => {
     const progress = seasonData?.progress;
     const dayIndex = seasonData?.today_day_index ?? 0;
-    if (!seasonData || !habitCompleted || !progress || !dayIndex) {
+    // Personal Quest bonuses wake only for the chosen Quest Habit.
+    const questReady = seasonData?.season.season_type !== 'personal_quest' || Boolean(questHabit);
+    if (!seasonData || !habitCompleted || !questReady || !progress || !dayIndex) {
       setShowBonusAwakenedPopup(false);
       return;
     }
@@ -290,7 +296,7 @@ export const CountdownCalendarModal = ({
     }
     setShowBonusAwakenedPopup(true);
     markBonusAwakenedSeen();
-  }, [seasonData, habitCompleted]);
+  }, [seasonData, habitCompleted, questHabit]);
 
   // Load holiday preferences then derive the active advent window and season data
   useEffect(() => {
@@ -708,8 +714,13 @@ export const CountdownCalendarModal = ({
   // Gate the "Finish your quest habit to wake the door" hint on todayFreeOpened so
   // the calendar doesn't pop into focused "BONUS" mode before the user has even
   // opened today's free door.
+  // Personal Quest: the same-day bonus needs a chosen Quest Habit (the one
+  // habit that matters most), completed today. Holiday calendars keep "any habit".
+  const needsQuestHabit = isPersonalQuest && !questHabit;
+  const bonusHabitDone = habitCompleted && !needsQuestHabit;
+  const showQuestHabitPicker = Boolean(isPersonalQuest && needsQuestHabit && todayBonusHatch && !todayBonusOpened && userId);
   const showLockedBonusHint = Boolean(
-    todayBonusHatch && todayFreeOpened && !habitCompleted && !todayBonusOpened,
+    todayBonusHatch && todayFreeOpened && !bonusHabitDone && !todayBonusOpened && !showQuestHabitPicker,
   );
 
   return (
@@ -863,6 +874,56 @@ export const CountdownCalendarModal = ({
           <div
             className={`daily-treats-calendar__quest-stage${showLockedBonusHint ? ' daily-treats-calendar__quest-stage--focused' : ''}`}
           >
+            {showQuestHabitPicker && (
+              <div className="daily-treats-calendar__quest-habit-picker" role="group" aria-labelledby="quest-habit-picker-title">
+                <span className="daily-treats-calendar__bonus-locked-kicker">BONUS</span>
+                <strong id="quest-habit-picker-title">Choose your Quest Habit</strong>
+                <span className="daily-treats-calendar__bonus-locked-copy">Pick the one habit that matters most, above all others. Finish it each day to wake the bonus door.</span>
+                {questHabitChoices === null ? (
+                  <button
+                    type="button"
+                    className="daily-treats-calendar__quest-habit-load"
+                    onClick={() => {
+                      setQuestHabitChoices([]);
+                      void listHabitsV2().then(({ data }) => {
+                        setQuestHabitChoices((data ?? [])
+                          .filter((habit) => habit.status === 'active')
+                          .map((habit) => ({ id: habit.id, title: habit.title, emoji: habit.emoji ?? null })));
+                      });
+                    }}
+                  >
+                    Set my Quest Habit
+                  </button>
+                ) : questHabitChoices.length === 0 ? (
+                  <span className="daily-treats-calendar__bonus-locked-copy">Loading your habits… (add a habit first if you have none)</span>
+                ) : (
+                  <div className="daily-treats-calendar__quest-habit-choices" role="list">
+                    {questHabitChoices.map((habit) => (
+                      <button
+                        key={habit.id}
+                        type="button"
+                        role="listitem"
+                        disabled={isSavingQuestHabit}
+                        onClick={() => {
+                          if (!userId) return;
+                          setIsSavingQuestHabit(true);
+                          const chosen: QuestHabit = { habitId: habit.id, title: habit.title, emoji: habit.emoji };
+                          void saveQuestHabit(userId, chosen)
+                            .then(async (saved) => {
+                              setQuestHabit(saved ?? chosen);
+                              setHabitCompleted(await isHabitCompletedToday(userId, habit.id));
+                            })
+                            .finally(() => setIsSavingQuestHabit(false));
+                        }}
+                      >
+                        {habit.emoji ? `${habit.emoji} ` : ''}{habit.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Locked bonus door hint — shown only when bonus is not yet unlocked */}
             {showLockedBonusHint && (
               <div className="daily-treats-calendar__bonus-locked-hint">
@@ -899,7 +960,7 @@ export const CountdownCalendarModal = ({
                 const canOpenSameDayBonus = Boolean(
                   bonusHatch
                     && day === todayIndex
-                    && habitCompleted
+                    && bonusHabitDone
                     && !todayBonusOpened
                     && (freeOpened || isOpenedLegacy),
                 );

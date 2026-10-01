@@ -42746,3 +42746,36 @@ body.habit-wizard-open .mobile-footer-nav {
   color: #2456c7;
   font-size: 24px;
 }
+
+/* Daily Momentum: choose a Quest Habit before the Personal Quest bonus wakes. */
+.daily-treats-calendar__quest-habit-picker {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 214, 102, 0.14);
+  border: 1px solid rgba(255, 214, 102, 0.5);
+  text-align: left;
+}
+.daily-treats-calendar__quest-habit-picker strong { font-size: 1rem; }
+.daily-treats-calendar__quest-habit-load,
+.daily-treats-calendar__quest-habit-choices button {
+  justify-self: start;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffd34d;
+  color: #2a1d00;
+  font-weight: 700;
+  cursor: pointer;
+}
+.daily-treats-calendar__quest-habit-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.daily-treats-calendar__quest-habit-choices button {
+  background: rgba(255, 255, 255, 0.9);
+}
+.daily-treats-calendar__quest-habit-choices button:disabled { opacity: 0.6; cursor: progress; }
