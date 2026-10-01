@@ -241,6 +241,7 @@ import { DepartureDayScene } from './DepartureDayScene';
 import { isPlayerPieceId } from '../services/islandRunPlayerPieces';
 import { resolveTreasureIslandWealth } from '../services/islandRunTreasures';
 import { resolveLandmarkFlag } from '../services/landmarkFlags';
+import { shouldContinueBuildHoldThroughLevel } from '../services/islandRunBuildHoldContinuity';
 import { ISLAND_AFFIRMATION_VISIBLE_MS, getIslandAffirmationVisitKey, resolveIslandAffirmation } from '../services/islandAffirmations';
 
 const ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY = 'islandRun.affirmationsSeen.v1';
@@ -3499,6 +3500,8 @@ export function IslandRunBoardPrototype({
 
   // ── Sticker album dialog ───────────────────────────────────────────────────
   const [showStickerAlbumDialog, setShowStickerAlbumDialog] = useState(false);
+  // Quiet L1/L2 level-up flash while a build hold carries on to Level 3.
+  const [buildHoldLevelUp, setBuildHoldLevelUp] = useState<{ title: string; level: number; diceAward: number; sequence: number } | null>(null);
   // Green-flag door landing: the player piece hops and says "Great job!!".
   const [playerPieceCheer, setPlayerPieceCheer] = useState<{ key: number; title: string }>({ key: 0, title: '' });
   const [playerPieceCheerElement, setPlayerPieceCheerElement] = useState<HTMLDivElement | null>(null);
@@ -4139,6 +4142,12 @@ export function IslandRunBoardPrototype({
     const value = raw === null ? Number.NaN : Number(raw);
     return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : null;
   }, [isIslandVisualPreview]);
+
+  useEffect(() => {
+    if (!buildHoldLevelUp) return undefined;
+    const timer = window.setTimeout(() => setBuildHoldLevelUp(null), 1_600);
+    return () => window.clearTimeout(timer);
+  }, [buildHoldLevelUp]);
 
   // Dev visual preview: ?playerCheerPreview=1 cheers on a finished landmark every 6 s.
   useEffect(() => {
@@ -12339,7 +12348,23 @@ export function IslandRunBoardPrototype({
         previousBuildLevel: currentBuildState.buildLevel,
         nextBuildLevel: nextBuildState.buildLevel,
       });
-      if (completionPresentation) {
+      // A held (or Fast Build) run carries straight on from L1 to L3 on the
+      // same landmark: L1/L2 flash a quiet chip, only Level 3 pauses.
+      const continueThroughLevel = Boolean(completionPresentation)
+        && shouldContinueBuildHoldThroughLevel({
+          holdActive: holdBuildSpendActiveRef.current,
+          playerHolding: buildHoldIntentRef.current || autoBuildStopIndexRef.current !== null,
+          tutorialGuidance: isBuildModalHatcheryGuidanceActive,
+          nextBuildLevel: nextBuildState.buildLevel,
+        });
+      if (completionPresentation && continueThroughLevel) {
+        setBuildHoldLevelUp((current) => ({
+          title: stopLabel,
+          level: nextBuildState.buildLevel,
+          diceAward: batchResult.diceAwarded,
+          sequence: (current?.sequence ?? 0) + 1,
+        }));
+      } else if (completionPresentation) {
         const startedAtMs = Date.now();
         buildLevelReviewIdRef.current += 1;
         const review: ActiveBuildLevelReview = {
@@ -20497,6 +20522,7 @@ export function IslandRunBoardPrototype({
           discountRate={activeBuildDiscountRate}
           discountExpiresAtMs={buildDiscountExpiresAtMs}
           levelReview={buildModalPresentationLevelReview}
+          holdLevelUp={buildHoldLevelUp}
           onAdvanceLevelReview={handleAdvanceBuildLevelReview}
           onBuildPartChoice={handleBuildPartChoice}
           onStartBuildHold={startBuildHoldFromPlayer}

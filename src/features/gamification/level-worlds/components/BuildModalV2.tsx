@@ -49,6 +49,8 @@ export interface BuildModalV2Props {
   discountRate?: number;
   discountExpiresAtMs?: number | null;
   levelReview?: BuildModalV2LevelReview | null;
+  /** Quiet L1/L2 level-up flash while a hold carries on to Level 3. */
+  holdLevelUp?: { title: string; level: number; diceAward: number; sequence: number } | null;
   onAdvanceLevelReview: () => void;
   onBuildPartChoice: (stopIndex: number, partNumber: BuildModalV2PartViewModel['partNumber']) => void;
   onStartBuildHold: (stopIndex: number) => void;
@@ -289,6 +291,17 @@ function BuildModalV2HoldButton({
   );
 }
 
+/** While building, coins stream from the Money counter into the landmark. */
+function BuildMoneyFlight() {
+  return (
+    <div className="bm2-money-flight" aria-hidden="true">
+      {Array.from({ length: 8 }, (_, index) => (
+        <span key={index} style={{ animationDelay: `${index * 55}ms`, '--bm2-coin-drift': `${(index % 4 - 1.5) * 18}px` } as CSSProperties}>💰</span>
+      ))}
+    </div>
+  );
+}
+
 export function BuildModalV2({
   isOpen,
   islandNumber,
@@ -305,6 +318,7 @@ export function BuildModalV2({
   discountRate = 0,
   discountExpiresAtMs = null,
   levelReview = null,
+  holdLevelUp = null,
   onAdvanceLevelReview,
   onBuildPartChoice,
   onStartBuildHold,
@@ -387,6 +401,13 @@ export function BuildModalV2({
           {Boolean(levelReview?.diceAward) && <strong className="bm2-dice-award">🎲 +{levelReview?.diceAward}</strong>}
         </div>}
         {Boolean(levelReview?.diceAward) && <BuildDiceFlight key={levelReview?.presentationSequence} />}
+        {!fastBuildMode && !levelReview && holdLevelUp && (
+          <div key={`hold-${holdLevelUp.sequence}`} className="bm2-quiet-level-up" role="status">
+            <span aria-hidden="true">✦</span> {holdLevelUp.title} · Level {holdLevelUp.level}
+            {holdLevelUp.diceAward > 0 && <strong> · 🎲 +{holdLevelUp.diceAward}</strong>}
+          </div>
+        )}
+        {!fastBuildMode && isBuildHoldActive && !levelReview && <BuildMoneyFlight />}
         {fastBuildMode && <div className="bm2-fast-burst" role="status">{fastBuildMode === 'island' ? 'Building every landmark…' : 'Building to Level 3…'}<strong>WHOOSH!</strong></div>}
         <header className="bm2-header">
           <span className="bm2-header__crest" aria-hidden="true">⚒</span>

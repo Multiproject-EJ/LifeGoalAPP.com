@@ -29411,3 +29411,33 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 @media (prefers-reduced-motion: reduce) {
   .island-run-affirmation { animation-timing-function: linear; }
 }
+
+/* Hold-to-build: Money streams from the header counter into the landmark. */
+.bm2-money-flight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 3;
+}
+.bm2-money-flight span {
+  position: absolute;
+  right: 74px;
+  top: 22px;
+  font-size: 1.15rem;
+  opacity: 0;
+  animation: bm2-money-flight 440ms cubic-bezier(0.5, 0, 0.75, 0.6) infinite;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+}
+@keyframes bm2-money-flight {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.7) rotate(0deg); }
+  12% { opacity: 1; }
+  80% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50vw + 92px + var(--bm2-coin-drift, 0px)), 30vh) scale(0.45) rotate(220deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bm2-money-flight { display: none; }
+}
