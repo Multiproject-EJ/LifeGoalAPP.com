@@ -195,7 +195,7 @@ export const authoredCaretakerConcordEntries: IslandCaretakerConcordContentEntry
       prompt: 'What do you ask?',
       branches: [
         { id: 'covefolk', label: 'Tell me about the Covefolk.', response: 'Gatherers and storykeepers. Abundance shared is their oldest law.' },
-        { id: 'same-hats', label: 'You look like the Luma caretaker.', response: 'Every island keeps its helpers. The hats travel further than we do.' },
+        { id: 'same-hats', label: 'You look like the First Light caretaker.', response: 'Every island keeps its helpers. The hats travel further than we do.' },
       ],
     },
   }),

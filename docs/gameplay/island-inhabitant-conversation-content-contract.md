@@ -15,7 +15,7 @@ This PR only adds read-only content definitions, validation, registry accessors,
 
 ## Civilization relationship
 
-Island 1 remains Luma Isle, home of The Lumin. Servant wizards are supporting inhabitants within island civilizations, not replacement civilizations. The first sample inhabitant is named **Caretaker** to keep the character broadly reusable while establishing a helpful woodland servant-wizard identity: a small practical caretaker with a long woodland hat hiding their face.
+Island 1 remains First Light Shore, home of The Lumin. Servant wizards are supporting inhabitants within island civilizations, not replacement civilizations. The first sample inhabitant is named **Caretaker** to keep the character broadly reusable while establishing a helpful woodland servant-wizard identity: a small practical caretaker with a long woodland hat hiding their face.
 
 ## Read-only content boundaries
 

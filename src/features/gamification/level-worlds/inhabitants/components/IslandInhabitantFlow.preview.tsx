@@ -30,5 +30,5 @@ export const islandInhabitantFlowPreviewStates: Array<Partial<IslandInhabitantFl
 
 export function IslandInhabitantFlowPreviewFixture({ index = 0 }: { index?: number }) {
   const state = islandInhabitantFlowPreviewStates[index] ?? islandInhabitantFlowPreviewStates[0];
-  return <IslandInhabitantFlow isOpen inhabitant={caretaker} topics={topics} conversations={conversations} greeting="Welcome, traveller. Choose what you would like to ask." backgroundArtSrc="/assets/islands/island-001/preview-background.webp" playerSpriteSrc="/assets/player/retro-player.png" islandName="Luma Isle" islandStatusLabel="Island 1 reusable two-stage communication flow" {...state} onClose={() => undefined} />;
+  return <IslandInhabitantFlow isOpen inhabitant={caretaker} topics={topics} conversations={conversations} greeting="Welcome, traveller. Choose what you would like to ask." backgroundArtSrc="/assets/islands/island-001/preview-background.webp" playerSpriteSrc="/assets/player/retro-player.png" islandName="First Light Shore" islandStatusLabel="Island 1 reusable two-stage communication flow" {...state} onClose={() => undefined} />;
 }

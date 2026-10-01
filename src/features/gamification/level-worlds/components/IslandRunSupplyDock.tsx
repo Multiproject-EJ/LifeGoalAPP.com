@@ -115,14 +115,14 @@ export function IslandRunSupplyDock({
       aria-hidden={controllerPreview?true:undefined}
       role="dialog"
       aria-modal="true"
-      aria-label="Luma Supply Dock"
+      aria-label="First Light Supply Dock"
     >
       <div className="island-run-supply-dock__backdrop" aria-hidden="true" />
       <div ref={scrollRef} className="island-run-supply-dock__scroll">
         <header className="island-run-supply-dock__header">
           <div className="island-run-supply-dock__sign">
             <span>Island {islandNumber} market</span>
-            <h3>Luma<br />Supply Dock</h3>
+            <h3>First Light<br />Supply Dock</h3>
           </div>
           <div className="island-run-supply-dock__wallets" aria-label="Current shop balances">
             <span className="island-run-supply-dock__wallet">
@@ -138,7 +138,7 @@ export function IslandRunSupplyDock({
             type="button"
             className="island-run-supply-dock__close"
             onClick={onClose}
-            aria-label="Close Luma Supply Dock"
+            aria-label="Close First Light Supply Dock"
           >
             ×
           </button>
@@ -215,7 +215,7 @@ export function IslandRunSupplyDock({
                 >
                   <img
                     src={`${MARKET_ART_ROOT}/dice-pouch-card.webp`}
-                    alt="Luma dice pouch with ivory dice"
+                    alt="First Light dice pouch with ivory dice"
                   />
                   <span>
                     <strong>Journey Supplies</strong>
@@ -324,7 +324,7 @@ export function IslandRunSupplyDock({
                   <h4>Pack for the next stretch.</h4>
                   <p>Claim the earned bundle first. Refills are here only when you want one.</p>
                 </div>
-                <img src={`${MARKET_ART_ROOT}/dice-pouch-card.webp`} alt="Luma dice pouch with ivory dice" />
+                <img src={`${MARKET_ART_ROOT}/dice-pouch-card.webp`} alt="First Light dice pouch with ivory dice" />
               </article>
 
               <article className="island-run-supply-dock__paper-card">
@@ -396,7 +396,7 @@ export function IslandRunSupplyDock({
           {activeSection === 'support' ? (
             <>
               <article className="island-run-supply-dock__support-card">
-                <img src={`${MARKET_ART_ROOT}/dock-compass.webp`} alt="Luma Supply Dock compass medallion" />
+                <img src={`${MARKET_ART_ROOT}/dock-compass.webp`} alt="First Light Supply Dock compass medallion" />
                 <span className="island-run-supply-dock__eyebrow">Entirely optional</span>
                 <h4>Support HabitGame</h4>
                 <p>

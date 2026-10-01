@@ -101,7 +101,7 @@ Rejected as the primary model for MVP, but useful as a rule inside Option 2.
 4. The island background fills the screen; the servant wizard appears large with name, role, and a one-sentence greeting.
 5. Three topic buttons appear, for example:
    - “What should I do next?”
-   - “Tell me about Luma Isle.”
+   - “Tell me about First Light Shore.”
    - “Who are you?”
 6. Player chooses a topic.
 7. Premium screen crossfades or slides down into retro conversation mode. Under reduced motion, the transition is instant.

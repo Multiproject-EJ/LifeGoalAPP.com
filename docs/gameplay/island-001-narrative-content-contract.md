@@ -25,7 +25,7 @@ Narrative definitions and Island 1 StoryReader manifests reject gameplay-authori
 
 ## Island 1 scope
 
-Island 1 is Luma Isle, home of The Lumin. The approved characters are Miri, Elder Sava, Poko, Captain Ivo, and Noctyra. The first restoration beat is Hatchery Level 1 completion, aligned to the sequential build system.
+Island 1 is First Light Shore, home of The Lumin. The approved characters are Miri, Elder Sava, Poko, Captain Ivo, and Noctyra. The first restoration beat is Hatchery Level 1 completion, aligned to the sequential build system.
 
 ## Story content locations
 

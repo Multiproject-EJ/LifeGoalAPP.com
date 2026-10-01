@@ -4,7 +4,7 @@ import { defineNarrativeTrack } from '../islandNarrativeTrack';
 export const island001NarrativeDefinition = {
   version: 1,
   islandNumber: 1,
-  islandName: 'Luma Isle',
+  islandName: 'First Light Shore',
   civilizationName: 'The Lumin',
   characters: [
     {
@@ -34,7 +34,7 @@ export const island001NarrativeDefinition = {
     {
       id: 'noctyra',
       displayName: 'Noctyra',
-      role: 'Black Crystal Dragon and guardian of Luma Isle.',
+      role: 'Black Crystal Dragon and guardian of First Light Shore.',
       portraitSrc: '/islands/001/story/portraits/noctyra.webp',
     },
     {
@@ -100,7 +100,7 @@ export const island001NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'You asked why Luma sends supplies back. The Reconstruction Accord keeps every mission reciprocal.',
+      text: 'You asked why First Light Shore sends supplies back. The Reconstruction Accord keeps every mission reciprocal.',
     },
     {
       id: 'I001-B26',
@@ -162,8 +162,8 @@ export const island001NarrativeDefinition = {
       repeatPolicy: 'once',
       headline: 'FIRST CONTACT',
       text: 'At last — you can hear me.',
-      secondaryText: 'Luma Isle is not abandoned. Its five lights are sleeping, and our guardian is trapped inside an old warning. Help me wake them.',
-      objectiveText: 'Restore the five lights of Luma Isle',
+      secondaryText: 'First Light Shore is not abandoned. Its five lights are sleeping, and our guardian is trapped inside an old warning. Help me wake them.',
+      objectiveText: 'Restore the five lights of First Light Shore',
       displayCtaText: 'We’ll wake them together',
     },
 

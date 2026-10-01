@@ -9,7 +9,7 @@ import {
 /**
  * Resolves the caretaker Concord conversation content for any island.
  *
- * Island 1 reuses the canonical Luma content (the pre-Concord acquisition
+ * Island 1 reuses the canonical First Light Shore content (the pre-Concord acquisition
  * story). Islands 2-5 use authored entries; islands 6+ fall back to generated
  * content so the caretaker modal works everywhere. Results are memoized so
  * repeated lookups return stable references for React dependency arrays.
@@ -17,7 +17,7 @@ import {
 
 const island001Entry: IslandCaretakerConcordContentEntry = {
   islandNumber: 1,
-  islandName: 'Luma Isle',
+  islandName: 'First Light Shore',
   inhabitant: island001InhabitantDefinitions[0],
   topics: [...island001InhabitantTopicDefinitions],
   conversations: [...island001ConversationDefinitions],

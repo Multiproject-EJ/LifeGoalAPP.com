@@ -26,7 +26,7 @@ Arc 2 hook: after Crown of Tides, The Concord isolates a second signal under the
 
 ## 3. Role of The Concord
 
-The Concord is an old Lumin expedition communication technology designed to translate words, creature emotion, guardian resonance, and landmark memory into meaning. The Great Drift damaged the device and scattered its nine physical fragments through Luma Isle.
+The Concord is an old Lumin expedition communication technology designed to translate words, creature emotion, guardian resonance, and landmark memory into meaning. The Great Drift damaged the device and scattered its nine physical fragments through First Light Shore.
 
 For Island 1:
 
@@ -115,7 +115,7 @@ Captain Ivo provides route literacy, practical risk framing, and player-facing C
 
 ---
 
-# 9. Island 1 full revision — Luma Isle
+# 9. Island 1 full revision — First Light Shore
 
 ## Identity
 
@@ -163,7 +163,7 @@ Variants:
 
 ## Story sequence and compact copy
 
-- **Arrival:** “Luma Isle is lit like a sky under glass. Every lantern is covered.” CTA: “Step softly.”
+- **Arrival:** “First Light Shore is lit like a sky under glass. Every lantern is covered.” CTA: “Step softly.”
 - **First communication failure:** Miri's greeting breaks into warning glyphs. Secondary: “The words are not missing. Meaning is.” CTA: “Find the signal.”
 - **Hatchery open:** “The Lantern Hatchery protects first light.” CTA: “Warm the nests.”
 - **Hatchery complete:** “A shield opens without going dark.” Toast: “Protection can breathe.”
@@ -333,7 +333,7 @@ Rules:
 - no creature requirement;
 - mobile-first one-line copy.
 
-Example for Luma finale:
+Example for First Light Shore finale:
 
 - Canonical truth: “Noctyra needs uncertainty without panic.”
 - Opening: “{Creature} noses toward the unknown light, curious but slow.”
@@ -358,7 +358,7 @@ Trigger/surface audit status for this proposal: standard narrative triggers such
 
 | Island | Beat ID | Trigger | Surface | Speaker | Primary copy | Secondary copy | Companion family | Art required | Existing file target | Risk |
 |---:|---|---|---|---|---|---|---|---|---|---|
-| 1 | i1.arrival.v2 | island_entered | StoryReader | Ivo | Luma Isle is lit like a sky under glass. | Every lantern is covered. | none | yes | `public/islands/001/story/arrival/manifest.json` | low |
+| 1 | i1.arrival.v2 | island_entered | StoryReader | Ivo | First Light Shore is lit like a sky under glass. | Every lantern is covered. | none | yes | `public/islands/001/story/arrival/manifest.json` | low |
 | 1 | i1.communication_failure | story_after_arrival | dialogue_sheet | Miri | The words are not missing. | Meaning is. | none | no | `island001Narrative.ts` | medium |
 | 1 | i1.hatchery.open | stop_opened:hatchery | dialogue_sheet | Miri | The Lantern Hatchery protects first light. | Warm the nests without locking them away. | fallback | no | `island001Narrative.ts` | low |
 | 1 | i1.hatchery.complete | stop_completed:hatchery | toast | System | Protection can breathe. | A shield opens without going dark. | steadying | no | `island001Narrative.ts` | low |
@@ -396,7 +396,7 @@ Trigger/surface audit status for this proposal: standard narrative triggers such
 
 ## 18. Art and asset implications
 
-- Luma needs Concord grid, Moon Gate, covered/open lantern states, Noctyra warning/restored poses.
+- First Light Shore needs Concord grid, Moon Gate, covered/open lantern states, Noctyra warning/restored poses.
 - Pebble Bay needs breathwheel, tidepool nursery, rounded stone paths, Maelis locked/released inlet poses.
 - Coconut Cove needs canopy platforms, fruit vault, exchange baskets, Tamba hoard/share poses.
 - Driftwood needs visible repair joins, name boards, patched sail flags, Garran wall/gate poses.
@@ -419,7 +419,7 @@ Do not overwrite current Island 1 live definitions. Add V2 definitions behind co
 ## 21. Open questions
 
 1. Should capacities live directly on `CreatureDefinition` or in a separate `creatureEmotionalProfiles.ts` config?
-2. Should `trust` be its own capacity, or should Luma use calm + curiosity + connection?
+2. Should `trust` be its own capacity, or should First Light Shore use calm + curiosity + connection?
 3. Does The Concord have a visible device owner after Island 1, or is it shipboard equipment?
 4. Should lore-only subassemblies Echo Crystal, Meaning Lens, and Concord Core appear as visual labels after the nine-fragment Concord is complete?
 5. How much retro UI should appear in StoryReader versus conversation surfaces?

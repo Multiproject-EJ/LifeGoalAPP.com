@@ -38,7 +38,7 @@ An expedition technology becomes part of the player's long-term toolkit, remains
 
 ## 5. The Concord canonical construction model
 
-- Island: Luma Isle.
+- Island: First Light Shore.
 - Civilization: The Lumin.
 - Scope: expedition.
 - Construction: nine island-specific Concord fragments.

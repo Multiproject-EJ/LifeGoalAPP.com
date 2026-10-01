@@ -121,7 +121,7 @@ All board-attached art must share one camera and lighting model:
 - grounded contact shadows may exist inside the asset, but no black or opaque rectangular background
 - no text, numbers, logos, watermarks, UI, fake tile icons, or baked-in status labels
 
-The approved Island 1 tropical waterfall image is a **composition reference**, not permission to replace the real tile UI. Its terrain terraces, waterfall integration, path flow, and landmark clearings are preserved as the Island 1 pilot language while Luma Isle's crystal, moonstone, brass, and observatory identity is layered into it.
+The approved Island 1 tropical waterfall image is a **composition reference**, not permission to replace the real tile UI. Its terrain terraces, waterfall integration, path flow, and landmark clearings are preserved as the Island 1 pilot language while First Light Shore's crystal, moonstone, brass, and observatory identity is layered into it.
 
 ## Ring readability rule
 
@@ -421,7 +421,7 @@ The five pilots intentionally exercise different production problems:
 
 | Island | Production case | What it proves |
 | --- | --- | --- |
-| 1 — Luma Isle | approved waterfall composition + crystalline observatory identity | adapting a chosen concept to the real board without replacing UI |
+| 1 — First Light Shore | approved waterfall composition + crystalline observatory identity | adapting a chosen concept to the real board without replacing UI |
 | 2 — Pebble Bay | water, mist, rounded stone, slow mechanical motion | low-contrast atmospheric readability |
 | 3 — Coconut Cove | dense tropical abundance and wooden vertical structures | foliage control and warm material separation |
 | 4 — Driftwood Isle | patched timber, sails, visible repair seams | irregular silhouettes without visual clutter |

@@ -126,7 +126,7 @@ export function IslandNarrativeDialogue({
                 <span aria-hidden="true">×</span>
               </button>
             ) : null}
-            <p className="island-narrative-dialogue__speaker-kicker">Luma Isle</p>
+            <p className="island-narrative-dialogue__speaker-kicker">First Light Shore</p>
             <h2 id={titleId} className="island-narrative-dialogue__speaker">{speakerName}</h2>
             <div id={descriptionId} className="island-narrative-dialogue__copy-wrap">
               <p className="island-narrative-dialogue__copy island-narrative-dialogue__copy--primary">{text}</p>
