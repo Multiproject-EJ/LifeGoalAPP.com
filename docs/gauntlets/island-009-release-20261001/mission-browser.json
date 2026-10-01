@@ -1,0 +1,61 @@
+{
+  "scope": "Isolated offline demo Board/Pilot integration; no user browser storage or physical-device claim",
+  "cases": [
+    {
+      "mode": "normal",
+      "checks": [
+        "Eighth repair clicked through real mission phone",
+        "Finish CTA suppressed while canonical eighth repair is playing",
+        "Completion celebration drains after lifecycle or renderer failure",
+        "Canonical eighth stage saved once; wallet unchanged"
+      ],
+      "canonical": {
+        "stage": {
+          "missionId": "ignition-chain",
+          "version": 1,
+          "claimedPickupTileIndices": [],
+          "chargesEarned": 8,
+          "chargesSpent": 8,
+          "activatedStages": 8,
+          "lastActivatedStage": 8,
+          "startedAtMs": 0,
+          "finaleCompletedAtMs": null,
+          "completedAtMs": 1790874916846,
+          "updatedAtMs": 1790874916846
+        },
+        "island": 9,
+        "dice": 100,
+        "essence": 1000
+      },
+      "status": "passed"
+    },
+    {
+      "mode": "reduced-motion",
+      "checks": [
+        "Eighth repair clicked through real mission phone",
+        "Completion celebration drains after lifecycle or renderer failure",
+        "Canonical eighth stage saved once; wallet unchanged"
+      ],
+      "canonical": {
+        "stage": {
+          "missionId": "ignition-chain",
+          "version": 1,
+          "claimedPickupTileIndices": [],
+          "chargesEarned": 8,
+          "chargesSpent": 8,
+          "activatedStages": 8,
+          "lastActivatedStage": 8,
+          "startedAtMs": 0,
+          "finaleCompletedAtMs": null,
+          "completedAtMs": 1790874938984,
+          "updatedAtMs": 1790874938984
+        },
+        "island": 9,
+        "dice": 100,
+        "essence": 1000
+      },
+      "status": "passed"
+    }
+  ],
+  "errors": []
+}

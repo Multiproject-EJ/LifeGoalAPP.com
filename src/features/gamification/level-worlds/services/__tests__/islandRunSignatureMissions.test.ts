@@ -1,4 +1,7 @@
+import { resolveIslandRunCompletion, shouldAutoPresentIslandCompletion } from '../islandRunCompletion';
 import {
+  HEARTSHAFT_STAR_STAGES,
+  getHeartshaftStarStage,
   CACTUS_CANYON_SPIRAL_MAX_SEGMENTS,
   CELESTIAL_REDOCKING_PLATFORM_COUNT,
   CELESTIAL_REDOCKING_ROLL_TARGET,
@@ -308,6 +311,80 @@ function fishingStartedLedger() {
 }
 
 export const islandRunSignatureMissionTests: TestCase[] = [
+  {
+    name: 'Heartshaft guards duplicate and stale inputs while preserving eight finite core repairs',
+    run: async () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunActionMutexesForTests();
+      __resetIslandRunStateStoreForTests();
+      installWindowWithStorage(createMemoryStorage());
+      const session = makeSession();
+      const base = readIslandRunGameStateRecord(session);
+      let ledger = base.signatureMissionProgressByIsland;
+      for (const tileIndex of getStagedRestorationPickupTileIndices(9, 36)) {
+        const result = collectStagedRestorationPickupForRoute({ ledger, islandNumber: 9,
+          cycleIndex: 0, tileCount: 36, landingTileIndex: tileIndex, routeTileIndices: [tileIndex], nowMs: 10 });
+        assertEqual(result.pickupCollected, 1, 'each finite core collected');
+        ledger = result.ledger;
+        assertEqual(collectStagedRestorationPickupForRoute({ ledger, islandNumber: 9,
+          cycleIndex: 0, tileCount: 36, landingTileIndex: tileIndex, routeTileIndices: [tileIndex], nowMs: 11 }).pickupCollected,
+          0, 'core cannot be collected twice');
+      }
+      await writeIslandRunGameStateRecord({ session, client: null,
+        record: { ...base, currentIslandNumber: 9, cycleIndex: 0, signatureMissionProgressByIsland: ledger } });
+      refreshIslandRunStateFromLocal(session);
+      const expected = { cycleIndex: 0, islandNumber: 9, activatedStages: 0 };
+      const duplicates = await Promise.all([0, 1].map(() => activateStagedRestorationMissionStage({ session, client: null, expected })));
+      assertEqual(duplicates.filter(x => x.status === 'ok').length, 1, 'exactly one repair wins despite eight available cores');
+      assertEqual(duplicates.filter(x => x.status === 'stale').length, 1, 'duplicate expected stage is inert');
+      for (const wrong of [{ ...expected, cycleIndex: 1 }, { ...expected, islandNumber: 8 }]) {
+        assertEqual((await activateStagedRestorationMissionStage({ session, client: null, expected: wrong })).status,
+          'wrong_island', 'stale visit cannot spend');
+      }
+      for (let stage = 2; stage <= 8; stage++) {
+        __resetIslandRunStateStoreForTests();
+        refreshIslandRunStateFromLocal(session);
+        const result = await activateStagedRestorationMissionStage({ session, client: null,
+          expected: { cycleIndex: 0, islandNumber: 9, activatedStages: stage - 1 } });
+        assertEqual(result.status, 'ok', 'repair after reload succeeds');
+        if (result.status !== 'ok') throw new Error('repair failed');
+        assertEqual(result.activatedStages, stage, 'one stage advances');
+        assertEqual(result.chargesRemaining, 8 - stage, 'one core spent');
+        assertEqual(result.completedAtMs !== null, stage === 8, 'only eighth stage completes');
+      }
+      const beforeReplay = readIslandRunGameStateRecord(session);
+      assertEqual((await activateStagedRestorationMissionStage({ session, client: null,
+        expected: { cycleIndex: 0, islandNumber: 9, activatedStages: 8 } })).status, 'already_complete', 'replay cannot pay again');
+      const afterReplay = readIslandRunGameStateRecord(session);
+      assertEqual(afterReplay.runtimeVersion, beforeReplay.runtimeVersion, 'replay causes no write');
+      assertEqual(afterReplay.dicePool, base.dicePool, 'no new dice reward');
+      assertEqual(afterReplay.essence, base.essence, 'no wallet spend');
+      assertEqual(JSON.stringify(afterReplay.stopStatesByIndex), JSON.stringify(beforeReplay.stopStatesByIndex), 'presentation does not complete landmarks');
+      const key = getIslandRunSignatureMissionKey(0, 9);
+      const legacy = sanitizeIslandRunSignatureMissionProgress({ [key]: {
+        mission_id: 'ignition-chain', charges_earned: 8, charges_spent: 8,
+        activated_stages: 8, completed_at_ms: 123, updated_at_ms: 123,
+      } });
+      const restored = resolveStagedRestorationMissionProgress({ ledger: legacy, cycleIndex: 0, islandNumber: 9 });
+      assertEqual(restored?.completedAtMs, 123, 'legacy completion preserved');
+      assertEqual(restored?.activatedStages, 8, 'legacy progress preserved');
+      const departure = resolveIslandRunCompletion(afterReplay);
+      assertEqual(departure.requirements.find(x => x.id === 'signature')?.complete, true, 'canonical departure reads eighth repair');
+      assertEqual(departure.complete, false, 'mission does not bypass unfinished landmark objectives');
+      assertEqual(resolveIslandRunCompletion({ ...afterReplay, signatureMissionProgressByIsland: legacy })
+        .requirements.find(x => x.id === 'signature')?.complete, true, 'legacy completion retains departure credit');
+      assertEqual(shouldAutoPresentIslandCompletion({ complete: true, visitKey: '0:9', shownVisitKey: null,
+        busy: true, isPreview: false }), false, 'presentation busy holds departure UI only');
+      assertEqual(shouldAutoPresentIslandCompletion({ complete: true, visitKey: '0:9', shownVisitKey: null,
+        busy: false, isPreview: false }), true, 'departure UI resumes after presentation');
+
+      assertEqual(HEARTSHAFT_STAR_STAGES.length, 8, 'eight authored stages');
+      assertEqual(new Set(HEARTSHAFT_STAR_STAGES.map(x => x.name)).size, 8, 'distinct stage names');
+      assertEqual(getHeartshaftStarStage(7).name, 'Unfold the Star', 'final action describes payoff');
+      assertEqual(getIslandMissionBriefingPresentation(9).headline, 'The Star Beneath', 'mission title');
+    },
+  },
+
   {
     name: 'Moonwell heat appears only after L3 and exact landing collects once on a reserved-safe tile',
     run: () => {

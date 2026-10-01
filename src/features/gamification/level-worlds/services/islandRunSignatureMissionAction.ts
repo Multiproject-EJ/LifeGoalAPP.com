@@ -62,7 +62,7 @@ export type ActivateStagedRestorationMissionResult =
       chargesRemaining: number;
       completedAtMs: number | null;
     }
-  | { status: 'wrong_island' | 'mission_locked' | 'no_charges' | 'already_complete' | 'unsupported_island' };
+  | { status: 'wrong_island' | 'mission_locked' | 'no_charges' | 'already_complete' | 'unsupported_island' | 'stale' };
 
 export type StartLavaLabyrinthEscapeMissionResult =
   | { status: 'ok' | 'already_started'; startedAtMs: number }
@@ -168,9 +168,13 @@ export function completeLavaLabyrinthEscapeMission(options: {
 export function activateStagedRestorationMissionStage(options: {
   session: Session;
   client: SupabaseClient | null;
+  /** Identity shown by the initiating UI; checked atomically before spending. */
+  expected?: { cycleIndex: number; islandNumber: number; activatedStages: number };
 }): Promise<ActivateStagedRestorationMissionResult> {
   return withIslandRunActionLock(options.session.user.id, async () => {
     const state = getIslandRunStateSnapshot(options.session);
+    if (options.expected && (state.cycleIndex !== options.expected.cycleIndex
+      || state.currentIslandNumber !== options.expected.islandNumber)) return { status: 'wrong_island' };
     const descriptor = getStagedRestorationMissionDescriptor(state.currentIslandNumber, state.signatureMissionProgressByIsland);
     if (!descriptor) return { status: 'unsupported_island' };
     const progress = resolveStagedRestorationMissionProgress({
@@ -179,6 +183,7 @@ export function activateStagedRestorationMissionStage(options: {
       islandNumber: state.currentIslandNumber,
     });
     if (!progress) return { status: 'wrong_island' };
+    if (options.expected && progress.activatedStages !== options.expected.activatedStages) return { status: 'stale' };
     if (descriptor.islandNumber === LAVA_LABYRINTH_ISLAND_NUMBER && progress.startedAtMs == null) {
       return { status: 'mission_locked' };
     }
