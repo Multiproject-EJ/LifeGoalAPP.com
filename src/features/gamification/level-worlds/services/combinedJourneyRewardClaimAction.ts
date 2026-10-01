@@ -1,3 +1,4 @@
+import { resolveMainPathRecord } from './islandRunExpansionVoyage';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { isIslandRunFeatureEnabled } from '../../../../config/islandRunFeatureFlags';
 import { withIslandRunActionLock } from './islandRunActionMutex';
@@ -97,10 +98,11 @@ export function claimCombinedJourneyReward(
     // inputs come from the caller's already-loaded summaries.
     const summary = deriveCombinedJourneyLevel({
       ...milestoneInputs,
+      // Expansion-pack islands never count as main-journey progress.
       ...buildIslandJourneyMilestones({
-        currentIslandNumber: current.currentIslandNumber,
-        cycleIndex: current.cycleIndex,
-        completion: resolveIslandRunCompletion(current),
+        currentIslandNumber: resolveMainPathRecord(current).currentIslandNumber,
+        cycleIndex: resolveMainPathRecord(current).cycleIndex,
+        completion: resolveIslandRunCompletion(resolveMainPathRecord(current)),
       }),
       // A display checkpoint is not evidence of reward eligibility. Claims stay
       // disabled until the server independently verifies all milestone inputs.

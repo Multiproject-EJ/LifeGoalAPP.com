@@ -27,6 +27,12 @@ import {
 } from './fortuneEngineProgression';
 import { normalizeGrantIds } from './islandRunGrantIdUtils';
 import {
+  createDefaultExpansionVoyageState,
+  mergeExpansionVoyageStateForConflict,
+  sanitizeExpansionVoyageState,
+  type ExpansionVoyageState,
+} from './islandRunExpansionVoyage';
+import {
   MOMENTUM_MATRIX_CELL_COUNT,
   getMomentumMatrixShape,
   type MomentumMatrixCell,
@@ -518,6 +524,8 @@ export interface IslandRunGameStateRecord {
   crystalMinersProgressByEvent: Record<string, CrystalMinersProgress>;
   /** Resumable Momentum Matrix exhibition progress, keyed by active timed-event runtime id. */
   momentumMatrixProgressByEvent: Record<string, MomentumMatrixProgressEntry>;
+  /** Dev-only expansion packs: owned packs, active voyage and stashed voyage positions. */
+  expansionVoyageState: ExpansionVoyageState;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -1079,6 +1087,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     journeyDiscArmory: createJourneyDiscArmory(0),
     crystalMinersProgressByEvent: {},
     momentumMatrixProgressByEvent: {},
+    expansionVoyageState: createDefaultExpansionVoyageState(),
   };
 }
 
@@ -1772,6 +1781,7 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.momentumMatrixProgressByEvent,
       fallback.momentumMatrixProgressByEvent,
     ),
+    expansionVoyageState: sanitizeExpansionVoyageState(value.expansionVoyageState, fallback.expansionVoyageState),
   };
 }
 
@@ -2764,6 +2774,7 @@ export function mergeRecordForConflict(options: {
       remote.momentumMatrixProgressByEvent,
       local.momentumMatrixProgressByEvent,
     ),
+    expansionVoyageState: mergeExpansionVoyageStateForConflict(remote.expansionVoyageState, local.expansionVoyageState),
   };
 }
 
@@ -2927,6 +2938,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     journey_disc_armory: record.journeyDiscArmory,
     crystal_miners_progress_by_event: record.crystalMinersProgressByEvent,
     momentum_matrix_progress_by_event: record.momentumMatrixProgressByEvent,
+    expansion_voyage_state: record.expansionVoyageState,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
   };
@@ -3003,7 +3015,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,vault_rush_claims_by_island,vault_island_progress,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,concord_roll_protection_state,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,signature_mission_progress_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_last_claim_at_ms,reward_bar_escalation_tier,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,skybound_academy_progress_by_event,journey_disc_arena_progress_by_event,journey_disc_armory,momentum_matrix_progress_by_event,crystal_miners_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,vault_rush_claims_by_island,vault_island_progress,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,concord_roll_protection_state,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,signature_mission_progress_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_last_claim_at_ms,reward_bar_escalation_tier,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,skybound_academy_progress_by_event,journey_disc_arena_progress_by_event,journey_disc_armory,momentum_matrix_progress_by_event,crystal_miners_progress_by_event,expansion_voyage_state')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -3168,6 +3180,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             momentumMatrixProgressByEvent: sanitizeMomentumMatrixProgressByEvent(
               (legacyData as Record<string, unknown>).momentum_matrix_progress_by_event,
               fallback.momentumMatrixProgressByEvent,
+            ),
+            expansionVoyageState: sanitizeExpansionVoyageState(
+              (legacyData as Record<string, unknown>).expansion_voyage_state,
+              fallback.expansionVoyageState,
             ),
           },
           fallback,
@@ -3372,6 +3388,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       momentumMatrixProgressByEvent: sanitizeMomentumMatrixProgressByEvent(
         (data as Record<string, unknown>).momentum_matrix_progress_by_event,
         fallback.momentumMatrixProgressByEvent,
+      ),
+      expansionVoyageState: sanitizeExpansionVoyageState(
+        (data as Record<string, unknown>).expansion_voyage_state,
+        fallback.expansionVoyageState,
       ),
     },
     fallback,

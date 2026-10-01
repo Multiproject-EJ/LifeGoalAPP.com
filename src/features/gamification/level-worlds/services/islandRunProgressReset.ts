@@ -41,6 +41,7 @@ import { clearCreatureCollectionForUser } from './creatureCollectionService';
 import { clearCreatureTreatInventoryForUser } from './creatureTreatInventoryService';
 import { resetXP } from '../../../../services/gamification';
 import { resetCompassBookForUser } from '../../../compass-book/services/compassBookService';
+import { createDefaultExpansionVoyageState } from './islandRunExpansionVoyage';
 
 export type IslandRunProgressResetChoices = {
   /** Clear collected creatures, active/pending eggs, companion state, and treats. */
@@ -172,6 +173,7 @@ export function buildFreshIslandRunRecord(
     journeyDiscArmory: { version: 1, rank: 1, weaponLevels: { ram_fin: 1, aegis_ring: 0, pulse_vane: 0 }, highestGuardianTierDefeated: 0, updatedAtMs: Date.now() },
     crystalMinersProgressByEvent: {},
     momentumMatrixProgressByEvent: {},
+    expansionVoyageState: createDefaultExpansionVoyageState(),
   };
 }
 

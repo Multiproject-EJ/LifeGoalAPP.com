@@ -37,7 +37,7 @@ The original idea was that players "play random islands again". Visiting islands
 
 This should be a separate, tested slice.
 
-## Phase 3: Expansion pack foundation (proposed)
+## Phase 3: Expansion pack foundation (foundation shipped 2026-10-01, dev only)
 
 > **Dev only.** Everything in this phase stays behind the existing dev-mode gate (`isDevModeEnabled`). The voyage switcher, pack catalog, shop entries and feature-pack offers render only in dev until a deliberate production-ready flip with its own tests.
 
@@ -47,6 +47,22 @@ This should be a separate, tested slice.
   - feature unlock, e.g. Meditation, which offers 5 islands that teach it through the game loop and nudge habit suggestions.
 - **Purchase.** Bought through the existing shop and entitlement path, owned forever. Seasonal packs are only sold in season.
 - **Play.** Switching voyage from the voyage map keeps the main-path state intact.
+
+### Foundation status (2026-10-01)
+
+- **Catalog:** `services/islandRunExpansionPacks.ts`.
+  - Beach Party: 20 islands, 25 kr.
+  - Christmas Feels: 15 islands, 25 kr, sold 15 Nov – 6 Jan.
+  - Calm Waters: 5 islands, offered by the Meditation unlock.
+- **Island numbers:** pack islands use reserved runtime numbers (1001+). They borrow existing worlds as placeholders and price like the main island at the same position.
+- **Saved state:** `expansionVoyageState` (column `expansion_voyage_state`, migration `20261001190000`, applied 2026-10-01). Switching voyage stashes and restores the board position. The wallet, creatures and collections stay shared.
+- **Actions:** `islandRunExpansionVoyageActions.ts` covers dev grant, switch voyage and finishing a pack. The last pack island returns the player to the main path.
+- **UI:** dev only, through the dev panel's "Expansion packs" section.
+- **Still to do:**
+  - shop purchase and entitlements;
+  - the voyage switcher on the voyage map, plus a voyage-map view of pack progress;
+  - pack-specific art and missions;
+  - the Meditation unlock offer.
 
 ## Phase 4: Mega Museum, Vol 2 (proposed)
 

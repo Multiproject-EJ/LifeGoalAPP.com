@@ -54,6 +54,15 @@ interface DebugPanelProps {
   onOpenDevWelcomePackPrototype?: () => Promise<string>;
   onGrantDevDemoEggRewardPack?: () => Promise<string>;
   onResetWelcomePackDevFlags?: () => Promise<string>;
+  /** Dev-only expansion packs (user decision 2026-10-01). */
+  expansionVoyage?: {
+    activeVoyageId: string;
+    ownedPackIds: readonly string[];
+    completedPackIds: readonly string[];
+    packs: ReadonlyArray<{ id: string; title: string; icon: string; islandCount: number; availability: string }>;
+    onGrantPack: (packId: string) => Promise<string>;
+    onSwitchVoyage: (voyageId: string) => Promise<string>;
+  };
   onClose: () => void;
 }
 
@@ -175,6 +184,7 @@ export function IslandRunDebugPanel({
   onOpenDevWelcomePackPrototype,
   onGrantDevDemoEggRewardPack,
   onResetWelcomePackDevFlags,
+  expansionVoyage,
   onClose,
 }: DebugPanelProps) {
   const appVersion = resolveBuildMarkerValue(import.meta.env.VITE_APP_VERSION);
@@ -822,6 +832,43 @@ export function IslandRunDebugPanel({
                     <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>{packGrantActionMessage}</div>
                   )}
                 </div>
+                {expansionVoyage && (
+                  <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
+                    <strong style={{ fontSize: '0.84rem' }}>🧳 Expansion packs (dev only)</strong>
+                    <div style={{ fontSize: '0.76rem', opacity: 0.86 }}>
+                      Side voyages next to the main path; each keeps its own position. Dev grant stands in for the shop. Active voyage: <strong>{expansionVoyage.activeVoyageId}</strong>.
+                    </div>
+                    {expansionVoyage.packs.map((pack) => {
+                      const owned = expansionVoyage.ownedPackIds.includes(pack.id);
+                      const active = expansionVoyage.activeVoyageId === pack.id;
+                      return (
+                        <div key={pack.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.8rem', minWidth: '11rem' }}>
+                            {pack.icon} {pack.title} · {pack.islandCount} islands · {expansionVoyage.completedPackIds.includes(pack.id) ? 'completed' : pack.availability}
+                          </span>
+                          {!owned ? (
+                            <button type="button" className="island-run-debug-panel__copy-btn" disabled={packGrantPending}
+                              onClick={() => { void runPackGrantAction(() => expansionVoyage.onGrantPack(pack.id)); }}>
+                              Grant
+                            </button>
+                          ) : (
+                            <button type="button" className="island-run-debug-panel__copy-btn" disabled={packGrantPending || active}
+                              onClick={() => { onClose(); void runPackGrantAction(() => expansionVoyage.onSwitchVoyage(pack.id)); }}>
+                              {active ? 'Playing' : 'Play'}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <div>
+                      <button type="button" className="island-run-debug-panel__copy-btn"
+                        disabled={packGrantPending || expansionVoyage.activeVoyageId === 'main'}
+                        onClick={() => { onClose(); void runPackGrantAction(() => expansionVoyage.onSwitchVoyage('main')); }}>
+                        Return to main path
+                      </button>
+                    </div>
+                  </div>
+                )}
                 {showLuckyRollDevLauncher && (
                   <div style={{ display: 'grid', gap: '0.55rem', borderTop: '1px solid rgba(255,255,255,0.16)', paddingTop: '0.65rem' }}>
                     <strong style={{ fontSize: '0.84rem' }}>✨ Treasure Path canonical test launcher</strong>

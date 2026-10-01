@@ -1,3 +1,4 @@
+import { resolveExpansionEconomyIslandNumber } from './islandRunExpansionPacks';
 import { applyDriftCurrentToReward, resolveDriftCurrent } from './islandRunDriftVoyage';
 
 export interface IslandRunBossReward {
@@ -26,7 +27,8 @@ export function getIslandRunIslandClearDice(islandNumber: number): number {
  * On a Drift Voyage (cycle 1+) the island's drift current adds its bonus.
  */
 export function getIslandRunBossReward(islandNumber: number, options?: { cycleIndex?: number }): IslandRunBossReward {
-  const safeIslandNumber = Math.max(1, Math.floor(islandNumber));
+  // Expansion-pack islands pay like the main island at the same position.
+  const safeIslandNumber = Math.max(1, Math.floor(resolveExpansionEconomyIslandNumber(islandNumber)));
   const tier = Math.floor((safeIslandNumber - 1) / 10);
   return applyDriftCurrentToReward({
     dice: getIslandRunIslandClearDice(safeIslandNumber),

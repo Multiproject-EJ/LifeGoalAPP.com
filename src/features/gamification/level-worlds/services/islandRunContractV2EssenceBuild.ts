@@ -1,3 +1,4 @@
+import { isExpansionIslandNumber, resolveExpansionEconomyIslandNumber } from './islandRunExpansionPacks';
 import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
 import { resolveIslandRunSequentialBuildTarget } from './islandRunSequentialBuild';
 
@@ -33,6 +34,8 @@ export { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
  * effectiveIslandNumber = cycleIndex × 120 + islandNumber
  */
 export function getEffectiveIslandNumber(islandNumber: number, cycleIndex: number): number {
+  // Expansion-pack islands (1001+) price like the main island at the same position.
+  if (isExpansionIslandNumber(islandNumber)) return resolveExpansionEconomyIslandNumber(islandNumber);
   const safeIsland = Math.max(1, Math.floor(islandNumber));
   const safeCycle = Math.max(0, Math.floor(cycleIndex));
   return safeCycle * 120 + safeIsland;
