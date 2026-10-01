@@ -769,8 +769,8 @@ export const islandRunRollActionTests: TestCase[] = [
         runtimeVersion: 5,
         dicePool: 30,
         tokenIndex: TRAFFIC_LIGHT_TILE_INDEX - 1,
-        currentIslandNumber: 2,
-        bonusTileChargeByIsland: { '2': { [TRAFFIC_LIGHT_TILE_INDEX]: 6 } },
+        currentIslandNumber: 3,
+        bonusTileChargeByIsland: { '3': { [TRAFFIC_LIGHT_TILE_INDEX]: 6 } },
       });
 
       const passSeven = await withMockedRandom([0, 0], () =>
@@ -779,7 +779,7 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(passSeven.trafficLightPass?.chargeAfter, 7, 'First traversal advances 6 → 7');
       assertEqual(passSeven.trafficLightPass?.unlocked, false, '7/8 must not unlock the reward');
       assertEqual(
-        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 2),
+        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 3),
         7,
         '7/8 is persisted in the same record as the roll',
       );
@@ -791,7 +791,7 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(unlock.trafficLightPass?.chargeAfter, 8, 'Next traversal reaches the final green light');
       assertEqual(unlock.trafficLightPass?.unlocked, true, 'Only 8/8 unlocks the modal');
       assertEqual(
-        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 2),
+        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 3),
         0,
         'Unlock resets the persisted counter',
       );

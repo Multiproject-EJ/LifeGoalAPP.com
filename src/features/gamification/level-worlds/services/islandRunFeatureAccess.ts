@@ -38,7 +38,8 @@ export function resolveIslandRunFeatureAccess(context: IslandRunFeatureAccessCon
     ordinaryEvents: validIsland && !beginnerIsland && (!gradual || (island >= 2 && games.ordinaryEvents)),
     inauguralRound: gradual && validIsland && games.inauguralRound,
     puzzleCollection: !Number.isFinite(context.currentIslandNumber) ? !gradual : island >= GRADUAL_PUZZLE_INTRODUCTION_ISLAND,
-    trafficLight: !beginnerIsland && (!gradual || island >= GRADUAL_TRAFFIC_LIGHT_INTRODUCTION_ISLAND),
+    // Island 003 introduces the Traffic Light for every save (none on 001/002).
+    trafficLight: !beginnerIsland && (!Number.isFinite(context.currentIslandNumber) ? !gradual : island >= GRADUAL_TRAFFIC_LIGHT_INTRODUCTION_ISLAND),
     eggs: island >= GRADUAL_EGG_INTRODUCTION_ISLAND,
     dailyWheel: !beginnerIsland && (!gradual || vault),
     vault,

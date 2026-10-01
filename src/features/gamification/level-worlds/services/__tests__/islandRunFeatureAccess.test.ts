@@ -94,7 +94,8 @@ export const islandRunFeatureAccessTests: TestCase[] = [
     for(const island of [2,3,4,120]){
       const a=resolveIslandRunFeatureAccess({currentIslandNumber:island});
       assert(!a.gradual,'unmarked is legacy, not guessed from island');
-      assert(a.trafficLight && a.dailyWheel && a.ordinaryEvents,'other legacy access preserved');
+      assert(a.dailyWheel && a.ordinaryEvents,'other legacy access preserved');
+      assertEqual(a.trafficLight,island>=3,'the Traffic Light waits for Island003 on every save');
       assertEqual(a.eggs,island>=4,'new eggs start on004 for every save');
       assertEqual(a.puzzleCollection,island>=15,'the puzzle icon waits for Island015 on every save');
     }

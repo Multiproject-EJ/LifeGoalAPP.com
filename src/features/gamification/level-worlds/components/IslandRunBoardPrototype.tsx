@@ -245,6 +245,12 @@ import { shouldContinueBuildHoldThroughLevel } from '../services/islandRunBuildH
 import { ISLAND_AFFIRMATION_VISIBLE_MS, getIslandAffirmationVisitKey, resolveIslandAffirmation } from '../services/islandAffirmations';
 
 const ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY = 'islandRun.affirmationsSeen.v1';
+const TRAFFIC_LIGHT_INTRO_SEEN_STORAGE_KEY = 'islandRun.trafficLightIntroSeen.v1';
+
+/** Dev preview only: put the Traffic Light on its tile even on a beginner save. */
+function withTrafficLightPreviewTile(tiles: IslandTileMapEntry[]): IslandTileMapEntry[] {
+  return tiles.map((tile) => (tile.index === TRAFFIC_LIGHT_TILE_INDEX ? { ...tile, tileType: 'traffic_light' } : tile));
+}
 import { resolveLandmarkDoorFlag, resolveLandmarkDoorLandingPresentation } from '../services/landmarkDoorLanding';
 import { readExpeditionShipGarageQualityPreference, resolveExpeditionShipGarageQuality } from './expeditionShipGarageQuality';
 import { resolveDepartureDaySeenKey, resolveDepartureDaySkip } from '../services/islandRunDepartureDay';
@@ -2190,6 +2196,8 @@ export function IslandRunBoardPrototype({
   const [controllerLandedIslandNumber, setControllerLandedIslandNumber] = useState<number | null>(null);
   // Island-start affirmation, once per island visit (per-viewer UI memory).
   const [islandAffirmation, setIslandAffirmation] = useState<{ visitKey: string; text: string } | null>(null);
+  // One-time Traffic Light introduction (its own island, Island 003).
+  const [showTrafficLightIntro, setShowTrafficLightIntro] = useState(false);
   // Dev island jump intro sequence (arrival + mission briefing) that the
   // bottom-right Skip button can dismiss in one tap.
   const [devFreshArrivalBriefing, setDevFreshArrivalBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
@@ -4134,6 +4142,14 @@ export function IslandRunBoardPrototype({
       if (showReceipt) setShowCompassBookReceiptModal(true);
     }, (reducedMotion ? JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS : JUNGLE_COMPASS_CEREMONY_DURATION_MS) + 300);
   }, []);
+
+  // Dev visual preview: ?trafficLightPreview=N shows the Traffic Light with N lamps lit.
+  const trafficLightPreviewCharge = useMemo(() => {
+    if (!isIslandVisualPreview || typeof window === 'undefined') return null;
+    const raw = new URLSearchParams(window.location.search).get('trafficLightPreview');
+    const value = raw === null ? Number.NaN : Number(raw);
+    return Number.isFinite(value) ? Math.max(0, Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, Math.floor(value))) : null;
+  }, [isIslandVisualPreview]);
 
   // Dev visual preview: ?assemblyChargesPreview=N shows Island 001 mid-excavation.
   const assemblyChargesPreview = useMemo(() => {
@@ -14839,6 +14855,15 @@ export function IslandRunBoardPrototype({
     setIslandAffirmation({ visitKey, text: resolveIslandAffirmation(islandNumber, cycleIndex) });
   }, [controllerLandedIslandNumber, cycleIndex, doesModalOwnAttention, hideControllerForPresentation, islandAffirmation?.visitKey, islandNumber]);
   useEffect(() => {
+    if (!featureAccess.trafficLight || islandAffirmation || showTrafficLightIntro) return;
+    if (controllerLandedIslandNumber !== islandNumber || hideControllerForPresentation || doesModalOwnAttention) return;
+    try {
+      if (window.localStorage.getItem(TRAFFIC_LIGHT_INTRO_SEEN_STORAGE_KEY) === '1') return;
+      window.localStorage.setItem(TRAFFIC_LIGHT_INTRO_SEEN_STORAGE_KEY, '1');
+    } catch { /* storage unavailable: show once this session */ }
+    setShowTrafficLightIntro(true);
+  }, [controllerLandedIslandNumber, doesModalOwnAttention, featureAccess.trafficLight, hideControllerForPresentation, islandAffirmation, islandNumber, showTrafficLightIntro]);
+  useEffect(() => {
     if (!islandAffirmation) return undefined;
     const timer = window.setTimeout(() => setIslandAffirmation(null), ISLAND_AFFIRMATION_VISIBLE_MS);
     return () => window.clearTimeout(timer);
@@ -14848,7 +14873,7 @@ export function IslandRunBoardPrototype({
       islandNumber: pendingMissionBriefing.islandNumber,
       controllerLandedIslandNumber,
       controllerHidden: hideControllerForPresentation,
-      screenBusy: doesModalOwnAttention || Boolean(queuedSignatureMissionPresentation) || isRolling || Boolean(pendingHopSequence) || islandAffirmation !== null,
+      screenBusy: doesModalOwnAttention || Boolean(queuedSignatureMissionPresentation) || isRolling || Boolean(pendingHopSequence) || islandAffirmation !== null || showTrafficLightIntro,
     })) return undefined;
     const timer = window.setTimeout(() => {
       setIncomingMissionBriefing(pendingMissionBriefing);
@@ -14856,7 +14881,7 @@ export function IslandRunBoardPrototype({
       setPendingMissionBriefing(null);
     }, MISSION_MESSAGE_AFTER_LANDING_MS);
     return () => window.clearTimeout(timer);
-  }, [controllerLandedIslandNumber, doesModalOwnAttention, hideControllerForPresentation, islandAffirmation, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
+  }, [controllerLandedIslandNumber, doesModalOwnAttention, hideControllerForPresentation, islandAffirmation, showTrafficLightIntro, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
   // Ring and shake as the message lands, then again every 30 s until read.
   useEffect(() => {
     if (!incomingMissionBriefing) return undefined;
@@ -17688,7 +17713,7 @@ export function IslandRunBoardPrototype({
             >
               <Island5ThreeScene
                 visibleTechnologyFragments={visibleTechnologyFragments}
-                trafficLightCharge={displayedTrafficLightCharge}
+                trafficLightCharge={trafficLightPreviewCharge ?? displayedTrafficLightCharge}
                 firstArrivalWaitForWelcome
                 firstArrivalWelcomeComplete={firstArrivalWelcomeComplete}
                 onFirstArrivalWelcome={() => {
@@ -17741,7 +17766,7 @@ export function IslandRunBoardPrototype({
                 })}
                 presentation="embedded"
                 qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}
-                tileMap={landmarkDoorTileMap}
+                tileMap={trafficLightPreviewCharge !== null ? withTrafficLightPreviewTile(landmarkDoorTileMap) : landmarkDoorTileMap}
                 tokenIndex={tokenIndex}
                 pendingHopSequence={pendingHopSequence}
                 isRolling={isRolling}
@@ -21771,6 +21796,15 @@ export function IslandRunBoardPrototype({
         <div key={islandAffirmation.visitKey} className="island-run-affirmation" role="status" aria-live="polite">
           <span className="island-run-affirmation__spark" aria-hidden="true">✦</span>
           <p>{islandAffirmation.text}</p>
+        </div>, document.body) : null}
+      {showTrafficLightIntro && !doesModalOwnAttention ? createPortal(
+        <div className="island-run-traffic-intro" role="dialog" aria-modal="false" aria-labelledby="island-run-traffic-intro-title">
+          <span className="island-run-traffic-intro__lamps" aria-hidden="true">🚦</span>
+          <div>
+            <strong id="island-run-traffic-intro-title">New: the Traffic Light</strong>
+            <p>Every time you pass it, one lamp lights up. Light all {TRAFFIC_LIGHT_CHARGE_TARGET} for a mystery bonus. It glows when you are close!</p>
+          </div>
+          <button type="button" onClick={() => setShowTrafficLightIntro(false)}>Got it</button>
         </div>, document.body) : null}
       {playerPieceCheer.key > 0 ? createPortal(
         <div ref={setPlayerPieceCheerElement} className="island-run-player-cheer" role="status" aria-live="polite">

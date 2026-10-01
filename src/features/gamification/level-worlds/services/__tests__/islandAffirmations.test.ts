@@ -26,7 +26,7 @@ export const islandAffirmationsTests: TestCase[] = [
       const fsMod = await import('fs');
       const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       assert(board.includes('if (controllerLandedIslandNumber !== islandNumber || hideControllerForPresentation || doesModalOwnAttention) return;'), 'waits for the landing');
-      assert(board.includes('|| islandAffirmation !== null,'), 'the mission message waits for the affirmation');
+      assert(board.includes('|| islandAffirmation !== null'), 'the mission message waits for the affirmation');
     },
   },
 ];
