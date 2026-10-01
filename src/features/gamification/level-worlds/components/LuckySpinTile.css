@@ -90,14 +90,17 @@
 }
 
 @keyframes lucky-spin-bob {
+  /* Composited bob (the independent translate property composes with each
+     badge's own transform); margin-top forced a layout every frame. */
   0%,
   100% {
-    margin-top: 0;
+    translate: 0 0;
   }
   50% {
-    margin-top: -0.35rem;
+    translate: 0 -0.35rem;
   }
 }
+
 
 @keyframes lucky-spin-beacon {
   0%,

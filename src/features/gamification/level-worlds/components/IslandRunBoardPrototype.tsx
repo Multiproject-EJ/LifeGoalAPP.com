@@ -18383,7 +18383,8 @@ export function IslandRunBoardPrototype({
 
       {/* Until the reward bar is revealed (First Light and gradual islands) the
           phone has no reward-bar slot, so it sits directly above the magnifier. */}
-      {!islandDeparture && !diplomaticRewardChannelVisible && (featureAccess.gradual || islandNumber === 1) ? (
+      {/* Hidden during the arrival and departure cinematics. */}
+      {!islandDeparture && !firstArrivalActive && !showFirstLightAssemblyCrater && !diplomaticRewardChannelVisible && (featureAccess.gradual || islandNumber === 1) ? (
         <button
           key={`mission-phone-floating-${missionMessageNudge}`}
           type="button"
@@ -18449,7 +18450,7 @@ export function IslandRunBoardPrototype({
         </div>
       ), document.body) : null}
 
-      {islandDeparture ? null : (
+      {islandDeparture || firstArrivalActive || showFirstLightAssemblyCrater ? null : (
         <button
           type="button"
           className="island-run-prototype__camera-reset-floating"
