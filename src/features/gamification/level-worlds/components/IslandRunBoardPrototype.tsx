@@ -241,6 +241,9 @@ import { DepartureDayScene } from './DepartureDayScene';
 import { isPlayerPieceId } from '../services/islandRunPlayerPieces';
 import { resolveTreasureIslandWealth } from '../services/islandRunTreasures';
 import { resolveLandmarkFlag } from '../services/landmarkFlags';
+import { ISLAND_AFFIRMATION_VISIBLE_MS, getIslandAffirmationVisitKey, resolveIslandAffirmation } from '../services/islandAffirmations';
+
+const ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY = 'islandRun.affirmationsSeen.v1';
 import { resolveLandmarkDoorFlag, resolveLandmarkDoorLandingPresentation } from '../services/landmarkDoorLanding';
 import { readExpeditionShipGarageQualityPreference, resolveExpeditionShipGarageQuality } from './expeditionShipGarageQuality';
 import { resolveDepartureDaySeenKey, resolveDepartureDaySkip } from '../services/islandRunDepartureDay';
@@ -2184,6 +2187,8 @@ export function IslandRunBoardPrototype({
   const [showMissionMessageBanner, setShowMissionMessageBanner] = useState(false);
   // The island the dice controller last landed on (its arrival animation).
   const [controllerLandedIslandNumber, setControllerLandedIslandNumber] = useState<number | null>(null);
+  // Island-start affirmation, once per island visit (per-viewer UI memory).
+  const [islandAffirmation, setIslandAffirmation] = useState<{ visitKey: string; text: string } | null>(null);
   // Dev island jump intro sequence (arrival + mission briefing) that the
   // bottom-right Skip button can dismiss in one tap.
   const [devFreshArrivalBriefing, setDevFreshArrivalBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
@@ -14789,12 +14794,28 @@ export function IslandRunBoardPrototype({
     const timer = window.setTimeout(() => setControllerLandedIslandNumber(islandNumber), MISSION_MESSAGE_CONTROLLER_LANDING_FALLBACK_MS);
     return () => window.clearTimeout(timer);
   }, [controllerLandedIslandNumber, hideControllerForPresentation, islandNumber]);
+  // A positive affirmation greets each island once the controller has landed.
+  useEffect(() => {
+    if (controllerLandedIslandNumber !== islandNumber || hideControllerForPresentation || doesModalOwnAttention) return;
+    const visitKey = getIslandAffirmationVisitKey(islandNumber, cycleIndex);
+    let seen: string[] = [];
+    try { seen = JSON.parse(window.localStorage.getItem(ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY) ?? '[]') as string[]; } catch { seen = []; }
+    if (!Array.isArray(seen)) seen = [];
+    if (seen.includes(visitKey) || islandAffirmation?.visitKey === visitKey) return;
+    try { window.localStorage.setItem(ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY, JSON.stringify([...seen, visitKey].slice(-60))); } catch { /* storage unavailable */ }
+    setIslandAffirmation({ visitKey, text: resolveIslandAffirmation(islandNumber, cycleIndex) });
+  }, [controllerLandedIslandNumber, cycleIndex, doesModalOwnAttention, hideControllerForPresentation, islandAffirmation?.visitKey, islandNumber]);
+  useEffect(() => {
+    if (!islandAffirmation) return undefined;
+    const timer = window.setTimeout(() => setIslandAffirmation(null), ISLAND_AFFIRMATION_VISIBLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [islandAffirmation]);
   useEffect(() => {
     if (!pendingMissionBriefing || !shouldDeliverMissionMessage({
       islandNumber: pendingMissionBriefing.islandNumber,
       controllerLandedIslandNumber,
       controllerHidden: hideControllerForPresentation,
-      screenBusy: doesModalOwnAttention || Boolean(queuedSignatureMissionPresentation) || isRolling || Boolean(pendingHopSequence),
+      screenBusy: doesModalOwnAttention || Boolean(queuedSignatureMissionPresentation) || isRolling || Boolean(pendingHopSequence) || islandAffirmation !== null,
     })) return undefined;
     const timer = window.setTimeout(() => {
       setIncomingMissionBriefing(pendingMissionBriefing);
@@ -14802,7 +14823,7 @@ export function IslandRunBoardPrototype({
       setPendingMissionBriefing(null);
     }, MISSION_MESSAGE_AFTER_LANDING_MS);
     return () => window.clearTimeout(timer);
-  }, [controllerLandedIslandNumber, doesModalOwnAttention, hideControllerForPresentation, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
+  }, [controllerLandedIslandNumber, doesModalOwnAttention, hideControllerForPresentation, islandAffirmation, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
   // Ring and shake as the message lands, then again every 30 s until read.
   useEffect(() => {
     if (!incomingMissionBriefing) return undefined;
@@ -21712,6 +21733,11 @@ export function IslandRunBoardPrototype({
             <span>Tap to answer Central Command</span>
           </span>
         </button>, document.body) : null}
+      {islandAffirmation && !doesModalOwnAttention ? createPortal(
+        <div key={islandAffirmation.visitKey} className="island-run-affirmation" role="status" aria-live="polite">
+          <span className="island-run-affirmation__spark" aria-hidden="true">✦</span>
+          <p>{islandAffirmation.text}</p>
+        </div>, document.body) : null}
       {playerPieceCheer.key > 0 ? createPortal(
         <div ref={setPlayerPieceCheerElement} className="island-run-player-cheer" role="status" aria-live="polite">
           <span key={playerPieceCheer.key} className="island-run-player-cheer__bubble">
