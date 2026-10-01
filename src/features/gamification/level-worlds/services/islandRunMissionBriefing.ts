@@ -164,12 +164,12 @@ const AUTHORED_MISSIONS: Readonly<Record<number, MissionCopy>> = Object.freeze({
   },
   9: {
     progressKind: 'staged_restoration',
-    headline: 'Restart the Ignition Chain',
-    missionStatement: 'The lava kingdom draws power from a crater far below the route. Restore its suspended steel works and stabilize the machinery without sealing the volcano or cooling its living heart.',
-    primaryObjective: 'Reconnect the crater-spanning forge systems.',
-    supportingObjective: 'Keep every landmark anchored while the deep engine cycles.',
-    fieldProtocol: 'Work with the pressure. Never mistake containment for control.',
-    caretakerSignal: 'The mountain is not angry. It is carrying more power than our old structures can share.',
+    headline: 'The Star Beneath',
+    missionStatement: 'An artificial star sleeps below the Heartshaft. Recover eight finite Ignition Cores from the route and restore its containment systems, one by one. Raise the suspended ring, unfold the star and write a golden constellation above the caldera.',
+    primaryObjective: 'Restore all eight containment systems and unfold the star.',
+    supportingObjective: 'Restore the island landmarks while keeping the deep shaft open.',
+    fieldProtocol: 'Each recovered core powers one repair. Listen, contain, align — then let the buried dawn rise.',
+    caretakerSignal: 'We thought we had built a furnace. We had been sheltering a sunrise.',
   },
   10: {
     progressKind: 'rootheart_powerworks',

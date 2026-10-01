@@ -1,0 +1,10 @@
+{
+  "status": "not-applicable",
+  "workflow": "existing-scene-extension",
+  "reason": "An isolated-object image-to-mesh factory does not apply to this architectural scene extension. No passing object-factory gates are claimed.",
+  "implementationStatus": "local implementation complete; validation passed",
+  "contract": "docs/gauntlets/2026-09-30-island-001-venetian-marina.md",
+  "approvedReference": "docs/visual-references/island-001-venetian-marina-20260930/001-source.png",
+  "evidence": "docs/gauntlets/island-001-venetian-marina/evidence",
+  "intakeScratchArchive": "/tmp/habitgame-marina-object-intake-20260930"
+}

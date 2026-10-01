@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-09-30T16:27:56.258375+00:00",
+  "branch": "codex/island-001-venetian-marina-20260930",
+  "base": "680e0b09512b4928c6d41600231f80443e672083",
+  "checks": {
+    "typescriptBuild": "tsc -b --pretty false: PASS",
+    "finalApplicationTypecheck": "tsc -p tsconfig.json --pretty false --incremental --tsBuildInfoFile /tmp/marina-app-check.tsbuildinfo: PASS",
+    "productionBuild": "vite build: PASS; existing large-chunk warnings",
+    "island001ExistingRuntime": "PASS",
+    "marinaMarketRuntimeAllQualities": "PASS",
+    "architectureGuards": "PASS; 0 violations, 3 existing allowlisted warnings",
+    "diffWhitespace": "PASS",
+    "browserLiveReplay": "PASS; 216/216 ships, 207/207 seated; existing mandate prompt displayed and dismissed; entrance reopened",
+    "browserPause": "PASS; animated market review held at 8.2% until After selected",
+    "browserErrors": "No error-level console entries in final live replay",
+    "portrait": "390x844 CSS viewport, Low quality; overview and first delegation visually checked"
+  },
+  "scopeLimits": [
+    "Local only; no merge or deploy",
+    "No physical-device performance acceptance",
+    "Existing full-scene rendering budget debt remains"
+  ],
+  "implementationSha256": {
+    "src/features/gamification/level-worlds/dev/Island1MarinaMarketLayout.ts": "5a01f0719fa8c1c861d3142f378b938347555caa3c25265b721ef5cff2de0ea9",
+    "src/features/gamification/level-worlds/dev/Island1MarinaMarket.ts": "8f84b1ff35ec8a3866ef5a1a066c0cc5a3d7a243c532afd9fb64618dd1729b7d",
+    "src/features/gamification/level-worlds/dev/Island1MarinaMarketPeople.ts": "1f36673e1b6b3416b04390154b473904dd6f27b0322cc6eccb9006ad56416755",
+    "src/features/gamification/level-worlds/dev/Island1MarinaMarketDetails.ts": "42da4c2c3e6af941f5374143d9a8137a5c45283c73474148186e8fcd79a80ad7",
+    "src/features/gamification/level-worlds/dev/Island1AssemblyMarina.ts": "06d1cd7c7a39f0f83670be70fab1dc0813e4f0eeff2d10947630e20474d0b5bc",
+    "src/features/gamification/level-worlds/dev/Island1MarinaDelegates.ts": "46d2ec01935846fc2f6beba391b27e854a707261af35d3abf2a0676d94af8193"
+  }
+}

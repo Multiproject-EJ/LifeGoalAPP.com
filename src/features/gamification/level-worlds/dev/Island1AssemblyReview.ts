@@ -49,7 +49,7 @@ if (mode === 'hall-hero') {
   camera.position.set(0,target.y+depth*.24,target.z+depth);
 }
 controls.target.copy(target); controls.update();
-if(mode==='marina'){camera.position.set(25,16,32);controls.target.set(0,-1.5,5);controls.update();}
+if(mode==='marina'){camera.position.set(28,23,35);controls.target.set(0,-1.5,5);controls.update();}
 scene.add(new THREE.HemisphereLight(0xe9f4ff, 0x7c8870, 1.0));
 const sun = new THREE.DirectionalLight(0xffe3b6, 2.4);
 sun.position.set(-8, 14, 8); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=12;sun.shadow.camera.bottom=-12;sun.shadow.normalBias=.025;scene.add(sun);
@@ -98,7 +98,24 @@ document.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach(button=>but
  runtime.updateAssemblyCrater({chargesDetonated:next,targetCharges:10,completed:next===10,constructionSequence:++sequence},next===0||reduced.matches);playing=true;
 });
 document.getElementById('complete')!.onclick=()=>{stage=10;playing=false;runtime.updateAssemblyCrater({chargesDetonated:10,targetCharges:10,completed:true,constructionSequence:sequence},true);};
-function overview(){cutaway=false;visibility();camera.fov=48;camera.position.set(25,16,32);controls.target.set(0,-1.5,5);camera.updateProjectionMatrix();controls.update();}
+function overview(){
+ cutaway=false;visibility();camera.fov=48;controls.target.set(0,-1.5,2);
+ const fit=Math.max(1,.98/camera.aspect);
+ camera.position.set(28,23,35).sub(controls.target).multiplyScalar(fit).add(controls.target);
+ scene.fog=new THREE.Fog(0xc1d9d7,46*fit,108*fit);
+ camera.updateProjectionMatrix();controls.update();
+}
+function marketView(view:string){
+ playing=false;marinaCinema=false;runtime.setMarinaProgress(1);overview();
+ const shots:Record<string,{pos:number[];aim:number[]}>= {
+  bridge:{pos:[-1,3.6,25],aim:[5.2,-1.9,16.8]},
+  arch:{pos:[11,-.6,22],aim:[5.5,-2.0,16.8]},
+  cafe:{pos:[21,2.5,16],aim:[14.8,-1.5,10]},
+ };
+ const shot=shots[view];
+ if(shot){camera.position.fromArray(shot.pos);controls.target.fromArray(shot.aim);camera.fov=48;camera.updateProjectionMatrix();controls.update();}
+ timeline.value='100';controls.enabled=true;
+}
 document.getElementById('marina-before')!.onclick=()=>{stage=10;playing=false;marinaCinema=false;controls.enabled=true;runtime.updateAssemblyCrater({chargesDetonated:10,targetCharges:10,completed:true,constructionSequence:sequence},true);runtime.setMarinaProgress(0);overview();timeline.value='0';};
 document.getElementById('marina-after')!.onclick=()=>{stage=10;playing=false;marinaCinema=false;controls.enabled=true;runtime.updateAssemblyCrater({chargesDetonated:10,targetCharges:10,completed:true,constructionSequence:sequence},true);runtime.setMarinaProgress(1);overview();timeline.value='100';};
 document.getElementById('marina-play')!.onclick=()=>{
@@ -117,7 +134,7 @@ function applyMarinaCamera(){
  if(cutaway!==openThreshold){cutaway=openThreshold;visibility();}
 }
 timeline.oninput=()=>showMarinaFrame(Number(timeline.value)/100);
-document.getElementById('marina-pause')!.onclick=()=>{playing=false;marinaCinema=false;controls.enabled=true;controls.update();};
+document.getElementById('marina-pause')!.onclick=()=>{runtime.setMarinaProgress(runtime.getMarinaPresentation().progress);playing=false;marinaCinema=false;controls.enabled=true;controls.update();};
 document.getElementById('marina-end-meeting')!.onclick=()=>{
  const now=performance.now()/1000;runtime.animate(now);runtime.endMarinaMeeting();
  if(reduced.matches)runtime.animate(now+2);else playing=true;
@@ -126,6 +143,15 @@ document.getElementById('marina-end-meeting')!.onclick=()=>{
 document.querySelectorAll<HTMLButtonElement>('[data-marina-shot]').forEach(b=>b.onclick=()=>showMarinaFrame(Number(b.dataset.marinaShot)));
 if(params.has('marinaProgress'))showMarinaFrame(Number(params.get('marinaProgress')));
 if(params.has('mandate'))openMandate();
+for(const [view,label] of [['overview','Market overview'],['bridge','Venetian bridge'],['arch','Bridge arch'],['cafe','Café and stalls']]){
+ const button=document.createElement('button');button.textContent=label;button.onclick=()=>marketView(view);
+ document.querySelector('nav')!.append(button);
+}
+if(params.has('marketView'))marketView(params.get('marketView')!);
+if(params.has('clean')){document.querySelectorAll<HTMLElement>('header,#cinema-controls,#status').forEach(e=>e.style.display='none');}
+const metrics=document.createElement('output');metrics.id='render-metrics';
+if(params.has('metrics')){metrics.style.cssText='position:fixed;left:12px;top:70px;padding:8px;background:#142735dd;color:white';document.body.append(metrics);}
+
 // Inspect the real instanced crowd head, not a separate high-detail showcase model.
 if(params.has('delegateView')){
  showMarinaFrame(params.has('delegateBody')?.36:1);scene.updateMatrixWorld(true);
@@ -213,7 +239,7 @@ missionCapture.onclick=async()=>{
  stage=10;missionCapture.disabled=false;
 };
 renderer.setAnimationLoop((time)=>{
- if(playing&&!reduced.matches)runtime.animate(time/1000);
+ if(!reduced.matches&&(playing||params.has('marketView')))runtime.animate(time/1000);
  const marina=runtime.getMarinaPresentation();
  mandateButton.disabled=!marina.completed;
  if(marinaCinema){
@@ -221,6 +247,7 @@ renderer.setAnimationLoop((time)=>{
   if(marina.completed){marinaCinema=false;playing=true;controls.enabled=true;controls.update();runtime.endMarinaMeeting();openMandate();}
  }
  renderer.render(scene,camera);
+ metrics.textContent=`${quality} · ${width}×${height} · ${renderer.info.render.calls} draws · ${renderer.info.render.triangles.toLocaleString()} triangles`;
  (document.getElementById('marina-end-meeting') as HTMLButtonElement).disabled=!marina.completed||marina.meetingState==='ended';
  const gate=marina.meetingState==='ended'?(marina.waterfallFlow>.001?'Meeting ended · entrance reopening':'Meeting ended · entrance open'):marina.meetingState==='in-session'?'Meeting in session · waterfall sealed':marina.meetingState==='admitting'?(marina.waterfallFlow>0?(marina.enteredCount===marina.delegateCount?'Everyone inside · waterfall returning':'Waterfall opening entrance'):`Entrance open · ${marina.enteredCount}/${marina.delegateCount} inside`):'Waterfall flowing';
  document.getElementById('status')!.textContent=`${marina.arrivedCraftCount}/${marina.craftCount} docked · ${gate} · ${marina.seatedCount}/${marina.delegateCount} seated`;

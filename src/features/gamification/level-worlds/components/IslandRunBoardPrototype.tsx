@@ -688,6 +688,7 @@ import {
   getFirstLightAssemblyAvailableDynamite,
   getFirstLightAssemblyNextBatch,
   getGreatHoneyfallAvailableNectar,
+  getHeartshaftStarStage,
   getStagedRestorationAvailableCharges,
   getStagedRestorationMissionDescriptor,
   getFrostwellAvailableSpins,
@@ -3480,13 +3481,15 @@ export function IslandRunBoardPrototype({
     triggerIslandRunHaptic('reward_claim');
   }, [playIslandRunSound, showVaultIslandGiftUnlock, triggerIslandRunHaptic]);
 
+  const worldMissionRendererAvailableRef = useRef(true);
   const missionPresentationForRewardsRef = useRef(worldMissionPresentationActive);
   missionPresentationForRewardsRef.current = worldMissionPresentationActive;
   const pendingMissionCelebrationsRef = useRef<Array<{ rewards: WinRewardItem[]; subtitle: string }>>([]);
-  const celebrationIslandRef = useRef(islandNumber);
+  const celebrationVisitKey = `${__storeState.cycleIndex}:${islandNumber}`;
+  const celebrationIslandRef = useRef(celebrationVisitKey);
   useEffect(() => {
-    if (celebrationIslandRef.current !== islandNumber) {
-      celebrationIslandRef.current = islandNumber;
+    if (celebrationIslandRef.current !== celebrationVisitKey) {
+      celebrationIslandRef.current = celebrationVisitKey;
       pendingMissionCelebrationsRef.current = [];
       return;
     }
@@ -3496,7 +3499,7 @@ export function IslandRunBoardPrototype({
     setWinCelebrationRewards(next.rewards);
     setWinCelebrationSubtitle(next.subtitle);
     setShowWinCelebrationModal(true);
-  }, [worldMissionPresentationActive, showWinCelebrationModal, islandNumber]);
+  }, [worldMissionPresentationActive, showWinCelebrationModal, celebrationVisitKey]);
   const openWinCelebrationModal = useCallback((rewards: WinRewardItem[], subtitle = 'You won') => {
     if (rewards.length === 0) return;
     if (missionPresentationForRewardsRef.current) {
@@ -7845,6 +7848,7 @@ export function IslandRunBoardPrototype({
   );
 
   const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
+    if (missionPresentationForRewardsRef.current || isActivatingStagedRestoration) return;
     const latestCompletion = resolveIslandRunCompletion(getIslandRunStateSnapshot(session));
     if (source !== 'dev_clear_island' && (!latestCompletion.complete || latestCompletion.visitKey !== islandClearVisitKey)) {
       setLandingText(`Island ${latestCompletion.percent}% complete — ${latestCompletion.nextRequirement?.label ?? 'finish the remaining requirements'}.`);
@@ -7903,7 +7907,7 @@ export function IslandRunBoardPrototype({
       });
     }
     setShowIslandClearCelebration(true);
-  }, [islandClearStats, islandClearVisitKey, islandNumber, session, showIslandClearCelebration]);
+  }, [islandClearStats, islandClearVisitKey, islandNumber, session, showIslandClearCelebration, isActivatingStagedRestoration]);
 
   useEffect(() => {
     if (
@@ -15253,7 +15257,7 @@ export function IslandRunBoardPrototype({
       complete: isCurrentIslandFinishedForDeparture,
       visitKey: islandClearVisitKey,
       shownVisitKey: islandClearCelebrationShownForVisitRef.current,
-      busy: doesModalOwnAttention || isRolling || pendingHopSequence !== null || isRewardBarClaiming
+      busy: doesModalOwnAttention || worldMissionPresentationActive || isActivatingStagedRestoration || isRolling || pendingHopSequence !== null || isRewardBarClaiming
         || Boolean(queuedSignatureMissionPresentation) || Boolean(pendingMissionBriefing) || Boolean(activeStoryEpisode),
       isPreview: isIslandVisualPreview,
     })) return undefined;
@@ -15265,6 +15269,7 @@ export function IslandRunBoardPrototype({
     doesModalOwnAttention,
     isCurrentIslandFinishedForDeparture,
     isRolling, pendingHopSequence, isRewardBarClaiming, isIslandVisualPreview,
+    worldMissionPresentationActive, isActivatingStagedRestoration,
     queuedSignatureMissionPresentation, pendingMissionBriefing, activeStoryEpisode,
     islandClearVisitKey,
     islandNumber,
@@ -15766,6 +15771,7 @@ export function IslandRunBoardPrototype({
     activator?: () => Promise<{ status: string; activatedStages?: number; completedAtMs?: number | null }>,
   ) => {
     if (isCompassBookCeremonyPlaying || isActivatingStagedRestoration || !stagedRestorationDescriptor || !stagedRestorationProgress) return;
+    if (stagedRestorationDescriptor.islandNumber === 9 && missionPresentationForRewardsRef.current) return;
     const isLivingCompass = stagedRestorationDescriptor.missionId === 'jungle-expedition-living-compass';
     setShowMissionPhoneBriefing(false);
     if (stagedRestorationDescriptor.islandNumber === 17 && stagedRestorationProgress.activatedStages >= 8) {
@@ -15773,6 +15779,10 @@ export function IslandRunBoardPrototype({
     }
     if (stagedRestorationProgress.completedAtMs !== null) {
       if (isLivingCompass) presentCompassBookCeremony(false);
+      if (stagedRestorationDescriptor.islandNumber === 9 && worldMissionRendererAvailableRef.current) {
+        missionPresentationForRewardsRef.current = true;
+        setWorldMissionPresentationActive(true);
+      }
       // Canonical completion is immutable; this only replays the world payoff.
       setStagedRestorationConstructionSequence((value) => value + 1);
       setBuildCameraFocusRequest({ preset: stagedRestorationDescriptor.islandNumber === 17 ? 'titan-spine' : 'boss', transition: 'quick' });
@@ -15790,9 +15800,15 @@ export function IslandRunBoardPrototype({
     try {
       const result = (activator
         ? await activator()
-        : await activateStagedRestorationMissionStage({ session, client })) as Awaited<ReturnType<typeof activateStagedRestorationMissionStage>>;
+        : await activateStagedRestorationMissionStage({ session, client, expected: {
+          cycleIndex: __storeState.cycleIndex, islandNumber: stagedRestorationDescriptor.islandNumber,
+          activatedStages: stagedRestorationProgress.activatedStages,
+        } })) as Awaited<ReturnType<typeof activateStagedRestorationMissionStage>>;
       if (ceremonyGeneration !== compassBookCeremonyGenerationRef.current) return;
       if (result.status !== 'ok') {
+        if (result.status === 'stale') {
+          setLandingText('That repair has already changed. Open the mission phone for the next step.');
+        }
         if (result.status === 'mission_locked') {
           setLandingText('Solve the complete Level-3 labyrinth before forging the Iron Skiff.');
         }
@@ -15819,7 +15835,9 @@ export function IslandRunBoardPrototype({
           : revealedCompassBook
             ? 'The Living Compass has answered. Watch the sky.'
             : `✨ ${currentMissionTracker.briefing.headline} complete — the whole island transformation is alive!`
-        : `✨ ${stagedRestorationDescriptor.stageLabel} ${result.activatedStages}/${stagedRestorationDescriptor.stageCount}.`);
+        : stagedRestorationDescriptor.islandNumber === 9
+          ? `✨ ${getHeartshaftStarStage(result.activatedStages - 1).name} — restored (${result.activatedStages}/8).`
+          : `✨ ${stagedRestorationDescriptor.stageLabel} ${result.activatedStages}/${stagedRestorationDescriptor.stageCount}.`);
       playIslandRunSound(completed ? 'reward_bar_claim_burst' : 'stop_land');
       triggerIslandRunHaptic(completed ? 'reward_claim' : 'stop_land');
       if (completed) {
@@ -15840,6 +15858,16 @@ export function IslandRunBoardPrototype({
           { icon: '✨', label: stagedRestorationDescriptor.stageLabel, value: 'COMPLETE' },
           { icon: '🏝️', label: currentMissionTracker.briefing.islandName, value: 'TRANSFORMED' },
         ];
+        if (stagedRestorationDescriptor.islandNumber === 9) {
+          // The renderer lifecycle drains the existing celebration queue; this
+          // presentation never grants completion or rewards.
+          if (worldMissionRendererAvailableRef.current) {
+            missionPresentationForRewardsRef.current = true;
+            setWorldMissionPresentationActive(true);
+          }
+          openWinCelebrationModal(completionRewards, 'Mission complete — The Star Beneath');
+          return;
+        }
         window.setTimeout(() => {
           if (unlockedVaultIsland) {
             setShowVaultIslandGiftUnlock(true);
@@ -15855,6 +15883,7 @@ export function IslandRunBoardPrototype({
   }, [
     beginLavaSkiffEscape,
     client,
+    __storeState.cycleIndex,
     currentMissionTracker.briefing.headline,
     currentMissionTracker.briefing.islandName,
     isActivatingStagedRestoration,
@@ -16360,6 +16389,8 @@ export function IslandRunBoardPrototype({
   );
   const shouldShowFinishIslandCta = Boolean(
     isCurrentIslandFinishedForDeparture &&
+      !worldMissionPresentationActive &&
+      !isActivatingStagedRestoration &&
       !doesModalOwnAttention &&
       !isRolling &&
       pendingHopSequence === null &&
@@ -17898,6 +17929,13 @@ export function IslandRunBoardPrototype({
                 onMoonwellThermalPhaseChange={setMoonwellThawPhase}
                 onMoonwellThermalComplete={() => { setMoonwellThawActive(false); setLandingText('♨ Moonwell restored. Warm water now bubbles beneath the winter sky.'); }}
                 onMissionPresentationActiveChange={setWorldMissionPresentationActive}
+                onMissionPresentationAvailabilityChange={(available) => {
+                  worldMissionRendererAvailableRef.current = available;
+                  if (!available) {
+                    missionPresentationForRewardsRef.current = false;
+                    setWorldMissionPresentationActive(false);
+                  }
+                }}
                 celestialRedockingPresentation={{
                   completedRolls: isIslandVisualPreview && islandArtPreviewNumber === 2
                     ? CELESTIAL_REDOCKING_ROLL_TARGET
@@ -22264,7 +22302,7 @@ export function IslandRunBoardPrototype({
             : stagedRestorationProgress.completedAtMs !== null
             ? `Replay ${currentMissionTracker.briefing.headline}`
             : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage
-              ? `${stagedRestorationDescriptor.actionLabel} · ${stagedRestorationProgress.activatedStages + 1} of ${stagedRestorationDescriptor.stageCount}`
+              ? `${stagedRestorationDescriptor.islandNumber === 9 ? getHeartshaftStarStage(stagedRestorationProgress.activatedStages).name : stagedRestorationDescriptor.actionLabel} · ${stagedRestorationProgress.activatedStages + 1} of ${stagedRestorationDescriptor.stageCount}`
               : coasterOrderNeeded
                 ? '🎩 Call the Theme Park Director'
                 : `Find ${stagedRestorationDescriptor.pickupLabel}`
@@ -22289,7 +22327,9 @@ export function IslandRunBoardPrototype({
             : stagedRestorationProgress.completedAtMs !== null
             ? 'Replay the completed 3D transformation and island-wide finale.'
             : stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage
-              ? 'The phone will fold so you can watch the next stage pop, flash and lock into the world.'
+              ? stagedRestorationDescriptor.islandNumber === 9
+                ? getHeartshaftStarStage(stagedRestorationProgress.activatedStages).hint
+                : 'The phone will fold so you can watch the next stage pop, flash and lock into the world.'
               : coasterOrderNeeded && coasterOrder?.nextPrice != null
                 ? `Next: ${coasterOrder.nextSectionName} for ${coasterOrder.nextPrice.toLocaleString()} Money. Order by phone or land on a 🎩 Director tile.`
                 : `Collect glowing ${stagedRestorationDescriptor.pickupLabel.toLowerCase()} objects on the route. Passing one also secures it.`

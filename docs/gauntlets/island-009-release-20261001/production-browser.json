@@ -1,0 +1,34 @@
+{
+  "status": "pass",
+  "scope": "production bundle, disposable guest and offline local Heartshaft fixture; not physical-device acceptance",
+  "errors": [],
+  "cases": [
+    "Fresh guest entry mounts the actual 3D Island001",
+    "Unmarked saves are not enrolled; production Island009 L3 renders without development flags"
+  ],
+  "canvas": {
+    "engine": "three.js r185",
+    "constructionRendererGeneration": "4810.300000000745",
+    "constructionCrewAllocatedTriangles": "43782",
+    "constructionCrewAllocatedDrawCalls": "90",
+    "constructionCrewTriangles": "0",
+    "constructionCrewDrawCalls": "0",
+    "constructionCrewRuntime": "parked",
+    "constructionCrewActive": "false",
+    "constructionCrewTarget": "boss",
+    "constructionCrewPhase": "arrive",
+    "constructionCrewMode": "resting",
+    "constructionCommissioning": "idle",
+    "constructionChoreography": "heartshaft-crucible-core-commissioning:station-4",
+    "island9RuntimePartManifest": "{\"model\":\"island-009-heartshaft-crucible\",\"parts\":[{\"id\":\"landmark-network\",\"name\":\"landmark-network\",\"kind\":\"part\",\"nodeName\":\"ISLAND_9_LANDMARK_NETWORK_RUNTIME_PROXY\",\"module\":\"landmark-network\",\"triangles\":0},{\"id\":\"route-integration\",\"name\":\"route-integration\",\"kind\":\"part\",\"nodeName\":\"ISLAND_9_ROUTE_INTEGRATION_RUNTIME_PROXY\",\"module\":\"canonical-board-route\",\"triangles\":0},{\"id\":\"heartshaft-crucible\",\"name\":\"heartshaft-crucible\",\"nodeName\":\"ISLAND_009_V2_HEARTSHAFT_CRUCIBLE\",\"kind\":\"part\"},{\"id\":\"ignition-ring\",\"name\":\"ignition-ring\",\"nodeName\":\"ISLAND_009_V2_IGNITION_RING\",\"kind\":\"part\"}],\"unnamedMeshes\":0,\"integralMeshes\":163}",
+    "island9RuntimePartCount": "4",
+    "island9AuthoredRenderableCount": "163",
+    "centralLandmarkOcclusion": "opaque",
+    "cameraAuthoring": "false",
+    "stagedRestorationStage": "0",
+    "stagedRestorationIsland": "9",
+    "assemblyBlastCameraShake": "0.000",
+    "explorePoint": ""
+  },
+  "text": "D\n40\n1,000\n🎲\n100\n🔇\n☰\n🧩 0/5\n✦\n✓\n✦\nARENA GAMES\n✦\n✦\n0/5\n🎲\n5\n7h 59m\n✦\n20 🛠️\n33%\nMISSION\n100%\n🥚 Hatchery Landmark\nReady to enter\n100%\n✅ Habit Landmark\nReady to enter\n100%\n🎪 Event Arena Landmark\nReady to enter\n100%\n📖 Wisdom Landmark\nReady to enter\n100%\n👑 Boss Landmark\nFinish earlier activities\n🔎\n✦\nIsland 009 fragment revealed ✦\nShop\nBuild\nRoll (1 dice) · 100 rolls left\nCreatures\nOpen Story\nROLL POWER\n×1"
+}

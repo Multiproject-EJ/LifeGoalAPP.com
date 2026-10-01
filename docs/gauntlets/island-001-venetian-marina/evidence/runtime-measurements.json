@@ -1,0 +1,35 @@
+[
+  {
+    "quality": "low",
+    "batches": 14,
+    "triangles": 37778,
+    "people": {
+      "count": 25,
+      "walkers": 10
+    },
+    "firstEntry": 0.6771941106821144,
+    "lastEntry": 0.9012339547560575
+  },
+  {
+    "quality": "medium",
+    "batches": 14,
+    "triangles": 43688,
+    "people": {
+      "count": 46,
+      "walkers": 16
+    },
+    "firstEntry": 0.6892458440533726,
+    "lastEntry": 0.9140968680622843
+  },
+  {
+    "quality": "high",
+    "batches": 14,
+    "triangles": 44828,
+    "people": {
+      "count": 52,
+      "walkers": 22
+    },
+    "firstEntry": 0.695740096743418,
+    "lastEntry": 0.913187454779915
+  }
+]

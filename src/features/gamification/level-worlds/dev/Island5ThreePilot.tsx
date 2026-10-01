@@ -1,3 +1,5 @@
+import { createIsland9ReleasedAmbience, buildIsland9ReleasedLandmark } from './Island9HeartshaftProduction';
+import { createIsland9StarBeneathPresentation } from './Island9StarBeneathPresentation';
 import { sunshoreCreatureClearanceLift } from './SunshoreCreatureClearance';
 import { FISHERMANS_DRAGON_CINEMATIC_SECONDS } from '../services/fishermansFishingWatchdog';
 import { createSunshoreArenaRetraction } from './SunshoreArenaRetraction';
@@ -504,6 +506,7 @@ interface Island5ThreePilotProps {
   onMoonwellThermalPhaseChange?: (phase: string) => void;
   onMoonwellThermalComplete?: () => void;
   onMissionPresentationActiveChange?: (active: boolean) => void;
+  onMissionPresentationAvailabilityChange?: (available: boolean) => void;
   celestialRedockingPresentation?: Island2CelestialRedockingPresentation;
   rootheartPowerworksPresentation?: Island10RootheartPowerworksPresentation;
   sunkenSandsTreasurePresentation?: Island12SunkenSandsTreasurePresentation;
@@ -3876,6 +3879,7 @@ export default function Island5ThreePilot({
   onMoonwellThermalPhaseChange,
   onMoonwellThermalComplete,
   onMissionPresentationActiveChange,
+  onMissionPresentationAvailabilityChange,
   celestialRedockingPresentation = { completedRolls: 20, targetRolls: 20, dockedPlatformCount: 4 },
   rootheartPowerworksPresentation = readInitialRootheartPowerworksPresentation(),
   sunkenSandsTreasurePresentation = { revealProgress: 1, ready: true, claimed: false },
@@ -4072,6 +4076,8 @@ export default function Island5ThreePilot({
   const [rendererRetryVersion, setRendererRetryVersion] = useState(0);
   const [assemblyAssetsReady, setAssemblyAssetsReady] = useState(areIsland001V2AssetsReady);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const missionPresentationAvailabilityRef = useRef(onMissionPresentationAvailabilityChange);
+  missionPresentationAvailabilityRef.current = onMissionPresentationAvailabilityChange;
   const missionPresentationCallbackRef = useRef(onMissionPresentationActiveChange);
   missionPresentationCallbackRef.current = onMissionPresentationActiveChange;
   const missionPresentationActiveRef = useRef(false);
@@ -4515,12 +4521,19 @@ export default function Island5ThreePilot({
       });
     } catch (caught) {
       console.error(`[island-${islandNumber}-3d-pilot] WebGL initialization failed:`, caught);
+      missionPresentationAvailabilityRef.current?.(false);
+      missionPresentationCallbackRef.current?.(false);
       setError('The 3D world paused while its renderer restarted. Tap to retry.');
       return undefined;
     }
 
+    let missionRendererAvailable = true;
+    missionPresentationAvailabilityRef.current?.(true);
     const handleContextLost = (event: Event) => {
       event.preventDefault();
+      missionRendererAvailable = false;
+      missionPresentationAvailabilityRef.current?.(false);
+      missionPresentationCallbackRef.current?.(false);
       setError('The 3D world paused to recover graphics memory. Tap to retry.');
     };
     const handleContextRestored = () => {
@@ -4677,7 +4690,12 @@ export default function Island5ThreePilot({
 
     // Leave enough depth for the First Light horizon ring at every camera
     // azimuth; foreground gameplay geometry remains inside the shadow budget.
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 210);
+    // Initial construction focus can run before renderer.resize. Its bounds fit
+    // must already use the real portrait aspect, including active-work mounts.
+    const initialCanvasBounds = canvas.getBoundingClientRect();
+    const initialCameraAspect = Math.max(1, Math.round(initialCanvasBounds.width))
+      / Math.max(1, Math.round(initialCanvasBounds.height));
+    const camera = new THREE.PerspectiveCamera(42, initialCameraAspect, 0.1, 210);
     camera.zoom = isIsland40Placeholder ? 0.9 : isMoonveilNexus ? 1.2 : isAbyssalPearlKingdom ? 1.12 : isCactusCanyon ? 1.06 : isHoneycombKingdom ? 1.16 : isJungleExpedition ? 0.98 : isLavaLabyrinth ? 1.2 : isFirstLightKingdom ? 1.03 : 1;
     camera.updateProjectionMatrix();
     const overview = getIsland5CameraPreset('overview');
@@ -5672,7 +5690,7 @@ export default function Island5ThreePilot({
             : isEverblossomKingdom && island8EverblossomMaterials
               ? createIsland8EverblossomLivingAmbience(scene, qualityProfile, island8EverblossomMaterials, water)
             : isHeartshaftCrucible && island9HeartshaftMaterials
-              ? createIsland9HeartshaftLivingAmbience(scene, qualityProfile, island9HeartshaftMaterials, water)
+              ? createIsland9ReleasedAmbience(scene, qualityProfile, island9HeartshaftMaterials, water)
             : isRootheartCanopyCity && island10RootheartMaterials
               ? createIsland10RootheartLivingAmbience(scene, qualityProfile, island10RootheartMaterials, water)
             : isSunkenSands && island12SunkenSandsMaterials
@@ -5778,7 +5796,9 @@ export default function Island5ThreePilot({
         : stagedRestorationPresentationRef.current ?? null
     );
     const stagedRestorationInitial = resolveStagedRestorationPresentation();
-    const stagedRestorationRuntime = stagedRestorationInitial?.islandNumber === 17
+    const stagedRestorationRuntime = stagedRestorationInitial?.islandNumber === 9
+      ? createIsland9StarBeneathPresentation(scene, qualityProfile.id)
+      : stagedRestorationInitial?.islandNumber === 17
       && livingAmbience.updateStagedRestoration && livingAmbience.missionHitTarget
       ? {
           root: livingAmbience.root,
@@ -5809,6 +5829,7 @@ export default function Island5ThreePilot({
         completed: stagedRestorationInitial.activatedStages >= stagedRestorationInitial.stageCount,
       }, jungleZenithPreviewEnabled || jungleMissionPreviewStage !== null);
     }
+    let heartshaftMissionLifecycleDirty = isHeartshaftCrucible;
     let stagedRestorationPresentationKey = stagedRestorationInitial
       ? `${stagedRestorationInitial.titanAwakening?.revision ?? 0}:${stagedRestorationInitial.activatedStages}:${stagedRestorationInitial.constructionSequence ?? 0}:${(stagedRestorationInitial.claimedPickupTileIndices ?? []).join(',')}`
       : '';
@@ -6482,12 +6503,13 @@ export default function Island5ThreePilot({
                     { constructionPreview },
                   )
               : isHeartshaftCrucible && island9HeartshaftMaterials
-                ? buildIsland9HeartshaftLandmark(
+                ? buildIsland9ReleasedLandmark(
                     landmark,
                     resolvedBuildLevel,
                     qualityProfile.id,
                     island9HeartshaftMaterials,
                     { constructionPreview },
+                    livingAmbience.root,
                   )
               : isRootheartCanopyCity && island10RootheartMaterials
                 ? buildIsland10RootheartLandmark(
@@ -9417,6 +9439,16 @@ export default function Island5ThreePilot({
       const previousAspect = camera.aspect;
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+      const resizedConstruction = constructionPresentationRef.current;
+      const resizedConstructionPreset = resizedConstruction?.targetStopId === 'mystery'
+        ? 'event' : resizedConstruction?.targetStopId;
+      const hasCandidatePreview = constructionPreviewRoot?.children.some(child => child.userData.candidateConstructionPreview);
+      if (hasCandidatePreview && resizedConstruction?.active && resizedConstructionPreset
+        && Math.abs(previousAspect - camera.aspect) > .001 && !cameraAuthoringEnabledRef.current
+        && activeInspectionPreset !== 'manual'
+        && ISLAND_5_CAMERA_PRESETS.some(preset => preset.id === resizedConstructionPreset)) {
+        applyPreset(resizedConstructionPreset as Island5CameraPresetId, 1, true);
+      }
       if (isAssemblyCraterFirstLight && Math.abs(previousAspect - camera.aspect) > .001 && !activeTour && !cameraAuthoringEnabledRef.current && activeInspectionPreset !== 'manual' && ['boss','hatchery','habit','wisdom','event'].includes(activeInspectionPreset)) {
         applyPreset(activeInspectionPreset, 1, true);
       }
@@ -9766,6 +9798,7 @@ export default function Island5ThreePilot({
         if (nextKey !== stagedRestorationPresentationKey) {
           stagedRestorationPresentationKey = nextKey;
           stagedRestorationRuntime.update(nextPresentation, isReducedMotion);
+          if (isHeartshaftCrucible) heartshaftMissionLifecycleDirty = true;
           tileRewardObjects.setStagedRestorationClaimedTiles(nextPresentation.claimedPickupTileIndices ?? []);
           if (isCoasterCarnival && island19CircuitFWorld && nextPresentation.islandNumber === 19) {
             island19CircuitFWorld.setCoasterBuildStage(
@@ -9799,6 +9832,9 @@ export default function Island5ThreePilot({
           }
           island19Helicopter.animate(elapsed, Boolean(nextPresentation.coasterSectionReady), isReducedMotion);
           canvas.dataset.island19HelicopterFlying = String(island19Helicopter.isFlying());
+        }
+        if (import.meta.env.DEV && isHeartshaftCrucible) {
+          canvas.dataset.starBeneathPose = JSON.stringify(stagedRestorationRuntime.root.userData.starBeneathPose ?? null);
         }
         if (isJungleExpedition) {
           const requestedSequence = Math.max(0, Math.floor(nextPresentation.constructionSequence ?? 0));
@@ -11250,7 +11286,7 @@ export default function Island5ThreePilot({
       livingAmbience.setSignatureMissionCinematicActive?.(Boolean(signatureMissionCameraPose));
       // Report actual camera/animation ownership, never a guessed UI duration.
       // Do not count a persistent inspection camera as an active cinematic.
-      const missionPresentationActive = Boolean(cactusCanyonBlastCameraPose
+      const missionPresentationActive = missionRendererAvailable && Boolean(cactusCanyonBlastCameraPose
         || jungleBuildupCameraPose || jungleZenithCameraPose || marinaArrivalCameraPose
         || activeWonderRide || activeTrainRide
         || stagedRestorationRuntime?.root.userData.missionPresentationActive
@@ -11261,7 +11297,8 @@ export default function Island5ThreePilot({
           && Math.max(0, fishermansFishingPresentationRef.current.previewElapsedSeconds ?? 0) < FISHERMANS_DRAGON_CINEMATIC_SECONDS)
         || (isRootheartCanopyCity && Number.isFinite(rootheartConstructionStartedAtMs)
           && now - rootheartConstructionStartedAtMs < (rootheartPowerworksPresentationRef.current.buildStage >= 3 ? 5200 : 3200)));
-      if (missionPresentationActive !== missionPresentationActiveRef.current) {
+      if (heartshaftMissionLifecycleDirty || missionPresentationActive !== missionPresentationActiveRef.current) {
+        heartshaftMissionLifecycleDirty = false;
         missionPresentationActiveRef.current = missionPresentationActive;
         missionPresentationCallbackRef.current?.(missionPresentationActive);
       }
@@ -12294,6 +12331,7 @@ export default function Island5ThreePilot({
       stormfrontStructureFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
       landmarkFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
       livingAmbience.root.userData.disposeAwakening?.();
+      if (isHeartshaftCrucible) stagedRestorationRuntime?.root.userData.dispose?.();
       tileRewardObjects.disposeFragments();
       island001AtmosphereRuntime?.dispose();
       pawnTileTrail.dispose();

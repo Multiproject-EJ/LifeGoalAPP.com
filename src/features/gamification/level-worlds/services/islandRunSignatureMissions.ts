@@ -132,6 +132,22 @@ export interface StagedRestorationMissionDescriptor {
   preferredPickupFractions: readonly number[];
 }
 
+/** Presentation descriptors only: the existing ignition-chain ledger owns all progress. */
+export const HEARTSHAFT_STAR_STAGES = Object.freeze([
+  { name: 'Wake the Listening Pylons', hint: 'One Ignition Core wakes the pylons. Amber pulses trace the buried star’s heartbeat.' },
+  { name: 'Seal the Basalt Veins', hint: 'One Ignition Core steadies the fractured walls. Blue light threads the living stone.' },
+  { name: 'Balance the Counterweights', hint: 'One Ignition Core lifts the ancient counterweights and steadies the curved crane.' },
+  { name: 'Thread the Gravity Loom', hint: 'One Ignition Core draws luminous tethers between the suspension anchors.' },
+  { name: 'Align the Corona Mirrors', hint: 'One Ignition Core turns the ring’s petals inward to catch the first white light.' },
+  { name: 'Open the Stellar Iris', hint: 'One Ignition Core opens the containment iris, revealing the star below.' },
+  { name: 'Lift the Dawn Ring', hint: 'One Ignition Core raises the suspended ring. Gold gathers along its crown.' },
+  { name: 'Unfold the Star', hint: 'The final Ignition Core releases a blue-white star and a golden constellation above the caldera.' },
+] as const);
+
+export function getHeartshaftStarStage(activatedStages: number) {
+  return HEARTSHAFT_STAR_STAGES[Math.max(0, Math.min(7, Math.floor(activatedStages)))];
+}
+
 export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorationMissionDescriptor>> = Object.freeze({
   17: {
     islandNumber: 17, missionId: 'rebuild-the-titans-spine', pickupKind: 'titan_soul_bolt',
@@ -165,7 +181,7 @@ export const STAGED_RESTORATION_MISSIONS: Readonly<Record<number, StagedRestorat
   },
   9: {
     islandNumber: 9, missionId: 'ignition-chain', pickupKind: 'ignition_core',
-    pickupLabel: 'Ignition Core', actionLabel: 'Fire Next Mechanism', stageLabel: 'Systems Ignited',
+    pickupLabel: 'Ignition Core', actionLabel: 'Restore Containment', stageLabel: 'Containment Systems',
     stageCount: 8, chargeCostPerStage: 1,
     preferredPickupFractions: [0 / 36, 3 / 36, 8 / 36, 11 / 36, 18 / 36, 20 / 36, 26 / 36, 29 / 36],
   },
