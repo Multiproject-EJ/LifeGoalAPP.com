@@ -195,7 +195,7 @@ export function resolveIslandRunCreatureArenaBattleAction(options: {
       : false;
     const rewardEgg = candidateEgg && !rewardAlreadyBanked ? candidateEgg : null;
     const standardBossReward = wonNow && !bossWasAlreadyResolved
-      ? getIslandRunBossReward(options.islandNumber)
+      ? getIslandRunBossReward(options.islandNumber, { cycleIndex: current.cycleIndex })
       : null;
     const next: IslandRunGameStateRecord = {
       ...current,

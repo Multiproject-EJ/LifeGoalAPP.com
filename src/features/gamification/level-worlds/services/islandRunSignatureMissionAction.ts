@@ -485,7 +485,7 @@ export function detonateFirstLightAssemblyCharge(options: {
     };
     const completesMission = completedAtMs !== null;
     const finaleReward = completesMission && state.bossTrialResolvedIslandNumber !== FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER
-      ? getIslandRunBossReward(FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER)
+      ? getIslandRunBossReward(FIRST_LIGHT_ASSEMBLY_ISLAND_NUMBER, { cycleIndex: state.cycleIndex })
       : null;
     // Island 001 has no separate Boss landmark. Completing the Assembly mission
     // fulfils the canonical fifth-stop compatibility slot so every downstream

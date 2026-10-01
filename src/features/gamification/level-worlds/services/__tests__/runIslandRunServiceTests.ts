@@ -27,6 +27,7 @@ import { skyHangarArenaSyncTests } from './skyHangarArenaSync.test';
 import { devMenuAutoCollapseTests } from './devMenuAutoCollapse.test';
 import { puzzleCollectionTests } from './puzzleCollection.test';
 import { islandTravelInterludeTests } from './islandTravelInterlude.test';
+import { islandRunDriftVoyageTests } from './islandRunDriftVoyage.test';
 import { missionPickupLandingAuditTests } from './missionPickupLandingAudit.test';
 import { island8BaselineActionTests, island8BaselineCheckTests } from './island8BaselineCheck.test';
 import { diceRegenJourneyTests } from './diceRegenJourney.test';
@@ -369,6 +370,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'devMenuAutoCollapse', tests: devMenuAutoCollapseTests },
   { label: 'puzzleCollection', tests: puzzleCollectionTests },
   { label: 'islandTravelInterlude', tests: islandTravelInterludeTests },
+  { label: 'islandRunDriftVoyage', tests: islandRunDriftVoyageTests },
   { label: 'missionPickupLandingAudit', tests: missionPickupLandingAuditTests },
   { label: 'island8BaselineCheck', tests: island8BaselineCheckTests },
   { label: 'island8BaselineAction', tests: island8BaselineActionTests },

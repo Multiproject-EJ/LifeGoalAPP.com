@@ -243,8 +243,12 @@ import { resolveTreasureIslandWealth } from '../services/islandRunTreasures';
 import { resolveLandmarkFlag } from '../services/landmarkFlags';
 import { shouldContinueBuildHoldThroughLevel } from '../services/islandRunBuildHoldContinuity';
 import { ISLAND_AFFIRMATION_VISIBLE_MS, getIslandAffirmationVisitKey, resolveIslandAffirmation } from '../services/islandAffirmations';
+import { getDriftVoyageIntroSeenKey, resolveDriftCurrent, resolveDriftVoyageIntro } from '../services/islandRunDriftVoyage';
+import { DriftVoyageIntroModal } from './DriftVoyageIntroModal';
 
 const ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY = 'islandRun.affirmationsSeen.v1';
+/** The banner stays a little longer when it also names the drift current. */
+const DRIFT_AFFIRMATION_EXTRA_MS = 1_800;
 const TRAFFIC_LIGHT_INTRO_SEEN_STORAGE_KEY = 'islandRun.trafficLightIntroSeen.v1';
 
 /** Dev preview only: put the Traffic Light on its tile even on a beginner save. */
@@ -2204,6 +2208,9 @@ export function IslandRunBoardPrototype({
   const [controllerLandedIslandNumber, setControllerLandedIslandNumber] = useState<number | null>(null);
   // Island-start affirmation, once per island visit (per-viewer UI memory).
   const [islandAffirmation, setIslandAffirmation] = useState<{ visitKey: string; text: string } | null>(null);
+  // Drift Voyage (post-120) intro, once per voyage (per-viewer UI memory).
+  const [driftVoyageIntroCycle, setDriftVoyageIntroCycle] = useState<number | null>(null);
+  const driftVoyageIntroShownRef = useRef<Set<number>>(new Set());
   // One-time Traffic Light introduction (its own island, Island 003).
   const [showTrafficLightIntro, setShowTrafficLightIntro] = useState(false);
   // Dev island jump intro sequence (arrival + mission briefing) that the
@@ -2922,6 +2929,8 @@ export function IslandRunBoardPrototype({
   // Effective island number for all cost/earn scaling: (cycleIndex × 120 + islandNumber).
   // Island 1 on cycle 1 becomes effective island 121, giving cycle-over-cycle cost escalation.
   const effectiveIslandNumber = cycleIndex * 120 + islandNumber;
+  // Drift Voyage (cycle 1+): this island's current and its clear bonus.
+  const driftCurrent = resolveDriftCurrent(cycleIndex, islandNumber);
   const boardProfileExposureTrackedRef = useRef(false);
   const hasPresentedEntryAudioModalRef = useRef(false);
 
@@ -7888,7 +7897,7 @@ export function IslandRunBoardPrototype({
     if (showIslandClearCelebration && islandClearStats?.islandNumber === islandNumber) return;
     islandClearCelebrationShownForVisitRef.current = islandClearVisitKey;
     const existingStats = islandClearStats?.islandNumber === islandNumber ? islandClearStats : null;
-    const bossReward = getBossReward(islandNumber);
+    const bossReward = getBossReward(islandNumber, { cycleIndex });
     logGameSession(session.user.id, {
       gameId: 'shooter_blitz',
       action: 'complete',
@@ -7912,7 +7921,7 @@ export function IslandRunBoardPrototype({
       });
     }
     setShowIslandClearCelebration(true);
-  }, [islandClearStats, islandClearVisitKey, islandNumber, session, showIslandClearCelebration, isActivatingStagedRestoration]);
+  }, [cycleIndex, islandClearStats, islandClearVisitKey, islandNumber, session, showIslandClearCelebration, isActivatingStagedRestoration]);
 
   useEffect(() => {
     if (
@@ -10830,7 +10839,7 @@ export function IslandRunBoardPrototype({
       return;
     }
 
-    const bossReward = getBossReward(islandNumber);
+    const bossReward = getBossReward(islandNumber, { cycleIndex });
 
     const resolution = applyBossTrialResolutionReward({
       session,
@@ -12895,7 +12904,7 @@ export function IslandRunBoardPrototype({
     }
 
     if (activeStopId === 'boss') {
-      const bossReward = getBossReward(islandNumber);
+      const bossReward = getBossReward(islandNumber, { cycleIndex });
       setLandingText('Boss stop complete! Island clear. Next island unlocked.');
       updateCompletedStopsWithSync((current) => ensureStopCompleted(current, 'boss'), { triggerSource: 'stop_objective_complete' });
       awardShards('boss_defeat');
@@ -14894,8 +14903,22 @@ export function IslandRunBoardPrototype({
     const timer = window.setTimeout(() => setControllerLandedIslandNumber(islandNumber), MISSION_MESSAGE_CONTROLLER_LANDING_FALLBACK_MS);
     return () => window.clearTimeout(timer);
   }, [controllerLandedIslandNumber, hideControllerForPresentation, islandNumber]);
+  // A new Drift Voyage is announced once, when you land back on Island 1.
+  useEffect(() => {
+    if (islandNumber !== 1 || !resolveDriftVoyageIntro(cycleIndex) || driftVoyageIntroCycle !== null) return;
+    if (driftVoyageIntroShownRef.current.has(cycleIndex)) return;
+    if (controllerLandedIslandNumber !== islandNumber || hideControllerForPresentation || doesModalOwnAttention) return;
+    const seenKey = getDriftVoyageIntroSeenKey(cycleIndex);
+    try {
+      if (window.localStorage.getItem(seenKey) === '1') return;
+      window.localStorage.setItem(seenKey, '1');
+    } catch { /* storage unavailable: still show it this once */ }
+    driftVoyageIntroShownRef.current.add(cycleIndex);
+    setDriftVoyageIntroCycle(cycleIndex);
+  }, [controllerLandedIslandNumber, cycleIndex, doesModalOwnAttention, driftVoyageIntroCycle, hideControllerForPresentation, islandNumber]);
   // A positive affirmation greets each island once the controller has landed.
   useEffect(() => {
+    if (driftVoyageIntroCycle !== null) return;
     if (controllerLandedIslandNumber !== islandNumber || hideControllerForPresentation || doesModalOwnAttention) return;
     const visitKey = getIslandAffirmationVisitKey(islandNumber, cycleIndex);
     let seen: string[] = [];
@@ -14904,7 +14927,7 @@ export function IslandRunBoardPrototype({
     if (seen.includes(visitKey) || islandAffirmation?.visitKey === visitKey) return;
     try { window.localStorage.setItem(ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY, JSON.stringify([...seen, visitKey].slice(-60))); } catch { /* storage unavailable */ }
     setIslandAffirmation({ visitKey, text: resolveIslandAffirmation(islandNumber, cycleIndex) });
-  }, [controllerLandedIslandNumber, cycleIndex, doesModalOwnAttention, hideControllerForPresentation, islandAffirmation?.visitKey, islandNumber]);
+  }, [controllerLandedIslandNumber, cycleIndex, doesModalOwnAttention, driftVoyageIntroCycle, hideControllerForPresentation, islandAffirmation?.visitKey, islandNumber]);
   useEffect(() => {
     if (!featureAccess.trafficLight || islandAffirmation || showTrafficLightIntro) return;
     if (controllerLandedIslandNumber !== islandNumber || hideControllerForPresentation || doesModalOwnAttention) return;
@@ -14916,15 +14939,15 @@ export function IslandRunBoardPrototype({
   }, [controllerLandedIslandNumber, doesModalOwnAttention, featureAccess.trafficLight, hideControllerForPresentation, islandAffirmation, islandNumber, showTrafficLightIntro]);
   useEffect(() => {
     if (!islandAffirmation) return undefined;
-    const timer = window.setTimeout(() => setIslandAffirmation(null), ISLAND_AFFIRMATION_VISIBLE_MS);
+    const timer = window.setTimeout(() => setIslandAffirmation(null), ISLAND_AFFIRMATION_VISIBLE_MS + (driftCurrent ? DRIFT_AFFIRMATION_EXTRA_MS : 0));
     return () => window.clearTimeout(timer);
-  }, [islandAffirmation]);
+  }, [driftCurrent, islandAffirmation]);
   useEffect(() => {
     if (!pendingMissionBriefing || !shouldDeliverMissionMessage({
       islandNumber: pendingMissionBriefing.islandNumber,
       controllerLandedIslandNumber,
       controllerHidden: hideControllerForPresentation,
-      screenBusy: doesModalOwnAttention || Boolean(queuedSignatureMissionPresentation) || isRolling || Boolean(pendingHopSequence) || islandAffirmation !== null || showTrafficLightIntro,
+      screenBusy: doesModalOwnAttention || Boolean(queuedSignatureMissionPresentation) || isRolling || Boolean(pendingHopSequence) || islandAffirmation !== null || showTrafficLightIntro || driftVoyageIntroCycle !== null,
     })) return undefined;
     const timer = window.setTimeout(() => {
       setIncomingMissionBriefing(pendingMissionBriefing);
@@ -14932,7 +14955,7 @@ export function IslandRunBoardPrototype({
       setPendingMissionBriefing(null);
     }, MISSION_MESSAGE_AFTER_LANDING_MS);
     return () => window.clearTimeout(timer);
-  }, [controllerLandedIslandNumber, doesModalOwnAttention, hideControllerForPresentation, islandAffirmation, showTrafficLightIntro, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
+  }, [controllerLandedIslandNumber, doesModalOwnAttention, hideControllerForPresentation, islandAffirmation, showTrafficLightIntro, driftVoyageIntroCycle, pendingMissionBriefing, queuedSignatureMissionPresentation, isRolling, pendingHopSequence]);
   // Ring and shake as the message lands, then again every 30 s until read.
   useEffect(() => {
     if (!incomingMissionBriefing) return undefined;
@@ -17395,7 +17418,7 @@ export function IslandRunBoardPrototype({
                     onClick={() => {
                       // Presentation-only replay: nothing is granted, and
                       // Travel checks real completion before leaving.
-                      const reward = getBossReward(islandNumber);
+                      const reward = getBossReward(islandNumber, { cycleIndex });
                       setIsIslandClearRewardClaimed(false);
                       setIslandClearStats({
                         islandNumber,
@@ -19395,7 +19418,7 @@ export function IslandRunBoardPrototype({
             {activeStop.stopId === 'boss' && openedStopIsPlayable ? (
               (() => {
                 const bossConfig = getBossTrialConfig(islandNumber);
-                const bossReward = getBossReward(islandNumber);
+                const bossReward = getBossReward(islandNumber, { cycleIndex });
                 const typeColor = getBossTypeColor(bossConfig.type as BossType);
                 const rhythmBossPreview = resolveBossRhythmStopMinigame({ kind: 'fixed_boss', islandNumber });
                 const rhythmEntryAffordable = rhythmBossPreview !== null && spinTokens >= rhythmBossPreview.entryTicketCost;
@@ -20525,6 +20548,11 @@ export function IslandRunBoardPrototype({
                   <span aria-hidden="true">{revisitIslands[String(islandClearStats.islandNumber)] ? '❤️' : '🤍'}</span>
                   {revisitIslands[String(islandClearStats.islandNumber)] ? "Noted — you'd love to revisit" : "I'd like to revisit this island"}
                 </button>
+                {resolveDriftCurrent(cycleIndex, islandClearStats.islandNumber) ? (
+                  <p className="island-clear-celebration__drift">
+                    {resolveDriftCurrent(cycleIndex, islandClearStats.islandNumber)!.icon} {resolveDriftCurrent(cycleIndex, islandClearStats.islandNumber)!.title} bonus included
+                  </p>
+                ) : null}
                 {isIslandClearRewardClaimed ? (
                   <p className="island-clear-celebration__rewards-collected">✅ Rewards Collected</p>
                 ) : (
@@ -21964,10 +21992,18 @@ export function IslandRunBoardPrototype({
         />
       ) : null}
       {islandAffirmation && !doesModalOwnAttention ? createPortal(
-        <div key={islandAffirmation.visitKey} className="island-run-affirmation" role="status" aria-live="polite">
+        <div key={islandAffirmation.visitKey} className={`island-run-affirmation${driftCurrent ? ' island-run-affirmation--drift' : ''}`} role="status" aria-live="polite">
           <span className="island-run-affirmation__spark" aria-hidden="true">✦</span>
-          <p>{islandAffirmation.text}</p>
+          <div>
+            <p>{islandAffirmation.text}</p>
+            {driftCurrent ? (
+              <p className="island-run-affirmation__drift">{driftCurrent.icon} Drift current: <strong>{driftCurrent.title}</strong>. {driftCurrent.blurb}</p>
+            ) : null}
+          </div>
         </div>, document.body) : null}
+      {driftVoyageIntroCycle !== null && resolveDriftVoyageIntro(driftVoyageIntroCycle) ? (
+        <DriftVoyageIntroModal intro={resolveDriftVoyageIntro(driftVoyageIntroCycle)!} onClose={() => setDriftVoyageIntroCycle(null)} />
+      ) : null}
       {showTrafficLightIntro && !doesModalOwnAttention ? createPortal(
         <div className="island-run-traffic-intro" role="dialog" aria-modal="false" aria-labelledby="island-run-traffic-intro-title">
           <span className="island-run-traffic-intro__lamps" aria-hidden="true">🚦</span>

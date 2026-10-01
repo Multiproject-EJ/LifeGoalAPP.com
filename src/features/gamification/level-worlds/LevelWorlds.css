@@ -29572,3 +29572,23 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 @media (prefers-reduced-motion: reduce) {
   .island8-wizard__bubble, .island8-wizard__beacons span.is-next { animation: none; }
 }
+.island-run-affirmation--drift {
+  animation-duration: 6s;
+}
+.island-run-affirmation__drift {
+  margin-top: 6px !important;
+  font-size: 0.82rem !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  color: #7a4a06;
+}
+.island-clear-celebration__drift {
+  margin: 4px auto 0;
+  padding: 4px 12px;
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(255, 213, 128, 0.22);
+  color: #ffe7b0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
