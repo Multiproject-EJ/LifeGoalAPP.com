@@ -196,7 +196,8 @@ function drawButton(b,t){
   c.shadowBlur=0;c.shadowOffsetY=0;b.tex.needsUpdate=true;return;
  }
  const remaining=Math.floor(state.dice/state.multiplier);
- c.font='800 94px system-ui';c.fillText(String(remaining),310,118);c.font='600 42px system-ui';c.fillText('ROLLS LEFT',500,116);
+ // Lay the count and label out as one centred pair so 3+ digit counts never run into the label.
+ {const align=c.textAlign;c.textAlign='left';c.font='800 94px system-ui';const countText=String(remaining);const countW=c.measureText(countText).width;c.font='600 42px system-ui';const labelW=c.measureText('ROLLS LEFT').width;const gap=26;const x0=512-(countW+gap+labelW)/2;c.font='800 94px system-ui';c.fillText(countText,x0,118);c.font='600 42px system-ui';c.fillText('ROLLS LEFT',x0+countW+gap,116);c.textAlign=align;}
  
  const cue=diceCue(state);
  let title=autoRoll.running?'AUTO ROLL':cue.title,sub=autoRoll.running?'Release to stop':cue.detail;
