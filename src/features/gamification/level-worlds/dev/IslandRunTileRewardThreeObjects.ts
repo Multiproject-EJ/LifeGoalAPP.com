@@ -13,6 +13,8 @@ export interface IslandRunTileRewardThreeRuntime {
   setTechnologyFragments: (fragments: readonly VisibleTechnologyFragment[]) => void;
   setTrafficLightCharge: (charge: number) => void;
   setCactusCanyonMissionStarted: (started: boolean) => void;
+  /** Hide staged-restoration pickups while landing cannot collect them yet. */
+  setStagedPickupsHidden: (hidden: boolean) => void;
   /**
    * Pops the Island 006 rod stations in, one after another, when the fishing
    * mission has just started (wall-clock ms, or null for no animation).
@@ -844,6 +846,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
   let trafficLitCount = -1;
   let trafficLampPopAt = new Map<number, number>();
   let cactusCanyonMissionStarted = true;
+  let stagedPickupsHidden = false;
   let fishermansRodsRevealedAtMs: number | null = null;
   // Reveal order: each rod pops shortly after the previous one.
   const fishermansRodOrder = new Map(
@@ -925,7 +928,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
         || entry.signatureMissionKind === 'heatshield_plate'
         || entry.signatureMissionKind === 'golden_ride_ticket'
         || entry.signatureMissionKind === 'titan_soul_bolt')
-        && stagedRestorationClaimedTiles.has(entry.tileIndex)) {
+        && (stagedPickupsHidden || stagedRestorationClaimedTiles.has(entry.tileIndex))) {
         entry.root.visible = false;
         return;
       }
@@ -968,6 +971,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
     disposeFragments: () => { for(const sprite of fragmentSprites.values()){sprite.material.map?.dispose();sprite.material.dispose();root.remove(sprite);}fragmentSprites.clear(); },
     setTrafficLightCharge: (charge) => { trafficCharge=charge; },
     setCactusCanyonMissionStarted: (started) => { cactusCanyonMissionStarted = started; },
+    setStagedPickupsHidden: (hidden) => { stagedPickupsHidden = hidden; },
     setFishermansRodsRevealedAtMs: (revealedAtMs) => { fishermansRodsRevealedAtMs = revealedAtMs; },
     setFirstLightClaimedDynamiteTiles: (tileIndices) => {
       firstLightClaimedDynamiteTiles = new Set(tileIndices);

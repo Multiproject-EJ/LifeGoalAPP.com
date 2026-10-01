@@ -214,7 +214,7 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 001 first replay roll secures one crossed Assembly cache when the final tile is not dynamite',
+    name: 'Island 001: passing over a dynamite cache collects nothing; only landing on it does',
     run: async () => {
       resetEnvironment();
       seedState({
@@ -229,15 +229,13 @@ export const islandRunRollActionTests: TestCase[] = [
         session: makeSession(), client: null, diceMultiplier: 1,
       }));
       assertEqual(result.newTokenIndex, 4, 'two twos finish on the non-cache tile 4');
-      assertEqual(result.firstLightAssemblyDynamiteCollected, 1, 'the first roll secures one reached route cache');
-      assertEqual(result.firstLightAssemblyDynamiteCollectionKind, 'route_pass', 'the renderer can explain the en-route pickup');
+      assertEqual(result.firstLightAssemblyDynamiteCollected, 0, 'crossing cache tile 1 does not collect it');
       const progress = resolveFirstLightAssemblyCraterProgress({
         ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
         islandNumber: 1,
         cycleIndex: 0,
       });
-      assertEqual(progress.claimedDynamiteTileIndices.length, 1, 'the route pickup commits atomically with movement');
-      assertEqual(progress.claimedDynamiteTileIndices[0], 1, 'only the first crossed cache is consumed');
+      assertEqual(progress.claimedDynamiteTileIndices.length, 0, 'no cache claimed by a pass');
     },
   },
   {

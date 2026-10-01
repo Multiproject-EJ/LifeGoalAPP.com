@@ -17965,6 +17965,9 @@ export function IslandRunBoardPrototype({
                   titanAwakening: stagedRestorationProgress?.titanAwakening,
                   titanInspectionOpen: showTitanAwakening,
                   claimedPickupTileIndices: stagedRestorationProgress?.claimedPickupTileIndices ?? [],
+                  // Island 020's plates only count once the Iron Skiff mission has launched.
+                  pickupsCollectible: isIslandVisualPreview || stagedRestorationVisualDescriptor.islandNumber !== 20
+                    || stagedRestorationProgress?.startedAtMs != null,
                   coasterDeliverySequence,
                   coasterSectionReady: Boolean(coasterOrder?.sectionReady),
                 } : undefined}

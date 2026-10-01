@@ -493,10 +493,9 @@ export const islandRunSignatureMissionTests: TestCase[] = [
         islandNumber: 1,
         cycleIndex: 0,
       });
-      assertEqual(routePass.dynamiteCollected, 1, 'crossing the route starts the mission without exact-land RNG');
-      assertEqual(routePass.collectionKind, 'route_pass', 'crossed cache reports the route-pass presentation');
-      assertEqual(routePass.collectedTileIndex, 1, 'the first unclaimed crossed cache is secured');
-      assertEqual(routeProgress.claimedDynamiteTileIndices.length, 1, 'a roll can secure at most one cache');
+      assertEqual(routePass.dynamiteCollected, 0, 'crossing a cache does not collect it (landing only)');
+      assertEqual(routePass.collectionKind, null, 'no route-pass collection');
+      assertEqual(routeProgress.claimedDynamiteTileIndices.length, 0, 'nothing claimed by passing');
 
       const landingPriority = collectFirstLightAssemblyDynamiteForRoute({
         ledger: {},
@@ -1200,7 +1199,9 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     name: 'staged restoration routes are unique, collision-free, and correctly sized on every authored island',
     run: () => {
       // Island 019 sells its coaster through the Director; see coasterDirector tests.
-      [4, 7, 8, 9, 16, 17, 18, 20].forEach((islandNumber) => {
+      // Island 008's seals are lit by the masked caretaker's questions (no pickups).
+      assertEqual(getStagedRestorationPickupTileIndices(8, 36).length, 0, 'Island 008 scatters no Wayfinder Glyphs');
+      [4, 7, 9, 16, 17, 18, 20].forEach((islandNumber) => {
         const descriptor = getStagedRestorationMissionDescriptor(islandNumber);
         assert(Boolean(descriptor), `Island ${islandNumber} has a staged mission descriptor`);
         if (!descriptor) return;
@@ -1324,12 +1325,15 @@ export const islandRunSignatureMissionTests: TestCase[] = [
         ledger: landing.ledger, islandNumber: 20, cycleIndex: 0,
         landingTileIndex: 3, routeTileIndices: [pickupTiles[0], 3], tileCount: 36, nowMs: 20,
       });
-      assertEqual(routePass.pickupCollected, 1, 'a route pass secures one unclaimed Heatshield Plate');
-      assertEqual(routePass.collectedTileIndex, pickupTiles[0], 'the first unclaimed crossed pickup is collected');
-      assertEqual(routePass.collectionKind, 'route_pass', 'route-pity source remains explicit');
+      assertEqual(routePass.pickupCollected, 0, 'passing over a Heatshield Plate does not collect it');
+      const landedSecond = collectStagedRestorationPickupForRoute({
+        ledger: routePass.ledger, islandNumber: 20, cycleIndex: 0,
+        landingTileIndex: pickupTiles[0], routeTileIndices: [pickupTiles[0]], tileCount: 36, nowMs: 25,
+      });
+      assertEqual(landedSecond.pickupCollected, 1, 'landing on it does');
 
       const duplicate = collectStagedRestorationPickupForRoute({
-        ledger: routePass.ledger, islandNumber: 20, cycleIndex: 0,
+        ledger: landedSecond.ledger, islandNumber: 20, cycleIndex: 0,
         landingTileIndex: pickupTiles[0], routeTileIndices: [pickupTiles[0]], tileCount: 36, nowMs: 30,
       });
       const progress = resolveStagedRestorationMissionProgress({ ledger: duplicate.ledger, islandNumber: 20, cycleIndex: 0 });
@@ -1436,17 +1440,21 @@ export const islandRunSignatureMissionTests: TestCase[] = [
     },
   },
   {
-    name: 'staged restoration route pity collects one object and cannot claim it twice',
+    name: 'staged restoration pickups: passing collects nothing, landing collects once',
     run: () => {
       const pickupTiles = getStagedRestorationPickupTileIndices(4, 36);
       const first = collectStagedRestorationPickupForRoute({
         ledger: {}, islandNumber: 4, cycleIndex: 0,
         landingTileIndex: 2, routeTileIndices: [0, pickupTiles[0], 2], tileCount: 36, nowMs: 10,
       });
-      assertEqual(first.pickupCollected, 1, 'route pass secures one pickup');
-      assertEqual(first.collectionKind, 'route_pass', 'pity source remains explicit');
-      const second = collectStagedRestorationPickupForRoute({
+      assertEqual(first.pickupCollected, 0, 'passing over a pickup does not collect it');
+      const landed = collectStagedRestorationPickupForRoute({
         ledger: first.ledger, islandNumber: 4, cycleIndex: 0,
+        landingTileIndex: pickupTiles[0], routeTileIndices: [pickupTiles[0]], tileCount: 36, nowMs: 15,
+      });
+      assertEqual(landed.pickupCollected, 1, 'landing on it collects it');
+      const second = collectStagedRestorationPickupForRoute({
+        ledger: landed.ledger, islandNumber: 4, cycleIndex: 0,
         landingTileIndex: pickupTiles[0], routeTileIndices: [pickupTiles[0]], tileCount: 36, nowMs: 20,
       });
       assertEqual(second.pickupCollected, 0, 'claimed pickup is idempotent');

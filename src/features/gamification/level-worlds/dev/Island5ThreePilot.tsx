@@ -9635,6 +9635,7 @@ export default function Island5ThreePilot({
       const elapsed = timer.getElapsed();
       tileRewardObjects.setTechnologyFragments(tilePresentationRef.current.fragments);
       tileRewardObjects.setTrafficLightCharge(tilePresentationRef.current.trafficLightCharge);
+      tileRewardObjects.setStagedPickupsHidden(stagedRestorationPresentationRef.current?.pickupsCollectible === false);
       const ceremonyPlayback = openingCeremonyPlaybackRef.current;
       const ceremonyElapsed = ceremonyPlayback ? Math.max(0, Date.now() - ceremonyPlayback.startedAtMs) : 0;
       openingCeremonyFx?.update(ceremonyPlayback ? {
