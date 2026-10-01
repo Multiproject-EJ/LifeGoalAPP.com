@@ -125,11 +125,11 @@ export const island18JungleExpeditionThreeWorldContractTests: TestCase[] = [
       const hints = new Set<string>();
       for (let stage = 0; stage < 5; stage += 1) {
         const action = getJungleMissionActionPresentation(stage, true, false);
-        assertEqual(action.label, `Awaken seal ${stage + 1} of 5`, 'the next stage is readable without a long mission title');
+        assertEqual(action.label, `Seal ${stage + 1} of 5 · answer the caretaker`, 'the next seal points at the caretaker Q&A');
         hints.add(action.hint);
       }
       assertEqual(hints.size, 5, 'all five stages describe their own payoff');
-      assertEqual(getJungleMissionActionPresentation(0, false, false).label, 'Find a Wayfinder', 'an empty inventory sends the player back to the route');
+      assertEqual(getJungleMissionActionPresentation(0, false, false).label, 'Seal 1 of 5 · answer the caretaker', 'seals no longer wait on Wayfinder pickups');
       assertEqual(getJungleMissionActionPresentation(5, false, true).label, 'Replay the awakening', 'completed replay does not require another charge');
     },
   },

@@ -26,6 +26,7 @@ import { island2StormfrontCinematicTests } from './island2StormfrontCinematic.te
 import { skyHangarArenaSyncTests } from './skyHangarArenaSync.test';
 import { devMenuAutoCollapseTests } from './devMenuAutoCollapse.test';
 import { puzzleCollectionTests } from './puzzleCollection.test';
+import { island8BaselineActionTests, island8BaselineCheckTests } from './island8BaselineCheck.test';
 import { diceRegenJourneyTests } from './diceRegenJourney.test';
 import { trafficLightIntroductionTests } from './trafficLightIntroduction.test';
 import { buildHoldContinuityTests } from './buildHoldContinuity.test';
@@ -365,6 +366,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'skyHangarArenaSync', tests: skyHangarArenaSyncTests },
   { label: 'devMenuAutoCollapse', tests: devMenuAutoCollapseTests },
   { label: 'puzzleCollection', tests: puzzleCollectionTests },
+  { label: 'island8BaselineCheck', tests: island8BaselineCheckTests },
+  { label: 'island8BaselineAction', tests: island8BaselineActionTests },
   { label: 'diceRegenJourney', tests: diceRegenJourneyTests },
   { label: 'trafficLightIntroduction', tests: trafficLightIntroductionTests },
   { label: 'buildHoldContinuity', tests: buildHoldContinuityTests },

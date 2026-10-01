@@ -885,6 +885,9 @@ import { MinigameRatingModal } from './MinigameRatingModal';
 import { MandateEggBasketOverlay } from './MandateEggBasketOverlay';
 import { OpeningArenaBuildModal } from './OpeningArenaBuildModal';
 import { PuzzleCollectionModal } from './PuzzleCollectionModal';
+import { Island8WizardBubble } from './Island8WizardBubble';
+import { ISLAND8_BASELINE_ISLAND_NUMBER, resolveIsland8BaselineProgress, resolveNextIsland8BaselineQuestion } from '../services/island8BaselineCheck';
+import { answerIsland8BaselineQuestion } from '../services/island8BaselineActions';
 import { resolvePuzzleCollectionView } from '../services/puzzleCollection';
 import { STICKER_COMPLETION_BONUS_DICE, STICKER_COMPLETION_BONUS_ESSENCE } from '../services/islandRunContractV2RewardBar';
 
@@ -3510,6 +3513,10 @@ export function IslandRunBoardPrototype({
 
   // ── Sticker album dialog ───────────────────────────────────────────────────
   const [showStickerAlbumDialog, setShowStickerAlbumDialog] = useState(false);
+  // Island 008 masked caretaker baseline check (speech bubble).
+  const [showWizardBubble, setShowWizardBubble] = useState(false);
+  const [isWizardAnswerBusy, setIsWizardAnswerBusy] = useState(false);
+  const [wizardSummonPending, setWizardSummonPending] = useState(false);
   const [showCompassLongFormDev, setShowCompassLongFormDev] = useState(false);
   // Quiet L1/L2 level-up flash while a build hold carries on to Level 3.
   const [buildHoldLevelUp, setBuildHoldLevelUp] = useState<{ title: string; level: number; diceAward: number; sequence: number } | null>(null);
@@ -3586,7 +3593,7 @@ export function IslandRunBoardPrototype({
     showHatcheryCompassModal ||
     showCompassBookReceiptModal ||
     Boolean(activePlaceholder) ||
-    showStickerAlbumDialog ||
+    showStickerAlbumDialog || showWizardBubble ||
     showSanctuaryPanel ||
     showChampionshipOpeningModal ||
     showStoryReader ||
@@ -4145,6 +4152,13 @@ export function IslandRunBoardPrototype({
       if (showReceipt) setShowCompassBookReceiptModal(true);
     }, (reducedMotion ? JUNGLE_COMPASS_REDUCED_CEREMONY_DURATION_MS : JUNGLE_COMPASS_CEREMONY_DURATION_MS) + 300);
   }, []);
+
+  // Island 008 wizard caretaker visit (live Q&A sets it; ?wizardVisitPreview=1 in preview).
+  const [wizardVisit, setWizardVisit] = useState<{ tileIndex: number; key: number } | null>(null);
+  const wizardVisitKeyRef = useRef(0);
+  const wizardVisitPreview = isIslandVisualPreview && typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('wizardVisitPreview') === '1';
+  const caretakerTileVisit = wizardVisit ?? (wizardVisitPreview ? { tileIndex: 17, key: 1 } : null);
 
   // Dev visual preview: ?trafficLightPreview=N shows the Traffic Light with N lamps lit.
   const trafficLightPreviewCharge = useMemo(() => {
@@ -14570,7 +14584,7 @@ export function IslandRunBoardPrototype({
       showWinCelebrationModal ||
       showSanctuaryPanel ||
       showShopPanel ||
-      showStickerAlbumDialog ||
+      showStickerAlbumDialog || showWizardBubble ||
       showStoryReader ||
       isIslandInhabitantFlowOpen ||
       showCreatureChannelModal ||
@@ -15747,7 +15761,10 @@ export function IslandRunBoardPrototype({
     });
   }, [client, openWinCelebrationModal, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
 
-  const handleActivateStagedRestoration = useCallback(async () => {
+  const handleActivateStagedRestoration = useCallback(async (
+    // Island 008: a caretaker baseline answer lights the seal instead of the phone.
+    activator?: () => Promise<{ status: string; activatedStages?: number; completedAtMs?: number | null }>,
+  ) => {
     if (isCompassBookCeremonyPlaying || isActivatingStagedRestoration || !stagedRestorationDescriptor || !stagedRestorationProgress) return;
     const isLivingCompass = stagedRestorationDescriptor.missionId === 'jungle-expedition-living-compass';
     setShowMissionPhoneBriefing(false);
@@ -15771,7 +15788,9 @@ export function IslandRunBoardPrototype({
     let ceremonyStarted = false;
     if (expectsBook) setIsCompassBookCeremonyPlaying(true);
     try {
-      const result = await activateStagedRestorationMissionStage({ session, client });
+      const result = (activator
+        ? await activator()
+        : await activateStagedRestorationMissionStage({ session, client })) as Awaited<ReturnType<typeof activateStagedRestorationMissionStage>>;
       if (ceremonyGeneration !== compassBookCeremonyGenerationRef.current) return;
       if (result.status !== 'ok') {
         if (result.status === 'mission_locked') {
@@ -15956,6 +15975,53 @@ export function IslandRunBoardPrototype({
       setIsOrderingCoasterSection(false);
     }
   }, [client, isOrderingCoasterSection, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
+  // ── Island 008: the masked caretaker's baseline check ────────────────────
+  // After each landing he zaps onto the tile and asks the next question; each
+  // answer lights one Living Compass seal (canonical action, mutex-protected).
+  const island8BaselineProgress = useMemo(
+    () => resolveIsland8BaselineProgress(__storeState.signatureMissionProgressByIsland, __storeState.cycleIndex),
+    [__storeState.cycleIndex, __storeState.signatureMissionProgressByIsland],
+  );
+  const island8WizardQuestion = islandNumber === ISLAND8_BASELINE_ISLAND_NUMBER
+    && !isIslandVisualPreview
+    && stagedRestorationDescriptor?.missionId === 'jungle-expedition-living-compass'
+    && stagedRestorationProgress != null
+    && stagedRestorationProgress.completedAtMs == null
+    ? resolveNextIsland8BaselineQuestion(island8BaselineProgress)
+    : null;
+  const wasRollingForWizardRef = useRef(false);
+  useEffect(() => {
+    const moving = isRolling || pendingHopSequence !== null;
+    if (wasRollingForWizardRef.current && !moving && island8WizardQuestion) setWizardSummonPending(true);
+    wasRollingForWizardRef.current = moving;
+  }, [isRolling, island8WizardQuestion, pendingHopSequence]);
+  useEffect(() => {
+    if (!wizardSummonPending || !island8WizardQuestion) return undefined;
+    if (isRolling || pendingHopSequence !== null || doesModalOwnAttention || isCompassBookCeremonyPlaying) return undefined;
+    setWizardSummonPending(false);
+    stopAutoRoll();
+    wizardVisitKeyRef.current += 1;
+    setWizardVisit({ tileIndex: runtimeStateRef.current.tokenIndex, key: wizardVisitKeyRef.current });
+    playIslandRunSound('reward_bar_claim_burst');
+    const timer = window.setTimeout(() => setShowWizardBubble(true), 1_100);
+    return () => window.clearTimeout(timer);
+  }, [doesModalOwnAttention, isCompassBookCeremonyPlaying, island8WizardQuestion, isRolling, pendingHopSequence, playIslandRunSound, stopAutoRoll, wizardSummonPending]);
+  const dismissWizard = useCallback((delayMs: number) => {
+    setShowWizardBubble(false);
+    window.setTimeout(() => setWizardVisit(null), delayMs);
+  }, []);
+  const handleWizardAnswer = useCallback(async (value: number) => {
+    if (!island8WizardQuestion || isWizardAnswerBusy) return;
+    setIsWizardAnswerBusy(true);
+    const questionId = island8WizardQuestion.id;
+    try {
+      await handleActivateStagedRestoration(() => answerIsland8BaselineQuestion({ session, client, questionId, value }));
+    } finally {
+      setIsWizardAnswerBusy(false);
+      dismissWizard(2_400);
+    }
+  }, [client, dismissWizard, handleActivateStagedRestoration, island8WizardQuestion, isWizardAnswerBusy, session]);
+
   const handleInstallCoasterSection = useCallback(() => {
     setShowCoasterDirector(false);
     void handleActivateStagedRestoration();
@@ -16031,7 +16097,7 @@ export function IslandRunBoardPrototype({
       showRewardDetailsModal ||
       showSanctuaryPanel ||
       showShopPanel ||
-      showStickerAlbumDialog ||
+      showStickerAlbumDialog || showWizardBubble ||
       showTravelOverlay ||
       bossTrialPhase !== 'idle' ||
       Boolean(dormantDoorMiniGame) ||
@@ -17740,6 +17806,7 @@ export function IslandRunBoardPrototype({
                 onStormfrontStructureClick={handleStormfrontStructureClick}
                 skyHangarBanner={skyHangarFlight ? { text: skyHangarFlight.bannerText, accent: skyHangarFlight.accent } : null}
                 skyHangarLaunchKey={skyHangarLaunchKey}
+                caretakerTileVisit={caretakerTileVisit}
                 playerPieceCheer={playerPieceCheer.key > 0 ? { key: playerPieceCheer.key, element: playerPieceCheerElement } : null}
                 openingArena={openingArenaVisual}
                 onOpeningArenaArrivalComplete={handleOpeningArenaArrivalComplete}
@@ -21807,6 +21874,16 @@ export function IslandRunBoardPrototype({
           <CompassBookLongFormDev session={session} onClose={() => setShowCompassLongFormDev(false)} />
         </Suspense>
       ) : null}
+      {showWizardBubble && island8WizardQuestion ? (
+        <Island8WizardBubble
+          question={island8WizardQuestion}
+          answeredCount={island8BaselineProgress.answers.length}
+          busy={isWizardAnswerBusy}
+          firstVisit={island8BaselineProgress.answers.length === 0}
+          onAnswer={(value) => void handleWizardAnswer(value)}
+          onLater={() => dismissWizard(600)}
+        />
+      ) : null}
       {islandAffirmation && !doesModalOwnAttention ? createPortal(
         <div key={islandAffirmation.visitKey} className="island-run-affirmation" role="status" aria-live="polite">
           <span className="island-run-affirmation__spark" aria-hidden="true">✦</span>
@@ -22249,6 +22326,9 @@ export function IslandRunBoardPrototype({
             // Island 017's spine rebuilds from collected bones, never from the phone.
             && !(stagedRestorationDescriptor.islandNumber === 17
               && (stagedRestorationProgress?.activatedStages ?? 0) < stagedRestorationDescriptor.stageCount)
+            // Island 008's seals are lit by answering the masked caretaker.
+            && !(stagedRestorationDescriptor.missionId === 'jungle-expedition-living-compass'
+              && stagedRestorationProgress?.completedAtMs == null)
           ? () => void handleActivateStagedRestoration()
           : showMissionPhoneBriefing && islandNumber === 14
           ? () => void handleActivateGreatHoneyfall()

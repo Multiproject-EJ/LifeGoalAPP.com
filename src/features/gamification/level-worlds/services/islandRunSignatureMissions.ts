@@ -6,6 +6,7 @@ import { DICE_SKINS_KEY, mergeDiceSkinProgress, sanitizeDiceSkinProgress, type D
 import { ISLAND_TREASURES_KEY, mergeIslandTreasureCollections, sanitizeIslandTreasureCollection, type IslandTreasureCollection } from './islandRunTreasures';
 import { STORMFRONT_KEY_PATTERN, mergeStormfrontProgress, sanitizeStormfrontProgress, type StormfrontProgress } from './island2Stormfront';
 import { OPENING_ARENA_KEY_PATTERN, mergeOpeningArenaProgress, sanitizeOpeningArenaProgress, type OpeningArenaProgress } from './island2OpeningArena';
+import { ISLAND8_BASELINE_KEY_PATTERN, mergeIsland8BaselineProgress, sanitizeIsland8BaselineProgress, type Island8BaselineProgress } from './island8BaselineCheck';
 import { WISDOM_DEFERRAL_KEY_PATTERN, mergeWisdomDeferral, sanitizeWisdomDeferral, type WisdomDeferral } from './wisdomDeferral';
 import { getEffectiveIslandNumber, getIslandEssenceMultiplier } from './islandRunContractV2EssenceBuild';
 import {
@@ -443,6 +444,7 @@ export type IslandRunSignatureMissionProgress =
   | StormfrontProgress
   | WisdomDeferral
   | OpeningArenaProgress
+  | Island8BaselineProgress
   | OpeningGamesCampaignMarker
   | OpeningGamesCeremonyProgress
   | MoonwellThermalProgress
@@ -523,6 +525,10 @@ export function sanitizeIslandRunSignatureMissionProgress(
     }
     if (record.missionId === 'island2-opening-arena') {
       if (OPENING_ARENA_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeOpeningArenaProgress(record);
+      return;
+    }
+    if (record.missionId === 'island8-baseline-check') {
+      if (ISLAND8_BASELINE_KEY_PATTERN.test(key) && record.version === 1) result[key] = sanitizeIsland8BaselineProgress(record);
       return;
     }
     if (record.missionId === 'wisdom-deferral') {
@@ -1784,6 +1790,10 @@ export function mergeIslandRunSignatureMissionProgress(
     }
     if (a.missionId === 'island2-opening-arena' || b.missionId === 'island2-opening-arena') {
       merged[key] = mergeOpeningArenaProgress(sanitizeOpeningArenaProgress(a), sanitizeOpeningArenaProgress(b));
+      return;
+    }
+    if (a.missionId === 'island8-baseline-check' || b.missionId === 'island8-baseline-check') {
+      merged[key] = mergeIsland8BaselineProgress(sanitizeIsland8BaselineProgress(a), sanitizeIsland8BaselineProgress(b));
       return;
     }
     if (a.missionId === 'wisdom-deferral' || b.missionId === 'wisdom-deferral') {

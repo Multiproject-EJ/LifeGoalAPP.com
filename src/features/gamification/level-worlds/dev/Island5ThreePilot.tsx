@@ -96,6 +96,7 @@ import {
   type Island5TileTransform,
 } from './island5ThreePilotContract';
 import { createCaretakerMaster, type CaretakerModel } from './CaretakerThreeModel';
+import { createWizardMask, createWizardZapEffect } from './MaskedWizardVisit';
 import { createCrownDrifterModel } from './CrownDrifterThreeModel';
 import { createIsland4OpeningPalaceModel } from './Island4OpeningPalaceThreeModel';
 import { createPalaceBalconyPlanting } from './PalaceBalconyPlanting';
@@ -491,6 +492,8 @@ interface Island5ThreePilotProps {
   tileBadgeAnchor?: { tileIndex: number; element: HTMLElement | null } | null;
   /** Bumping `key` makes the player piece jump and spin for joy; `element` rides above it. */
   playerPieceCheer?: { key: number; element: HTMLElement | null } | null;
+  /** Island 008: the masked wizard caretaker zaps onto this tile (bump key to re-zap). */
+  caretakerTileVisit?: { tileIndex: number; key: number } | null;
   /** Today's Lucky Spin waits on this tile as a 3D wheel (null hides it). */
   luckySpinTileIndex?: number | null;
   /** Tapping the 3D Lucky Spin wheel (screen point for the launch burst). */
@@ -3864,6 +3867,7 @@ export default function Island5ThreePilot({
   onTokenLand,
   tileBadgeAnchor,
   playerPieceCheer = null,
+  caretakerTileVisit = null,
   luckySpinTileIndex = null,
   onLuckySpinClick,
   onLandmarkClick,
@@ -4096,6 +4100,8 @@ export default function Island5ThreePilot({
   onCelebrationSnapshotRef.current = onCelebrationSnapshot;
   const tileBadgeAnchorRef = useRef(tileBadgeAnchor);
   const playerPieceCheerRef = useRef(playerPieceCheer);
+  const caretakerTileVisitRef = useRef(caretakerTileVisit);
+  caretakerTileVisitRef.current = caretakerTileVisit;
   playerPieceCheerRef.current = playerPieceCheer;
   tileBadgeAnchorRef.current = tileBadgeAnchor;
   const luckySpinTileIndexRef = useRef(luckySpinTileIndex);
@@ -6383,6 +6389,14 @@ export default function Island5ThreePilot({
     boardCaretaker.setAnimation('idle', 0, true);
     boardCaretaker.setEmotion('calm');
     scene.add(caretakerFootplate, caretakerContactShadow, caretakerHitTarget, boardCaretaker.root);
+    // Island 008 masked wizard: mask on the head, zap effect at the tile.
+    const wizardMask = createWizardMask();
+    wizardMask.root.visible = false;
+    boardCaretaker.rig.head.add(wizardMask.root);
+    const wizardZap = createWizardZapEffect();
+    scene.add(wizardZap.root);
+    let wizardVisitKey: number | null = null;
+    let wizardVisitStartedAt = -Infinity;
     if (!caretakerBoardAvailable) {
       caretakerHitTarget.visible = false;
       boardCaretaker.root.visible = false;
@@ -10582,6 +10596,47 @@ export default function Island5ThreePilot({
         }
       }
 
+      const wizardVisit = caretakerTileVisitRef.current;
+      const wizardVisiting = Boolean(wizardVisit && tileTransforms.length > 0 && !encounterCaretaker);
+      if (wizardVisit && wizardVisiting) {
+        if (wizardVisit.key !== wizardVisitKey) {
+          wizardVisitKey = wizardVisit.key;
+          wizardVisitStartedAt = elapsed;
+          boardCaretaker.setEmotion('curious');
+          boardCaretaker.setAnimation('greet', elapsed, true);
+        }
+        const visitTile = ((Math.floor(wizardVisit.tileIndex) % tileTransforms.length) + tileTransforms.length) % tileTransforms.length;
+        const ground = getIsland5TokenGroundPosition(tileTransforms, visitTile);
+        // Stand just inward of the tile so he never covers the player piece.
+        const inward = Math.hypot(ground[0], ground[2]) || 1;
+        const wx = ground[0] - (ground[0] / inward) * 0.55;
+        const wz = ground[2] - (ground[2] / inward) * 0.55;
+        boardCaretaker.root.visible = true;
+        boardCaretaker.root.position.set(wx, ground[1], wz);
+        boardCaretaker.root.rotation.y = Math.atan2(camera.position.x - wx, camera.position.z - wz);
+        wizardMask.root.visible = true;
+        const age = elapsed - wizardVisitStartedAt;
+        const pop = isReducedMotion ? 1 : Math.min(1, age / 0.45);
+        const easeOutBack = 1 + 2.70158 * (pop - 1) ** 3 + 1.70158 * (pop - 1) ** 2;
+        boardCaretaker.root.scale.setScalar(CARETAKER_BOARD_SCALE * 1.6 * Math.max(0.001, easeOutBack));
+        wizardZap.root.position.set(wx, ground[1], wz);
+        wizardZap.update(age, isReducedMotion);
+        if (age > 2.4 && boardCaretaker.animation === 'greet') boardCaretaker.setAnimation('talk-gentle', elapsed);
+        boardCaretaker.update(elapsed, frameDeltaSeconds, isReducedMotion);
+        canvas.dataset.caretakerWizardVisit = String(visitTile);
+        const wizardScreen = new THREE.Vector3(wx, ground[1] + 0.5, wz).project(camera);
+        canvas.dataset.caretakerWizardScreen = `${((wizardScreen.x + 1) / 2).toFixed(3)},${((1 - wizardScreen.y) / 2).toFixed(3)}`;
+      } else if (wizardVisitKey !== null) {
+        wizardVisitKey = null;
+        wizardMask.root.visible = false;
+        wizardZap.root.visible = false;
+        boardCaretaker.root.scale.setScalar(CARETAKER_BOARD_SCALE);
+        boardCaretaker.root.visible = caretakerBoardAvailable;
+        boardCaretaker.setEmotion('calm');
+        boardCaretaker.setAnimation('idle', elapsed, true);
+        delete canvas.dataset.caretakerWizardVisit;
+      }
+
       if (encounterCaretaker) {
         const encounterElapsed = elapsed - caretakerEncounterStartedAt;
         if (encounterElapsed > 2.25 && encounterCaretaker.animation === 'greet') {
@@ -10589,7 +10644,7 @@ export default function Island5ThreePilot({
           encounterCaretaker.setEmotion('curious');
         }
         encounterCaretaker.update(elapsed, frameDeltaSeconds, isReducedMotion);
-      } else if (caretakerBoardAvailable) {
+      } else if (caretakerBoardAvailable && !wizardVisiting) {
         const wanderCycle = elapsed % 18;
         const isWalking = !isReducedMotion && wanderCycle < 4.4;
         const wanderProgress = Math.min(1, wanderCycle / 4.4);
@@ -12267,6 +12322,8 @@ export default function Island5ThreePilot({
       }
       scene.remove(boardCaretaker.root);
       boardCaretaker.dispose();
+      wizardMask.dispose();
+      wizardZap.dispose();
       livingAmbience.dispose?.();
       openingCeremonyFx?.dispose();
       const disposedSceneBackground = scene.background;

@@ -9,12 +9,14 @@ const SEAL_HINTS = [
   'Send their light into the sky. Something is answering.',
 ] as const;
 
-export function getJungleMissionActionPresentation(stage: number, hasCharge: boolean, completed: boolean) {
+export function getJungleMissionActionPresentation(stage: number, _hasCharge: boolean, completed: boolean) {
   const nextStage = Math.max(0, Math.min(4, Math.floor(stage)));
   return {
-    label: completed ? 'Replay the awakening' : hasCharge ? `Awaken seal ${nextStage + 1} of 5` : 'Find a Wayfinder',
+    // Seals are lit by answering the masked caretaker's baseline questions;
+    // `hasCharge` is kept for older call sites but no longer gates the copy.
+    label: completed ? 'Replay the awakening' : `Seal ${nextStage + 1} of 5 · answer the caretaker`,
     hint: completed
       ? 'The sky opens. Your Compass Book descends.'
-      : hasCharge ? SEAL_HINTS[nextStage] : 'A glowing Wayfinder waits along the route.',
+      : `${SEAL_HINTS[nextStage]} Roll on: the masked caretaker appears where you land with a question.`,
   };
 }
