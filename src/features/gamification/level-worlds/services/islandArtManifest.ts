@@ -1,3 +1,4 @@
+import { resolveExpansionWorldSource } from './islandRunExpansionPacks';
 import type { ZBand } from './islandBoardLayout';
 
 export type IslandArtBossState = 'idle' | 'active' | 'attack' | 'defeated' | 'reward';
@@ -209,6 +210,10 @@ function normalizeCameraMode(value: unknown): IslandArtCameraMode | undefined {
 }
 
 export function normalizeIslandArtIslandNumber(islandNumber: number): number {
+  // Expansion-pack islands use their borrowed world's art (world sources
+  // chosen for packs equal their runtime island numbers).
+  const packWorld = resolveExpansionWorldSource(islandNumber);
+  if (packWorld !== null) return packWorld;
   return Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
 }
 

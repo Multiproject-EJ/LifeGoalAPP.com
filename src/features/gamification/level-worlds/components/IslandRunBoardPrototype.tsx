@@ -244,6 +244,16 @@ import { resolveLandmarkFlag } from '../services/landmarkFlags';
 import { shouldContinueBuildHoldThroughLevel } from '../services/islandRunBuildHoldContinuity';
 import { ISLAND_AFFIRMATION_VISIBLE_MS, getIslandAffirmationVisitKey, resolveIslandAffirmation } from '../services/islandAffirmations';
 import { getDriftVoyageIntroSeenKey, resolveDriftCurrent, resolveDriftVoyageIntro } from '../services/islandRunDriftVoyage';
+import {
+  EXPANSION_PACKS,
+  getExpansionPack,
+  isExpansionIslandNumber,
+  isExpansionPacksEnabled,
+  resolveExpansionIsland,
+  resolveExpansionPackAvailability,
+  resolveNextExpansionIsland,
+} from '../services/islandRunExpansionPacks';
+import { completeExpansionPackVoyage, devGrantExpansionPack, switchExpansionVoyage } from '../services/islandRunExpansionVoyageActions';
 import { DriftVoyageIntroModal } from './DriftVoyageIntroModal';
 
 const ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY = 'islandRun.affirmationsSeen.v1';
@@ -2091,7 +2101,10 @@ export function IslandRunBoardPrototype({
       livingTicketGrowthPreview: import.meta.env.DEV && params.has('livingTicketGrowth')
         ? readNumericParam(params, 'livingTicketGrowth', 1, 0, 1)
         : null,
-      islandVisualIslandNumber: Math.round(readNumericParam(params, 'islandVisualIsland', 1, 1, 120)),
+      // Dev-only expansion-pack islands (1001+) can be previewed too.
+      islandVisualIslandNumber: ((island) => (island <= 120 || isExpansionIslandNumber(island) ? island : 120))(
+        Math.round(readNumericParam(params, 'islandVisualIsland', 1, 1, 1300)),
+      ),
       islandVisualLandmark,
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
       islandVisualBossState,
@@ -2928,7 +2941,9 @@ export function IslandRunBoardPrototype({
   const [cycleIndex, setCycleIndex] = useState<number>(0);
   // Effective island number for all cost/earn scaling: (cycleIndex × 120 + islandNumber).
   // Island 1 on cycle 1 becomes effective island 121, giving cycle-over-cycle cost escalation.
-  const effectiveIslandNumber = cycleIndex * 120 + islandNumber;
+  const effectiveIslandNumber = getEffectiveIslandNumber(islandNumber, cycleIndex);
+  // Dev-only expansion packs: the pack this island belongs to, if any.
+  const expansionIsland = resolveExpansionIsland(islandNumber);
   // Drift Voyage (cycle 1+): this island's current and its clear bonus.
   const driftCurrent = resolveDriftCurrent(cycleIndex, islandNumber);
   const boardProfileExposureTrackedRef = useRef(false);
@@ -12230,10 +12245,15 @@ export function IslandRunBoardPrototype({
         return;
       }
     }
-    setTravelOverlayDestinationIsland(nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland);
+    // Dev-only expansion packs: travel stays inside the pack; its last island
+    // finishes the pack and returns to the main path where the player left it.
+    const finishingPack = isExpansionIslandNumber(stats.islandNumber) && resolveNextExpansionIsland(stats.islandNumber) === null;
+    const resolvedDestination = finishingPack
+      ? getIslandRunStateSnapshot(session).expansionVoyageState.stashedPathsByVoyage.main?.currentIslandNumber ?? 1
+      : isExpansionIslandNumber(nextIsland) ? nextIsland : nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland;
+    setTravelOverlayDestinationIsland(resolvedDestination);
     setTravelOverlayMode('advance');
     setIsIslandClearCelebrationDeparting(true);
-    const resolvedDestination = nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland;
     const startTravel = () => {
       setIslandDeparture(null);
       // The interlude covers the board while the canonical travel commits and
@@ -12252,6 +12272,10 @@ export function IslandRunBoardPrototype({
           setLandingText('Departure could not finish. Your progress is safe — tap Finish Island to try again.');
           return;
         }
+        if (finishingPack) {
+          setLandingText(`🎉 ${expansionIsland?.pack.title ?? 'Pack'} complete! Back on the main path.`);
+          return;
+        }
         setActiveStoryEpisode({
           kind: 'island_travel_arrival',
           manifestPath: resolveIslandTravelArrivalManifestPath(resolvedDestination),
@@ -12267,7 +12291,15 @@ export function IslandRunBoardPrototype({
       const sceneFallback = window.setTimeout(finishScene, TRAVEL_INTERLUDE_FALLBACK_MS);
       travelInterludeFinishRef.current = finishScene;
       setTravelInterlude({ plan, key: Date.now() });
-      void performIslandTravel(nextIsland, { startTimer: true, completedVisitKey: completion.visitKey }).then(() => {
+      const travel = finishingPack
+        ? completeExpansionPackVoyage({
+          session, client, getIslandDurationMs, islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+        }).then((result) => {
+          if (result.status !== 'ok') throw new Error(result.status);
+          applyVoyageRecordToBoard(getIslandRunStateSnapshot(session));
+        })
+        : performIslandTravel(nextIsland, { startTimer: true, completedVisitKey: completion.visitKey });
+      void travel.then(() => {
         travelOutcome = 'ok';
         maybeArrive();
       }).catch(() => {
@@ -13104,6 +13136,68 @@ export function IslandRunBoardPrototype({
       triggerSource: 'qa_reset_progression',
     });
     setRuntimeState(record);
+  };
+
+  // Dev-only expansion packs: mirror a voyage switch into the board's React
+  // state (the canonical record is already committed by the action).
+  const applyVoyageRecordToBoard = (record: ReturnType<typeof getIslandRunStateSnapshot>) => {
+    setRuntimeState(record);
+    runtimeStateRef.current = record;
+    setIslandNumber(record.currentIslandNumber);
+    setCycleIndex(record.cycleIndex);
+    setTokenIndex(record.tokenIndex);
+    setActiveEgg(record.activeEggTier && record.activeEggSetAtMs !== null && record.activeEggHatchDurationMs !== null
+      ? {
+        tier: record.activeEggTier,
+        setAtMs: record.activeEggSetAtMs,
+        hatchAtMs: record.activeEggSetAtMs + record.activeEggHatchDurationMs,
+        isDormant: record.activeEggIsDormant,
+      }
+      : null);
+    setRollValue(null);
+    setActiveStopId(null);
+    setFocusedStopId(null);
+    setCameraMode('overview_manual');
+    window.requestAnimationFrame(() => boardCameraRef.current?.goDefault());
+    setShowEncounterModal(false);
+    setEncounterResolved(false);
+    setCompletedEncounterIndices(new Set());
+    setActiveEncounterTileIndex(null);
+    setCurrentEncounterChallenge(null);
+    setEncounterStep('challenge');
+    setEncounterRewardData(null);
+    updateCompletedStopsWithSync(record.completedStopsByIsland[String(record.currentIslandNumber)] ?? [], {
+      requestSync: false, triggerSource: 'expansion_voyage_switch',
+    });
+    setBossTrialResolved(record.bossTrialResolvedIslandNumber === record.currentIslandNumber);
+    setBossRewardSummary(null);
+    setBossTrialPhase('idle');
+    setIslandStartedAtMs(record.islandStartedAtMs);
+    setIslandExpiresAtMs(record.islandExpiresAtMs);
+    setIsIslandTimerPendingStart(record.islandStartedAtMs <= 0);
+    setTimeLeftSec(Math.max(0, Math.ceil((record.islandExpiresAtMs - Date.now()) / 1000)));
+  };
+
+  const expansionPacksEnabled = isExpansionPacksEnabled({ isDevModeEnabled });
+
+  const handleDevGrantExpansionPack = async (packId: string): Promise<string> => {
+    if (!expansionPacksEnabled) return 'Expansion packs are dev only.';
+    const result = await devGrantExpansionPack({ session, client, packId });
+    return result.status === 'ok' ? `Granted ${getExpansionPack(packId)?.title ?? packId}.` : `Grant: ${result.status}`;
+  };
+
+  const handleSwitchExpansionVoyage = async (voyageId: string): Promise<string> => {
+    if (!expansionPacksEnabled) return 'Expansion packs are dev only.';
+    if (isAnimatingRollRef.current || isTravellingRef.current) return 'Wait for the current roll or travel to finish.';
+    const result = await switchExpansionVoyage({
+      session, client, voyageId, getIslandDurationMs, islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
+    });
+    if (result.status !== 'ok') return `Switch: ${result.status}`;
+    const record = getIslandRunStateSnapshot(session);
+    applyVoyageRecordToBoard(record);
+    const label = voyageId === 'main' ? 'the main path' : getExpansionPack(voyageId)?.title ?? voyageId;
+    setLandingText(`🧳 Now playing ${label} (Island ${record.currentIslandNumber}).`);
+    return `Switched to ${label}.`;
   };
 
   const handleDevGrantDice = useCallback((amount: number) => {
@@ -16881,7 +16975,7 @@ export function IslandRunBoardPrototype({
             <div className="island-run-prototype__status-row">
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{dicePool}</strong></span>
               <span className="island-run-prototype__stat-chip">Money: <strong>{runtimeState.essence}</strong></span>
-              <span className={`island-run-prototype__stat-chip island-run-prototype__level-chip${islandLevelFlash ? ' island-run-prototype__level-chip--levelup' : ''}`}>LEVEL <strong>{islandNumber}</strong> / 120</span>
+              <span className={`island-run-prototype__stat-chip island-run-prototype__level-chip${islandLevelFlash ? ' island-run-prototype__level-chip--levelup' : ''}`}>{expansionIsland ? <>{expansionIsland.pack.icon} <strong>{expansionIsland.localIndex}</strong> / {expansionIsland.pack.islandCount}</> : <>LEVEL <strong>{islandNumber}</strong> / 120</>}</span>
               <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
               <span className="island-run-prototype__stat-chip">Last roll: <strong>{rollValue ?? '-'}</strong></span>
@@ -17233,7 +17327,7 @@ export function IslandRunBoardPrototype({
               <button type="button" className="island-run-board__topbar-menu-item"
                 aria-label={`Open Island Map, current island ${islandNumber} of ${ISLAND_RUN_MAX_ISLAND}`}
                 onClick={() => { stopAutoRoll(); setShowTopbarMenu(false); setShowSolarMapOverlay(true); }}>
-                Island Map · {islandNumber} / {ISLAND_RUN_MAX_ISLAND}
+                {expansionIsland ? `${expansionIsland.pack.title} · ${expansionIsland.localIndex} / ${expansionIsland.pack.islandCount}` : `Island Map · ${islandNumber} / ${ISLAND_RUN_MAX_ISLAND}`}
               </button>
               <button type="button" className="island-run-board__topbar-menu-item"
                 onClick={() => { stopAutoRoll(); setShowTopbarMenu(false); setShowScoreboard(true); }}>
@@ -23447,6 +23541,19 @@ export function IslandRunBoardPrototype({
           onOpenDevWelcomePackPrototype={handleOpenWelcomePackModal}
           onGrantDevDemoEggRewardPack={handleDevGrantDemoEggRewardPack}
           onResetWelcomePackDevFlags={handleDevResetWelcomePackFlags}
+          expansionVoyage={expansionPacksEnabled ? {
+            activeVoyageId: runtimeState.expansionVoyageState?.activeVoyageId ?? 'main',
+            ownedPackIds: runtimeState.expansionVoyageState?.ownedPackIds ?? [],
+            completedPackIds: runtimeState.expansionVoyageState?.completedPackIds ?? [],
+            packs: EXPANSION_PACKS.map((pack) => ({
+              id: pack.id, title: pack.title, icon: pack.icon, islandCount: pack.islandCount,
+              availability: resolveExpansionPackAvailability({
+                pack, ownedPackIds: runtimeState.expansionVoyageState?.ownedPackIds ?? [], unlockedFeatures: [], nowMs: Date.now(),
+              }),
+            })),
+            onGrantPack: handleDevGrantExpansionPack,
+            onSwitchVoyage: handleSwitchExpansionVoyage,
+          } : undefined}
           onClose={() => setShowDebugPanel(false)}
         />
       )}

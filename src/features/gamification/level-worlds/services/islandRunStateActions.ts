@@ -90,12 +90,14 @@ import {
   applyEssenceDrift,
   awardIslandRunContractV2Essence,
   deductIslandRunContractV2Essence,
+  getEffectiveIslandNumber,
   getRemainingIslandBuildCost,
   initStopBuildStatesForIsland,
   MAX_BUILD_LEVEL,
   spendIslandRunContractV2EssenceOnStopBuild,
   type IslandRunContractV2BuildSpendFailureReason,
 } from './islandRunContractV2EssenceBuild';
+import { isExpansionIslandNumber } from './islandRunExpansionPacks';
 import {
   canPostponeIslandRunStop,
   ISLAND_RUN_CONTRACT_V2_STOP_TYPES,
@@ -5252,7 +5254,7 @@ export const ISLAND_RUN_MAX_ISLAND = 120;
  *  renderer helper; kept private to the action so callers don't have to
  *  thread it through. */
 function effectiveIslandNumber(resolvedIsland: number, cycleIndex: number): number {
-  return resolvedIsland + cycleIndex * ISLAND_RUN_MAX_ISLAND;
+  return getEffectiveIslandNumber(resolvedIsland, cycleIndex);
 }
 
 function buildTravelLuckyRollRunId(sessionKey: string, nowMs: number): string {
@@ -5501,11 +5503,13 @@ export function resolveIslandRunTravelState(options: ResolveIslandRunTravelState
     islandRunContractV2Enabled,
   } = options;
 
-  // Cycle-wrap resolution (120 → 1 bumps cycleIndex).
-  const wraps = nextIsland > ISLAND_RUN_MAX_ISLAND;
+  // Cycle-wrap resolution (120 → 1 bumps cycleIndex). Expansion-pack islands
+  // (1001+) never wrap: they are a separate voyage with its own range.
+  const expansionTravel = isExpansionIslandNumber(nextIsland);
+  const wraps = !expansionTravel && nextIsland > ISLAND_RUN_MAX_ISLAND;
   const resolvedIsland = wraps
     ? ((nextIsland - 1) % ISLAND_RUN_MAX_ISLAND) + 1
-    : Math.max(1, nextIsland);
+    : Math.max(1, Math.floor(nextIsland));
   const nextCycleIndex = wraps ? current.cycleIndex + 1 : current.cycleIndex;
 
   const oldIslandKey = String(current.currentIslandNumber);

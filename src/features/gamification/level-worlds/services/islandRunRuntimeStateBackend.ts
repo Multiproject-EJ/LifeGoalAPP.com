@@ -684,6 +684,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
       journeyDiscArenaProgressByEvent: current.journeyDiscArenaProgressByEvent,
       journeyDiscArmory: current.journeyDiscArmory,
       momentumMatrixProgressByEvent: current.momentumMatrixProgressByEvent,
+      expansionVoyageState: current.expansionVoyageState,
       crystalMinersProgressByEvent: current.crystalMinersProgressByEvent,
     };
 

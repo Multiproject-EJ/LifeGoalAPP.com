@@ -1,3 +1,4 @@
+import { getExpansionIslandName } from './islandRunExpansionPacks';
 const MAX_ISLANDS = 120;
 
 const ISLAND_NAMES: readonly string[] = [
@@ -130,6 +131,8 @@ const ISLAND_NAMES: readonly string[] = [
 ] as const;
 
 export function getIslandDisplayName(islandNumber: number): string {
+  const packName = getExpansionIslandName(islandNumber);
+  if (packName) return packName;
   const safeIsland = Number.isFinite(islandNumber)
     ? Math.min(MAX_ISLANDS, Math.max(1, Math.floor(islandNumber)))
     : 1;

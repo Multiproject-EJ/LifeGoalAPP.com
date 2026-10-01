@@ -1,3 +1,4 @@
+import { resolveExpansionWorldSource } from './islandRunExpansionPacks';
 // Island 040 is an explicit stand-in (a visual copy of source 004), not the Cosmic Outpost production pack.
 export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 17 | 18 | 19 | 20 | 22 | 40;
 
@@ -68,5 +69,11 @@ const ROUTES_BY_RUNTIME_ISLAND = new Map(
 );
 
 export function resolveIslandRun3DWorldRoute(runtimeIslandNumber: number): IslandRun3DWorldRoute | null {
-  return ROUTES_BY_RUNTIME_ISLAND.get(runtimeIslandNumber) ?? null;
+  const route = ROUTES_BY_RUNTIME_ISLAND.get(runtimeIslandNumber);
+  if (route) return route;
+  // Dev-only expansion-pack islands borrow an existing world until pack art exists.
+  const packWorld = resolveExpansionWorldSource(runtimeIslandNumber);
+  return packWorld === null ? null : {
+    runtimeIslandNumber, worldSourceNumber: packWorld, role: 'ordinary', presentationStatus: 'placeholder',
+  };
 }

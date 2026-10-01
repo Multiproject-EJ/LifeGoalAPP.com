@@ -82,6 +82,7 @@ import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { buildJourneyLevelInputFromOverlay } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import { useCombinedJourneyChest } from './features/gamification/level-worlds/hooks/useCombinedJourneyChest';
 import { useEarnedJourneyXp } from './features/gamification/level-worlds/hooks/useEarnedJourneyXp';
+import { resolveMainPathRecord } from './features/gamification/level-worlds/services/islandRunExpansionVoyage';
 import { resolveIslandRunCompletion } from './features/gamification/level-worlds/services/islandRunCompletion';
 import {
   deriveCombinedJourneyLevel,
@@ -732,11 +733,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const portalEntry = useWorldPortalEntry(activeSession ?? null, client, developerCheck, guestTransferPending,
     guestClaimFailedOwner === supabaseSession?.user.id);
   const { journeyState } = portalEntry;
-  const islandJourneyProgress = useMemo(() => journeyState ? {
-    currentIslandNumber: journeyState.currentIslandNumber,
-    cycleIndex: journeyState.cycleIndex,
-    completion: resolveIslandRunCompletion(journeyState),
-  } : undefined, [journeyState]);
+  const islandJourneyProgress = useMemo(() => {
+    if (!journeyState) return undefined;
+    // Expansion-pack islands never count as main-journey progress.
+    const mainPath = resolveMainPathRecord(journeyState);
+    return {
+      currentIslandNumber: mainPath.currentIslandNumber,
+      cycleIndex: mainPath.cycleIndex,
+      completion: resolveIslandRunCompletion(mainPath),
+    };
+  }, [journeyState]);
   const guestClaimInFlightUserIdRef = useRef<string | null>(null);
 
   useEffect(() => scheduleRapidFireworksPreload(), []);
