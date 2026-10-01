@@ -1,5 +1,6 @@
 import { getIslandDisplayName } from './islandNames';
 import { getVoyageEra, getVoyageIslandArt, getVoyageNodeX } from './islandVoyageMap';
+import { DRIFT_VOYAGE_COMPLETION_CAPTION, isDriftVoyageCompletionTravel } from './islandRunDriftVoyage';
 
 /**
  * Cozy ship-interior travel interlude (user request 2026-09-30): every trip
@@ -79,7 +80,9 @@ export function resolveTravelInterludePlan(options: {
 }): TravelInterludePlan {
   const vignette = resolveTravelInterludeVignette(options.toIslandNumber);
   const captions = VIGNETTE_CAPTIONS[vignette];
-  const caption = captions[Math.abs(Math.trunc(options.fromIslandNumber)) % captions.length]!;
+  const caption = isDriftVoyageCompletionTravel({ fromIslandNumber: options.fromIslandNumber, toIslandNumber: options.toIslandNumber })
+    ? DRIFT_VOYAGE_COMPLETION_CAPTION
+    : captions[Math.abs(Math.trunc(options.fromIslandNumber)) % captions.length]!;
   return {
     vignette,
     caption,
