@@ -905,6 +905,8 @@ import { ISLAND_DEPARTURE_FALLBACK_MS, shouldPlayIslandDepartureCinematic } from
 const LEGACY_SIDE_STORY_POPUPS_ENABLED = false;
 
 const Island5ThreeScene = lazy(() => import('../dev/Island5ThreePilot'));
+const CompassBookLongFormDev = lazy(() => import('../../../compass-book/dev/CompassBookLongFormDev')
+  .then((module) => ({ default: module.CompassBookLongFormDev })));
 const VaultIslandCollectionModal = lazy(() => import('./VaultIslandCollectionModal'));
 const VaultCasinoLab = lazy(() => import('../../../../dev/VaultCasinoLab'));
 
@@ -3508,6 +3510,7 @@ export function IslandRunBoardPrototype({
 
   // ── Sticker album dialog ───────────────────────────────────────────────────
   const [showStickerAlbumDialog, setShowStickerAlbumDialog] = useState(false);
+  const [showCompassLongFormDev, setShowCompassLongFormDev] = useState(false);
   // Quiet L1/L2 level-up flash while a build hold carries on to Level 3.
   const [buildHoldLevelUp, setBuildHoldLevelUp] = useState<{ title: string; level: number; diceAward: number; sequence: number } | null>(null);
   // Green-flag door landing: the player piece hops and says "Great job!!".
@@ -17255,6 +17258,13 @@ export function IslandRunBoardPrototype({
                   <button
                     type="button"
                     className="island-run-board__dev-island-jump-submit"
+                    onClick={() => { setShowTopbarMenu(false); setShowCompassLongFormDev(true); }}
+                  >
+                    📖 Compass Book long form (dev)
+                  </button>
+                  <button
+                    type="button"
+                    className="island-run-board__dev-island-jump-submit"
                     onClick={() => {
                       // Presentation-only replay: nothing is granted, and
                       // Travel checks real completion before leaving.
@@ -21792,6 +21802,11 @@ export function IslandRunBoardPrototype({
             <span>Tap to answer Central Command</span>
           </span>
         </button>, document.body) : null}
+      {showCompassLongFormDev && isDevModeEnabled ? (
+        <Suspense fallback={null}>
+          <CompassBookLongFormDev session={session} onClose={() => setShowCompassLongFormDev(false)} />
+        </Suspense>
+      ) : null}
       {islandAffirmation && !doesModalOwnAttention ? createPortal(
         <div key={islandAffirmation.visitKey} className="island-run-affirmation" role="status" aria-live="polite">
           <span className="island-run-affirmation__spark" aria-hidden="true">✦</span>

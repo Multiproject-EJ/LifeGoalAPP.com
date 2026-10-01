@@ -6,6 +6,7 @@ import { IslandMissionBriefingModal } from '../components/IslandMissionBriefingM
 import { MandateEggBasketOverlay } from '../components/MandateEggBasketOverlay';
 import { MinigameRatingModal } from '../components/MinigameRatingModal';
 import { PuzzleCollectionModal } from '../components/PuzzleCollectionModal';
+import { CompassBookLongFormDev } from '../../../compass-book/dev/CompassBookLongFormDev';
 import { getEventRotationTemplates } from '../services/islandRunEventEngine';
 import { resolvePuzzleCollectionView } from '../services/puzzleCollection';
 import { resolveIslandMissionTrackerPresentation } from '../services/islandRunMissionTracker';
@@ -79,4 +80,4 @@ function PuzzleReview() {
   });
   return <main style={{ minHeight: '100vh', background: '#0c2336' }}><PuzzleCollectionModal view={view} bonusDice={100} bonusMoney={50} onClose={() => undefined} /></main>;
 }
-createRoot(document.getElementById('root')!).render(params.get('basket') === '1' ? <BasketReview /> : params.get('rating') === '1' ? <RatingReview /> : params.get('puzzle') === '1' ? <PuzzleReview /> : <CompletionReview />);
+createRoot(document.getElementById('root')!).render(params.get('basket') === '1' ? <BasketReview /> : params.get('rating') === '1' ? <RatingReview /> : params.get('puzzle') === '1' ? <PuzzleReview /> : params.get('compassLongForm') === '1' ? <CompassBookLongFormDev session={null} onClose={() => undefined} /> : <CompletionReview />);
