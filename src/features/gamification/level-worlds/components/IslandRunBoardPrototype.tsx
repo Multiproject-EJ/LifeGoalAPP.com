@@ -3739,7 +3739,7 @@ export function IslandRunBoardPrototype({
     ? islandProgressReadState.bossTrialResolvedIslandNumber === islandNumber
     : bossTrialResolved || islandProgressReadState.bossTrialResolvedIslandNumber === islandNumber;
   // The Concord caretaker content resolves per island: Island 1 keeps the
-  // canonical Luma acquisition story, islands 2+ use authored/fallback entries.
+  // canonical First Light Shore acquisition story, islands 2+ use authored/fallback entries.
   const caretakerConcordContent = useMemo(
     () => getIslandCaretakerConcordContent(runtimeState.currentIslandNumber),
     [runtimeState.currentIslandNumber],
@@ -17261,7 +17261,7 @@ export function IslandRunBoardPrototype({
               <div className="island-run-board__audio-menu-header" role="presentation">
                 <span className="island-run-board__audio-menu-crest" aria-hidden="true">✦</span>
                 <span className="island-run-board__audio-menu-heading">
-                  <small>Sound of Luma</small>
+                  <small>Sound of First Light</small>
                   <strong>Island soundscape</strong>
                   <span>Set the world around you.</span>
                 </span>
@@ -22145,11 +22145,11 @@ export function IslandRunBoardPrototype({
             <img
               className="first-voyage-departure__art"
               src="/islands/001/story/arrival/001-covered-lights.webp"
-              alt="Luma Isle at dawn with its landmark lights covered"
+              alt="First Light Shore at dawn with its landmark lights covered"
             />
             <div className="first-voyage-departure__shade" aria-hidden="true" />
             <div className="first-voyage-departure__content">
-              <p className="first-voyage-departure__eyebrow">Mission 001 · Luma Isle</p>
+              <p className="first-voyage-departure__eyebrow">Mission 001 · First Light Shore</p>
               <h2 id="first-voyage-departure-title">Wake the island’s lights</h2>
               <p>The five landmarks have gone dark. Your builder crew is ready to restore them and reopen the route to the Arena.</p>
               <div className="first-voyage-departure__ready" role="status">
@@ -22736,7 +22736,7 @@ export function IslandRunBoardPrototype({
           manifestPath={activeStoryEpisode.manifestPath}
           isOpen={showStoryReader}
           onClose={handleCloseStoryReader}
-          completionTitle={activeStoryEpisode.kind === 'island_arrival' ? 'Luma Isle awaits' : activeStoryEpisode.kind === 'island_resolution' ? 'The route is open' : activeStoryEpisode.kind === 'island_travel_arrival' ? `${getIslandDisplayName(islandNumber)} awaits` : activeStoryEpisode.kind === 'championship' ? `${championshipPresentation?.title ?? 'The championship'} begins` : undefined}
+          completionTitle={activeStoryEpisode.kind === 'island_arrival' ? 'First Light Shore awaits' : activeStoryEpisode.kind === 'island_resolution' ? 'The route is open' : activeStoryEpisode.kind === 'island_travel_arrival' ? `${getIslandDisplayName(islandNumber)} awaits` : activeStoryEpisode.kind === 'championship' ? `${championshipPresentation?.title ?? 'The championship'} begins` : undefined}
           completionText={activeStoryEpisode.kind === 'championship' ? 'The opening ceremony is complete. The Arena is waiting.' : activeStoryEpisode.kind === 'island_arrival' || activeStoryEpisode.kind === 'island_resolution' || activeStoryEpisode.kind === 'island_travel_arrival' ? 'Return to the island' : undefined}
           completionButtonLabel={activeStoryEpisode.kind === 'championship' ? 'Enter the Arena' : activeStoryEpisode.kind === 'island_arrival' || activeStoryEpisode.kind === 'island_resolution' || activeStoryEpisode.kind === 'island_travel_arrival' ? 'Start zoomed out' : undefined}
           musicEnabled={musicEnabled}

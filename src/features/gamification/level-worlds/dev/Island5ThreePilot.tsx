@@ -1,3 +1,12 @@
+import {
+  ISLAND_3D_LEARNED_TIER_STORAGE_KEY,
+  createIsland3DAdaptiveState,
+  parseIsland3DLearnedTier,
+  resolveIsland3DMaxTier,
+  resolveIsland3DStartTier,
+  serializeIsland3DLearnedTier,
+  stepIsland3DAdaptiveQuality,
+} from '../services/islandRun3DAdaptiveQuality';
 import { createIsland9ReleasedAmbience, buildIsland9ReleasedLandmark } from './Island9HeartshaftProduction';
 import { createIsland9StarBeneathPresentation } from './Island9StarBeneathPresentation';
 import { sunshoreCreatureClearanceLift } from './SunshoreCreatureClearance';
@@ -4039,8 +4048,21 @@ export default function Island5ThreePilot({
     return Number.isFinite(value) && value >= 0 ? value : null;
   })();
   const [qualitySelection, setQualitySelection] = useState<Island3DQualitySelection>(readInitialQualitySelection);
-  const [runtimeQualityCap, setRuntimeQualityCap] = useState<Island3DQuality | null>(null);
-  const sustainedQualityMissesRef = useRef(0);
+  // Adaptive quality: a remembered per-device tier (if any) is the starting
+  // point; the controller below adjusts resolution first, then tier.
+  const [runtimeQualityCap, setRuntimeQualityCap] = useState<Island3DQuality | null>(() => {
+    try {
+      const learned = parseIsland3DLearnedTier(window.localStorage.getItem(ISLAND_3D_LEARNED_TIER_STORAGE_KEY), Date.now());
+      if (!learned) return null;
+      const maxTier = resolveIsland3DMaxTier({ prefersReducedMotion: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches });
+      return resolveIsland3DStartTier({ detected: learned.tier, learned, maxTier });
+    } catch {
+      return null;
+    }
+  });
+  const adaptiveQualityRef = useRef<ReturnType<typeof createIsland3DAdaptiveState> | null>(null);
+  const pixelScaleRef = useRef(1);
+  const applyPixelScaleRef = useRef<((scale: number) => void) | null>(null);
   const [archiveInteriorOpen, setArchiveInteriorOpen] = useState(() => import.meta.env.DEV && new URLSearchParams(window.location.search).get('archiveInterior') === '1');
   const archiveInteriorOpenRef = useRef(archiveInteriorOpen);
   archiveInteriorOpenRef.current = archiveInteriorOpen;
@@ -4273,36 +4295,56 @@ export default function Island5ThreePilot({
   const productionQualitySelection = qualitySelection === 'auto' && runtimeQualityCap
     ? runtimeQualityCap
     : qualitySelection;
-  const resolvedQualitySelection = qualityOverride ?? productionQualitySelection;
+  // An 'auto' override behaves like production so adaptive quality can be QA'd in dev.
+  const explicitQualityOverride = qualityOverride && qualityOverride !== 'auto' ? qualityOverride : undefined;
+  const resolvedQualitySelection = explicitQualityOverride ?? productionQualitySelection;
   const qualityProfile = useMemo(
     () => resolveIsland3DQuality(resolvedQualitySelection, deviceSignals),
     [deviceSignals, resolvedQualitySelection],
   );
 
+  const maxQualityTier = useMemo(() => resolveIsland3DMaxTier(deviceSignals), [deviceSignals]);
   useEffect(() => {
+    // Only the automatic production path adapts; explicit QA selections and
+    // profiling runs keep exactly what was asked for.
+    if (explicitQualityOverride || qualitySelection !== 'auto' || profilerStatus === 'running') {
+      adaptiveQualityRef.current = null;
+      return;
+    }
+    if (!adaptiveQualityRef.current || adaptiveQualityRef.current.tier !== qualityProfile.id) {
+      adaptiveQualityRef.current = {
+        ...createIsland3DAdaptiveState(resolveIsland3DStartTier({
+          detected: qualityProfile.id, learned: null, maxTier: maxQualityTier,
+        })),
+        upgradedThisSession: adaptiveQualityRef.current?.upgradedThisSession ?? false,
+      };
+    }
+    if (import.meta.env.DEV) document.documentElement.dataset.island3dAdaptiveFps = String(metrics.fps);
+    if (metrics.fps <= 0) return;
     // Construction briefly raises draw calls and triangle count. Treating that
-    // authored burst as a sustained device-quality failure used to rebuild the
-    // entire renderer mid-build on iOS, exposing the retired 2D fallback.
-    // Keep the active scene stable and reconsider quality once the crew rests.
-    if (constructionPresentationRef.current?.active) {
-      sustainedQualityMissesRef.current = 0;
-      return;
+    // authored burst (or a hidden tab) as a device verdict used to rebuild the
+    // renderer mid-build on iOS. Keep the scene stable until things rest.
+    const busy = Boolean(constructionPresentationRef.current?.active)
+      || (typeof document !== 'undefined' && document.visibilityState !== 'visible');
+    const { state, action } = stepIsland3DAdaptiveQuality(adaptiveQualityRef.current, {
+      fps: metrics.fps, busy, maxTier: maxQualityTier,
+    });
+    adaptiveQualityRef.current = state;
+    // Dev evidence seam: expose the controller state for QA captures.
+    if (import.meta.env.DEV) document.documentElement.dataset.island3dAdaptive = JSON.stringify({ ...state, fps: metrics.fps, busy });
+    if (action.kind === 'scale') {
+      pixelScaleRef.current = action.pixelScale;
+      applyPixelScaleRef.current?.(action.pixelScale);
+    } else if (action.kind === 'tier') {
+      pixelScaleRef.current = 1;
+      try {
+        window.localStorage.setItem(ISLAND_3D_LEARNED_TIER_STORAGE_KEY, serializeIsland3DLearnedTier(action.tier, Date.now()));
+      } catch { /* storage unavailable: adapt this session only */ }
+      setRuntimeQualityCap(action.tier);
     }
-    if (qualityOverride || qualitySelection !== 'auto' || profilerStatus === 'running' || metrics.fps <= 0) {
-      sustainedQualityMissesRef.current = 0;
-      return;
-    }
-    const missThreshold = qualityProfile.id === 'high' ? 44 : qualityProfile.id === 'medium' ? 32 : 24;
-    if (metrics.fps >= missThreshold) {
-      sustainedQualityMissesRef.current = 0;
-      return;
-    }
-    sustainedQualityMissesRef.current += 1;
-    if (sustainedQualityMissesRef.current < 8) return;
-    sustainedQualityMissesRef.current = 0;
-    if (qualityProfile.id === 'high') setRuntimeQualityCap('medium');
-    else if (qualityProfile.id === 'medium') setRuntimeQualityCap('low');
-  }, [metrics.fps, profilerStatus, qualityOverride, qualityProfile.id, qualitySelection]);
+  // Depends on the metrics sample object (new every ~750 ms), not just the
+  // fps number: a steadily slow phone repeats the same fps and must still count.
+  }, [explicitQualityOverride, maxQualityTier, metrics, profilerStatus, qualityProfile.id, qualitySelection]);
   const resolvedTileMap = useMemo<readonly IslandTileMapEntry[]>(() => {
     if (tileMap) return tileMap;
     const previewTiles = applyLandmarkDoorTiles(
@@ -4904,11 +4946,14 @@ export default function Island5ThreePilot({
     // The underwater scene carries multiple full-screen transparent water and
     // light layers. A 1.4 DPR ceiling remains crisp at the phone viewport while
     // reserving fill-rate for fauna, caustics and landmark motion.
-    renderer.setPixelRatio(getIsland3DRendererPixelRatio(
+    const basePixelRatio = getIsland3DRendererPixelRatio(
       qualityProfile,
       window.devicePixelRatio,
       isAbyssalPearlKingdom ? 1.4 : isJungleExpedition ? 1.5 : Number.POSITIVE_INFINITY,
-    ));
+    );
+    // Adaptive resolution: the cheapest lever, applied live without rebuilding.
+    renderer.setPixelRatio(basePixelRatio * pixelScaleRef.current);
+    applyPixelScaleRef.current = (scale: number) => renderer.setPixelRatio(basePixelRatio * scale);
     // The underwater kingdom uses diffuse volume light. Jungle Expedition uses
     // a tiny selective shadow set applied after scene assembly so its merged
     // ruin structures keep readable stair and balcony depth without shadowing

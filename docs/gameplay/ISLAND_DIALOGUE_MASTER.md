@@ -64,7 +64,7 @@ Every narrative beat must declare its track. Current shipped beats for Islands 1
 | --- | --- | --- | --- |
 | `I001-B00` | Fresh Island 1 entry after the arrival story | `expedition_phone` | “Roll the dice. Collect the fragments.” Acknowledgement canonically arms the first roll. |
 | `I001-B31` | First `the-concord` fragment collected (`0 → 1`) | `expedition_phone` | “Begin the diplomatic effort. Earn, build, and play.” Acknowledgement activates the ordinary island tile network. |
-| `I001-B32` | The Concord is canonically active after fragment `9/9` | `dialogue_sheet` rendered as the Concord call screen | The Luma Caretaker becomes the first fully translated island voice and gives the five-light restoration purpose. |
+| `I001-B32` | The Concord is canonically active after fragment `9/9` | `dialogue_sheet` rendered as the Concord call screen | The First Light caretaker becomes the first fully translated island voice and gives the five-light restoration purpose. |
 
 Both transmissions are marked seen only when acknowledged. Their Island 1 tutorial transitions are committed atomically with the canonical seen ledger, preventing a reload or device sync from separating “message read” from “board activated.” The first-fragment transmission waits until the fragment-collection presentation has closed.
 

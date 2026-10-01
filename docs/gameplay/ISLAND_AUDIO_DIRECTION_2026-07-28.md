@@ -42,7 +42,7 @@ silence so dice, tiles, inhabitants, and construction remain readable.
 
 ## First five island briefs
 
-### Island 1 — Luma Isle
+### Island 1 — First Light Shore
 
 - Night shoreline, glass chimes, gentle water, distant luminous insects.
 - Sparse celesta/glass notes and warm low pad.

@@ -55,7 +55,7 @@ export default function Island001StoryPreview() {
     <main className="island-story-preview">
       <section className="island-story-preview__hero">
         <p className="island-story-preview__kicker">Development story preview</p>
-        <h1>Island 001 — Luma Isle</h1>
+        <h1>Island 001 — First Light Shore</h1>
         <p>
           A development-only motion-webtoon lab for later island chapters. The
           retired global intro is intentionally not part of onboarding or this sequence.

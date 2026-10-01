@@ -18,7 +18,7 @@ export function IslandInhabitantEncounterPreview(): React.JSX.Element {
   return (
     <div data-preview="IslandInhabitantEncounter isolated preview states only">
       <p>Selected preview topic: {selectedTopic}</p>
-      <IslandInhabitantEncounter isOpen inhabitant={caretaker} topics={topics} greeting="Welcome, traveller. The gentle paths have been quiet." characterArtSrc={caretaker.premiumArtSrc} backgroundArtSrc="/assets/islands/island-001/preview-background.webp" islandName="Luma Isle" islandStatusLabel="Island 1 woodland caretaker with three topics" onSelectTopic={(topic) => setSelectedTopic(topic.id)} onClose={noopClose} />
+      <IslandInhabitantEncounter isOpen inhabitant={caretaker} topics={topics} greeting="Welcome, traveller. The gentle paths have been quiet." characterArtSrc={caretaker.premiumArtSrc} backgroundArtSrc="/assets/islands/island-001/preview-background.webp" islandName="First Light Shore" islandStatusLabel="Island 1 woodland caretaker with three topics" onSelectTopic={(topic) => setSelectedTopic(topic.id)} onClose={noopClose} />
       {/* missing character-art fallback */}
       <IslandInhabitantEncounter isOpen={false} inhabitant={caretaker} topics={topics} greeting="Missing character-art fallback." backgroundArtSrc="/assets/islands/island-001/preview-background.webp" onSelectTopic={(topic) => setSelectedTopic(topic.id)} onClose={noopClose} />
       {/* missing background fallback */}

@@ -53,7 +53,7 @@ export const islandStoryReaderComponentTests: TestCase[] = [
     assertIncludes(readerSource, 'completionTitle?: string;', 'StoryReader must accept display-only completion title');
     assertIncludes(readerSource, 'completionText?: string;', 'StoryReader must accept display-only completion text');
     assertIncludes(readerSource, 'completionButtonLabel?: string;', 'StoryReader must accept display-only completion button label');
-    assertIncludes(boardSource, "completionTitle={activeStoryEpisode.kind === 'island_arrival' ? 'Luma Isle awaits'", 'Arrival should use approved completion title');
+    assertIncludes(boardSource, "completionTitle={activeStoryEpisode.kind === 'island_arrival' ? 'First Light Shore awaits'", 'Arrival should use approved completion title');
     assertIncludes(boardSource, "activeStoryEpisode.kind === 'island_resolution' ? 'The route is open'", 'Resolution should use approved completion title');
     assertIncludes(boardSource, "? 'Return to the island' : undefined", 'Arrival/resolution should use approved return copy');
   } },

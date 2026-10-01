@@ -147,7 +147,7 @@ supplies in return.
 
 PA explanation:
 
-> You asked why Luma is sending supplies back. The Reconstruction Accord keeps
+> You asked why First Light Shore is sending supplies back. The Reconstruction Accord keeps
 > every mission reciprocal.
 
 Supporting explanation:

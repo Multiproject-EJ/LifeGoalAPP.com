@@ -196,7 +196,7 @@ function ShopPreview() {
         <figure className="world-home__shop-current-phone">
           <img
             src="/landing-page-assets/showcase/supply-dock-current.png"
-            alt="Current Luma Supply Dock showing earned dice supplies and clearly separated optional extras"
+            alt="Current First Light Supply Dock showing earned dice supplies and clearly separated optional extras"
             width="390"
             height="844"
             loading="lazy"

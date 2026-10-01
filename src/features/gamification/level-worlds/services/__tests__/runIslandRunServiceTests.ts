@@ -29,6 +29,7 @@ import { puzzleCollectionTests } from './puzzleCollection.test';
 import { islandTravelInterludeTests } from './islandTravelInterlude.test';
 import { islandRunDriftVoyageTests } from './islandRunDriftVoyage.test';
 import { islandRunExpansionPacksTests } from './islandRunExpansionPacks.test';
+import { islandRun3DAdaptiveQualityTests } from './islandRun3DAdaptiveQuality.test';
 import { missionPickupLandingAuditTests } from './missionPickupLandingAudit.test';
 import { island8BaselineActionTests, island8BaselineCheckTests } from './island8BaselineCheck.test';
 import { diceRegenJourneyTests } from './diceRegenJourney.test';
@@ -373,6 +374,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandTravelInterlude', tests: islandTravelInterludeTests },
   { label: 'islandRunDriftVoyage', tests: islandRunDriftVoyageTests },
   { label: 'islandRunExpansionPacks', tests: islandRunExpansionPacksTests },
+  { label: 'islandRun3DAdaptiveQuality', tests: islandRun3DAdaptiveQualityTests },
   { label: 'missionPickupLandingAudit', tests: missionPickupLandingAuditTests },
   { label: 'island8BaselineCheck', tests: island8BaselineCheckTests },
   { label: 'island8BaselineAction', tests: island8BaselineActionTests },

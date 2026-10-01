@@ -27,10 +27,10 @@ function expectValidContent(islandNumber: number): void {
 
 export const islandCaretakerConcordTests: TestCase[] = [
   { name: 'caretaker Concord content exists and validates for islands 1 through 120 samples', run: () => SAMPLE_ISLANDS.forEach(expectValidContent) },
-  { name: 'island 1 keeps the canonical Luma caretaker content', run: () => {
+  { name: 'island 1 keeps the canonical First Light Shore caretaker content', run: () => {
     const content = getIslandCaretakerConcordContent(1);
     assertEqual(content?.inhabitant.id, 'luma-caretaker', 'Expected Island 1 to reuse luma-caretaker');
-    assertEqual(content?.islandName, 'Luma Isle', 'Expected Island 1 name Luma Isle');
+    assertEqual(content?.islandName, 'First Light Shore', 'Expected Island 1 name First Light Shore');
     assertEqual(content?.topics[0]?.id, 'i001-topic-next-step', 'Expected canonical Island 1 topics');
   } },
   { name: 'authored islands 2-5 match their narrative island and civilization names', run: () => {

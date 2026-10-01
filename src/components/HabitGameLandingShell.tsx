@@ -323,7 +323,7 @@ export function HabitGameAuthCard({
             </div>
             <div className="guest-free-play-modal__route" aria-label="First voyage sequence">
               <span><b>1</b> Welcome pack</span>
-              <span><b>2</b> Sail to Luma</span>
+              <span><b>2</b> Sail to First Light</span>
               <span><b>3</b> Save free later</span>
             </div>
             {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}

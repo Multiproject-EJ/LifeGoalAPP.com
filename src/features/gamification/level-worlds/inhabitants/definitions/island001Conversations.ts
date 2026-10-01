@@ -2,7 +2,7 @@ import type { IslandConversationDefinition, IslandInhabitantTopicDefinition } fr
 
 export const island001InhabitantTopicDefinitions: IslandInhabitantTopicDefinition[] = [
   { id: 'i001-topic-next-step', islandNumber: 1, inhabitantId: 'luma-caretaker', label: 'What should I do next?', iconId: 'compass', conversationId: 'I001-C01-next-step', order: 1 },
-  { id: 'i001-topic-luma-isle', islandNumber: 1, inhabitantId: 'luma-caretaker', label: 'Tell me about Luma Isle.', iconId: 'book', conversationId: 'I001-C02-luma-isle', order: 2 },
+  { id: 'i001-topic-luma-isle', islandNumber: 1, inhabitantId: 'luma-caretaker', label: 'Tell me about First Light Shore.', iconId: 'book', conversationId: 'I001-C02-luma-isle', order: 2 },
   { id: 'i001-topic-caretaker', islandNumber: 1, inhabitantId: 'luma-caretaker', label: 'Who are you?', iconId: 'inhabitant', conversationId: 'I001-C03-caretaker', order: 3 },
 ];
 
@@ -31,10 +31,10 @@ export const island001ConversationDefinitions: IslandConversationDefinition[] = 
     id: 'I001-C02-luma-isle',
     islandNumber: 1,
     inhabitantId: 'luma-caretaker',
-    title: 'Tell me about Luma Isle.',
+    title: 'Tell me about First Light Shore.',
     openingNodeId: 'five-places',
     nodes: {
-      'five-places': { type: 'npc', id: 'five-places', speakerId: 'luma-caretaker', text: 'Luma Isle was built around five places of trust.', nextNodeId: 'places-closed' },
+      'five-places': { type: 'npc', id: 'five-places', speakerId: 'luma-caretaker', text: 'First Light Shore was built around five places of trust.', nextNodeId: 'places-closed' },
       'places-closed': { type: 'npc', id: 'places-closed', speakerId: 'luma-caretaker', text: 'When fear spread, each place closed itself away.', nextNodeId: 'luma-choice' },
       'luma-choice': { type: 'choice', id: 'luma-choice', prompt: 'What would you like to know?', choices: [
         { id: 'open-again', label: 'Can they open again?', nextNodeId: 'acts-of-trust' },

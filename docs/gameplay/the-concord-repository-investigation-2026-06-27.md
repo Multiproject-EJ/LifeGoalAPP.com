@@ -1,6 +1,6 @@
 # 2026-06-29 Supersession Amendment
 
-Status: historical investigation retained, but its hybrid construction recommendation is superseded. Current canonical design is the direct nine-fragment model: Luma Isle has nine island-specific physical Concord fragments, each maps to one 3x3 slot, each reveals one ninth of a coherent Concord image, and all nine distinct slots complete The Concord. There is no current six-general-component requirement and no separate Echo Crystal, Meaning Lens, or Concord Core gameplay gate. Those names may remain lore-only or visual subassembly labels.
+Status: historical investigation retained, but its hybrid construction recommendation is superseded. Current canonical design is the direct nine-fragment model: First Light Shore has nine island-specific physical Concord fragments, each maps to one 3x3 slot, each reveals one ninth of a coherent Concord image, and all nine distinct slots complete The Concord. There is no current six-general-component requirement and no separate Echo Crystal, Meaning Lens, or Concord Core gameplay gate. Those names may remain lore-only or visual subassembly labels.
 
 The existing 3x3 technology collection persistence and reward behavior remains the gameplay foundation; future implementation should observe full-grid completion through canonical gameplay state and must not let narrative content grant technology unlocks.
 

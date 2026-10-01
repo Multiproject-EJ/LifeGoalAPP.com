@@ -76,7 +76,7 @@ export const islandNarrativeReactionDispatchTests: TestCase[] = [
       const dialogue = beat ? buildReactionDialogue(beat, definition) : null;
       assertEqual(dialogue?.speakerName, 'Caretaker', 'first translated voice is the Caretaker');
       assertEqual(dialogue?.headline, 'FIRST CONTACT', 'call owns its display heading');
-      assertEqual(dialogue?.objectiveText, 'Restore the five lights of Luma Isle', 'call explains the new purpose');
+      assertEqual(dialogue?.objectiveText, 'Restore the five lights of First Light Shore', 'call explains the new purpose');
     },
   },
   {

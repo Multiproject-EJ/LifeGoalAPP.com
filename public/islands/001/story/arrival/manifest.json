@@ -13,14 +13,14 @@
     {
       "id": "diplomatic-brief",
       "type": "text",
-      "text": "Diplomatic assignment 001: help Luma Isle restore five landmarks with the ship’s specialist builder teams—and accept the host’s Arena invitation."
+      "text": "Diplomatic assignment 001: help First Light Shore restore five landmarks with the ship’s specialist builder teams—and accept the host’s Arena invitation."
     },
     {
       "id": "covered-lights",
       "type": "image",
       "src": "/islands/001/story/arrival/001-covered-lights.webp",
-      "alt": "A bright dawn over Luma Isle where every lantern has been deliberately covered",
-      "caption": "Luma Isle should be shining by now."
+      "alt": "A bright dawn over First Light Shore where every lantern has been deliberately covered",
+      "caption": "First Light Shore should be shining by now."
     },
     {
       "id": "silent-cradle",

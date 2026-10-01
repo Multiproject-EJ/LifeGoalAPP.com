@@ -29,7 +29,7 @@
       "id": "noctyra-listens",
       "type": "image",
       "src": "/islands/001/story/resolution/004-noctyra-listens.webp",
-      "alt": "Noctyra lowering her wings and listening to the people of Luma Isle",
+      "alt": "Noctyra lowering her wings and listening to the people of First Light Shore",
       "caption": "Noctyra: “I was trying to keep the small lights safe.”"
     },
     {
@@ -49,13 +49,13 @@
     {
       "id": "accord-record",
       "type": "text",
-      "text": "Your PA records the restoration in the 120-Island Accord. Luma answers by opening its Arena and the route onward."
+      "text": "Your PA records the restoration in the 120-Island Accord. First Light Shore answers by opening its Arena and the route onward."
     },
     {
       "id": "route-opens",
       "type": "image",
       "src": "/islands/001/story/resolution/007-route-opens.webp",
-      "alt": "A restored golden route leaving Luma Isle as a distant island answers in pale light",
+      "alt": "A restored golden route leaving First Light Shore as a distant island answers in pale light",
       "caption": "One route opens. Another answers."
     },
     {

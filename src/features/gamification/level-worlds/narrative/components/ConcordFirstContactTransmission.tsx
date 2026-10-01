@@ -113,7 +113,7 @@ export function ConcordFirstContactTransmission({
             <img
               className="concord-first-contact__portrait"
               src={portraitSrc}
-              alt={`${speakerName}, the Luma Isle caretaker`}
+              alt={`${speakerName}, the First Light Shore caretaker`}
             />
             <div className="concord-first-contact__translation-wave" aria-hidden="true">
               {Array.from({ length: 18 }, (_, index) => <i key={index} />)}

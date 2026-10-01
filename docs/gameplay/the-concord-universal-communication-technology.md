@@ -2,7 +2,7 @@
 
 Status: this amendment supersedes any earlier sections in this document that describe The Concord as requiring six generic technology pieces, Ancient Components, or separate Echo Crystal / Meaning Lens / Concord Core gameplay gates. Those names may remain internal lore or visual subassembly labels only. Current canonical design is: nine island-specific Concord fragments collected through the existing 3x3 technology collection foundation complete The Concord and unlock translated inhabitant/creature communication in a later implementation PR.
 
-- Island: Luma Isle.
+- Island: First Light Shore.
 - Scope: expedition technology.
 - Construction: nine physical Concord fragments mapped one-to-one to slots 0-8.
 - Collection UI: existing 3x3 technology collection modal.
