@@ -6,6 +6,7 @@ import {
   type TravelInterludePlan,
 } from '../services/islandTravelInterlude';
 import { createShipTravelInteriorScene } from '../dev/ShipTravelInteriorScene';
+import { ISLAND_3D_LEARNED_TIER_STORAGE_KEY, parseIsland3DLearnedTier } from '../services/islandRun3DAdaptiveQuality';
 import { useControllerShopScrollLock } from './living-controller/useControllerShopScrollLock';
 import './IslandTravelInterlude.css';
 
@@ -42,7 +43,10 @@ export function IslandTravelInterlude({ plan, onComplete, previewProgress }: {
     let renderer: THREE.WebGLRenderer | null = null;
     let interior: ReturnType<typeof createShipTravelInteriorScene> | null = null;
     try {
-      const lowEnd = typeof navigator !== 'undefined' && (navigator.hardwareConcurrency ?? 8) <= 4;
+      // Follow the board's remembered device tier when there is one.
+      let learnedTier: string | null = null;
+      try { learnedTier = parseIsland3DLearnedTier(window.localStorage.getItem(ISLAND_3D_LEARNED_TIER_STORAGE_KEY), Date.now())?.tier ?? null; } catch { learnedTier = null; }
+      const lowEnd = learnedTier ? learnedTier === 'low' : typeof navigator !== 'undefined' && (navigator.hardwareConcurrency ?? 8) <= 4;
       renderer = new THREE.WebGLRenderer({ canvas, antialias: !lowEnd, alpha: false, powerPreference: 'high-performance' });
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
