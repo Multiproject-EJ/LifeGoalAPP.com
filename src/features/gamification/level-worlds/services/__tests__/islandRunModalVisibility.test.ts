@@ -102,4 +102,40 @@ export const islandRunModalVisibilityTests: TestCase[] = [
       assert(board.includes('{incomingMissionBriefing && showMissionMessageBanner && !doesModalOwnAttention ?'), 'the banner waits for it');
     },
   },
+  {
+    name: 'dev money grant refreshes the board state so the top bar shows it immediately (QA Island 003)',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const handler = board.slice(board.indexOf('const handleDevGrantEssence = useCallback('), board.indexOf('const handleDevSpeedHatchEgg = useCallback('));
+      assert(handler.includes('setRuntimeState(result.record);') && handler.includes('runtimeStateRef.current = result.record;'), 'grant updates the rendered wallet');
+    },
+  },
+  {
+    name: 'Frostwell: every spin and its drilling are watched to the end, then the view returns to the island',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const modal = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandFrostwellMissionModal.tsx', 'utf8');
+      assert(!modal.includes('Finish animation') && !modal.includes('Finish and return to island'), 'no skip buttons during the drilling');
+      assert(modal.includes("{busy ? null : <button className=\"frostwell-v2__close\"") && modal.includes('const close = () => { if (!busyRef.current) onClose(); };')
+        && modal.includes("if (event.key === 'Escape' && !busyRef.current) onClose();"), 'no close, backdrop tap or Escape while busy');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const effect = board.slice(board.indexOf('const frostwellPreviousPhaseRef = useRef('), board.indexOf('}, [closeFrostwellMission, frostwellPresentationBuilt, frostwellSequence.phase]);'));
+      assert(effect.includes("if (frostwellSequence.phase !== 'complete' || previous === 'complete' || previous === 'ready') return;")
+        && effect.includes("closeFrostwellMission();\n    setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' });"), 'after the drilling the camera returns to the island');
+    },
+  },
+  {
+    name: 'Boss modal: "landmarks incomplete" only when a landmark is really below Level 3 (QA Island 003)',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes('? canonicalIslandCompletion.buildsComplete < canonicalIslandCompletion.landmarkCount'), 'build gap comes from the builds requirement only');
+      assert(board.includes("openedStopIsPlayable && isCurrentIslandLandmarkBuildIncomplete && !isCurrentIslandBossDefeated ? ("), 'notice keyed to builds');
+      assert(board.includes("isCurrentIslandLandmarkBuildIncomplete ? '🔒 Full Rewards Locked — Finish Landmark Upgrades' : bossTrialResolved ? '👑 Complete the Boss stop'"), 'button says what is actually left');
+    },
+  },
 ];

@@ -13,13 +13,18 @@ export function IslandFrostwellMissionModal({ open, phase, meters, built, spins,
   const dialog = React.useRef<HTMLElement>(null);
   const cinematic = phase === 'drilling' || phase === 'commissioning';
   const busy = phase === 'arming' || phase === 'spinning' || cinematic;
+  // The spin and the drilling always play to the end (user rule): no close,
+  // skip, backdrop tap or Escape until the auger stops.
+  const busyRef = React.useRef(busy);
+  busyRef.current = busy;
+  const close = () => { if (!busyRef.current) onClose(); };
   React.useEffect(() => {
     if (!open) return;
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const unlock = lockPageScroll();
     dialog.current?.focus();
     const key = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape' && !busyRef.current) onClose();
       if (event.key !== 'Tab') return;
       const items = Array.from(dialog.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
       const first = items[0]; const last = items[items.length - 1];
@@ -30,15 +35,14 @@ export function IslandFrostwellMissionModal({ open, phase, meters, built, spins,
     return () => { unlock(); document.removeEventListener('keydown', key); previous?.focus(); };
   }, [open, onClose]);
   if (!open || typeof document === 'undefined') return null;
-  return createPortal(<div className={`frostwell-v2-overlay${cinematic ? ' is-cinematic' : ''}`} onClick={onClose}>
+  return createPortal(<div className={`frostwell-v2-overlay${cinematic ? ' is-cinematic' : ''}`} onClick={close}>
     <section ref={dialog} tabIndex={-1} className={`frostwell-v2${built && !busy ? ' is-complete' : ''}`} role="dialog" aria-modal="true" aria-labelledby={title} onClick={event => event.stopPropagation()}>
-      <button className="frostwell-v2__close" aria-label={busy ? 'Finish animation and close' : 'Close Frostwell mission'} onClick={onClose}>×</button>
+      {busy ? null : <button className="frostwell-v2__close" aria-label="Close Frostwell mission" onClick={close}>×</button>}
       <div className="frostwell-v2__eyebrow">FROSTWELL ICEWORKS · SPECIAL MISSION</div>
       <h2 id={title}>{phase === 'drilling' ? 'Into the blue' : phase === 'commissioning' ? 'The iceworks awaken' : built ? 'Life beneath the ice' : 'What lies 500 metres below?'}</h2>
       {cinematic ? <>
         <p role="status">{phase === 'drilling' ? `Your auger is cutting ${result ?? 0} metres deeper. Follow its light through the frozen ocean.` : 'Fresh water rises. The lift turns. Your fishery comes to life.'}</p>
         <div className="frostwell-v2__cinematic-meter"><span>{meters}m</span><i /><span>{phase === 'drilling' ? 'BORING THROUGH ICE' : 'BRINGING SYSTEMS ONLINE'}</span></div>
-        <button className="frostwell-v2__text" onClick={onClose}>Finish animation</button>
       </> : built ? <>
         <div className="frostwell-v2__seal" aria-hidden="true">✦<span>500<small>METRES</small></span>✦</div>
         <p>The deep ice is open. Watch the nets bring up fish, the lifts rise and your new iceworks start trading.</p>
@@ -57,7 +61,7 @@ export function IslandFrostwellMissionModal({ open, phase, meters, built, spins,
         <div className="frostwell-v2__depth"><strong>{meters}<small> / 500 m</small></strong><span>{phase === 'spinning' ? 'Your next descent…' : phase === 'complete' && result !== null ? `+${result}m · deeper into the ice` : 'Find the water below'}</span></div>
         <div className="frostwell-v2__track" role="progressbar" aria-label="Drilling depth" aria-valuemin={0} aria-valuemax={500} aria-valuenow={meters}><i style={{ width: `${meters / 5}%` }} /></div>
         <p className="frostwell-v2__hint" role="status">{spins < 1 && !busy ? 'Land on a blue drill symbol to earn your next spin.' : 'Every spin drills 15–75 metres. No extra payment at breakthrough.'}</p>
-        <button className="frostwell-v2__text" onClick={onOverview}>{busy ? 'Finish and return to island' : 'Keep exploring'}</button>
+        {busy ? null : <button className="frostwell-v2__text" onClick={onOverview}>Keep exploring</button>}
       </>}
     </section>
   </div>, document.body);

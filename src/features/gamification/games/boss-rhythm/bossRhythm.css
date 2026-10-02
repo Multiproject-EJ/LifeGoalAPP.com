@@ -176,6 +176,13 @@
   margin: 0;
   font-size: 1.6rem;
   font-weight: 800;
+  /* Explicit: the global heading colour is dark navy on this dark overlay. */
+  color: #fff6dc;
+}
+
+.boss-rhythm__overlay--victory .boss-rhythm__overlay-title {
+  color: #ffd76a;
+  text-shadow: 0 0 18px rgba(255, 215, 106, 0.45);
 }
 
 .boss-rhythm__overlay-copy {
@@ -375,4 +382,83 @@
   .boss-rhythm__ctl--fire { width: 3.8rem; height: 3.8rem; }
   .boss-rhythm__ctl--move { width: 3rem; height: 3rem; }
   .boss-rhythm__ctl--shield { width: 2.9rem; height: 2.9rem; }
+}
+
+/* ── Boss Blitz (2026-10-02 rebuild): drag-to-fly controls ── */
+.boss-blitz .boss-rhythm__stage { cursor: grab; }
+.boss-blitz__boss-bar { position: relative; overflow: visible; }
+.boss-blitz__bar-mark {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.7);
+  transform: translateX(-1px);
+  border-radius: 1px;
+}
+.boss-blitz__briefing { overflow-y: auto; justify-content: center; }
+.boss-blitz__briefing .boss-rhythm__howto li { text-align: left; }
+.boss-blitz__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(6, 10, 28, 0.55), rgba(6, 10, 28, 0.95));
+  z-index: 2;
+}
+.boss-blitz__hearts { display: flex; gap: 0.2rem; flex: 1 1 auto; font-size: 1.35rem; line-height: 1; }
+.boss-blitz__heart { color: rgba(255, 255, 255, 0.18); transition: color 0.2s, transform 0.2s; }
+.boss-blitz__heart.is-full { color: #ff4d8a; text-shadow: 0 0 10px rgba(255, 77, 138, 0.7); }
+.boss-blitz__ctl {
+  position: relative;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.boss-blitz__ctl:disabled { cursor: default; }
+.boss-blitz__ctl--shield {
+  width: 3.4rem;
+  height: 3.4rem;
+  font-size: 1.3rem;
+  background: radial-gradient(circle at 35% 30%, #3a5aa8, #18264f);
+  box-shadow: 0 0 0 2px rgba(159, 247, 255, 0.45);
+}
+.boss-blitz__ctl--shield:disabled { opacity: 0.4; }
+.boss-blitz__ctl-count {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.2rem;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  background: #ffd76a;
+  color: #2a1a00;
+  font-size: 0.72rem;
+  line-height: 1.2rem;
+}
+.boss-blitz__ctl--nova {
+  width: 4.6rem;
+  height: 4.6rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  background:
+    radial-gradient(circle at 50% 50%, #0d1a3a 58%, transparent 60%),
+    conic-gradient(#46e6ff var(--nova, 0deg), rgba(255, 255, 255, 0.12) 0deg);
+}
+.boss-blitz__ctl--nova span { position: relative; z-index: 1; }
+.boss-blitz__ctl--nova.is-ready {
+  background: radial-gradient(circle at 40% 35%, #ffffff, #46e6ff 45%, #1a6bff);
+  color: #04102a;
+  animation: boss-blitz-nova-ready 0.9s ease-in-out infinite;
+}
+@keyframes boss-blitz-nova-ready {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(70, 230, 255, 0.5), 0 0 22px rgba(70, 230, 255, 0.6); }
+  50% { box-shadow: 0 0 0 6px rgba(70, 230, 255, 0.25), 0 0 34px rgba(70, 230, 255, 0.9); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boss-blitz__ctl--nova.is-ready { animation: none; box-shadow: 0 0 0 3px rgba(70, 230, 255, 0.6); }
 }

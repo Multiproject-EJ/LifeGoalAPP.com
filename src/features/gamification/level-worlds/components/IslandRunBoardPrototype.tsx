@@ -3813,6 +3813,18 @@ export function IslandRunBoardPrototype({
   const frostwellAvailableSpins = frostwellPreviewActive && frostwellMissionState === 'drilling'
     ? 1
     : getFrostwellAvailableSpins(frostwellProgress);
+  // User rule (2026-10-02): every spin is watched. The drilling cannot be
+  // skipped, and once the auger stops the view returns to the island. Only
+  // the breakthrough keeps its completion card, whose buttons also return.
+  const frostwellPreviousPhaseRef = useRef(frostwellSequence.phase);
+  useEffect(() => {
+    const previous = frostwellPreviousPhaseRef.current;
+    frostwellPreviousPhaseRef.current = frostwellSequence.phase;
+    if (frostwellSequence.phase !== 'complete' || previous === 'complete' || previous === 'ready') return;
+    if (frostwellPresentationBuilt) return;
+    closeFrostwellMission();
+    setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' });
+  }, [closeFrostwellMission, frostwellPresentationBuilt, frostwellSequence.phase]);
   const firstLightAssemblyProgress = useMemo(() => resolveFirstLightAssemblyCraterProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
@@ -7651,6 +7663,12 @@ export function IslandRunBoardPrototype({
   const isCurrentIslandFullyCleared = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? canonicalIslandCompletion.baseComplete
     : legacyIsCurrentIslandFullyCleared);
+  // Only the builds: "fully cleared" also counts the Boss objective itself, so
+  // it is never true before the Boss is won (QA Island 003: the Boss modal
+  // said "Landmarks incomplete" with every landmark at Level 3).
+  const isCurrentIslandLandmarkBuildIncomplete = ISLAND_RUN_CONTRACT_V2_ENABLED
+    ? canonicalIslandCompletion.buildsComplete < canonicalIslandCompletion.landmarkCount
+    : !legacyIsCurrentIslandFullyCleared;
   const isBaseIslandFinishedForDeparture = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? canonicalIslandCompletion.complete
     : legacyIsCurrentIslandFullyCleared);
@@ -13313,6 +13331,8 @@ export function IslandRunBoardPrototype({
       setLandingText('DEV MODE: invalid money grant amount.');
       return;
     }
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
     setLandingText(`🧪 DEV MODE: +${result.applied} money granted via canonical action.`);
   }, [client, isDevModeEnabled, session]);
 
@@ -19902,10 +19922,10 @@ export function IslandRunBoardPrototype({
                   onClick={() => handleCompleteActiveStop()}
                   disabled={!bossTrialResolved || bossTrialPhase === 'in_progress'}
                 >
-                  {isCurrentIslandFullyCleared ? '✅ Boss Stop Complete' : '🔒 Full Rewards Locked — Finish Landmark Upgrades'}
+                  {isCurrentIslandFullyCleared ? '✅ Boss Stop Complete' : isCurrentIslandLandmarkBuildIncomplete ? '🔒 Full Rewards Locked — Finish Landmark Upgrades' : bossTrialResolved ? '👑 Complete the Boss stop' : '⚔️ Win the boss battle to finish'}
                 </button>
               ) : null}
-              {activeStop.stopId === 'boss' && openedStopIsPlayable && !isCurrentIslandFullyCleared && !isCurrentIslandBossDefeated ? (
+              {activeStop.stopId === 'boss' && openedStopIsPlayable && isCurrentIslandLandmarkBuildIncomplete && !isCurrentIslandBossDefeated ? (
                 <p className="island-stop-modal__locked-notice" role="status" style={{ marginTop: '0.4rem' }}>
                   <span aria-hidden="true">🧱</span> Landmarks incomplete — finish upgrades to Level {MAX_BUILD_LEVEL} on all stops before you can claim full island-clear rewards and travel.
                 </p>
@@ -23310,7 +23330,7 @@ export function IslandRunBoardPrototype({
       <IslandFrostwellMissionModal open={showFrostwellMission} phase={frostwellSequence.phase}
         meters={frostwellPresentationMeters} built={frostwellPresentationBuilt} spins={frostwellAvailableSpins}
         rotation={frostwellWheelRotation} result={frostwellLastSpinMeters} onSpin={() => { void handleSpinFrostwell(); }}
-        onClose={closeFrostwellMission} onOverview={() => { closeFrostwellMission(); setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' }); }} />
+        onClose={() => { const wasBuilt = frostwellPresentationBuilt; closeFrostwellMission(); if (wasBuilt) setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' }); }} onOverview={() => { closeFrostwellMission(); setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' }); }} />
 
       <IslandAssemblyCraterModal
         open={showFirstLightAssemblyCrater}

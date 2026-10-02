@@ -28795,6 +28795,8 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
+  /* Explicit: the phone's inherited text colour is dark (names were invisible). */
+  color: #eaf6ff;
 }
 .island-mission-tracker__flags header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .island-mission-tracker__flags header small { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }

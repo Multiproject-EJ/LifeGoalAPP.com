@@ -44,13 +44,21 @@ const BRIDGE_BY_CHAPTER: Record<CompassBookChapterId, string> = {
   personal_playbook: 'Used by the Personal Playbook to shape a sustainable habit rule and recovery route.',
 };
 
+/** Free-text answers sit mid-sentence: quote them and drop trailing punctuation
+ * ("protects “whether to keep walking”; choose…", not "protects Whether….;"). */
+export function quoteInlineAnswer(answer: string): string {
+  const text = answer.trim().replace(/[\s.;:,!?]+$/u, '');
+  if (!text) return '“this”';
+  return /^[“"«]/.test(text) ? text : `“${text}”`;
+}
+
 function authoredNextStep(input: {
   chapterId: CompassBookChapterId;
   questionId: string | null;
   answerSummary: string;
   linked: { kind: 'goal' | 'habit'; label: string } | null;
 }): string {
-  const answer = input.answerSummary;
+  const answer = quoteInlineAnswer(input.answerSummary);
   const linkedLabel = input.linked ? `“${input.linked.label}”` : null;
 
   switch (input.chapterId) {
