@@ -1,0 +1,39 @@
+{
+  "status": "pass",
+  "scope": "production bundle, disposable guest and offline local island fixture; not physical-device acceptance",
+  "errors": [],
+  "cases": [
+    "Fresh guest entry mounts the actual 3D Island001",
+    "Unmarked saves are not enrolled; production Island007 L3 renders without development flags"
+  ],
+  "canvas": {
+    "engine": "three.js r185",
+    "island7Environment": "world-space-geometry-v2",
+    "island7EnvironmentBudget": "{\"triangles\":23202,\"drawCalls\":16}",
+    "island7TimeOfDay": "day",
+    "island7EnvironmentReady": "true",
+    "constructionRendererGeneration": "1792",
+    "constructionCrewAllocatedTriangles": "43782",
+    "constructionCrewAllocatedDrawCalls": "90",
+    "constructionCrewTriangles": "0",
+    "constructionCrewDrawCalls": "0",
+    "constructionCrewRuntime": "parked",
+    "constructionCrewActive": "false",
+    "constructionCrewTarget": "boss",
+    "constructionCrewPhase": "arrive",
+    "constructionCrewMode": "resting",
+    "constructionCommissioning": "idle",
+    "constructionChoreography": "abyssal-pearl-throne-commissioning:station-4",
+    "island7RuntimePartManifest": "{\"model\":\"island-007-abyssal-pearl-kingdom\",\"parts\":[{\"id\":\"terrain-network\",\"name\":\"terrain-network\",\"kind\":\"part\",\"nodeName\":\"ISLAND7_UNDERWATER_SCENERY_BATCH_0\",\"module\":\"terrain\",\"triangles\":0},{\"id\":\"central-seabed\",\"name\":\"central-seabed\",\"kind\":\"part\",\"nodeName\":\"ISLAND7_UNDERWATER_SCENERY_BATCH_0\",\"module\":\"terrain\",\"triangles\":0},{\"id\":\"outer-reef-shelves\",\"name\":\"outer-reef-shelves\",\"kind\":\"part\",\"nodeName\":\"ISLAND7_UNDERWATER_SCENERY_BATCH_0\",\"module\":\"terrain\",\"triangles\":0},{\"id\":\"reef-botany\",\"name\":\"reef-botany\",\"kind\":\"part\",\"nodeName\":\"ISLAND7_UNDERWATER_SCENERY_BATCH_0\",\"module\":\"reef\",\"triangles\":0},{\"id\":\"coral-cluster-array\",\"name\":\"coral-cluster-array\",\"kind\":\"part\",\"nodeName\":\"ISLAND7_UNDERWATER_SCENERY_BATCH_0\",\"module\":\"reef\",\"triangles\":0},{\"id\":\"ruin-fragment-array\",\"name\":\"ruin-fragment-array\",\"kind\":\"part\",\"nodeName\":\"ISLAND7_UNDERWATER_SCENERY_BATCH_0\",\"module\":\"terrain-detail\",\"triangles\":0},{\"id\":\"ambience-system\",\"name\":\"ambience-system\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_UNDERWATER_LIVING_AMBIENCE\",\"module\":\"ambience\",\"triangles\":0},{\"id\":\"fish-schools\",\"name\":\"fish-schools\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_FISH_SCHOOLS\",\"module\":\"fauna\",\"triangles\":0},{\"id\":\"jellyfish-field\",\"name\":\"jellyfish-field\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_JELLYFISH\",\"module\":\"fauna\",\"triangles\":0},{\"id\":\"manta-glide\",\"name\":\"manta-glide\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_MANTA_ORBIT\",\"module\":\"fauna\",\"triangles\":0},{\"id\":\"submarine-route\",\"name\":\"submarine-route\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_SUBMARINE_ORBIT\",\"module\":\"vehicle\",\"triangles\":0},{\"id\":\"bubble-fields\",\"name\":\"bubble-fields\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_BUBBLE_FIELD\",\"module\":\"particles\",\"triangles\":0},{\"id\":\"caustic-projection\",\"name\":\"caustic-projection\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_CAUSTIC_FIELD\",\"module\":\"lighting\",\"triangles\":0},{\"id\":\"surface-light-shafts\",\"name\":\"surface-light-shafts\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_SURFACE_LIGHT_SHAFT\",\"module\":\"lighting\",\"triangles\":0},{\"id\":\"landmark-network\",\"name\":\"landmark-network\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_LANDMARK_NETWORK_RUNTIME_PROXY\",\"module\":\"landmark-network\",\"triangles\":0},{\"id\":\"pearl-palace\",\"name\":\"pearl-palace\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_UNDERWATER_BOSS_ROOT\",\"module\":\"landmark\",\"triangles\":0},{\"id\":\"pearl-trim-array\",\"name\":\"pearl-trim-array\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_BOSS_ARCHITECTURE_PIVOT\",\"module\":\"landmark-architecture\",\"triangles\":0},{\"id\":\"palace-pearl-core\",\"name\":\"palace-pearl-core\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_PALACE_PEARL_CORE\",\"module\":\"landmark-animated\",\"triangles\":0},{\"id\":\"hatchery-grotto\",\"name\":\"hatchery-grotto\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_UNDERWATER_HATCHERY_ROOT\",\"module\":\"landmark\",\"triangles\":0},{\"id\":\"pearl-trim-array\",\"name\":\"pearl-trim-array\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_HATCHERY_ARCHITECTURE_PIVOT\",\"module\":\"landmark-architecture\",\"triangles\":0},{\"id\":\"habit-sanctuary\",\"name\":\"habit-sanctuary\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_UNDERWATER_HABIT_ROOT\",\"module\":\"landmark\",\"triangles\":0},{\"id\":\"pearl-trim-array\",\"name\":\"pearl-trim-array\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_HABIT_ARCHITECTURE_PIVOT\",\"module\":\"landmark-architecture\",\"triangles\":0},{\"id\":\"wisdom-archive\",\"name\":\"wisdom-archive\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_UNDERWATER_WISDOM_ROOT\",\"module\":\"landmark\",\"triangles\":0},{\"id\":\"pearl-trim-array\",\"name\":\"pearl-trim-array\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_WISDOM_ARCHITECTURE_PIVOT\",\"module\":\"landmark-architecture\",\"triangles\":0},{\"id\":\"compass-portal\",\"name\":\"compass-portal\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_UNDERWATER_EVENT_ROOT\",\"module\":\"landmark\",\"triangles\":0},{\"id\":\"pearl-trim-array\",\"name\":\"pearl-trim-array\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_EVENT_ARCHITECTURE_PIVOT\",\"module\":\"landmark-architecture\",\"triangles\":0},{\"id\":\"portal-energy-core\",\"name\":\"portal-energy-core\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_PORTAL_SURFACE\",\"module\":\"landmark-animated\",\"triangles\":0},{\"id\":\"route-integration\",\"name\":\"route-integration\",\"kind\":\"part\",\"nodeName\":\"ISLAND_7_TILE_SURFACE_BATCH_1\",\"module\":\"canonical-board-route\",\"triangles\":0}],\"unnamedMeshes\":0,\"integralMeshes\":114}",
+    "island7RuntimePartCount": "24",
+    "centralLandmarkOcclusion": "opaque",
+    "cameraAuthoring": "false",
+    "stagedRestorationStage": "0",
+    "stagedRestorationIsland": "7",
+    "assemblyBlastCameraShake": "0.000",
+    "explorePoint": "",
+    "stormfrontStructures": "hidden",
+    "landmarkFlags": "hatchery:green,habit:green,event:green,wisdom:green,boss:green"
+  },
+  "text": "D\n40\n1,000\n🎲\n100\n🔇\n☰\n✦\n✓\n✦\nARENA GAMES\n✦\n✦\n0/5\n🎲\n5\n7h 59m\n✦\n20 🛠️\n33%\nMISSION\n100%\n🥚 Hatchery Landmark\nReady to enter\n100%\n✅ Habit Landmark\nReady to enter\n100%\n🎪 Event Arena Landmark\nReady to enter\n100%\n📖 Wisdom Landmark\nReady to enter\n100%\n👑 Boss Landmark\nFinish earlier activities\n🔎\nShop\nBuild\nRoll (1 dice) · 100 rolls left\nCreatures\nOpen Story\nROLL POWER\n×1\n✦\n\nToday you plant seeds others will call luck.\n\n🚦\nNew: the Traffic Light\n\nEvery time you pass it, one lamp lights up. Light all 8 for a mystery bonus. It glows when you are close!\n\nGot it"
+}

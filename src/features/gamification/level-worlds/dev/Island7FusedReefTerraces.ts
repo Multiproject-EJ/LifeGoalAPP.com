@@ -89,7 +89,7 @@ export async function createIsland7FusedReefTerraces(quality: Island3DQuality, s
     if (triangles > triangleLimit || drawCalls > 16) throw new Error(`Fused reef budget exceeded: ${triangles} triangles, ${drawCalls} draws`);
     root.userData = { ...root.userData, revision: 'fused-reef-terraces-v002', presentationOnly: true,
       representationFamily: 'continuous-fused-geological-terraces',
-      visualApproval: 'pending-independent-macro-QC', worldCoordinatesBaked: true,
+      visualApproval: 'user-accepted-v2-production-rollout-2026-10-02', worldCoordinatesBaked: true,
       environmentBudget: { quality, triangles, drawCalls, triangleLimit, foundationCount: 5 },
       source: { bankAndFooting: 'worker-reef-v002 closed approved geometry', foundation: 'worker-reef-v002' },
       sculptRuntime: { clickable: false, explodable: true, presentationOnly: true,

@@ -4555,12 +4555,10 @@ export default function Island5ThreePilot({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || (isAssemblyCraterFirstLight && !assemblyAssetsReady)) return undefined;
-    // Unaccepted V2 macro studies stay in the local workbench until their
-    // independent visual gate passes. Ordinary gameplay retains V1.
-    const island7EnvironmentV2Enabled = import.meta.env.DEV && isAbyssalPearlKingdom
-      && new URLSearchParams(window.location.search).get('island7EnvironmentV2') === '1';
-    const island7PalaceV2Enabled = import.meta.env.DEV && isAbyssalPearlKingdom
-      && new URLSearchParams(window.location.search).get('island7PalaceV2') === '1';
+    // Island 007 V2 is the accepted production presentation. Query parameters
+    // below remain DEV-only diagnostics; gameplay authority stays canonical.
+    const island7EnvironmentV2Enabled = isAbyssalPearlKingdom;
+    const island7PalaceV2Enabled = isAbyssalPearlKingdom;
     setHasRenderedFrame(false);
     setError(null);
     setTourStatus('idle');
@@ -5835,6 +5833,7 @@ export default function Island5ThreePilot({
         if (island7Environment.root.userData.status === 'disposed') return;
         canvas.dataset.island7EnvironmentReady = 'error';
         console.error('Island 007 authored environment failed to load', error);
+        setError('The island models could not load. Tap to retry.');
       });
     }
     const jungleInspectionOccluders = isJungleExpedition
@@ -12351,7 +12350,9 @@ export default function Island5ThreePilot({
         canvas.dataset.constructionSceneDrawCalls = String(renderer.info.render.calls);
         canvas.dataset.constructionSceneTriangles = String(renderer.info.render.triangles);
       }
-      if (!firstFrameRendered && renderer.info.render.calls > 0) {
+      const island7EnvironmentReady = !island7Environment
+        || island7Environment.root.userData.status === 'ready';
+      if (!firstFrameRendered && renderer.info.render.calls > 0 && island7EnvironmentReady) {
         firstFrameRendered = true;
         setHasRenderedFrame(true);
         markIslandRunLoadingScreenDone();

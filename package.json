@@ -65,6 +65,7 @@
     "test:personal-quest-day-unlock": "node scripts/check-personal-quest-day-unlock.mjs",
     "check:island-run-lucky-roll-dev-overlay": "node scripts/check-island-run-lucky-roll-dev-overlay.mjs",
     "check:island-run-architecture-guards": "node scripts/check-island-run-architecture-guards.mjs",
+    "check:app-entry": "node scripts/check-app-entry.mjs",
     "check:app-boot": "node scripts/check-app-boot-smoke.mjs",
     "check:audio-assets": "node scripts/validate-audio-assets.mjs",
     "check:island-art-assets": "node scripts/validate-island-art-assets.mjs",

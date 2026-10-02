@@ -1,10 +1,11 @@
+import { Capacitor } from '@capacitor/core';
 import { isStandaloneMode } from './detectStandalone';
 
 export type ResolvedRoute = 'world' | 'app' | 'login' | 'lobby' | 'privacy' | 'terms' | 'support' | 'unknown';
 
 /**
  * Resolve current pathname to a route target.
- * - `/` in standalone mode → 'app' (skip world site for installed PWA users)
+ * - `/` in Capacitor or standalone mode → 'app' (skip the public site for installed app users)
  * - `/` in browser mode → 'world' (show public landing)
  * - `/login` → 'login'
  * - `/lobby` → 'lobby' (auth-required post-login bridge)
@@ -19,7 +20,7 @@ export function resolveRoute(pathname: string = window.location.pathname): Resol
   const normalized = pathname.replace(/\/+$/, '') || '/';
 
   if (normalized === '/') {
-    return isStandaloneMode() ? 'app' : 'world';
+    return Capacitor.isNativePlatform() || isStandaloneMode() ? 'app' : 'world';
   }
   if (normalized === '/login') return 'login';
   if (normalized === '/lobby') return 'lobby';

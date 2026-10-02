@@ -1298,7 +1298,7 @@ export function buildIsland7UnderwaterLandmark(
   quality: Island3DQuality,
   materials: Island7UnderwaterMaterials,
   options: IslandConstructionFactoryOptions & {
-    /** DEV-only visual factory; preserves the canonical wrapper and sockets. */
+    /** Presentation-only factory; preserves the canonical wrapper and sockets. */
     palaceFactory?: (level: 1 | 2 | 3, quality: Island3DQuality) => THREE.Group;
     outerFactory?: (id: 'hatchery' | 'habit' | 'wisdom' | 'event', level: 1 | 2 | 3, quality: Island3DQuality) => THREE.Group;
   } = {},
@@ -1342,8 +1342,8 @@ export function buildIsland7UnderwaterLandmark(
     addPlinth(root, definition.id === 'boss' ? 1.45 : 1.08, materials, quality);
   } else {
     const resolved = level as 1 | 2 | 3;
-    const palaceFactory = import.meta.env.DEV && definition.id === 'boss' ? options.palaceFactory : undefined;
-    const outerFactory = import.meta.env.DEV && definition.id !== 'boss' ? options.outerFactory : undefined;
+    const palaceFactory = definition.id === 'boss' ? options.palaceFactory : undefined;
+    const outerFactory = definition.id !== 'boss' ? options.outerFactory : undefined;
     const customFactory = palaceFactory || outerFactory;
     const building = outerFactory && definition.id !== 'boss' ? outerFactory(definition.id, resolved, quality) : definition.id === 'hatchery'
       ? createNautilusHatchery(resolved, quality, materials)
@@ -1386,8 +1386,8 @@ export function buildIsland7UnderwaterLandmark(
   // One hero shadow anchors the central palace. The four satellites keep
   // baked material depth and receive that lighting without each replaying the
   // whole architectural draw list into the shadow map.
-  markShadows(root, quality === 'high' && (definition.id === 'boss' || (import.meta.env.DEV && Boolean(options.outerFactory))));
-  if (import.meta.env.DEV && (options.outerFactory || options.palaceFactory)) root.traverse(node => {
+  markShadows(root, quality === 'high' && (definition.id === 'boss' || Boolean(options.outerFactory)));
+  if (options.outerFactory || options.palaceFactory) root.traverse(node => {
     if (!(node instanceof THREE.Mesh)) return;
     const transparent = (Array.isArray(node.material) ? node.material : [node.material]).some(material => material.transparent);
     if (transparent) node.castShadow = false;

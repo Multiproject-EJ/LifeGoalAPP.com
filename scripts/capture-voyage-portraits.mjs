@@ -16,8 +16,10 @@
  *   npm run island-portraits -- --base http://127.0.0.1:5173
  */
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = process.cwd();
 const MANIFEST = join(ROOT, 'src/features/gamification/level-worlds/services/islandVoyagePortraits.json');
@@ -63,8 +65,18 @@ async function main() {
   const islands = requested
     ? requested.split(',').map(Number).filter((n) => routes.has(n))
     : [...routes.keys()].sort((a, b) => a - b);
-  const { chromium } = await import('playwright').catch(() => import('/opt/node22/lib/node_modules/playwright/index.mjs'));
-  const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const require = createRequire(import.meta.url);
+  let playwright;
+  try {
+    playwright = require(process.env.ISLAND_PLAYWRIGHT || 'playwright');
+  } catch {
+    playwright = require('/opt/node22/lib/node_modules/playwright');
+  }
+  const { chromium } = playwright;
+  const browser = await chromium.launch({
+    ...(process.env.ISLAND_CHROME ? { executablePath: process.env.ISLAND_CHROME } : {}),
+    args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+  });
   const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
   for (const island of islands) {
     const nnn = String(island).padStart(3, '0');
@@ -118,6 +130,6 @@ async function main() {
   writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => { console.error(error); process.exit(1); });
 }

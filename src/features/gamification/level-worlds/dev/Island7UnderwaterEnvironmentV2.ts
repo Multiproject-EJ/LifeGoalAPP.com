@@ -27,8 +27,8 @@ export function createIsland7UnderwaterEnvironmentV2(options: {
   const root = new THREE.Group();
   root.name = 'ISLAND_7_V2_ENVIRONMENT_ROOT';
   root.userData.presentationOnly = true;
-  root.userData.representationFamily = 'reusable-unapproved-fused-reef-terraces-v002';
-  root.userData.activeReviewScope = 'parked-unapproved-terrain-context';
+  root.userData.representationFamily = 'accepted-fused-reef-terraces-v002';
+  root.userData.activeReviewScope = 'island-007-v2-production';
   root.userData.backgroundRepresentation = 'world-space-geometry';
   root.userData.status = 'loading';
   root.userData.environmentBudget = { triangles: 0, drawCalls: 0 };
