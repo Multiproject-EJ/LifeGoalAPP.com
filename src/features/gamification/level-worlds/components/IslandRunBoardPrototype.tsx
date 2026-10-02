@@ -253,6 +253,7 @@ import {
   resolveNextExpansionIsland,
 } from '../services/islandRunExpansionPacks';
 import { completeExpansionPackVoyage, devGrantExpansionPack, switchExpansionVoyage } from '../services/islandRunExpansionVoyageActions';
+import { devEnrollOpeningGamesCampaign } from '../services/islandRunOpeningGamesCampaignDevAction';
 import { DriftVoyageIntroModal } from './DriftVoyageIntroModal';
 
 const ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY = 'islandRun.affirmationsSeen.v1';
@@ -17489,6 +17490,20 @@ export function IslandRunBoardPrototype({
                     disabled={isDevMissionResetPending || isDevIslandJumpPending}
                   >
                     {isDevMissionResetPending ? 'Clearing mission…' : 'Clear current island mission'}
+                  </button>
+                  <button
+                    type="button"
+                    className="island-run-board__dev-island-jump-submit"
+                    onClick={() => {
+                      setShowTopbarMenu(false);
+                      void devEnrollOpeningGamesCampaign({ session, client })
+                        .then((result) => setLandingText(result.status === 'ok'
+                          ? '🧪 DEV: this save now plays the new campaign (Opening Arena, Stormfront…).'
+                          : '🧪 DEV: this save is already on the new campaign.'))
+                        .catch(() => setLandingText('Could not switch this save to the new campaign.'));
+                    }}
+                  >
+                    🧪 Enrol in new campaign (dev)
                   </button>
                   <button
                     type="button"

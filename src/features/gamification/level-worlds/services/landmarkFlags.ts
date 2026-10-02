@@ -2,7 +2,8 @@
  * Landmark flags: one glance tells whether a landmark still needs work.
  * - no flag: not started yet;
  * - red (glowing): building has started but it is not finished;
- * - green: built to Level 3 — the landmark is 100% done.
+ * - green: built to Level 3 (100% built; its activity may still be open,
+ *   which "Complete Landmarks" counts separately).
  * Shown on the 3D board beside each landmark, on its label and in the
  * Mission Phone. Presentation only.
  */
@@ -21,5 +22,5 @@ export function resolveLandmarkFlag(options: { level: number; percent?: number }
 export const LANDMARK_FLAG_LABEL: Record<LandmarkFlag, string> = {
   none: 'Not started',
   red: 'In progress',
-  green: 'Done',
+  green: 'Built',
 };
