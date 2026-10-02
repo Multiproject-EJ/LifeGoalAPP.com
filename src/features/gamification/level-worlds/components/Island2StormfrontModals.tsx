@@ -12,6 +12,7 @@ import { MAX_BUILD_LEVEL } from '../services/islandRunBuildConstants';
 
 /** Hold-to-build cadence (one funded step per tick while held). */
 const HOLD_STEP_MS = 140;
+export const INSUFFICIENT_MONEY_NOTICE = 'Not enough money. Roll to collect more, then keep building.';
 
 const STRUCTURE_ICONS: Record<StormfrontStructureId, string> = { 'lightning-grid': '⚡', 'sky-hangar': '🛩️' };
 
@@ -96,9 +97,9 @@ export function Island2StormfrontBuildModal(props: {
     inFlight.current = true;
     try {
       const result = await onFundStepRef.current(id);
-      if (result.status === 'insufficient_money') { setNotice('Not enough money. Roll to collect more, then keep building.'); setHolding(null); }
+      if (result.status === 'insufficient_money') { setNotice(INSUFFICIENT_MONEY_NOTICE); setHolding(null); }
       else if (result.status === 'already_complete') setHolding(null);
-      else if (result.status === 'ok') { setNotice(result.leveledUp ? 'Level up! 🚩' : null); }
+      else if (result.status === 'ok') setNotice((current) => (result.leveledUp ? 'Level up! 🚩' : current === INSUFFICIENT_MONEY_NOTICE ? null : current));
     } finally {
       inFlight.current = false;
     }

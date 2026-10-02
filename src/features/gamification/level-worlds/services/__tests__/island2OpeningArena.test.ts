@@ -124,6 +124,34 @@ export const island2OpeningArenaTests: TestCase[] = [
     },
   },
   {
+    name: 'opening arena + stormfront: a level-up notice survives the next hold step; a stale money warning clears',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const keep = "current === INSUFFICIENT_MONEY_NOTICE ? null : current";
+      const storm = fsMod.readFileSync('src/features/gamification/level-worlds/components/Island2StormfrontModals.tsx', 'utf8');
+      assert(storm.includes(`setNotice((current) => (result.leveledUp ? 'Level up! 🚩' : ${keep}))`), 'storm defences keep the level-up flash while the hold continues');
+      assert(!storm.includes("setNotice(result.leveledUp ? 'Level up! 🚩' : null)"), 'a plain funded step no longer wipes the level-up notice 140 ms later');
+      const arena = fsMod.readFileSync('src/features/gamification/level-worlds/components/OpeningArenaBuildModal.tsx', 'utf8');
+      assert(arena.includes(`setNotice((current) => (result.leveledUp ? 'Level up! The crowd cheers 🎉' : ${keep}))`), 'the arena clears the money warning once building works again');
+    },
+  },
+  {
+    name: 'island 002 QA: the habit door notice names the real exit, has a readable backing, and the reward count stays above its knob',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes("' (or tap “Come back later”)'") && !board.includes('Skip for now'), 'the notice points at the habit card’s real “Come back later” button');
+      const css = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      assert(css.includes('.island-stop-modal--behavior-focus > .island-stop-modal__locked-notice {'), 'the door notice no longer floats over the world in the transparent focused sheet');
+      const counter = css.slice(css.indexOf('\n.island-run-board__rewardbar-track-counter {'));
+      const knob = css.slice(css.indexOf('\n.island-run-board__rewardbar-position {'));
+      const z = (block: string) => Number(/z-index:\s*(\d+)/.exec(block.slice(0, block.indexOf('}')))?.[1]);
+      assert(z(counter) > z(knob), 'the x/15 count renders above the progress knob');
+    },
+  },
+  {
     name: 'opening arena: Island 002 centre is the Golden Sky Lift and the outer landmarks carry Crystal Miners drop zones',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
