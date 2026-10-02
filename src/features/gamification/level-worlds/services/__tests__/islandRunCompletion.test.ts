@@ -82,6 +82,8 @@ export const islandRunCompletionTests: TestCase[] = [
       try { await travelToNextIsland({ session, client: null, nextIsland: 3, completedVisitKey: '0:2', startTimer: true, nowMs: 12345, getIslandDurationMs: () => 0, islandRunContractV2Enabled: true }); } catch { rejected = true; }
       assert(rejected, 'Canonical departure refuses unfinished goals');
       assertEqual(getIslandRunStateSnapshot(session).currentIslandNumber, 2, 'Player remains on current island');
+      const jumped = await travelToNextIsland({ session, client: null, nextIsland: 3, completedVisitKey: '0:2', devJump: true, startTimer: false, nowMs: 12345, getIslandDurationMs: () => 0, islandRunContractV2Enabled: true });
+      assertEqual(jumped.record.currentIslandNumber, 3, 'the developer island jump loads any island for QA');
     },
   },
   {

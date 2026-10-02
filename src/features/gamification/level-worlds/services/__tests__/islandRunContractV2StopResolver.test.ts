@@ -639,4 +639,16 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'postponement: a free-to-enter beginner landmark opened before its predecessor can still be postponed (QA Island 003)',
+    run: () => {
+      const states = Array.from({ length: 5 }, (_, index) => ({ objectiveComplete: false, buildComplete: false, accessUnlocked: index === 0 }));
+      const shown = resolveIslandRunContractV2Stops({ stopStatesByIndex: states });
+      assertEqual(shown.statusesByIndex[1] === 'locked', false, 'the board lets the player enter Habit before the Welcome Venue');
+      const result = canPostponeIslandRunStop({ stopStatesByIndex: states, stopIndex: 1 });
+      assertEqual(result.ok, true, 'so its "Come back later" works instead of stranding the player');
+      const boss = canPostponeIslandRunStop({ stopStatesByIndex: states, stopIndex: 4 });
+      assertEqual(boss.ok, false, 'the Boss is still never postponable');
+    },
+  },
 ];

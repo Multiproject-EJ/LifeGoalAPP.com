@@ -5309,6 +5309,9 @@ export interface TravelToNextIslandOptions {
   /** Normal completion travel must still refer to this fully completed visit.
    * Omitted only for explicit debug/resume routes with their own eligibility. */
   completedVisitKey?: string;
+  /** Developer island jump only (dev menu, dev builds): skips the completion
+   *  gate so QA can load any island. Never set on a player path. */
+  devJump?: boolean;
   /** When true (the normal case) the per-island timer starts immediately; when
    *  false the timer is left pending (`islandStartedAtMs/Expires = 0`) so the
    *  UI can start it on an explicit "Begin" tap. Matches the legacy
@@ -5459,7 +5462,7 @@ export async function travelToNextIsland(options: TravelToNextIslandOptions): Pr
   } = options;
 
   const current = getIslandRunStateSnapshot(session);
-  if (options.completedVisitKey !== undefined || resolveIslandRunFeatureAccess(current).gradual) {
+  if (!options.devJump && (options.completedVisitKey !== undefined || resolveIslandRunFeatureAccess(current).gradual)) {
     const completion = resolveIslandRunCompletion(current);
     if (!completion.complete || (options.completedVisitKey !== undefined && completion.visitKey !== options.completedVisitKey)
       || nextIsland !== current.currentIslandNumber + 1) {

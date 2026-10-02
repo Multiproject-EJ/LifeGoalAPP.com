@@ -91,4 +91,15 @@ export const islandRunModalVisibilityTests: TestCase[] = [
       assert(board.includes('missionPhoneOpen: Boolean(activeMissionBriefing) || showMissionPhoneBriefing,'), 'the board passes the phone state');
     },
   },
+  {
+    name: 'the Vault Casino owns the screen: no mission banner or board chrome over it (QA Island 003)',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const block = board.slice(board.indexOf('const doesModalOwnAttention = Boolean('), board.indexOf('walletPanelOriginRect !== null,'));
+      assert(block.includes('activeVaultCasinoPlay !== null ||'), 'Vault Casino counts as a screen-owning modal');
+      assert(board.includes('{incomingMissionBriefing && showMissionMessageBanner && !doesModalOwnAttention ?'), 'the banner waits for it');
+    },
+  },
 ];
