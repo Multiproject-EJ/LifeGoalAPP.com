@@ -13313,6 +13313,8 @@ export function IslandRunBoardPrototype({
       setLandingText('DEV MODE: invalid money grant amount.');
       return;
     }
+    setRuntimeState(result.record);
+    runtimeStateRef.current = result.record;
     setLandingText(`🧪 DEV MODE: +${result.applied} money granted via canonical action.`);
   }, [client, isDevModeEnabled, session]);
 

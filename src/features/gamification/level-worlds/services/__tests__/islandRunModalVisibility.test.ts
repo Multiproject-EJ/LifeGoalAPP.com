@@ -102,4 +102,14 @@ export const islandRunModalVisibilityTests: TestCase[] = [
       assert(board.includes('{incomingMissionBriefing && showMissionMessageBanner && !doesModalOwnAttention ?'), 'the banner waits for it');
     },
   },
+  {
+    name: 'dev money grant refreshes the board state so the top bar shows it immediately (QA Island 003)',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const handler = board.slice(board.indexOf('const handleDevGrantEssence = useCallback('), board.indexOf('const handleDevSpeedHatchEgg = useCallback('));
+      assert(handler.includes('setRuntimeState(result.record);') && handler.includes('runtimeStateRef.current = result.record;'), 'grant updates the rendered wallet');
+    },
+  },
 ];
