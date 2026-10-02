@@ -8012,6 +8012,14 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   gap: 5px;
   padding: 5px 3px 3px;
   text-align: center;
+  /* The phone's main action stays on screen while the content scrolls
+     (QA Island 004: 'Raise Causeway Span' sat clipped under the flags). */
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin-top: auto;
+  padding-top: 16px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), #000 34%);
 }
 
 .island-mission-tracker__milestones {
@@ -27931,6 +27939,9 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 
 .island-landmark-progress-label--ready { border-color: #38b6ff; box-shadow: 0 0 12px #168bff55; }
 .island-run-board__rewardbar-hatchery-egg-button { position: relative; }
+/* The hatch timer hangs below the egg: leave room so it never covers the
+   Lucky Spin button under it (QA Island 004). */
+.island-run-board__rewardbar-hatchery-egg-button:has(.island-run-board__rewardbar-hatchery-time) { margin-bottom: 14px; }
 
 .island-landmark-progress-label { opacity: 0; transition: opacity 220ms ease; }
 @media (prefers-reduced-motion: reduce) { .island-landmark-progress-label { transition: none; } }

@@ -138,4 +138,17 @@ export const islandRunModalVisibilityTests: TestCase[] = [
       assert(board.includes("isCurrentIslandLandmarkBuildIncomplete ? '🔒 Full Rewards Locked — Finish Landmark Upgrades' : bossTrialResolved ? '👑 Complete the Boss stop'"), 'button says what is actually left');
     },
   },
+  {
+    name: 'QA Island 004: hatchery says "ready" when its egg can be collected; the phone action stays on screen; the hatch timer leaves room',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes("openedStopIsPlayable && islandNumber >= 4\n                          ? 'Ready: collect your egg into the spaceship incubator."), 'ready copy when collectable');
+      const css = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      const action = css.slice(css.indexOf('.island-mission-tracker__mission-action {'), css.indexOf('.island-mission-tracker__milestones {'));
+      assert(action.includes('position: sticky;') && action.includes('bottom: 0;'), 'the phone main action is pinned to the screen bottom');
+      assert(css.includes('.island-run-board__rewardbar-hatchery-egg-button:has(.island-run-board__rewardbar-hatchery-time) { margin-bottom: 14px; }'), 'hatch timer does not cover Lucky Spin');
+    },
+  },
 ];

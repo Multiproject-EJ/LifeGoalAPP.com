@@ -19598,7 +19598,9 @@ export function IslandRunBoardPrototype({
                     <p className="island-hatchery-card__copy">
                       {isEggManiaUnused
                         ? 'This island has Egg Mania: set three surprise-tier eggs at once. Each hatches independently in 24–72h.'
-                        : 'Complete every building at Level 3 and the other activities, then collect your egg into the spaceship incubator. It hatches in 24–72h.'}
+                        : openedStopIsPlayable && islandNumber >= 4
+                          ? 'Ready: collect your egg into the spaceship incubator. It hatches in 24–72h while you explore.'
+                          : 'Complete every building at Level 3 and the other activities, then collect your egg into the spaceship incubator. It hatches in 24–72h.'}
                     </p>
                     <div className="island-hatchery-card__timeline" aria-label="Egg hatch progress timeline">
                       {HATCHERY_TIMELINE_STEPS.map((step, index) => {
