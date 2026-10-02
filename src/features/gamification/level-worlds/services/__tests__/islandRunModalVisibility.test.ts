@@ -166,4 +166,15 @@ export const islandRunModalVisibilityTests: TestCase[] = [
       assert(modal.includes('onClick={() => setFlagsExpanded(false)}>Hide landmarks'), 'and can be folded back');
     },
   },
+  {
+    name: 'QA Island 005: a Wisdom slider left on its midpoint still records an answer when released; build titles stay readable',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const renderer = fsMod.readFileSync('src/features/compass-book/components/CompassActivityRenderer.tsx', 'utf8');
+      assert(renderer.includes("onPointerUp={(event) => {\n              if (current === null) onChange(block.questionId, { kind: 'scale', value: Number(event.currentTarget.value) });"), 'releasing an unanswered slider records its value');
+      const css = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      assert(/\.bm2-celebration-title h2 \{[^}]*color: inherit;/.test(css), 'the build celebration title keeps its gold colour');
+    },
+  },
 ];

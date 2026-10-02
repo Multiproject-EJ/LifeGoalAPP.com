@@ -27899,7 +27899,7 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 .bm2-fast-build:disabled { opacity: .5; cursor: default; }
 .bm2-celebration-title { position: absolute; top: 31%; left: 50%; transform: translateX(-50%); width: min(90vw,620px); text-align: center; color: #fff1ac; text-shadow: 0 3px 10px #00121f,0 0 24px #d18b24; pointer-events: none; z-index: 4; animation: bm2-title-pop .35s ease-out both; }
 .bm2-celebration-title span { text-transform: uppercase; font-size: .7rem; letter-spacing: .16em; }
-.bm2-celebration-title h2 { font-size: clamp(1.5rem,6vw,2.6rem); line-height: 1.06; margin: .4rem 0; text-wrap: balance; }
+.bm2-celebration-title h2 { font-size: clamp(1.5rem,6vw,2.6rem); line-height: 1.06; margin: .4rem 0; text-wrap: balance; color: inherit; /* the global h2 colour is dark navy */ }
 .bm2-celebration-title p { margin: .3rem; font-weight: 700; }
 .bm2-dice-award { display: inline-block; margin-top: .3rem; font-size: 1.4rem; color: #fff; }
 .bm2-celebration-crew { position: absolute; width: min(96vw,650px); height: min(34dvh,300px); left: 50%; top: 49%; transform: translateX(-50%); opacity: 0; pointer-events: none; z-index: 3; }
