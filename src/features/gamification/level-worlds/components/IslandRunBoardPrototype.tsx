@@ -3813,6 +3813,18 @@ export function IslandRunBoardPrototype({
   const frostwellAvailableSpins = frostwellPreviewActive && frostwellMissionState === 'drilling'
     ? 1
     : getFrostwellAvailableSpins(frostwellProgress);
+  // User rule (2026-10-02): every spin is watched. The drilling cannot be
+  // skipped, and once the auger stops the view returns to the island. Only
+  // the breakthrough keeps its completion card, whose buttons also return.
+  const frostwellPreviousPhaseRef = useRef(frostwellSequence.phase);
+  useEffect(() => {
+    const previous = frostwellPreviousPhaseRef.current;
+    frostwellPreviousPhaseRef.current = frostwellSequence.phase;
+    if (frostwellSequence.phase !== 'complete' || previous === 'complete' || previous === 'ready') return;
+    if (frostwellPresentationBuilt) return;
+    closeFrostwellMission();
+    setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' });
+  }, [closeFrostwellMission, frostwellPresentationBuilt, frostwellSequence.phase]);
   const firstLightAssemblyProgress = useMemo(() => resolveFirstLightAssemblyCraterProgress({
     ledger: runtimeState.signatureMissionProgressByIsland,
     cycleIndex: runtimeState.cycleIndex,
@@ -23312,7 +23324,7 @@ export function IslandRunBoardPrototype({
       <IslandFrostwellMissionModal open={showFrostwellMission} phase={frostwellSequence.phase}
         meters={frostwellPresentationMeters} built={frostwellPresentationBuilt} spins={frostwellAvailableSpins}
         rotation={frostwellWheelRotation} result={frostwellLastSpinMeters} onSpin={() => { void handleSpinFrostwell(); }}
-        onClose={closeFrostwellMission} onOverview={() => { closeFrostwellMission(); setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' }); }} />
+        onClose={() => { const wasBuilt = frostwellPresentationBuilt; closeFrostwellMission(); if (wasBuilt) setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' }); }} onOverview={() => { closeFrostwellMission(); setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' }); }} />
 
       <IslandAssemblyCraterModal
         open={showFirstLightAssemblyCrater}
