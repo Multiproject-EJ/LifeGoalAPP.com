@@ -27931,6 +27931,9 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
 
 .island-landmark-progress-label--ready { border-color: #38b6ff; box-shadow: 0 0 12px #168bff55; }
 .island-run-board__rewardbar-hatchery-egg-button { position: relative; }
+/* The hatch timer hangs below the egg: leave room so it never covers the
+   Lucky Spin button under it (QA Island 004). */
+.island-run-board__rewardbar-hatchery-egg-button:has(.island-run-board__rewardbar-hatchery-time) { margin-bottom: 14px; }
 
 .island-landmark-progress-label { opacity: 0; transition: opacity 220ms ease; }
 @media (prefers-reduced-motion: reduce) { .island-landmark-progress-label { transition: none; } }
