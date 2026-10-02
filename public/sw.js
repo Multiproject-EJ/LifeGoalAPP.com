@@ -1,10 +1,12 @@
-const CACHE_VERSION = 'v11-native-alerts-20260920';
+const CACHE_VERSION = 'v12-reminders-loading-20261002';
 const SHELL_CACHE = `lifegoalapp-shell-${CACHE_VERSION}`;
 const DATA_CACHE = `lifegoalapp-data-${CACHE_VERSION}`;
+const LOADING_ART_PATH = '/assets/loading/island-run-voyage-loading-v1.webp';
 const APP_SHELL = [
   '/manifest.webmanifest',
   '/icons/app-icon-192.png',
-  '/icons/app-icon-512.png'
+  '/icons/app-icon-512.png',
+  LOADING_ART_PATH
 ];
 const DOCUMENT_FALLBACKS = ['/', '/index.html'];
 const STATIC_ASSET_EXTENSIONS = /\.(?:css|js|mjs|map|woff2?|ttf|otf|eot|png|jpe?g|gif|svg|webp|avif|ico|webm|mov|mp4|glb)$/i;
@@ -319,6 +321,24 @@ function networkFirstStaticAsset(event) {
   );
 }
 
+function cacheFirstShellAsset(event, cacheKey) {
+  event.respondWith(
+    (async () => {
+      const cache = await caches.open(SHELL_CACHE);
+      const cachedResponse = await cache.match(cacheKey);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      const networkResponse = await fetch(event.request);
+      if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+        await cache.put(cacheKey, networkResponse.clone());
+      }
+      return networkResponse;
+    })()
+  );
+}
+
 function cacheSupabaseData(event) {
   event.respondWith(
     caches.open(DATA_CACHE).then((cache) =>
@@ -393,6 +413,11 @@ self.addEventListener('fetch', (event) => {
           }
         })()
       );
+      return;
+    }
+
+    if (requestUrl.pathname === LOADING_ART_PATH) {
+      cacheFirstShellAsset(event, LOADING_ART_PATH);
       return;
     }
 

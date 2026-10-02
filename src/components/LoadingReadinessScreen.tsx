@@ -1,5 +1,3 @@
-import { CompassCrestBrand } from './CompassCrestBrand';
-
 export type LoadingReadinessStepStatus = 'pending' | 'active' | 'complete' | 'warning';
 
 export interface LoadingReadinessStep {
@@ -37,6 +35,10 @@ export function LoadingReadinessScreen({
   variant = 'app',
 }: LoadingReadinessScreenProps) {
   const safeProgress = clampProgress(progress);
+  const currentStep = steps.find((step) => step.status === 'warning')
+    ?? steps.find((step) => step.status === 'active')
+    ?? steps.find((step) => step.status === 'pending')
+    ?? steps[steps.length - 1];
 
   return (
     <div
@@ -45,12 +47,17 @@ export function LoadingReadinessScreen({
       aria-live="polite"
       aria-label={`${title}: ${safeProgress}% ready`}
     >
+      <img
+        className="loading-readiness__art"
+        src="/assets/loading/island-run-voyage-loading-v1.webp"
+        alt=""
+        aria-hidden="true"
+        fetchPriority="high"
+        decoding="async"
+      />
+      <span className="loading-readiness__shade" aria-hidden="true" />
       <div className="loading-readiness__card">
-        <CompassCrestBrand
-          className="loading-readiness__brand"
-          surface="dark"
-          animated
-        />
+        {currentStep ? <p className="loading-readiness__eyebrow">{currentStep.label}</p> : null}
         <h1 className="loading-readiness__title">{title}</h1>
         <p className="loading-readiness__subtitle">{subtitle}</p>
 
@@ -66,7 +73,7 @@ export function LoadingReadinessScreen({
         </div>
         <p className="loading-readiness__percent">{safeProgress}% ready</p>
 
-        <ol className="loading-readiness__steps" aria-label="Readiness checklist">
+        <ol className="loading-readiness__steps sr-only" aria-label="Readiness checklist">
           {steps.map((step) => (
             <li
               key={step.label}

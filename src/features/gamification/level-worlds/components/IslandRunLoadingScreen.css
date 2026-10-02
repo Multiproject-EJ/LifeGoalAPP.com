@@ -1,165 +1,96 @@
-/* Island Run loading screen. Every animation delay adds the shared
-   --ir-loading-offset (negative) so back-to-back loading steps continue one
-   scene. Only opacity/transform/filter animate: smooth, no jank. */
 .ir-loading {
-  --ir-loading-offset: 0ms;
   position: absolute;
   inset: 0;
   z-index: 8;
   overflow: hidden;
-  display: grid;
-  grid-template-rows: 1fr auto auto;
-  justify-items: center;
-  padding: 0 24px max(28px, env(safe-area-inset-bottom, 0px));
-  color: #f4f8ff;
-  background: #060d22;
+  color: #f7fbff;
+  background: #041128;
   pointer-events: none;
+  isolation: isolate;
 }
 
-.ir-loading__sky, .ir-loading__dawn, .ir-loading__stars {
+.ir-loading__art,
+.ir-loading__shade {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
 }
-.ir-loading__sky { background: linear-gradient(180deg, #050b1f 0%, #0c1a3e 55%, #1c2a5a 100%); }
-/* Dawn warms the horizon over ~5 s, then breathes gently. */
-.ir-loading__dawn {
+
+.ir-loading__art {
+  z-index: -2;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+.ir-loading__shade {
+  z-index: -1;
   background:
-    radial-gradient(120% 55% at 50% 100%, rgba(255, 176, 118, .85), rgba(255, 140, 120, .35) 45%, transparent 70%),
-    linear-gradient(180deg, transparent 40%, rgba(130, 110, 190, .35));
-  opacity: 0;
-  animation: ir-loading-dawn 5s var(--ir-loading-offset) ease-in-out both, ir-loading-breathe 6s calc(5s + var(--ir-loading-offset)) ease-in-out infinite;
-}
-@keyframes ir-loading-dawn { 0%, 12% { opacity: 0; } 100% { opacity: 1; } }
-@keyframes ir-loading-breathe { 50% { opacity: .82; } }
-
-.ir-loading__stars {
-  background:
-    radial-gradient(1.2px 1.2px at 12% 18%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 28% 8%, #fff 50%, transparent 51%),
-    radial-gradient(1.4px 1.4px at 44% 22%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 62% 12%, #fff 50%, transparent 51%),
-    radial-gradient(1.3px 1.3px at 78% 26%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 90% 10%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 20% 34%, #dfe8ff 50%, transparent 51%),
-    radial-gradient(1.2px 1.2px at 70% 38%, #dfe8ff 50%, transparent 51%),
-    radial-gradient(1px 1px at 52% 4%, #fff 50%, transparent 51%),
-    radial-gradient(1px 1px at 86% 44%, #dfe8ff 50%, transparent 51%);
-  opacity: 0;
-  animation: ir-loading-stars 5.5s var(--ir-loading-offset) ease-out both, ir-loading-twinkle 3.2s calc(5.5s + var(--ir-loading-offset)) ease-in-out infinite;
-}
-@keyframes ir-loading-stars { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: .55; } }
-@keyframes ir-loading-twinkle { 50% { opacity: .35; } }
-
-.ir-loading__cloud {
-  position: absolute;
-  width: 70%;
-  height: 60px;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(255, 214, 196, .28), transparent);
-  filter: blur(6px);
-  opacity: 0;
-}
-.ir-loading__cloud--one { top: 44%; left: -20%; animation: ir-loading-cloud 22s var(--ir-loading-offset) linear infinite, ir-loading-fade-in 3s calc(1.5s + var(--ir-loading-offset)) ease both; }
-.ir-loading__cloud--two { top: 54%; left: 30%; animation: ir-loading-cloud 30s calc(-9s + var(--ir-loading-offset)) linear infinite, ir-loading-fade-in 3s calc(2.2s + var(--ir-loading-offset)) ease both; }
-@keyframes ir-loading-cloud { to { translate: 60% 0; } }
-@keyframes ir-loading-fade-in { to { opacity: 1; } }
-
-/* The island rises into view, then its lights switch on one by one. */
-.ir-loading__island {
-  position: absolute;
-  left: 50%;
-  bottom: 18%;
-  width: min(92vw, 420px);
-  translate: -50% 40px;
-  opacity: 0;
-  animation: ir-loading-island 2.6s calc(.6s + var(--ir-loading-offset)) cubic-bezier(.2, .8, .2, 1) both;
-}
-@keyframes ir-loading-island { to { translate: -50% 0; opacity: 1; } }
-.ir-loading__light {
-  fill: #ffd98a;
-  opacity: 0;
-  filter: drop-shadow(0 0 3px #ffbe55);
-  animation: ir-loading-light .5s calc(2.4s + var(--light-index) * .22s + var(--ir-loading-offset)) ease-out both;
-}
-@keyframes ir-loading-light { 0% { opacity: 0; } 60% { opacity: 1; } 100% { opacity: .9; } }
-.ir-loading__path-glow {
-  fill: none;
-  stroke: #ffcf7a;
-  stroke-width: 1.6;
-  opacity: 0;
-  filter: drop-shadow(0 0 4px #ffb347);
-  animation: ir-loading-fade-in 1.6s calc(4.2s + var(--ir-loading-offset)) ease both;
-}
-
-/* Controller: a soft, non-jaggy fade (opacity + scale + blur together). */
-.ir-loading__controller {
-  position: relative;
-  align-self: center;
-  width: min(62vw, 280px);
-  opacity: 0;
-  transform: translateY(14px) scale(.92);
-  filter: blur(10px);
-  will-change: opacity, transform, filter;
-  animation: ir-loading-controller 1.8s calc(.3s + var(--ir-loading-offset)) cubic-bezier(.22, .8, .22, 1) both, ir-loading-float 5s calc(2.1s + var(--ir-loading-offset)) ease-in-out infinite;
-}
-@keyframes ir-loading-controller {
-  to { opacity: 1; transform: none; filter: drop-shadow(0 16px 26px rgba(4, 10, 30, .55)); }
-}
-@keyframes ir-loading-float { 50% { translate: 0 -6px; } }
-.ir-loading__screen { filter: drop-shadow(0 0 10px rgba(110, 210, 255, .7)); opacity: .35; animation: ir-loading-screen 1.4s calc(1.6s + var(--ir-loading-offset)) ease both; }
-@keyframes ir-loading-screen { to { opacity: 1; } }
-.ir-loading__screen-text { fill: #fff; font: 800 15px/1 system-ui, sans-serif; letter-spacing: .14em; opacity: 0; animation: ir-loading-fade-in 1s calc(2.6s + var(--ir-loading-offset)) ease both; }
-.ir-loading__button {
-  fill: #25407a;
-  stroke: rgba(160, 210, 255, .4);
-  stroke-width: 1.2;
-  animation: ir-loading-button .6s calc(2s + var(--button-index) * .25s + var(--ir-loading-offset)) ease-out both;
-}
-@keyframes ir-loading-button {
-  0% { fill: #25407a; }
-  50% { fill: #bfe9ff; }
-  100% { fill: #6cc8ff; filter: drop-shadow(0 0 4px #7fd4ff); }
+    linear-gradient(180deg, rgba(2, 10, 24, 0.1) 0%, transparent 46%, rgba(1, 9, 24, 0.48) 68%, rgba(1, 8, 22, 0.94) 100%),
+    radial-gradient(90% 36% at 50% 96%, rgba(5, 22, 52, 0.3), transparent 72%);
 }
 
 .ir-loading__copy {
-  position: relative;
+  position: absolute;
+  right: max(24px, env(safe-area-inset-right, 0px));
+  bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 18px));
+  left: max(24px, env(safe-area-inset-left, 0px));
   display: grid;
   justify-items: center;
   gap: 6px;
-  margin-top: 18px;
   text-align: center;
-  opacity: 0;
-  animation: ir-loading-fade-in 1.2s calc(.9s + var(--ir-loading-offset)) ease both;
+  text-shadow: 0 2px 14px rgba(0, 5, 18, 0.78);
 }
-.ir-loading__copy strong { font: 700 1.1rem/1.2 Georgia, 'Times New Roman', serif; text-shadow: 0 2px 10px rgba(0, 0, 0, .5); }
-.ir-loading__copy small { color: rgba(226, 236, 255, .78); font-size: .8rem; }
+
+.ir-loading__status {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.ir-loading__stage {
+  color: #f5ce74;
+  font: 800 0.66rem/1.2 system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ir-loading__copy strong {
+  font: 700 clamp(1.08rem, 4.8vw, 1.35rem)/1.15 Georgia, 'Times New Roman', serif;
+}
+
+.ir-loading__copy small {
+  max-width: 34ch;
+  color: rgba(225, 239, 255, 0.78);
+  font: 500 0.76rem/1.35 system-ui, sans-serif;
+}
+
 .ir-loading__progress {
-  position: relative;
-  width: 140px;
-  height: 3px;
-  margin-top: 6px;
+  width: min(100%, 280px);
+  height: 8px;
+  margin-top: 7px;
   overflow: hidden;
+  border: 1px solid rgba(211, 236, 255, 0.2);
   border-radius: 999px;
-  background: rgba(255, 255, 255, .14);
+  background: rgba(2, 13, 31, 0.74);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.45), 0 6px 20px rgba(0, 5, 20, 0.32);
 }
+
 .ir-loading__progress i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 40%;
+  display: block;
+  height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, transparent, #ffd98a, transparent);
-  animation: ir-loading-sweep 1.6s ease-in-out infinite;
+  background: linear-gradient(90deg, #33bfe9 0%, #8feaff 48%, #f4c968 100%);
+  box-shadow: 0 0 16px rgba(103, 220, 255, 0.72);
+  transition: width 220ms ease-out;
 }
-@keyframes ir-loading-sweep { from { translate: -100% 0; } to { translate: 260% 0; } }
+
+.ir-loading__percent {
+  color: rgba(230, 242, 255, 0.72);
+  font: 750 0.68rem/1 system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .ir-loading *, .ir-loading > * { animation: none !important; }
-  .ir-loading__dawn { opacity: .75; }
-  .ir-loading__stars, .ir-loading__island, .ir-loading__light, .ir-loading__path-glow,
-  .ir-loading__copy, .ir-loading__screen-text, .ir-loading__cloud { opacity: 1; translate: -50% 0; }
-  .ir-loading__stars, .ir-loading__light, .ir-loading__path-glow, .ir-loading__copy,
-  .ir-loading__screen-text, .ir-loading__cloud { translate: none; }
-  .ir-loading__controller { opacity: 1; transform: none; filter: none; }
-  .ir-loading__screen { opacity: 1; }
-  .ir-loading__button { fill: #6cc8ff; }
+  .ir-loading__progress i { transition: none; }
 }

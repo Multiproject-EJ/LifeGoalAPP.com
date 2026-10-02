@@ -47,6 +47,56 @@ export type HabitReminderQueueStatus = { pending: number; failed: number };
 // Demo mode storage
 const DEMO_HABIT_PREFS_KEY = 'demo_habit_reminder_prefs';
 const DEMO_ACTION_LOGS_KEY = 'demo_reminder_action_logs';
+const habitPrefsCacheKey = (userId: string) => `habitgame:habit-reminder-prefs-cache:v1:${userId}`;
+
+function readCachedHabitPrefs(userId: string): HabitWithReminderPref[] | null {
+  try {
+    const stored = localStorage.getItem(habitPrefsCacheKey(userId));
+    if (stored === null) return null;
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed as HabitWithReminderPref[] : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedHabitPrefs(userId: string, preferences: HabitWithReminderPref[]): void {
+  try {
+    localStorage.setItem(habitPrefsCacheKey(userId), JSON.stringify(preferences));
+  } catch {
+    // Native scheduling can still use the current response for this session.
+  }
+}
+
+/**
+ * Keep an existing complete server snapshot current after a confirmed write.
+ * A missing cache stays missing: creating a partial snapshot for one habit
+ * could make an outage look like every other reminder was cleared.
+ */
+export function updateCachedHabitReminderPref(
+  userId: string,
+  habitId: string,
+  updates: { enabled?: boolean; preferred_time?: string | null },
+): void {
+  const cached = readCachedHabitPrefs(userId);
+  if (cached === null) return;
+
+  const index = cached.findIndex((preference) => preference.habit_id === habitId);
+  const existing = index >= 0 ? cached[index] : null;
+  const next: HabitWithReminderPref = {
+    habit_id: habitId,
+    title: existing?.title ?? 'Habit',
+    emoji: existing?.emoji ?? null,
+    enabled: updates.enabled ?? existing?.enabled ?? false,
+    preferred_time: updates.preferred_time !== undefined
+      ? updates.preferred_time
+      : existing?.preferred_time ?? null,
+  };
+  const preferences = index >= 0
+    ? cached.map((preference, preferenceIndex) => preferenceIndex === index ? next : preference)
+    : [...cached, next];
+  writeCachedHabitPrefs(userId, preferences);
+}
 
 async function getActiveSession() {
   const supabase = getSupabaseClient();
@@ -131,12 +181,19 @@ export async function fetchHabitReminderPrefs(): Promise<ServiceResponse<HabitWi
   });
 
   if (!result.ok) {
-    // Outage: local pending preferences keep the settings screen usable.
-    const merged = await mergeLocalReminderPrefs(session.user.id, []);
+    // Preserve the last known good selection during an outage. Returning an
+    // error when no snapshot exists prevents native reconciliation from
+    // interpreting an unavailable response as "the user cleared everything".
+    const cached = readCachedHabitPrefs(session.user.id);
+    const merged = await mergeLocalReminderPrefs(session.user.id, cached ?? []);
+    if (cached === null && merged.length === 0) {
+      return { data: null, error: new Error(result.error.explanation) };
+    }
     return { data: merged, error: null };
   }
 
   const merged = await mergeLocalReminderPrefs(session.user.id, result.data);
+  writeCachedHabitPrefs(session.user.id, merged);
   return { data: merged, error: null };
 }
 
@@ -204,6 +261,10 @@ export async function updateHabitReminderPref(
     return { data: null, error: new Error(result.error.explanation) };
   }
 
+  updateCachedHabitReminderPref(session.user.id, habitId, {
+    enabled: result.data.enabled,
+    preferred_time: result.data.preferred_time,
+  });
   await removeLocalReminderPrefRecord(buildReminderPrefKey(session.user.id, habitId));
   return { data: result.data, error: null };
 }
@@ -215,13 +276,15 @@ async function queueLocalReminderPrefUpdate(
 ): Promise<HabitReminderPrefsRow> {
   const key = buildReminderPrefKey(userId, habitId);
   const existing = await getLocalReminderPrefRecord(key);
+  const cached = readCachedHabitPrefs(userId)?.find((preference) => preference.habit_id === habitId) ?? null;
+  const current = existing?.pref ?? cached;
   const nowMs = Date.now();
-  const nextEnabled = updates.enabled ?? existing?.pref.enabled ?? false;
-  const nextTime = updates.preferred_time !== undefined ? updates.preferred_time : existing?.pref.preferred_time ?? null;
+  const nextEnabled = updates.enabled ?? current?.enabled ?? false;
+  const nextTime = updates.preferred_time !== undefined ? updates.preferred_time : current?.preferred_time ?? null;
   const pref: HabitWithReminderPref = {
     habit_id: habitId,
-    title: existing?.pref.title ?? 'Habit',
-    emoji: existing?.pref.emoji ?? null,
+    title: current?.title ?? 'Habit',
+    emoji: current?.emoji ?? null,
     enabled: nextEnabled,
     preferred_time: nextTime,
   };

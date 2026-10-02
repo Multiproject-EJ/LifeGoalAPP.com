@@ -117,7 +117,6 @@ import {
 } from '../services/islandTechnologyFragmentPlacements';
 import { StatDriftNumbers } from './StatDriftNumbers';
 import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
-import { LoadingReadinessScreen } from '../../../../components/LoadingReadinessScreen';
 import {
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
@@ -16606,20 +16605,12 @@ export function IslandRunBoardPrototype({
   if (!hasHydratedRuntimeState) {
     return (
       <section className="island-run-prototype island-run-prototype--loading" aria-label="Island Run loading">
-        <LoadingReadinessScreen
+        <IslandRunLoadingScreen
+          stage="save"
           title={isCycleCapstoneReadiness ? `Preparing Island ${loadingIslandNumber}` : 'Preparing Island Run'}
-          subtitle={isCycleCapstoneReadiness
+          detail={isCycleCapstoneReadiness
             ? 'Verifying your cycle progress before the final island opens.'
             : 'Syncing your island, dice, rewards, and token position before controls unlock.'}
-          progress={68}
-          steps={[
-            { label: 'Opening Island Run', status: 'complete' },
-            { label: 'Reading local island save', status: 'complete' },
-            { label: 'Syncing cloud progress', status: 'active' },
-            { label: 'Preparing board controls', status: 'pending' },
-          ]}
-          detail="Gameplay controls unlock after the canonical Island Run state is ready."
-          variant="island"
         />
       </section>
     );
@@ -17961,7 +17952,7 @@ export function IslandRunBoardPrototype({
             <Suspense
               fallback={(
                 <div className="island-run-board__three-preview-loading">
-                  <IslandRunLoadingScreen title={`Island ${islandArtPreviewNumber}`} detail="Building the 3D world…" />
+                  <IslandRunLoadingScreen stage="bundle" title={`Island ${islandArtPreviewNumber}`} detail="Opening the 3D world…" />
                 </div>
               )}
             >

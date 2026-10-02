@@ -28,7 +28,7 @@ export function GameFirstShell({ phase, offline, developerError, renderGame, acc
     <div hidden={panel !== null}>
       {phase === 'ready' ? <RecoverableErrorBoundary fallback={failure}>{renderGame(help)}</RecoverableErrorBoundary>
         : phase === 'loading' && !guestTransferPending ? <div className="game-first-loading">
-          <IslandRunLoadingScreen title="Opening your saved journey" detail="Checking your save and access…" />
+          <IslandRunLoadingScreen stage="save" title="Opening your saved journey" detail="Checking your save and access…" />
           {/* Help stays reachable even while loading. */}
           <button type="button" className="game-first-loading__help" onClick={help}>Account &amp; help</button>
         </div>

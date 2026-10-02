@@ -1,6 +1,21 @@
 import { assessHabitHealth, type HabitHealthState } from '../features/habits/habitHealth';
 
-export type NativeAlert = { key: string; title: string; body: string; at: number; habitId?: string };
+export type NativeAlert = {
+  key: string;
+  title: string;
+  body: string;
+  at: number;
+  habitId?: string;
+  todoId?: string;
+  /** A calendar trigger keeps an explicitly selected habit reminder alive even
+   * when the app is not opened again. Capacitor weekdays use 1=Sunday through
+   * 7=Saturday. */
+  repeat?: {
+    hour: number;
+    minute: number;
+    weekday?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  };
+};
 export function nativeAlertId(key: string): number {
   let hash = 2166136261;
   for (let i = 0; i < key.length; i++) hash = Math.imul(hash ^ key.charCodeAt(i), 16777619);

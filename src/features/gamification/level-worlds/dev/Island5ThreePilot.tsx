@@ -12790,7 +12790,7 @@ export default function Island5ThreePilot({
       })() : null}
       {!hasRenderedFrame ? (
         <div className="island-5-three-pilot__loading">
-          <IslandRunLoadingScreen title={`Entering ${worldName}`} detail="Awakening the living world…" />
+          <IslandRunLoadingScreen stage="world" title={`Entering ${worldName}`} detail="Rendering your island…" />
         </div>
       ) : null}
       {isCactusCanyon && hasRenderedFrame && trainRidePhase === 'idle' && !isEvidenceCapture ? (

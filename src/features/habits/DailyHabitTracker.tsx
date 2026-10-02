@@ -39,7 +39,7 @@ import { isDemoSession } from '../../services/demoSession';
 import { getDemoGoals } from '../../services/demoData';
 import { fetchVisionImages, getVisionImagePublicUrl } from '../../services/visionBoard';
 import { generateSpecialVisionStar, persistSpecialVisionStarImage } from '../../services/visionStarSpecial';
-import { HabitAlertConfig } from './HabitAlertConfig';
+import { CompactReminderPopover, type CompactReminderTarget } from './CompactReminderPopover';
 import {
   createJournalEntry,
   listJournalEntries,
@@ -64,7 +64,18 @@ import {
 import { useDailySpinStatus } from '../../hooks/useDailySpinStatus';
 import { isIslandRunFeatureEnabled } from '../../config/islandRunFeatureFlags';
 import { fetchGoals, insertGoal } from '../../services/goals';
-import { getHabitReminderQueueStatus, syncQueuedHabitReminderPrefs } from '../../services/habitReminderPrefs';
+import { getHabitReminderQueueStatus, syncQueuedHabitReminderPrefs, type HabitWithReminderPref } from '../../services/habitReminderPrefs';
+import {
+  clearHabitQuickReminder,
+  clearTodoQuickReminder,
+  formatReminderTime,
+  loadHabitQuickReminders,
+  QUICK_ITEM_REMINDERS_CHANGED,
+  readNativeTodoReminderPreferences,
+  saveHabitQuickReminder,
+  saveTodoQuickReminder,
+  type NativeTodoReminderPreference,
+} from '../../services/quickItemReminders';
 import {
   createHabitV2,
   archiveHabitV2,
@@ -732,6 +743,12 @@ type HabitEditDraft = {
   goalId: string | null;
 };
 
+type TrackerReminderTarget = CompactReminderTarget & {
+  /** Canonical title for preference-state refreshes. Lock-screen notification
+   * bodies remain generic so private-mode content cannot leak. */
+  sourceTitle: string;
+};
+
 type TodayWinsSummary = {
   journalCount: number;
   lotusEarned: number;
@@ -1310,6 +1327,15 @@ export function DailyHabitTracker({
   const [activeOfferTeaser, setActiveOfferTeaser] = useState<TimeBoundOfferId | EggHatchOfferId | null>(null);
 
   const [todayTodos, setTodayTodos] = useState<TodayTodo[]>([]);
+  const [habitQuickReminders, setHabitQuickReminders] = useState<Record<string, HabitWithReminderPref>>({});
+  const [todoQuickReminders, setTodoQuickReminders] = useState<Record<string, NativeTodoReminderPreference>>(
+    () => readNativeTodoReminderPreferences(session.user.id),
+  );
+  const [quickReminderTarget, setQuickReminderTarget] = useState<TrackerReminderTarget | null>(null);
+  const [quickReminderBusy, setQuickReminderBusy] = useState(false);
+  const [quickReminderError, setQuickReminderError] = useState<string | null>(null);
+  const [quickReminderStatus, setQuickReminderStatus] = useState<string | null>(null);
+  const quickReminderTriggerRef = useRef<HTMLElement | null>(null);
   const [todayTodoModalOpen, setTodayTodoModalOpen] = useState(false);
   const [ambianceModalOpen, setAmbianceModalOpen] = useState(false);
   const [selectedAmbiance, setSelectedAmbiance] = useState<'starlight' | null>(() => {
@@ -1446,6 +1472,130 @@ export function DailyHabitTracker({
   useEffect(() => {
     void loadTodayTodos(activeDate);
   }, [activeDate, loadTodayTodos]);
+
+  const refreshQuickReminders = useCallback(async () => {
+    setTodoQuickReminders(readNativeTodoReminderPreferences(session.user.id));
+    try {
+      setHabitQuickReminders(await loadHabitQuickReminders());
+    } catch (error) {
+      console.warn('[quick reminders] unable to refresh habit preferences', error);
+    }
+  }, [session.user.id]);
+
+  useEffect(() => {
+    void refreshQuickReminders();
+    const refresh = () => { void refreshQuickReminders(); };
+    window.addEventListener(QUICK_ITEM_REMINDERS_CHANGED, refresh);
+    return () => window.removeEventListener(QUICK_ITEM_REMINDERS_CHANGED, refresh);
+  }, [refreshQuickReminders]);
+
+  const closeQuickReminder = useCallback(() => {
+    setQuickReminderTarget(null);
+    setQuickReminderBusy(false);
+    setQuickReminderError(null);
+    setQuickReminderStatus(null);
+    const trigger = quickReminderTriggerRef.current;
+    quickReminderTriggerRef.current = null;
+    window.setTimeout(() => trigger?.focus({ preventScroll: true }), 0);
+  }, []);
+
+  const openQuickReminder = useCallback((
+    target: Omit<TrackerReminderTarget, 'anchor'>,
+    trigger: HTMLElement,
+  ) => {
+    const rect = trigger.getBoundingClientRect();
+    quickReminderTriggerRef.current = trigger;
+    setQuickReminderError(null);
+    setQuickReminderStatus(null);
+    setQuickReminderTarget({
+      ...target,
+      anchor: {
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+        width: rect.width,
+      },
+    });
+  }, []);
+
+  const handleSaveQuickReminder = useCallback(async (time: string) => {
+    const target = quickReminderTarget;
+    if (!target) return;
+    setQuickReminderBusy(true);
+    setQuickReminderError(null);
+    setQuickReminderStatus(null);
+    try {
+      let permission: 'granted' | 'denied' | 'web';
+      if (target.kind === 'habit') {
+        const result = await saveHabitQuickReminder(session.user.id, target.id, time);
+        permission = result.permission;
+        setHabitQuickReminders((current) => ({
+          ...current,
+          [target.id]: {
+            habit_id: target.id,
+            title: current[target.id]?.title ?? target.sourceTitle,
+            emoji: current[target.id]?.emoji ?? null,
+            enabled: true,
+            preferred_time: result.time,
+          },
+        }));
+        setQuickReminderTarget((current) => current ? { ...current, time: result.time } : current);
+      } else {
+        const result = await saveTodoQuickReminder({
+          userId: session.user.id,
+          todoId: target.id,
+          title: target.sourceTitle,
+          todoDate: target.todoDate ?? activeDate,
+          time,
+        });
+        permission = result.permission;
+        setTodoQuickReminders((current) => ({ ...current, [target.id]: result.reminder }));
+        setQuickReminderTarget((current) => current ? { ...current, time: result.reminder.time } : current);
+      }
+      setQuickReminderStatus(permission === 'granted'
+        ? 'Alert set on this iPhone.'
+        : permission === 'denied'
+          ? 'Time saved. Enable HabitGame in iPhone Settings → Notifications.'
+          : 'Habit reminder saved.');
+    } catch (error) {
+      setQuickReminderError(error instanceof Error ? error.message : 'Could not set this reminder.');
+    } finally {
+      setQuickReminderBusy(false);
+    }
+  }, [activeDate, quickReminderTarget, session.user.id]);
+
+  const handleClearQuickReminder = useCallback(async () => {
+    const target = quickReminderTarget;
+    if (!target) return;
+    setQuickReminderBusy(true);
+    setQuickReminderError(null);
+    setQuickReminderStatus(null);
+    try {
+      if (target.kind === 'habit') {
+        await clearHabitQuickReminder(session.user.id, target.id);
+        setHabitQuickReminders((current) => ({
+          ...current,
+          [target.id]: current[target.id]
+            ? { ...current[target.id], enabled: false, preferred_time: null }
+            : { habit_id: target.id, title: target.sourceTitle, emoji: null, enabled: false, preferred_time: null },
+        }));
+      } else {
+        clearTodoQuickReminder(session.user.id, target.id);
+        setTodoQuickReminders((current) => {
+          const next = { ...current };
+          delete next[target.id];
+          return next;
+        });
+      }
+      setQuickReminderTarget((current) => current ? { ...current, time: null } : current);
+      setQuickReminderStatus('Reminder cleared.');
+    } catch (error) {
+      setQuickReminderError(error instanceof Error ? error.message : 'Could not clear this reminder.');
+    } finally {
+      setQuickReminderBusy(false);
+    }
+  }, [quickReminderTarget, session.user.id]);
 
   useEffect(() => {
     todayRef.current = today;
@@ -1710,9 +1860,36 @@ export function DailyHabitTracker({
       setTodayTodoError('Could not save todo right now. Please try again.');
       return;
     }
+    if (editingTodayTodo) {
+      const existingReminder = todoQuickReminders[editingTodayTodo.id];
+      if (existingReminder) {
+        try {
+          const result = await saveTodoQuickReminder({
+            userId: session.user.id,
+            todoId: editingTodayTodo.id,
+            title,
+            todoDate: scheduledDate,
+            time: existingReminder.time,
+          });
+          setTodoQuickReminders((current) => ({
+            ...current,
+            [editingTodayTodo.id]: result.reminder,
+          }));
+        } catch {
+          // An edit can move a todo behind its chosen clock time. Never leave
+          // a visible bell pointing at a stale date in that case.
+          clearTodoQuickReminder(session.user.id, editingTodayTodo.id);
+          setTodoQuickReminders((current) => {
+            const next = { ...current };
+            delete next[editingTodayTodo.id];
+            return next;
+          });
+        }
+      }
+    }
     handleCloseTodayTodoModal();
     void loadTodayTodos(activeDate);
-  }, [activeDate, editingTodayTodo, handleCloseTodayTodoModal, loadTodayTodos, session.user.id, todayTodoDate, todayTodoEstimatedMinutes, todayTodoIsFocus, todayTodoNotes, todayTodoTitle, todayTodos]);
+  }, [activeDate, editingTodayTodo, handleCloseTodayTodoModal, loadTodayTodos, session.user.id, todayTodoDate, todayTodoEstimatedMinutes, todayTodoIsFocus, todayTodoNotes, todayTodoTitle, todayTodos, todoQuickReminders]);
 
   const handleToggleTodayTodo = useCallback(async (todo: TodayTodo) => {
     if (activeDate > today) {
@@ -1725,6 +1902,13 @@ export function DailyHabitTracker({
     const { error } = await updateTodayTodo(todo.id, { completed: isMarkingComplete });
     if (!error) {
       if (isMarkingComplete) {
+        clearTodoQuickReminder(session.user.id, todo.id);
+        setTodoQuickReminders((current) => {
+          if (!current[todo.id]) return current;
+          const next = { ...current };
+          delete next[todo.id];
+          return next;
+        });
         setJustCompletedTodoId(todo.id);
         triggerCompletionHaptic('light', { channel: 'habit', minIntervalMs: 120 });
         window.setTimeout(() => {
@@ -1733,7 +1917,7 @@ export function DailyHabitTracker({
       }
       void loadTodayTodos(activeDate);
     }
-  }, [activeDate, loadTodayTodos, today]);
+  }, [activeDate, loadTodayTodos, session.user.id, today]);
 
   const handleRescheduleTodayTodo = useCallback(async (todo: TodayTodo, nextDateISO: string) => {
     setTodayTodoActionPendingById((current) => ({ ...current, [todo.id]: true }));
@@ -1747,9 +1931,31 @@ export function DailyHabitTracker({
       setTodayTodoLoadError('Could not reschedule todo right now.');
       return;
     }
+    const existingReminder = todoQuickReminders[todo.id];
+    if (existingReminder) {
+      try {
+        const result = await saveTodoQuickReminder({
+          userId: session.user.id,
+          todoId: todo.id,
+          title: todo.title,
+          todoDate: nextDateISO,
+          time: existingReminder.time,
+        });
+        setTodoQuickReminders((current) => ({ ...current, [todo.id]: result.reminder }));
+      } catch {
+        // If the same clock time is no longer in the future, clear it instead
+        // of leaving a bell that cannot fire.
+        clearTodoQuickReminder(session.user.id, todo.id);
+        setTodoQuickReminders((current) => {
+          const next = { ...current };
+          delete next[todo.id];
+          return next;
+        });
+      }
+    }
     setTodayTodoLoadError(null);
     void loadTodayTodos(activeDate);
-  }, [activeDate, loadTodayTodos]);
+  }, [activeDate, loadTodayTodos, session.user.id, todoQuickReminders]);
 
   const handleRescheduleTodayTodoTomorrow = useCallback((todo: TodayTodo) => {
     const baseDate = new Date(`${todo.todo_date || activeDate}T12:00:00`);
@@ -1804,6 +2010,13 @@ export function DailyHabitTracker({
       setTodayTodoLoadError('Could not convert todo to a habit right now.');
       return;
     }
+    clearTodoQuickReminder(session.user.id, todo.id);
+    setTodoQuickReminders((current) => {
+      if (!current[todo.id]) return current;
+      const next = { ...current };
+      delete next[todo.id];
+      return next;
+    });
     setTodayTodoLoadError(null);
     setTodayTodoStatus(
       restoresOriginalHabit
@@ -1881,8 +2094,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [monthlyCompletionsV2, setMonthlyCompletionsV2] = useState<
     Record<string, Record<string, boolean>>
   >({});
-  // State for alert configuration modal
-  const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
   const [autoProgressPanels, setAutoProgressPanels] = useState<Record<string, boolean>>({});
   // Per-habit set of ids whose always-visible 7-day streak strip is enabled.
   const [streakVisibleHabitIds, setStreakVisibleHabitIds] = useState<Set<string>>(() => new Set());
@@ -8752,6 +8963,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               : getTodoSwipeAction(isExpanded);
             const todoSwipeArmedDirection = swipeArmedByTodoId[todo.id] ?? null;
             const todoDisplayTitle = isPrivateCompactView ? `Private todo ${todoIndex + 1}` : todo.title;
+            const todoReminder = todoQuickReminders[todo.id] ?? null;
             const showCollapsedCoachPill = !isExpanded && !isPrivateCompactView && Boolean(onOpenAiCoach) && shouldShowStaleTodoCoachPill(todo, staleTodoCoachClockMs);
             const isReorderActive = Boolean(todoDrag);
             const isDraggingTodo = todoDrag?.todoId === todo.id;
@@ -8908,6 +9120,28 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             <h3 className="habit-checklist__todo-title">{todoDisplayTitle}</h3>
                           </div>
                           <div className="habit-checklist__todo-badges">
+                            {isNativeNotifications() ? <button
+                              type="button"
+                              className={`habit-checklist__reminder-trigger${todoReminder ? ' habit-checklist__reminder-trigger--active' : ''}`}
+                              data-swipe-ignore="true"
+                              aria-label={todoReminder
+                                ? `Reminder for ${todoDisplayTitle} at ${todoReminder.time}`
+                                : `Set reminder for ${todoDisplayTitle}`}
+                              title={todoReminder ? `Reminder ${todoReminder.time}` : 'Set reminder'}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openQuickReminder({
+                                  kind: 'todo',
+                                  id: todo.id,
+                                  label: todoDisplayTitle,
+                                  sourceTitle: todo.title,
+                                  time: todoReminder?.time ?? null,
+                                  todoDate: todo.todo_date,
+                                }, event.currentTarget);
+                              }}
+                            >
+                              <span aria-hidden="true">🔔</span>{todoReminder ? <time>{todoReminder.time}</time> : null}
+                            </button> : null}
                             {todo.estimated_minutes ? (
                               <span className="habit-checklist__todo-time-badge">⏱ {todo.estimated_minutes}m</span>
                             ) : null}
@@ -9149,6 +9383,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               ? matchedSuperHabit
               : null;
             const habitDisplayName = isPrivateCompactView ? `Private habit ${habitIndex + 1}` : habit.name;
+            const habitReminderPreference = habitQuickReminders[habit.id];
+            const habitReminderTime = habitReminderPreference?.enabled
+              ? formatReminderTime(habitReminderPreference.preferred_time)
+              : '';
             const superHabitSectionOpen = isExpandedHabitSectionOpen(habit.id, 'superHabit');
             const coachSectionOpen = isExpandedHabitSectionOpen(habit.id, 'coach');
             const infoSectionOpen = isExpandedHabitSectionOpen(habit.id, 'info');
@@ -9458,6 +9696,27 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           {habitDisplayName}
                         </span>
                         <div className="habit-checklist__badges">
+                          <button
+                            type="button"
+                            className={`habit-checklist__reminder-trigger${habitReminderTime ? ' habit-checklist__reminder-trigger--active' : ''}`}
+                            data-swipe-ignore="true"
+                            aria-label={habitReminderTime
+                              ? `Reminder for ${habitDisplayName} at ${habitReminderTime}`
+                              : `Set reminder for ${habitDisplayName}`}
+                            title={habitReminderTime ? `Reminder ${habitReminderTime}` : 'Set reminder'}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openQuickReminder({
+                                kind: 'habit',
+                                id: habit.id,
+                                label: habitDisplayName,
+                                sourceTitle: habit.name,
+                                time: habitReminderTime || null,
+                              }, event.currentTarget);
+                            }}
+                          >
+                            <span aria-hidden="true">🔔</span>{habitReminderTime ? <time>{habitReminderTime}</time> : null}
+                          </button>
                           {isRoutekeeperBreathingHabit(habit) ? (
                             <span
                               className="habit-checklist__lotus-reward-badge"
@@ -10152,10 +10411,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         className="habit-checklist__alert-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setAlertConfigHabit({ id: habit.id, name: habit.name });
+                          openQuickReminder({
+                            kind: 'habit',
+                            id: habit.id,
+                            label: habitDisplayName,
+                            sourceTitle: habit.name,
+                            time: habitReminderTime || null,
+                          }, e.currentTarget);
                         }}
                       >
-                        🔔 Alerts
+                        {habitReminderTime ? `🔔 ${habitReminderTime}` : '🔔 Set alert'}
                       </button>
                       <button
                         type="button"
@@ -12972,17 +13237,22 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     );
   };
 
-  const alertConfigModal = alertConfigHabit ? (
-    <div className="habit-alert-modal-overlay" onClick={() => setAlertConfigHabit(null)}>
-      <div className="habit-alert-modal-content" onClick={(e) => e.stopPropagation()}>
-        <HabitAlertConfig
-          habitId={alertConfigHabit.id}
-          habitName={alertConfigHabit.name}
-          onClose={() => setAlertConfigHabit(null)}
-        />
-      </div>
-    </div>
+  const quickReminderContent = quickReminderTarget ? (
+    <CompactReminderPopover
+      target={quickReminderTarget}
+      busy={quickReminderBusy}
+      error={quickReminderError}
+      status={quickReminderStatus}
+      onClose={closeQuickReminder}
+      onSave={(time) => { void handleSaveQuickReminder(time); }}
+      onClear={() => { void handleClearQuickReminder(); }}
+    />
   ) : null;
+  const quickReminderPortal = quickReminderContent
+    ? modalRoot
+      ? createPortal(quickReminderContent, modalRoot)
+      : quickReminderContent
+    : null;
 
   const editHabitModalContent = editHabit ? (
     <div className="habit-edit-modal-overlay" onClick={handleCloseEdit}>
@@ -13796,7 +14066,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {visionAlreadyCollectedModal}
         {visionVisualizationModal}
         {habitVisionPreviewModal}
-        {alertConfigModal}
+        {quickReminderPortal}
         {editHabitModal}
         {todayPauseDialogHabit ? (
           <HabitPauseDialog
@@ -14198,7 +14468,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         </div>
       )}
 
-      {alertConfigModal}
+      {quickReminderPortal}
       {editHabitModal}
       {dailyLifeUpgradeCreateFlowPortal}
       {yesterdaySundownTodoPortal}

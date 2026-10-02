@@ -27,6 +27,7 @@ import {
   buildReminderPrefKey,
   removeLocalReminderPrefRecord,
 } from '../data/habitReminderPrefsOfflineRepo';
+import { updateCachedHabitReminderPref } from './habitReminderPrefs';
 import { putPersonalityTest } from '../data/localDb';
 import { buildTopTraitSummary } from '../features/identity/personalitySummary';
 import { upsertPersonalityProfile } from './personalityTest';
@@ -350,6 +351,7 @@ export function registerOfflineSyncExecutors(): void {
       if (!response.ok) {
         throw { status: response.status, message: `Reminder preference sync failed (${response.status})` };
       }
+      updateCachedHabitReminderPref(userId, habitId, updates);
       await removeLocalReminderPrefRecord(buildReminderPrefKey(userId, habitId));
       return { outcome: 'success' as const };
     },

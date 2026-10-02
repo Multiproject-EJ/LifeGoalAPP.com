@@ -5,15 +5,15 @@ import type { Session } from '@supabase/supabase-js';
 import { App as CapacitorApp } from '@capacitor/app';
 import { getIslandRunStateSnapshot, subscribeIslandRunState } from '../gamification/level-worlds/services/islandRunStateStore';
 import { eggAlerts } from '../../services/nativeNotificationPolicy';
-import { buildNativeLifeReminders } from '../../services/nativeLifeReminders';
-import { clearOtherNativeUsers, enableNativeAlertPackage, isNativeNotifications, NATIVE_ALERTS_CHANGED, readNativeAlertPreferences, saveNativeAlertPreferences, syncNativeAlerts } from '../../services/nativeNotifications';
+import { buildNativeLifeReminderGroups, buildNativeTodoReminderAlerts } from '../../services/nativeLifeReminders';
+import { clearOtherNativeUsers, enableNativeAlertPackage, isNativeNotifications, NATIVE_ALERTS_CHANGED, readNativeAlertPreferences, saveNativeAlertPreferences, syncNativeAlerts, syncSelectedNativeAlerts } from '../../services/nativeNotifications';
 import './NativeNotifications.css';
 
 export function NativeNotificationCoordinator({ session }: { session: Session | null }) {
   const [prompt, setPrompt] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
   useEffect(() => {
     if (!isNativeNotifications()) return;
-    let live = true, lifeBusy = false;
+    let live = true, lifeBusy = false, lifeQueued = false;
     setPrompt(false);
     const userId = session?.user.id ?? null;
     void clearOtherNativeUsers(userId).catch(console.warn);
@@ -30,11 +30,32 @@ export function NativeNotificationCoordinator({ session }: { session: Session | 
       if (!readNativeAlertPreferences(userId).eggPromptSeen && Object.values(ledger).some(egg => egg.status === 'incubating' && egg.hatchAtMs > Date.now())) setPrompt(true);
     };
     const syncLife = async () => {
-      if (lifeBusy || !live) return; lifeBusy = true;
+      if (!live) return;
+      if (lifeBusy) { lifeQueued = true; return; }
+      lifeBusy = true;
       try {
-        const alerts = readNativeAlertPreferences(userId).life ? await buildNativeLifeReminders(userId) : [];
-        if (live) await syncNativeAlerts(userId, 'life', alerts, () => live);
-      } catch (e) { report(e); }
+        do {
+          lifeQueued = false;
+          try {
+            const preferences = readNativeAlertPreferences(userId);
+            const shouldBuild = preferences.life || preferences.selected;
+            // Todo choices live on this iPhone. Reconcile them before any
+            // network-backed habit reads so a failed fetch cannot block a new
+            // schedule or cancellation. The partitioned sync preserves the
+            // last-known habit notifications while their source is offline.
+            const todoAlerts = shouldBuild ? buildNativeTodoReminderAlerts(userId) : [];
+            if (live) await syncSelectedNativeAlerts(userId, 'todo', todoAlerts, () => live);
+            if (!shouldBuild) {
+              if (live) await syncSelectedNativeAlerts(userId, 'habit', [], () => live);
+              if (live) await syncNativeAlerts(userId, 'life', [], () => live);
+              continue;
+            }
+            const groups = await buildNativeLifeReminderGroups(userId);
+            if (live) await syncSelectedNativeAlerts(userId, 'habit', groups.selected.filter(alert => Boolean(alert.habitId)), () => live);
+            if (live) await syncNativeAlerts(userId, 'life', groups.ambient, () => live);
+          } catch (e) { report(e); }
+        } while (live && lifeQueued);
+      }
       finally { lifeBusy = false; }
     };
     const refresh = () => { syncEggs(true); void syncLife(); };

@@ -1,0 +1,176 @@
+.habit-checklist__reminder-trigger {
+  display: inline-flex;
+  min-width: 28px;
+  min-height: 26px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 3px 7px;
+  border: 1px solid rgba(83, 133, 174, 0.22);
+  border-radius: 999px;
+  color: #5f7890;
+  background: rgba(231, 241, 248, 0.72);
+  font: 750 0.66rem/1 system-ui, sans-serif;
+  box-shadow: none;
+}
+
+.habit-checklist__reminder-trigger time {
+  font-variant-numeric: tabular-nums;
+}
+
+.habit-checklist__reminder-trigger--active {
+  border-color: rgba(31, 150, 211, 0.32);
+  color: #07547d;
+  background: linear-gradient(180deg, rgba(214, 244, 255, 0.96), rgba(186, 230, 248, 0.9));
+}
+
+.habit-checklist__reminder-trigger:focus-visible {
+  outline: 2px solid #2d9bd3;
+  outline-offset: 2px;
+}
+
+.compact-reminder {
+  position: fixed;
+  z-index: 12050;
+  box-sizing: border-box;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(117, 198, 255, 0.34);
+  border-radius: 16px;
+  color: #f5faff;
+  background:
+    linear-gradient(145deg, rgba(18, 47, 82, 0.98), rgba(8, 24, 48, 0.99));
+  box-shadow: 0 18px 44px rgba(0, 10, 28, 0.46), inset 0 1px rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.compact-reminder__heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.compact-reminder__bell {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(95, 197, 255, 0.14);
+  font-size: 15px;
+}
+
+.compact-reminder__copy {
+  display: grid;
+  min-width: 0;
+}
+
+.compact-reminder__copy strong {
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.compact-reminder__copy small {
+  overflow: hidden;
+  color: rgba(225, 240, 255, 0.72);
+  font-size: 0.7rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-reminder__cadence {
+  color: #bfeaff;
+  font-size: 0.67rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.compact-reminder__close {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: #dceeff;
+  background: rgba(255, 255, 255, 0.08);
+  font: 500 20px/1 system-ui, sans-serif;
+}
+
+.compact-reminder__form {
+  display: grid;
+  grid-template-columns: minmax(116px, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.compact-reminder__time input {
+  width: 100%;
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  border: 1px solid rgba(128, 211, 255, 0.38);
+  border-radius: 11px;
+  color: #f8fcff;
+  color-scheme: dark;
+  background: rgba(2, 16, 35, 0.62);
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.compact-reminder__clear,
+.compact-reminder__save {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 11px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.compact-reminder__clear {
+  color: #dcecff;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.compact-reminder__save {
+  color: #08213b;
+  background: linear-gradient(180deg, #f9dc8a, #eeb54e);
+  box-shadow: 0 5px 14px rgba(234, 177, 69, 0.24);
+}
+
+.compact-reminder button:disabled,
+.compact-reminder input:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.compact-reminder__message {
+  margin: -2px 2px 0;
+  color: #bfeaff;
+  font-size: 0.69rem;
+  line-height: 1.25;
+}
+
+.compact-reminder__message--error {
+  color: #ffc4bd;
+}
+
+@media (max-width: 370px) {
+  .compact-reminder__heading {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .compact-reminder__cadence { display: none; }
+  .compact-reminder__form { grid-template-columns: minmax(108px, 1fr) auto; }
+  .compact-reminder__clear { grid-row: 2; grid-column: 1 / -1; min-height: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compact-reminder { scroll-behavior: auto; }
+}
