@@ -1449,6 +1449,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [microTestBadge.showBadge, microTestBadge.count]);
 
   const showMicroTestNotificationDot = microTestBadge.showBadge && !hasSeenMicroTestBadge;
+  // Anything new inside the launcher menu (unseen micro-tests, a rank promotion).
+  // Only then does the launcher show the robot; otherwise it stays the compass.
+  const launcherMenuHasNews = showMicroTestNotificationDot || pendingPromotion !== null;
   
 
   const mobileMenuPointsBadges = useMemo(() => {
@@ -6245,6 +6248,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             }}
             onEnergySelect={handleEnergySelect}
             isDiodeActive={isFooterControllerLayoutActive}
+            launcherHasNews={launcherMenuHasNews}
             pointsBadges={mobileFooterPointsBadges}
             showPointsBadges={shouldShowPointsBadges}
             isFlashActive={isMobileMenuFlashActive}
@@ -6582,6 +6586,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           }}
           onEnergySelect={handleEnergySelect}
           isDiodeActive={isFooterControllerLayoutActive}
+          launcherHasNews={launcherMenuHasNews}
           pointsBadges={mobileFooterPointsBadges}
           showPointsBadges={shouldShowPointsBadges}
           isFlashActive={isMobileMenuFlashActive}
