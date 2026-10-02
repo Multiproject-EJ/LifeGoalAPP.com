@@ -78,6 +78,7 @@ const CREATOR_STORY_PREVIEW_PATH = '/dev/creator-story-preview';
 const SETTINGS_PREVIEW_PATH = '/dev/settings-preview';
 const VOYAGE_MAP_PREVIEW_PATH = '/dev/voyage-map-preview';
 const TRAVEL_INTERLUDE_PREVIEW_PATH = '/dev/travel-interlude-preview';
+const TODAY_PET_PREVIEW_PATH = '/dev/today-pet-preview';
 const ARENA_PUZZLE_PREVIEW_PATH = '/dev/arena-puzzle-preview';
 const HOLIDAY_MODAL_PREVIEW_PATH = '/dev/holiday-modal-preview';
 const HABIT_LANDMARK_PREVIEW_PATH = '/dev/habit-landmark-preview';
@@ -155,6 +156,22 @@ function TravelInterludePreviewRoute() {
   useEffect(() => {
     let isMounted = true;
     import('./features/gamification/level-worlds/components/IslandTravelInterludePreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function TodayPetPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/habits/todayPet/TodayPetPreview').then((module) => {
       if (isMounted) setPreview(() => module.default);
     });
     return () => {
@@ -826,6 +843,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === TRAVEL_INTERLUDE_PREVIEW_PATH;
+  const isTodayPetPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === TODAY_PET_PREVIEW_PATH;
   const isVoyageMapPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -943,6 +964,10 @@ function Root() {
 
   if (isSkyboundExpeditionPreviewRoute) {
     return <SkyboundExpeditionPreviewRoute />;
+  }
+
+  if (isTodayPetPreviewRoute) {
+    return <TodayPetPreviewRoute />;
   }
 
   if (isTravelInterludePreviewRoute) {

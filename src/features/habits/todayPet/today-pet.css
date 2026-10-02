@@ -181,3 +181,34 @@
 
 /* In-tree marker: lets the one displayed Today tracker own the pet. */
 .today-pet-anchor { display: inline-block; width: 0; height: 0; overflow: hidden; }
+
+/* Pet stats card: above the action bubbles while the pet is tapped. */
+.today-pet__stats {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 76px);
+  translate: -50% 0;
+  width: 190px;
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(224, 242, 254, 0.96));
+  color: #0f172a;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.26);
+  pointer-events: auto;
+  animation: today-pet-bubble-in 280ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+.today-pet__stats--from-left { left: 0; translate: 0 0; }
+.today-pet__stats--from-right { left: auto; right: 0; translate: 0 0; }
+.today-pet__stats-name { margin: 0 0 1px; font-size: 12px; font-weight: 900; }
+.today-pet__stat { display: grid; grid-template-columns: 50px 1fr auto; align-items: center; gap: 6px; }
+.today-pet__stat-title { font-size: 10px; font-weight: 800; color: #334155; }
+.today-pet__stat small { font-size: 9.5px; font-weight: 800; color: #475569; white-space: nowrap; }
+.today-pet__stat-bar { position: relative; height: 7px; border-radius: 999px; background: rgba(15, 23, 42, 0.12); overflow: hidden; }
+.today-pet__stat-bar i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; transition: width 400ms ease; }
+.today-pet__stat--feeling .today-pet__stat-bar i { background: linear-gradient(90deg, #f472b6, #fb7185); }
+.today-pet__stat--power .today-pet__stat-bar i { background: linear-gradient(90deg, #60a5fa, #a78bfa); }
+.today-pet__stat--hunger .today-pet__stat-bar i { background: linear-gradient(90deg, #fbbf24, #f97316); }
+.today-pet__stats-bonus { margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 9.5px; font-weight: 800; color: #0f766e; }

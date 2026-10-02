@@ -11,7 +11,7 @@ import { getCreatureById } from '../../gamification/level-worlds/services/creatu
 /** Every pet shares one maximum size so none takes over the screen. */
 export const TODAY_PET_SIZE_PX = 60;
 
-export type TodayPetCompanion = { creatureId: string; paired: boolean };
+export type TodayPetCompanion = { creatureId: string; paired: boolean; bondLevel?: number };
 
 /**
  * The paired companion when owned; otherwise the player's first creature
@@ -22,9 +22,10 @@ export function resolveTodayPetCompanion(
 ): TodayPetCompanion | null {
   const owned = record.creatureCollection.filter((entry) => entry.copies > 0 && getCreatureById(entry.creatureId));
   const activeId = typeof record.activeCompanionId === 'string' ? record.activeCompanionId.trim() : '';
-  if (activeId && owned.some((entry) => entry.creatureId === activeId)) return { creatureId: activeId, paired: true };
+  const active = activeId ? owned.find((entry) => entry.creatureId === activeId) : undefined;
+  if (active) return { creatureId: activeId, paired: true, bondLevel: active.bondLevel };
   const first = [...owned].sort((a, b) => (a.firstCollectedAtMs || 0) - (b.firstCollectedAtMs || 0))[0];
-  return first ? { creatureId: first.creatureId, paired: false } : null;
+  return first ? { creatureId: first.creatureId, paired: false, bondLevel: first.bondLevel } : null;
 }
 
 export type TodayPetAction =
@@ -124,4 +125,58 @@ export function resolveTodayPetPose(mood: TodayPetMood, t: number, reduced = fal
     default:
       return base;
   }
+}
+
+// ── Pet stats card (user request 2026-10-02) ───────────────────────────────
+
+export interface TodayPetStat { pct: number; label: string }
+export interface TodayPetStats {
+  feeling: TodayPetStat & { emoji: string };
+  power: TodayPetStat;
+  hunger: TodayPetStat;
+  /** The real start-of-island companion bonus (only while paired). */
+  islandBonusLabel: string | null;
+  feedBonusLabel: string;
+}
+
+const TIER_POWER: Record<string, number> = { common: 30, uncommon: 42, rare: 55, epic: 70, legendary: 85, mythic: 95 };
+
+/**
+ * Presentation stats for the pet card. Power grows with rarity and bond;
+ * hunger rises through the day until today's feed; feeling blends being fed,
+ * a recent pet/play and the current mood.
+ */
+export function resolveTodayPetStats(options: {
+  tier: string;
+  bondLevel: number;
+  fedToday: boolean;
+  recentlyLoved: boolean;
+  mood: TodayPetMood;
+  hourOfDay: number;
+  islandBonusLabel: string | null;
+  feedDice?: number;
+}): TodayPetStats {
+  const clamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
+  const bond = Math.max(1, Math.floor(Number.isFinite(options.bondLevel) ? options.bondLevel : 1));
+  const powerPct = clamp((TIER_POWER[options.tier] ?? 30) + Math.min(20, (bond - 1) * 2));
+  const hour = Math.max(0, Math.min(24, options.hourOfDay));
+  const hungerPct = options.fedToday ? 0 : clamp(25 + hour * 3);
+  const hungerLabel = options.fedToday ? 'Full' : hungerPct >= 70 ? 'Very hungry' : hungerPct >= 45 ? 'Hungry' : 'Peckish';
+  let feelingPct = 45 + (options.fedToday ? 30 : 0) + (options.recentlyLoved ? 20 : 0) - (hungerPct >= 70 ? 15 : 0);
+  if (options.mood === 'happy' || options.mood === 'play' || options.mood === 'chase') feelingPct += 10;
+  if (options.mood === 'sleep') feelingPct = Math.max(feelingPct, 55);
+  feelingPct = clamp(feelingPct);
+  const feeling = options.mood === 'sleep'
+    ? { label: 'Sleepy', emoji: '😴' }
+    : feelingPct >= 85 ? { label: 'Overjoyed', emoji: '🥰' }
+      : feelingPct >= 65 ? { label: 'Happy', emoji: '😊' }
+        : feelingPct >= 45 ? { label: 'Content', emoji: '🙂' }
+          : { label: 'Needs you', emoji: '🥺' };
+  return {
+    feeling: { pct: feelingPct, ...feeling },
+    power: { pct: powerPct, label: `Bond Lv ${bond}` },
+    hunger: { pct: hungerPct, label: hungerLabel },
+    islandBonusLabel: options.islandBonusLabel,
+    feedBonusLabel: options.fedToday ? 'Fed today' : `Feed · +${options.feedDice ?? 15} 🎲`,
+  };
 }
