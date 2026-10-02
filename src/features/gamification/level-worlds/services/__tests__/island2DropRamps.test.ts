@@ -60,4 +60,24 @@ export const island2DropRampsTests: TestCase[] = [
       assert(pilot.includes('if (dropRampLaunchStartedAt === null && launchRequest.sequence > 0) launchRequest.onComplete?.();'), 'no ramps or reduced motion: complete immediately');
     },
   },
+  {
+    name: 'opening ceremony: once per player on the Arena home, hover base → celebratory strike → finale, never stranded',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes("const wantsCeremony = arenaCeremonyPreview || (dropRampsActive && activeStopId === 'mystery');"), 'plays when the Arena first opens on Island 002');
+      assert(board.includes('const arenaCeremonySeenKey = `islandRun.island2ArenaCeremony.v1:${session.user.id}`;')
+        && board.includes("window.localStorage.setItem(arenaCeremonySeenKey, '1');"), 'once per player');
+      assert(board.includes("setArenaCeremonyPhase(reducedMotion ? 'cheer' : 'arrival');"), 'reduced motion skips the motion straight to the finale');
+      assert(board.includes("onOpeningArenaArrivalComplete={arenaCeremonyPhase === 'arrival' ? () => setArenaCeremonyPhase('strike') : handleOpeningArenaArrivalComplete}"), 'the ceremony arrival never anchors the new-campaign mission');
+      assert(board.includes("stormfrontCinematicMode={arenaCeremonyPhase === 'strike' ? 'celebration' : 'storm'}"), 'the strike plays in celebration mode');
+      assert(board.includes("const ceiling = arenaCeremonyPhase === 'arrival' ? 12000 : arenaCeremonyPhase === 'strike' ? 20000 : 3600;"), 'every phase has a ceiling');
+      const pilot = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(pilot.includes("damagedRoots: stormfrontCinematicRef.current.mode === 'celebration' ? []"), 'the celebration strike breaks nothing');
+      const css = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      const finale = css.slice(css.indexOf('@keyframes island-run-arena-ceremony-in'));
+      assert(!finale.slice(0, finale.indexOf('}\n}') + 3).includes('opacity: 0; }\n}'), 'the finale only fades in, so it can never end invisible');
+    },
+  },
 ];

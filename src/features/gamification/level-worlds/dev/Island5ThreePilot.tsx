@@ -459,6 +459,8 @@ interface Island5ThreePilotProps {
   onDepartureCinematicComplete?: () => void;
   /** Island 002 Stormfront: plays the storm and the central strike (presentation only). */
   stormfrontCinematicActive?: boolean;
+  /** 'celebration': the Island 002 opening ceremony strike — no landmark damage. */
+  stormfrontCinematicMode?: 'storm' | 'celebration';
   onStormfrontCinematicComplete?: () => void;
   onStormfrontCinematicBeat?: (beat: StormfrontCinematicBeat) => void;
   /** Island 002 storm-safe add-on structures (null hides them). */
@@ -3859,6 +3861,7 @@ export default function Island5ThreePilot({
   departureCinematicActive = false,
   onDepartureCinematicComplete,
   stormfrontCinematicActive = false,
+  stormfrontCinematicMode = 'storm',
   onStormfrontCinematicComplete,
   onStormfrontCinematicBeat,
   stormfrontStructureLevels = null,
@@ -4167,8 +4170,8 @@ export default function Island5ThreePilot({
   onLuckySpinClickRef.current = onLuckySpinClick;
   const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
   departureCinematicRef.current = { active: departureCinematicActive, onComplete: onDepartureCinematicComplete };
-  const stormfrontCinematicRef = useRef({ active: stormfrontCinematicActive, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat });
-  stormfrontCinematicRef.current = { active: stormfrontCinematicActive, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat };
+  const stormfrontCinematicRef = useRef({ active: stormfrontCinematicActive, mode: stormfrontCinematicMode, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat });
+  stormfrontCinematicRef.current = { active: stormfrontCinematicActive, mode: stormfrontCinematicMode, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat };
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
   constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
@@ -11691,7 +11694,9 @@ export default function Island5ThreePilot({
             scene,
             canvas,
             start: { position: camera.position.clone(), target: controls.target.clone(), fov: camera.fov },
-            damagedRoots: outerIds.map((id) => landmarkRootsById.get(id)).filter((entry): entry is THREE.Object3D => Boolean(entry)),
+            // The opening ceremony strike celebrates; only the real storm breaks pieces off.
+            damagedRoots: stormfrontCinematicRef.current.mode === 'celebration' ? []
+              : outerIds.map((id) => landmarkRootsById.get(id)).filter((entry): entry is THREE.Object3D => Boolean(entry)),
             allRoots,
           });
           stormfrontCinematicTime = 0;

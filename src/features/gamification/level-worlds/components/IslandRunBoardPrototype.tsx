@@ -11489,6 +11489,51 @@ export function IslandRunBoardPrototype({
     return () => window.clearInterval(timer);
   }, [isIslandVisualPreview]);
 
+  // Island 002 opening ceremony (user decision 2026-10-02): the first time the
+  // Arena opens on the Arena home, the hover base flies in carrying the full
+  // arena, a celebratory lightning strike lights up the island, fireworks
+  // burst, then the Arena appears. Once per player; presentation only.
+  type ArenaCeremonyPhase = 'idle' | 'arrival' | 'strike' | 'cheer';
+  const [arenaCeremonyPhase, setArenaCeremonyPhase] = useState<ArenaCeremonyPhase>('idle');
+  const arenaCeremonySeenKey = `islandRun.island2ArenaCeremony.v1:${session.user.id}`;
+  const arenaCeremonyPreview = isIslandVisualPreview && new URLSearchParams(window.location.search).get('islandArenaCeremonyPreview') === '1';
+  const endArenaCeremony = useCallback(() => {
+    setArenaCeremonyPhase('idle');
+    document.body.classList.remove('island-run--drop-ramp-launch');
+  }, []);
+  useEffect(() => {
+    if (arenaCeremonyPhase !== 'idle') return;
+    const wantsCeremony = arenaCeremonyPreview || (dropRampsActive && activeStopId === 'mystery');
+    if (!wantsCeremony) return;
+    if (!arenaCeremonyPreview) {
+      try {
+        if (window.localStorage.getItem(arenaCeremonySeenKey) === '1') return;
+        // Marked at the start: an interrupted ceremony never traps the player in a replay loop.
+        window.localStorage.setItem(arenaCeremonySeenKey, '1');
+      } catch {
+        return;
+      }
+    }
+    const reducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.body.classList.add('island-run--drop-ramp-launch');
+    setCameraMode('overview_manual');
+    setFocusedStopId(null);
+    setThreeCameraOverviewRequestVersion((current) => current + 1);
+    setArenaCeremonyPhase(reducedMotion ? 'cheer' : 'arrival');
+  }, [activeStopId, arenaCeremonyPhase, arenaCeremonyPreview, arenaCeremonySeenKey, dropRampsActive]);
+  useEffect(() => {
+    if (arenaCeremonyPhase === 'idle') return undefined;
+    // Each phase has a ceiling, so a missing 3D callback can never strand the Arena.
+    const ceiling = arenaCeremonyPhase === 'arrival' ? 12000 : arenaCeremonyPhase === 'strike' ? 20000 : 3600;
+    const timer = window.setTimeout(() => {
+      if (arenaCeremonyPhase === 'arrival') setArenaCeremonyPhase('strike');
+      else if (arenaCeremonyPhase === 'strike') setArenaCeremonyPhase('cheer');
+      else endArenaCeremony();
+    }, ceiling);
+    return () => window.clearTimeout(timer);
+  }, [arenaCeremonyPhase, endArenaCeremony]);
+  useEffect(() => () => { document.body.classList.remove('island-run--drop-ramp-launch'); }, []);
+
   const handleLaunchArenaGame = async (gameId: ArenaGameId) => {
     const launchVisitKey = arenaStadiumVisitKey(getIslandRunStateSnapshot(session));
     const launchPreferences = activeStopId === 'mystery' ? { ...arenaPreferences, disabledEventIds: [] } : arenaPreferences;
@@ -18023,8 +18068,9 @@ export function IslandRunBoardPrototype({
                 firstArrivalActive={firstArrivalActive}
                 departureCinematicActive={Boolean(islandDeparture)}
                 onDepartureCinematicComplete={() => islandDepartureFinishRef.current?.()}
-                stormfrontCinematicActive={stormfrontCinematicPlaying}
-                onStormfrontCinematicComplete={finishStormfrontCinematic}
+                stormfrontCinematicActive={stormfrontCinematicPlaying || arenaCeremonyPhase === 'strike'}
+                stormfrontCinematicMode={arenaCeremonyPhase === 'strike' ? 'celebration' : 'storm'}
+                onStormfrontCinematicComplete={arenaCeremonyPhase === 'strike' ? () => setArenaCeremonyPhase('cheer') : finishStormfrontCinematic}
                 onStormfrontCinematicBeat={handleStormfrontBeat}
                 stormfrontStructureLevels={stormfrontStructureLevels}
                 onStormfrontStructureClick={handleStormfrontStructureClick}
@@ -18032,8 +18078,10 @@ export function IslandRunBoardPrototype({
                 skyHangarLaunchKey={skyHangarLaunchKey}
                 caretakerTileVisit={caretakerTileVisit}
                 playerPieceCheer={playerPieceCheer.key > 0 ? { key: playerPieceCheer.key, element: playerPieceCheerElement } : null}
-                openingArena={openingArenaVisual}
-                onOpeningArenaArrivalComplete={handleOpeningArenaArrivalComplete}
+                openingArena={arenaCeremonyPhase === 'arrival' ? { stage: 'arriving', arenaLevel: 3, rollsUntilDelivery: 0 }
+                  : arenaCeremonyPhase !== 'idle' ? { stage: 'anchored', arenaLevel: 3, rollsUntilDelivery: 0 }
+                    : openingArenaVisual}
+                onOpeningArenaArrivalComplete={arenaCeremonyPhase === 'arrival' ? () => setArenaCeremonyPhase('strike') : handleOpeningArenaArrivalComplete}
                 onOpeningArenaClick={isIslandVisualPreview ? undefined : () => setShowOpeningArenaBuild(true)}
                 centreLandmarkVariant={openingArenaAvailable || (isIslandVisualPreview && new URLSearchParams(window.location.search).get('islandSkyLiftPreview') === '1')
                   ? 'golden-sky-lift' : null}
@@ -22086,6 +22134,13 @@ export function IslandRunBoardPrototype({
         document.body,
       ) : null}
 
+      {arenaCeremonyPhase === 'cheer' ? createPortal(
+        <div className="island-run-arena-ceremony" role="status" aria-live="polite">
+          <CelebrationFireworks variant="hero" />
+          <p className="island-run-arena-ceremony__eyebrow">Island 002 · Opening ceremony</p>
+          <h2 className="island-run-arena-ceremony__title">The Arena Games are open!</h2>
+          <p className="island-run-arena-ceremony__body">Launch from the drop ramps into Crystal Miners.</p>
+        </div>, document.body) : null}
       {dropRampDiveActive ? createPortal(<div className="island-run-drop-dive" aria-hidden="true" />, document.body) : null}
       {/* Only while an intro is playing or queued: an unopened phone message
           must not leave the pill hovering over the controller. */}
