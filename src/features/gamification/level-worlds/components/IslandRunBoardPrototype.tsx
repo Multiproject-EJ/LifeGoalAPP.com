@@ -14954,8 +14954,29 @@ export function IslandRunBoardPrototype({
     showIsland20Arrival,
     stopAutoRoll,
   ]);
-  const hideControllerForPresentation = shouldHideMissionController(missionOwnsController, doesModalOwnAttention,
+  const controllerHiddenByPresentation = shouldHideMissionController(missionOwnsController, doesModalOwnAttention,
     lavaSkiffNavigation.active || isShooterControllerActive);
+  // Controller rescue (user request 2026-10-02): the floating 🎮 button can
+  // bring back a controller that a stuck presentation flag left hidden. The
+  // override lasts only while that flag stays stuck: the next time nothing
+  // hides it, it clears, so a newly opened modal hides the controller again.
+  const [controllerRescueActive, setControllerRescueActive] = useState(false);
+  const [controllerResetKey, setControllerResetKey] = useState(0);
+  useEffect(() => {
+    if (!controllerHiddenByPresentation) setControllerRescueActive(false);
+  }, [controllerHiddenByPresentation]);
+  const hideControllerForPresentation = controllerHiddenByPresentation && !controllerRescueActive;
+  const handleControllerRescueButton = useCallback(() => {
+    const controllerShowing = !isControllerTucked && !hideControllerForPresentation;
+    if (controllerShowing) {
+      setIsControllerTucked(true);
+      return;
+    }
+    // Reset: untuck, ignore a stuck hide flag and rebuild the controller.
+    setIsControllerTucked(false);
+    if (controllerHiddenByPresentation) setControllerRescueActive(true);
+    setControllerResetKey((current) => current + 1);
+  }, [controllerHiddenByPresentation, hideControllerForPresentation, isControllerTucked]);
   useEffect(() => {
     if (missionOwnsController) {
       stopAutoRoll();
@@ -18551,6 +18572,17 @@ export function IslandRunBoardPrototype({
       {islandDeparture || firstArrivalActive || showFirstLightAssemblyCrater ? null : (
         <button
           type="button"
+          className={`island-run-prototype__controller-rescue-floating${isControllerTucked || hideControllerForPresentation ? ' is-missing' : ''}`}
+          aria-label={isControllerTucked || hideControllerForPresentation ? 'Show and reset the game controller' : 'Hide the game controller'}
+          title={isControllerTucked || hideControllerForPresentation ? 'Show / reset controller' : 'Hide controller'}
+          onClick={handleControllerRescueButton}
+        >
+          🎮
+        </button>
+      )}
+      {islandDeparture || firstArrivalActive || showFirstLightAssemblyCrater ? null : (
+        <button
+          type="button"
           className="island-run-prototype__camera-reset-floating"
           aria-label="Zoom out to the full island overview"
           title="Full island overview"
@@ -18648,6 +18680,7 @@ export function IslandRunBoardPrototype({
               <ShooterControllerAdapter onIntent={emitShooterControllerIntent} />
             ) : (
               <LivingController
+                key={`living-controller-${controllerResetKey}`}
                 arrivalKey={String(islandNumber)}
                 onThemeChange={setTopbarControllerTheme}
                 onArrivalImpact={() => { triggerIslandRunHaptic('controller_land'); setControllerLandedIslandNumber(islandNumber); }}

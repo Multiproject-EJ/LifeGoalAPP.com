@@ -29681,3 +29681,31 @@ body.island-run--drop-ramp-launch .event-arena-modal-backdrop {
 @media (prefers-reduced-motion: reduce) {
   .island-run-arena-ceremony { animation: none; }
 }
+
+/* Controller rescue: beside the full-overview button. Tap to hide the
+   controller; when it is missing or tucked, tap to show and reset it. */
+.island-run-prototype__controller-rescue-floating {
+  position: absolute;
+  right: max(72px, calc(env(safe-area-inset-right, 0px) + 72px));
+  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 44px);
+  z-index: 18;
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 2px solid rgba(198, 170, 103, 0.9);
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.96) 0%, rgba(248, 234, 197, 0.92) 100%);
+  font-size: 1.2rem;
+  box-shadow: 0 6px 16px rgba(19, 35, 56, 0.22);
+  cursor: pointer;
+}
+.island-run-prototype__controller-rescue-floating.is-missing {
+  border-color: rgba(127, 243, 255, 0.95);
+  box-shadow: 0 0 0 3px rgba(127, 243, 255, 0.35), 0 6px 16px rgba(19, 35, 56, 0.22);
+}
+.island-run-prototype__controller-rescue-floating:focus-visible {
+  outline: 2px solid rgba(170, 236, 255, 0.96);
+  outline-offset: 2px;
+}
