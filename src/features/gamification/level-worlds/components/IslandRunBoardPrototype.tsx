@@ -19206,6 +19206,7 @@ export function IslandRunBoardPrototype({
         hasActiveStop: Boolean(activeStop),
         storyReaderOpen: showStoryReader,
         firstRunCelebrationOpen: showFirstRunCelebration,
+        missionPhoneOpen: Boolean(activeMissionBriefing) || showMissionPhoneBriefing,
       }) && activeStop && (() => {
         if (activeStop.stopId === 'hatchery' && featureAccess.welcomeCheckIn && !showEarlyOwnedEggs) {
           return <IslandRunWelcomeCheckInModal key={`${cycleIndex}:${islandNumber}`} session={session} client={client}
