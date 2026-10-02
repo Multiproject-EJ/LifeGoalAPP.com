@@ -90,11 +90,11 @@ export const arenaJourneyTests: TestCase[] = [
     assert(!currentArenaStadium(getIslandRunStateSnapshot(session))?.playedAtMs,'cancel no credit');
   }},
   { name: 'one-game stadium completes from a funded terminal Signal round exactly once', async run() {
-    const state=await seed(2);const eventId=state.activeTimedEvent!.eventId;
-    await action({kind:'introduce',gameId:'signal_path'},2);
+    const state=await seed(3);const eventId=state.activeTimedEvent!.eventId;
+    await action({kind:'introduce',gameId:'crystal_miners'},3);await action({kind:'introduce',gameId:'signal_path'},3);
     await stadiumAction({kind:'enter'});await stadiumAction({kind:'play',gameId:'signal_path',eventId});
-    const launch=await action({kind:'begin-signal',eventId},2);
-    await action({kind:'settle-signal',attemptId:launch!.attemptId!,result:report},2);
+    const launch=await action({kind:'begin-signal',eventId},3);
+    await action({kind:'settle-signal',attemptId:launch!.attemptId!,result:report},3);
     const results=await Promise.all([stadiumAction({kind:'refresh'}),stadiumAction({kind:'refresh'})]);
     assertEqual(results.filter(r=>r?.complete).length,1,'one completion');
     const after=getIslandRunStateSnapshot(session);
@@ -127,15 +127,15 @@ export const arenaJourneyTests: TestCase[] = [
     assertEqual(getIslandRunStateSnapshot(session).dicePool,state.dicePool+5,'L3 completion dice once');
   }},
   { name: 'stadium rejects stale visits, unreleased games and cross-owner receipts', async run() {
-    const state=await seed(2);await action({kind:'introduce',gameId:'signal_path'},2);
+    const state=await seed(3);await action({kind:'introduce',gameId:'signal_path'},3);
     const key=arenaStadiumVisitKey(state);const eventId=state.activeTimedEvent!.eventId;
     await stadiumAction({kind:'enter'});
     assertEqual(await stadiumAction({kind:'play',gameId:'twin_sigils',eventId}),null,'demo no credit');
     await stadiumAction({kind:'play',gameId:'signal_path',eventId});
-    const launch=await action({kind:'begin-signal',eventId},2);
+    const launch=await action({kind:'begin-signal',eventId},3);
     updateFixture({islandStartedAtMs:state.islandStartedAtMs+1});
     assertEqual(await stadiumAction({kind:'refresh'},key),null,'same island new visit');
-    assertEqual(await action({kind:'settle-signal',attemptId:launch!.attemptId!,result:report},2),null,'old funded callback');
+    assertEqual(await action({kind:'settle-signal',attemptId:launch!.attemptId!,result:report},3),null,'old funded callback');
     assertEqual(currentArenaStadium(getIslandRunStateSnapshot(session)),null,'previous visit ignored');
   }},
   { name: 'stadium sanitizer round-trips and stale merge cannot erase settled participation', async run() {
@@ -159,7 +159,7 @@ export const arenaJourneyTests: TestCase[] = [
     for (const [island, count] of [[1,0],[2,1],[3,2],[5,2],[6,3],[40,3],[2,1],[1,0]]) assertEqual(introducedArenaGames(island,p).length,count,'introduced catalogue size');
     assertEqual(Object.keys(p.introduced).length,3,'no mutation');
     for (const bad of [0,-1,NaN,Infinity,2.5]) assertEqual(introducedArenaGames(bad,p).length,0,'invalid island closed');
-    assertEqual(pendingArenaIntroductions(6,sanitizeArenaJourney(null)).join(','),'signal_path,crystal_miners,journey_disc_arena','catch-up order');
+    assertEqual(pendingArenaIntroductions(6,sanitizeArenaJourney(null)).join(','),'crystal_miners,signal_path,journey_disc_arena','catch-up order');
   }},
   { name: 'demo preview needs verified developer AND individual opt-in; island1 never bypassed', run() {
     for(const dev of [false,true]) for(const enabled of [[],['twin_sigils'] as const]) {
@@ -197,14 +197,14 @@ export const arenaJourneyTests: TestCase[] = [
   }},
   { name: 'introduction action rejects early/stale callbacks and never awards currency', async run() {
     const before=await seed(2);
-    assertEqual(await action({kind:'introduce',gameId:'crystal_miners'},2),null,'too early');
-    assertEqual(await action({kind:'introduce',gameId:'signal_path'},3),null,'stale island');
-    assert(await action({kind:'introduce',gameId:'signal_path'},2),'introduce');
+    assertEqual(await action({kind:'introduce',gameId:'signal_path'},2),null,'too early: Signal Path joins on Island 003');
+    assertEqual(await action({kind:'introduce',gameId:'crystal_miners'},3),null,'stale island');
+    assert(await action({kind:'introduce',gameId:'crystal_miners'},2),'Crystal Miners is introduced on Island 002');
     const after=getIslandRunStateSnapshot(session);
     assertEqual(JSON.stringify(after.minigameTicketsByEvent),JSON.stringify(before.minigameTicketsByEvent),'no grant/spend');
     assertEqual(after.dicePool,before.dicePool,'no XP/wallet award');
     __resetIslandRunStateStoreForTests();
-    assert(resolveArenaJourney(getIslandRunStateSnapshot(session)).introduced.signal_path,'persisted');
+    assert(resolveArenaJourney(getIslandRunStateSnapshot(session)).introduced.crystal_miners,'persisted');
   }},
   { name: 'signal launch atomically spends once with replay-safe settlement; cancelled is not played', async run() {
     const state=await seed(); await action({kind:'introduce',gameId:'signal_path'});

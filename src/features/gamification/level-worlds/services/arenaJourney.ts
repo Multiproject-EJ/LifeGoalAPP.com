@@ -3,8 +3,10 @@ import type { IslandRunSignatureMissionProgressByIsland } from './islandRunSigna
 
 /** Owner-scoped, permanent introductions. Current island still limits visibility. */
 export const ARENA_JOURNEY_KEY = 'arena-journey-v1';
+// Crystal Miners opens the Arena journey on Island 002, launched from its four
+// corner drop ramps (user decision 2026-10-02); Signal Path follows on 003.
 export const ARENA_INTRODUCTIONS: Partial<Record<ArenaGameId, number>> = {
-  signal_path: 2, crystal_miners: 3, journey_disc_arena: 6,
+  crystal_miners: 2, signal_path: 3, journey_disc_arena: 6,
 };
 export const ARENA_DEMO_IDS: readonly ArenaGameId[] = ['twin_sigils', 'concord_categories', 'lexicon_relay'];
 export interface ArenaStadiumVisit {
