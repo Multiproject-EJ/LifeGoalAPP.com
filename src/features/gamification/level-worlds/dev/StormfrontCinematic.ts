@@ -113,8 +113,17 @@ export function createIsland2StormfrontCinematic(options: {
   damagedRoots: THREE.Object3D[];
   /** Every landmark root, used to find the island centre and size. */
   allRoots: THREE.Object3D[];
+  /**
+   * Island 002 opening ceremony: a short, bright, golden strike — no dark
+   * build-up, rain or lightning wall; the strike lands ~1.2 s in and the
+   * camera is back by ~5.5 s.
+   */
+  celebration?: boolean;
 }) {
   const { scene, canvas, start, damagedRoots, allRoots } = options;
+  const celebration = options.celebration === true;
+  /** Celebration plays only the strike and its settle from the full timeline. */
+  const CELEBRATION_TIME_OFFSET = STORMFRONT_CINEMATIC.boom - 1.2;
   const root = new THREE.Group();
   root.name = 'ISLAND_2_STORMFRONT_CINEMATIC';
   scene.add(root);
@@ -262,6 +271,11 @@ export function createIsland2StormfrontCinematic(options: {
   wall.frustumCulled = false;
   root.add(wall);
   let nextWallBoltAt = STORMFRONT_CINEMATIC.waveStart;
+  if (celebration) {
+    // Golden strike for the celebration.
+    boltMaterial.color.set('#fff3c4');
+    boltGlowMaterial.color.set('#ffc94a');
+  }
 
   const flashLight = new THREE.PointLight('#cfe3ff', 0, radius * 8, 1.4);
   root.add(flashLight);
@@ -278,6 +292,11 @@ export function createIsland2StormfrontCinematic(options: {
   const column = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.2, 80, 20, 1, true), columnMaterial);
   column.position.copy(centre).add(new THREE.Vector3(0, 40, 0));
   root.add(column);
+  if (celebration) {
+    ringMaterial.color.set('#ffe9a8');
+    columnMaterial.color.set('#ffe7a0');
+    flashLight.color.set('#ffd77a');
+  }
   let boomSpawned = false;
 
   // Debris: chunks break off the top of each damaged landmark and tumble down.
@@ -331,10 +350,12 @@ export function createIsland2StormfrontCinematic(options: {
   const target = new THREE.Vector3();
   let lastT = 0;
 
-  function update(t: number, camera: THREE.PerspectiveCamera, reducedMotion: boolean): boolean {
+  function update(realT: number, camera: THREE.PerspectiveCamera, reducedMotion: boolean): boolean {
+    const t = celebration ? realT + CELEBRATION_TIME_OFFSET : realT;
     const dt = THREE.MathUtils.clamp(t - lastT, 0, 0.1);
     lastT = t;
-    const frame = resolveStormfrontCinematicFrame(t, reducedMotion);
+    const stormFrame = resolveStormfrontCinematicFrame(t, reducedMotion);
+    const frame = celebration ? { ...stormFrame, storm: 0, rain: 0, wave: null } : stormFrame;
     const c = STORMFRONT_CINEMATIC;
 
     // Sky, clouds and overall grading.
@@ -460,7 +481,12 @@ export function createIsland2StormfrontCinematic(options: {
     }
 
     // Camera: pull back for the storm, frame the centre for the strike, return.
-    if (t < c.waveStart) {
+    if (celebration && t < c.boom) {
+      // Celebration: glide straight from the player's view to the strike framing.
+      const u = smooth(realT / 1.2);
+      eye.copy(start.position).lerp(boomEye, u);
+      target.copy(start.target).lerp(boomTarget, u);
+    } else if (t < c.waveStart) {
       const u = segment(t, 0, c.waveStart);
       eye.copy(start.position).lerp(wideEye, u);
       target.copy(start.target).lerp(wideTarget, u);
@@ -486,7 +512,8 @@ export function createIsland2StormfrontCinematic(options: {
     eye.sub(target).multiplyScalar(Math.max(1, 0.78 / camera.aspect)).add(target);
     camera.position.copy(eye);
     camera.lookAt(target);
-    camera.fov = THREE.MathUtils.lerp(start.fov, 46, segment(t, 0, c.waveStart) * (1 - segment(t, c.aftermath + 0.6, c.duration)));
+    const fovIn = celebration ? segment(realT, 0, 1.2) : segment(t, 0, c.waveStart);
+    camera.fov = THREE.MathUtils.lerp(start.fov, 46, fovIn * (1 - segment(t, c.aftermath + 0.6, c.duration)));
     camera.updateProjectionMatrix();
     root.userData.beat = frame.beat satisfies StormfrontCinematicBeat;
     return t >= c.duration;

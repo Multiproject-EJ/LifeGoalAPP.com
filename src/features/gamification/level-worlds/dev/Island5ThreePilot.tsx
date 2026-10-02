@@ -11698,6 +11698,7 @@ export default function Island5ThreePilot({
             damagedRoots: stormfrontCinematicRef.current.mode === 'celebration' ? []
               : outerIds.map((id) => landmarkRootsById.get(id)).filter((entry): entry is THREE.Object3D => Boolean(entry)),
             allRoots,
+            celebration: stormfrontCinematicRef.current.mode === 'celebration',
           });
           stormfrontCinematicTime = 0;
           stormfrontCinematicNotified = false;

@@ -11524,7 +11524,7 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     if (arenaCeremonyPhase === 'idle') return undefined;
     // Each phase has a ceiling, so a missing 3D callback can never strand the Arena.
-    const ceiling = arenaCeremonyPhase === 'arrival' ? 12000 : arenaCeremonyPhase === 'strike' ? 20000 : 3600;
+    const ceiling = arenaCeremonyPhase === 'arrival' ? 12000 : arenaCeremonyPhase === 'strike' ? 9000 : 3600;
     const timer = window.setTimeout(() => {
       if (arenaCeremonyPhase === 'arrival') setArenaCeremonyPhase('strike');
       else if (arenaCeremonyPhase === 'strike') setArenaCeremonyPhase('cheer');

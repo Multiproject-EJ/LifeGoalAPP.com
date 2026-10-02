@@ -72,9 +72,13 @@ export const island2DropRampsTests: TestCase[] = [
       assert(board.includes("setArenaCeremonyPhase(reducedMotion ? 'cheer' : 'arrival');"), 'reduced motion skips the motion straight to the finale');
       assert(board.includes("onOpeningArenaArrivalComplete={arenaCeremonyPhase === 'arrival' ? () => setArenaCeremonyPhase('strike') : handleOpeningArenaArrivalComplete}"), 'the ceremony arrival never anchors the new-campaign mission');
       assert(board.includes("stormfrontCinematicMode={arenaCeremonyPhase === 'strike' ? 'celebration' : 'storm'}"), 'the strike plays in celebration mode');
-      assert(board.includes("const ceiling = arenaCeremonyPhase === 'arrival' ? 12000 : arenaCeremonyPhase === 'strike' ? 20000 : 3600;"), 'every phase has a ceiling');
+      assert(board.includes("const ceiling = arenaCeremonyPhase === 'arrival' ? 12000 : arenaCeremonyPhase === 'strike' ? 9000 : 3600;"), 'every phase has a ceiling');
       const pilot = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       assert(pilot.includes("damagedRoots: stormfrontCinematicRef.current.mode === 'celebration' ? []"), 'the celebration strike breaks nothing');
+      assert(pilot.includes("celebration: stormfrontCinematicRef.current.mode === 'celebration',"), 'the celebration plays the short golden timeline');
+      const cinematic = fsMod.readFileSync('src/features/gamification/level-worlds/dev/StormfrontCinematic.ts', 'utf8');
+      assert(cinematic.includes('const CELEBRATION_TIME_OFFSET = STORMFRONT_CINEMATIC.boom - 1.2;')
+        && cinematic.includes('const frame = celebration ? { ...stormFrame, storm: 0, rain: 0, wave: null } : stormFrame;'), 'no dark build-up, rain or lightning wall; strike ~1.2 s in');
       const css = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
       const finale = css.slice(css.indexOf('@keyframes island-run-arena-ceremony-in'));
       assert(!finale.slice(0, finale.indexOf('}\n}') + 3).includes('opacity: 0; }\n}'), 'the finale only fades in, so it can never end invisible');
