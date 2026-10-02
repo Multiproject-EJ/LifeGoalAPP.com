@@ -31,12 +31,19 @@ const NativeCompassAI = registerPlugin<NativeCompassAIPlugin>('NativeCompassAI')
 export type NativeCompassAIStatus = {
   available: boolean;
   reason: string;
-  model: 'apple-foundation-models' | 'authored-fallback';
+  model: 'apple-foundation-models' | 'gemini-nano' | 'authored-fallback';
 };
 
+/**
+ * The same plugin ("NativeCompassAI") is implemented on both native
+ * platforms: Apple Foundation Models on iOS
+ * (ios/App/App/NativeCompassAIPlugin.swift) and Gemini Nano through ML Kit
+ * on Android (android/app/src/main/java/.../NativeCompassAIPlugin.kt).
+ */
 export async function getNativeCompassAIStatus(): Promise<NativeCompassAIStatus> {
-  if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'ios') {
-    return { available: false, reason: 'not_native_ios', model: 'authored-fallback' };
+  const platform = Capacitor.getPlatform();
+  if (!Capacitor.isNativePlatform() || (platform !== 'ios' && platform !== 'android')) {
+    return { available: false, reason: 'not_native', model: 'authored-fallback' };
   }
 
   try {
@@ -44,8 +51,8 @@ export async function getNativeCompassAIStatus(): Promise<NativeCompassAIStatus>
     return {
       available: status.available,
       reason: status.reason,
-      model: status.model === 'apple-foundation-models'
-        ? 'apple-foundation-models'
+      model: status.model === 'apple-foundation-models' || status.model === 'gemini-nano'
+        ? status.model
         : 'authored-fallback',
     };
   } catch {
@@ -66,9 +73,10 @@ export async function suggestPrivateCompassNextStep(input: {
 }
 
 /**
- * General on-device generation with Apple's Foundation Models (iOS 26+,
- * Apple Intelligence enabled). Throws when unavailable or when generation
- * fails; the shared AI runtime then falls back to the server.
+ * General on-device generation: Apple's Foundation Models (iOS 26+, Apple
+ * Intelligence enabled) or Gemini Nano (eligible Android phones). Throws when
+ * unavailable or when generation fails; the shared AI runtime then falls back
+ * to the server.
  */
 export async function generateOnDevice(input: {
   instructions: string;

@@ -2,8 +2,9 @@
  * Shared AI runtime core: one entry point for every AI task in the app.
  *
  * Order of attempts:
- *   1. On-device model (Apple Intelligence on eligible iPhones) when the task
- *      allows it: free, private, works offline.
+ *   1. On-device model (Apple Intelligence on eligible iPhones, Gemini Nano on
+ *      eligible Android phones) when the task allows it: free, private, works
+ *      offline.
  *   2. Server (`ai-task` edge function, which holds the API key) when the user
  *      is signed in and entitled.
  *   3. null: the caller shows its own authored fallback.
@@ -55,6 +56,8 @@ export type AiRuntimeAdapters = {
   isOnDeviceTask: (task: AiTaskKey) => boolean;
   isOnDeviceAvailable: () => Promise<boolean>;
   generateOnDevice: (input: { instructions: string; prompt: string; temperature: number; maxTokens: number }) => Promise<string>;
+  /** Name reported for on-device results, e.g. "apple-foundation-models". */
+  onDeviceModel?: () => string;
   isServerAvailable: () => boolean;
   /** Client-side quota and telemetry gate before a server call. */
   isServerEntitled: (task: AiTaskKey) => boolean;
@@ -140,7 +143,7 @@ export function createAiRuntime(adapters: AiRuntimeAdapters) {
       return {
         text: text.trim(),
         source: 'on_device',
-        model: 'apple-foundation-models',
+        model: adapters.onDeviceModel?.() ?? 'on-device',
         tokenInput: null,
         tokenOutput: null,
         latencyMs: Math.max(0, Math.round(adapters.now() - startedAt)),
