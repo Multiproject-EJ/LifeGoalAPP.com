@@ -11453,6 +11453,42 @@ export function IslandRunBoardPrototype({
     playIslandRunSound('minigame_open');
   };
 
+  // Island 002 Arena home (user decision 2026-10-02): the corner landmarks are
+  // Crystal Miners drop ramps; entering the mine plays a drill-pod launch off
+  // every ramp first. Presentation only — the game launch itself is unchanged.
+  const dropRampsActive = islandNumber === 2 && !featureAccess.gradual;
+  const [dropRampLaunchSequence, setDropRampLaunchSequence] = useState(0);
+  const [dropRampDiveActive, setDropRampDiveActive] = useState(false);
+  const dropRampLaunchResolveRef = useRef<(() => void) | null>(null);
+  const playDropRampLaunch = useCallback(() => new Promise<void>((resolve) => {
+    if (dropRampLaunchResolveRef.current) { resolve(); return; }
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      dropRampLaunchResolveRef.current = null;
+      document.body.classList.remove('island-run--drop-ramp-launch');
+      setDropRampDiveActive(false);
+      resolve();
+    };
+    dropRampLaunchResolveRef.current = finish;
+    document.body.classList.add('island-run--drop-ramp-launch');
+    if (!(typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) setDropRampDiveActive(true);
+    setCameraMode('overview_manual');
+    setFocusedStopId(null);
+    setThreeCameraOverviewRequestVersion((current) => current + 1);
+    setDropRampLaunchSequence((current) => current + 1);
+    // Never strand the player if the 3D scene is rebuilding or unavailable.
+    window.setTimeout(finish, 4500);
+  }), []);
+  useEffect(() => () => { dropRampLaunchResolveRef.current?.(); }, []);
+  useEffect(() => {
+    // Dev capture seam: ?islandDropRampPreview=launch replays the launch every 8 s.
+    if (!isIslandVisualPreview || new URLSearchParams(window.location.search).get('islandDropRampPreview') !== 'launch') return undefined;
+    const timer = window.setInterval(() => setDropRampLaunchSequence((current) => current + 1), 8000);
+    return () => window.clearInterval(timer);
+  }, [isIslandVisualPreview]);
+
   const handleLaunchArenaGame = async (gameId: ArenaGameId) => {
     const launchVisitKey = arenaStadiumVisitKey(getIslandRunStateSnapshot(session));
     const launchPreferences = activeStopId === 'mystery' ? { ...arenaPreferences, disabledEventIds: [] } : arenaPreferences;
@@ -11489,6 +11525,10 @@ export function IslandRunBoardPrototype({
       }
       const pace = resolveArenaSessionPace(launchPreferences, gameId, [...introducedArenaGameIds, ...enabledArenaDemos]);
       if (!pace) { setShowArenaPreferences(true); return; }
+      if (dropRampsActive) {
+        await playDropRampLaunch();
+        if (arenaLaunchOwnerRef.current !== session.user.id) return;
+      }
       registerAllMinigameManifests();
       setActiveLaunchedMinigameId(gameId);
       setActiveLaunchedMinigameSource('timed_event');
@@ -17997,6 +18037,10 @@ export function IslandRunBoardPrototype({
                 onOpeningArenaClick={isIslandVisualPreview ? undefined : () => setShowOpeningArenaBuild(true)}
                 centreLandmarkVariant={openingArenaAvailable || (isIslandVisualPreview && new URLSearchParams(window.location.search).get('islandSkyLiftPreview') === '1')
                   ? 'golden-sky-lift' : null}
+                outerLandmarkVariant={dropRampsActive || (isIslandVisualPreview && Boolean(new URLSearchParams(window.location.search).get('islandDropRampPreview'))) ? 'drop-ramps' : null}
+                dropRampLaunchSequence={dropRampLaunchSequence}
+                dropRampPreviewProgress={isIslandVisualPreview && /^t[0-9.]+$/.test(new URLSearchParams(window.location.search).get('islandDropRampPreview') ?? '') ? Number(new URLSearchParams(window.location.search).get('islandDropRampPreview')!.slice(1)) : null}
+                onDropRampLaunchComplete={() => dropRampLaunchResolveRef.current?.()}
                 crystalDropZonesVisible={openingArenaAvailable || (isIslandVisualPreview && new URLSearchParams(window.location.search).get('islandSkyLiftPreview') === '1')}
                 onCrystalDropZoneClick={isIslandVisualPreview ? undefined : () => {
                   setLandingText('💎 Crystal Miners drop zone — the Event Arena sends expeditions down from here.');
@@ -22042,6 +22086,7 @@ export function IslandRunBoardPrototype({
         document.body,
       ) : null}
 
+      {dropRampDiveActive ? createPortal(<div className="island-run-drop-dive" aria-hidden="true" />, document.body) : null}
       {/* Only while an intro is playing or queued: an unopened phone message
           must not leave the pill hovering over the controller. */}
       {devFreshArrivalBriefing && (firstArrivalActive || pendingMissionBriefing || activeMissionBriefing) ? createPortal(

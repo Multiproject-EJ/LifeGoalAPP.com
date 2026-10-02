@@ -29607,3 +29607,31 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   font-size: 0.85rem;
   font-weight: 700;
 }
+
+/* Island 002 drill-pod launch: the Arena window steps aside while the pods
+   leave the drop ramps, then the mine opens. */
+body.island-run--drop-ramp-launch .event-arena-modal-backdrop {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The dive: after the pods leave the ramps the view sinks into a glowing
+   crystal shaft, then the mine opens. Timed to the 3D launch (~3.1 s). */
+.island-run-drop-dive {
+  position: fixed;
+  inset: 0;
+  z-index: 11990;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 58%, rgba(159, 247, 255, 0) 0 18%, rgba(57, 198, 255, 0.55) 34%, rgba(10, 30, 58, 0.96) 70%),
+    repeating-radial-gradient(circle at 50% 58%, rgba(159, 247, 255, 0.22) 0 2px, transparent 2px 26px);
+  transform: scale(2.4);
+  animation: island-run-drop-dive 3.1s ease-in forwards;
+}
+
+@keyframes island-run-drop-dive {
+  0%, 52% { opacity: 0; transform: scale(2.4); }
+  78% { opacity: 0.85; transform: scale(1.35); }
+  100% { opacity: 1; transform: scale(1); }
+}
