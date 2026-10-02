@@ -176,6 +176,13 @@
   margin: 0;
   font-size: 1.6rem;
   font-weight: 800;
+  /* Explicit: the global heading colour is dark navy on this dark overlay. */
+  color: #fff6dc;
+}
+
+.boss-rhythm__overlay--victory .boss-rhythm__overlay-title {
+  color: #ffd76a;
+  text-shadow: 0 0 18px rgba(255, 215, 106, 0.45);
 }
 
 .boss-rhythm__overlay-copy {

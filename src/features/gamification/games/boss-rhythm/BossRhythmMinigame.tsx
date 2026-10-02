@@ -937,6 +937,21 @@ export function BossRhythmMinigame({ onComplete, islandNumber }: IslandRunMiniga
             <button type="button" className="boss-rhythm__btn boss-rhythm__btn--primary" onClick={startBattle}>
               ▶ Launch Battle
             </button>
+            {import.meta.env.DEV ? (
+              <button
+                type="button"
+                className="boss-rhythm__btn"
+                onClick={() => {
+                  // QA only (dev builds): skip to a perfect win; the claim still
+                  // goes through the normal onComplete path.
+                  setEndStats({ outcome: 'victory', score: 0, maxCombo: 0, accuracy: 1,
+                    diamonds: resolveBossRhythmRareReward({ islandNumber, accuracy: 1 }).diamonds });
+                  setScreen('victory');
+                }}
+              >
+                Win (dev)
+              </button>
+            ) : null}
             <button type="button" className="boss-rhythm__btn boss-rhythm__btn--ghost" onClick={quitBattle}>
               Retreat
             </button>
