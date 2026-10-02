@@ -7663,6 +7663,12 @@ export function IslandRunBoardPrototype({
   const isCurrentIslandFullyCleared = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? canonicalIslandCompletion.baseComplete
     : legacyIsCurrentIslandFullyCleared);
+  // Only the builds: "fully cleared" also counts the Boss objective itself, so
+  // it is never true before the Boss is won (QA Island 003: the Boss modal
+  // said "Landmarks incomplete" with every landmark at Level 3).
+  const isCurrentIslandLandmarkBuildIncomplete = ISLAND_RUN_CONTRACT_V2_ENABLED
+    ? canonicalIslandCompletion.buildsComplete < canonicalIslandCompletion.landmarkCount
+    : !legacyIsCurrentIslandFullyCleared;
   const isBaseIslandFinishedForDeparture = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? canonicalIslandCompletion.complete
     : legacyIsCurrentIslandFullyCleared);
@@ -19916,10 +19922,10 @@ export function IslandRunBoardPrototype({
                   onClick={() => handleCompleteActiveStop()}
                   disabled={!bossTrialResolved || bossTrialPhase === 'in_progress'}
                 >
-                  {isCurrentIslandFullyCleared ? '✅ Boss Stop Complete' : '🔒 Full Rewards Locked — Finish Landmark Upgrades'}
+                  {isCurrentIslandFullyCleared ? '✅ Boss Stop Complete' : isCurrentIslandLandmarkBuildIncomplete ? '🔒 Full Rewards Locked — Finish Landmark Upgrades' : bossTrialResolved ? '👑 Complete the Boss stop' : '⚔️ Win the boss battle to finish'}
                 </button>
               ) : null}
-              {activeStop.stopId === 'boss' && openedStopIsPlayable && !isCurrentIslandFullyCleared && !isCurrentIslandBossDefeated ? (
+              {activeStop.stopId === 'boss' && openedStopIsPlayable && isCurrentIslandLandmarkBuildIncomplete && !isCurrentIslandBossDefeated ? (
                 <p className="island-stop-modal__locked-notice" role="status" style={{ marginTop: '0.4rem' }}>
                   <span aria-hidden="true">🧱</span> Landmarks incomplete — finish upgrades to Level {MAX_BUILD_LEVEL} on all stops before you can claim full island-clear rewards and travel.
                 </p>

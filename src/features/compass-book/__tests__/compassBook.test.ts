@@ -99,7 +99,7 @@ import {
   getCompassSignalIdForChapter,
   scoreCompassIllumination,
 } from '../logic/compassIllumination';
-import { buildWisdomCompassInsight } from '../logic/wisdomCompassInsight';
+import { buildWisdomCompassInsight, quoteInlineAnswer } from '../logic/wisdomCompassInsight';
 import {
   TURN_MAX_MS,
   TURN_MIN_MS,
@@ -1598,6 +1598,8 @@ function testWisdomCompassUsefulness(): void {
     }
   }
   assert(testedActivities === 120, 'all 120 island reflections pass the usefulness gate');
+  assert(quoteInlineAnswer('Whether to keep the morning walk going this month.') === '“Whether to keep the morning walk going this month”', 'free-text answers are quoted without trailing punctuation (QA Island 003)');
+  assert(quoteInlineAnswer('“Already quoted”') === '“Already quoted”', 'quoted answers are left alone');
 }
 
 function testPresentationPolicy(): void {

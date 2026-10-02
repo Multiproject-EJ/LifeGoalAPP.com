@@ -127,4 +127,15 @@ export const islandRunModalVisibilityTests: TestCase[] = [
         && effect.includes("closeFrostwellMission();\n    setBuildCameraFocusRequest({ preset: 'overview', transition: 'standard' });"), 'after the drilling the camera returns to the island');
     },
   },
+  {
+    name: 'Boss modal: "landmarks incomplete" only when a landmark is really below Level 3 (QA Island 003)',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes('? canonicalIslandCompletion.buildsComplete < canonicalIslandCompletion.landmarkCount'), 'build gap comes from the builds requirement only');
+      assert(board.includes("openedStopIsPlayable && isCurrentIslandLandmarkBuildIncomplete && !isCurrentIslandBossDefeated ? ("), 'notice keyed to builds');
+      assert(board.includes("isCurrentIslandLandmarkBuildIncomplete ? '🔒 Full Rewards Locked — Finish Landmark Upgrades' : bossTrialResolved ? '👑 Complete the Boss stop'"), 'button says what is actually left');
+    },
+  },
 ];
