@@ -443,6 +443,12 @@ function derivePhase(progress: number): ConstructionPhase {
   return CONSTRUCTION_PHASES[index];
 }
 
+/** Always a valid index into a ring of `length` stations, for any integer offset. */
+export function wrapStationIndex(index: number, length: number): number {
+  if (length <= 0 || !Number.isFinite(index)) return 0;
+  return ((Math.round(index) % length) + length) % length;
+}
+
 export function createRobotConstructionTheatre(options: {
   family: RobotFamilyModel;
   quality?: RobotQuality;
@@ -969,12 +975,12 @@ export function createRobotConstructionTheatre(options: {
             presentation.choreography?.phaseStationOffsets?.[presentation.phase] ?? 0,
           );
           const stationStep = presentation.choreography?.stationStep ?? 1;
-          const baseStationIndex = (
+          const baseStationIndex = wrapStationIndex(
             PHASE_PRIMARY_STATION[presentation.phase][role]
             + Math.round(presentation.choreography?.stationOffset ?? 0)
-            + phaseStationOffset
-            + rig.stations.length * 2
-          ) % rig.stations.length;
+            + phaseStationOffset,
+            rig.stations.length,
+          );
           const relocates = isWorking && !reducedMotion && isRelocationPhase(presentation.phase);
           // A compact time-lapse cycle: hold long enough to read the task,
           // disappear into a local dust burst, then pop out at a different
@@ -984,12 +990,11 @@ export function createRobotConstructionTheatre(options: {
           const completedRoleMoves = Math.max(0, Math.floor((relocationSlotIndex + 2 - roleIndex) / ROLE_ORDER.length));
           const cycleProgress = roleIsRelocating ? relocationSlotProgress : 0;
           const stationShift = relocates ? completedRoleMoves * stationStep : 0;
-          const fromStationIndex = (
-            baseStationIndex + stationShift + rig.stations.length * 4
-          ) % rig.stations.length;
-          const toStationIndex = (
-            fromStationIndex + (roleIsRelocating ? stationStep : 0) + rig.stations.length
-          ) % rig.stations.length;
+          // stationShift grows without bound while building; with a negative
+          // stationStep a fixed "+ length * k" bias went negative after a few
+          // minutes and crashed every frame (crash reports 2026-10-02).
+          const fromStationIndex = wrapStationIndex(baseStationIndex + stationShift, rig.stations.length);
+          const toStationIndex = wrapStationIndex(fromStationIndex + (roleIsRelocating ? stationStep : 0), rig.stations.length);
           const transitionProgress = roleIsRelocating
             ? THREE.MathUtils.smoothstep(cycleProgress, 0.68, 0.76)
             : 0;

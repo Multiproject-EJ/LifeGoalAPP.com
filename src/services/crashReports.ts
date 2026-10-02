@@ -22,6 +22,9 @@ export interface CapturedCrash {
   route: string;
   atIso: string;
   msSinceLoad: number;
+  /** How many times this exact crash repeated (e.g. once per frame). */
+  repeatCount?: number;
+  lastAtIso?: string;
 }
 
 export interface CrashReportResult {
@@ -90,6 +93,15 @@ export function captureCrash(input: {
     atIso: new Date().toISOString(),
     msSinceLoad: typeof performance !== 'undefined' ? Math.round(performance.now()) : 0,
   };
+  // A crash inside a render/animation loop repeats every frame: fold the
+  // repeats into one entry so the report keeps distinct crashes.
+  const repeated = crashes.find((entry) => entry.message === crash.message && entry.stack === crash.stack && entry.surface === crash.surface);
+  if (repeated) {
+    repeated.repeatCount = (repeated.repeatCount ?? 1) + 1;
+    repeated.lastAtIso = crash.atIso;
+    storeCrashes();
+    return repeated;
+  }
   crashes = [...crashes, crash].slice(-MAX_CRASHES);
   storeCrashes();
   emit(CRASH_REPORT_EVENT, crash);

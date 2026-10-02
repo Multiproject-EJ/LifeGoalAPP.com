@@ -8,6 +8,7 @@ import {
   queueCrashReportForLater,
   takePendingCrashReports,
 } from '../../../../../services/crashReports';
+import { wrapStationIndex } from '../../dev/RobotConstructionTheatre';
 import { applyCrashReportThankYouDice } from '../islandRunCrashReportRewardAction';
 import {
   readIslandRunGameStateRecord,
@@ -86,6 +87,33 @@ export const crashReportsTests: TestCase[] = [
       assertEqual(pending.length, 3, 'only the latest three are kept');
       assertEqual(pending[2].note, 'note 4', 'newest last');
       assertEqual(takePendingCrashReports().length, 0, 'handed over exactly once');
+    },
+  },
+  {
+    name: 'reported crash: construction crew station index stays valid after long builds with a negative step',
+    run: () => {
+      // Field reports: "undefined is not an object (evaluating 'x2.position')"
+      // every frame after minutes of building (stationStep -1 kept shifting).
+      for (const shift of [0, -1, -7, -40, -1000, 1000]) {
+        const index = wrapStationIndex(3 + shift, 6);
+        assert(Number.isInteger(index) && index >= 0 && index < 6, `shift ${shift} → ${index}`);
+      }
+      assertEqual(wrapStationIndex(-1, 6), 5, 'wraps backwards');
+      assertEqual(wrapStationIndex(Number.NaN, 6), 0, 'never NaN');
+      assertEqual(wrapStationIndex(4, 0), 0, 'empty ring is safe');
+    },
+  },
+  {
+    name: 'crash capture: a crash repeating every frame is one entry with a repeat count',
+    run: () => {
+      clearRecentCrashes();
+      const error = new TypeError("undefined is not an object (evaluating 'x2.position')");
+      for (let i = 0; i < 40; i += 1) captureCrash({ error, surface: 'window' });
+      captureCrash({ error: new Error('something else'), surface: 'window' });
+      const recent = getRecentCrashes();
+      assertEqual(recent.length, 2, 'distinct crashes only');
+      assertEqual(recent[0]!.repeatCount, 40, 'repeats are counted');
+      clearRecentCrashes();
     },
   },
 ];
