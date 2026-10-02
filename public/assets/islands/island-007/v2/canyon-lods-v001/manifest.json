@@ -1,0 +1,25 @@
+{
+  "revision": "canyon-lods-v001",
+  "status": "assembly-scale-LOD-awaiting-independent-review",
+  "sourceRevision": "worker-reef-v002",
+  "sourceSha256": "974a0773f7498bd6fe149669fa507a883b07ff3ccecabdc4147e13b1e6c4bdd3",
+  "derivation": "decimation only; no geometry transformations or re-sculpting",
+  "models": [
+    {
+      "quality": "medium",
+      "triangles": 2000,
+      "bytes": 37404,
+      "sha256": "bc26295469dcd601989ecc09f410c1b73419aaed48006a720c78189e448120f0",
+      "nonManifoldEdges": 0,
+      "url": "/assets/islands/island-007/v2/canyon-lods-v001/reef-shelf-medium.glb"
+    },
+    {
+      "quality": "low",
+      "triangles": 1000,
+      "bytes": 19404,
+      "sha256": "c674a0e02c491b1c92daf540f9a0c31b1f2cf60dc3bf52473a1fa9675dcdf3ab",
+      "nonManifoldEdges": 0,
+      "url": "/assets/islands/island-007/v2/canyon-lods-v001/reef-shelf-low.glb"
+    }
+  ]
+}

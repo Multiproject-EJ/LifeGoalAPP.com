@@ -1,0 +1,818 @@
+{
+  "scope": "Actual Vite browser factory/wrapper/construction-delta execution; day materials; no pixel or shader-render approval",
+  "rows": [
+    {
+      "id": "boss",
+      "quality": "low",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 9,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 1,
+        "4": 2,
+        "5": 1
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "boss",
+      "quality": "low",
+      "from": 1,
+      "to": 2,
+      "retained": 4,
+      "additive": 14,
+      "stages": {
+        "1": 1,
+        "2": 5,
+        "3": 4,
+        "4": 1,
+        "5": 3
+      },
+      "revealBatches": 14,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "boss",
+      "quality": "low",
+      "from": 2,
+      "to": 3,
+      "retained": 13,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "4": 1,
+        "5": 2
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "hatchery",
+      "quality": "low",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 9,
+      "stages": {
+        "1": 2,
+        "2": 1,
+        "3": 1,
+        "4": 2,
+        "5": 3
+      },
+      "revealBatches": 8,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "hatchery",
+      "quality": "low",
+      "from": 1,
+      "to": 2,
+      "retained": 4,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 4,
+        "3": 2,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 7,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "hatchery",
+      "quality": "low",
+      "from": 2,
+      "to": 3,
+      "retained": 8,
+      "additive": 8,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 1
+      },
+      "revealBatches": 8,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "habit",
+      "quality": "low",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 12,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "revealBatches": 12,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "habit",
+      "quality": "low",
+      "from": 1,
+      "to": 2,
+      "retained": 7,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 1,
+        "3": 2,
+        "4": 2,
+        "5": 3
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "habit",
+      "quality": "low",
+      "from": 2,
+      "to": 3,
+      "retained": 11,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 4,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "wisdom",
+      "quality": "low",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 11,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 6,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 11,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "wisdom",
+      "quality": "low",
+      "from": 1,
+      "to": 2,
+      "retained": 6,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 1,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "wisdom",
+      "quality": "low",
+      "from": 2,
+      "to": 3,
+      "retained": 10,
+      "additive": 6,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 1,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 6,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "event",
+      "quality": "low",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 11,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 5,
+        "4": 1,
+        "5": 2
+      },
+      "revealBatches": 11,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "event",
+      "quality": "low",
+      "from": 1,
+      "to": 2,
+      "retained": 6,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 2,
+        "4": 1,
+        "5": 3
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "event",
+      "quality": "low",
+      "from": 2,
+      "to": 3,
+      "retained": 10,
+      "additive": 8,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 1,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 8,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "boss",
+      "quality": "medium",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 9,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 1,
+        "4": 2,
+        "5": 1
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "boss",
+      "quality": "medium",
+      "from": 1,
+      "to": 2,
+      "retained": 4,
+      "additive": 14,
+      "stages": {
+        "1": 1,
+        "2": 4,
+        "3": 5,
+        "4": 1,
+        "5": 3
+      },
+      "revealBatches": 14,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "boss",
+      "quality": "medium",
+      "from": 2,
+      "to": 3,
+      "retained": 13,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "4": 1,
+        "5": 2
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "hatchery",
+      "quality": "medium",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 9,
+      "stages": {
+        "1": 2,
+        "2": 1,
+        "3": 1,
+        "4": 2,
+        "5": 3
+      },
+      "revealBatches": 8,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "hatchery",
+      "quality": "medium",
+      "from": 1,
+      "to": 2,
+      "retained": 4,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 4,
+        "3": 2,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 7,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "hatchery",
+      "quality": "medium",
+      "from": 2,
+      "to": 3,
+      "retained": 8,
+      "additive": 8,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 1
+      },
+      "revealBatches": 8,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "habit",
+      "quality": "medium",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 12,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "revealBatches": 12,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "habit",
+      "quality": "medium",
+      "from": 1,
+      "to": 2,
+      "retained": 7,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 1,
+        "3": 2,
+        "4": 2,
+        "5": 3
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "habit",
+      "quality": "medium",
+      "from": 2,
+      "to": 3,
+      "retained": 11,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 4,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "wisdom",
+      "quality": "medium",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 11,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 6,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 11,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "wisdom",
+      "quality": "medium",
+      "from": 1,
+      "to": 2,
+      "retained": 6,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 1,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "wisdom",
+      "quality": "medium",
+      "from": 2,
+      "to": 3,
+      "retained": 10,
+      "additive": 6,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 1,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 6,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "event",
+      "quality": "medium",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 11,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 5,
+        "4": 1,
+        "5": 2
+      },
+      "revealBatches": 11,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "event",
+      "quality": "medium",
+      "from": 1,
+      "to": 2,
+      "retained": 6,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 2,
+        "4": 1,
+        "5": 3
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "event",
+      "quality": "medium",
+      "from": 2,
+      "to": 3,
+      "retained": 10,
+      "additive": 8,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 1,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 8,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "boss",
+      "quality": "high",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 9,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 1,
+        "4": 2,
+        "5": 1
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "boss",
+      "quality": "high",
+      "from": 1,
+      "to": 2,
+      "retained": 4,
+      "additive": 14,
+      "stages": {
+        "1": 1,
+        "2": 4,
+        "3": 5,
+        "4": 1,
+        "5": 3
+      },
+      "revealBatches": 14,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "boss",
+      "quality": "high",
+      "from": 2,
+      "to": 3,
+      "retained": 13,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "4": 1,
+        "5": 2
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "hatchery",
+      "quality": "high",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 9,
+      "stages": {
+        "1": 2,
+        "2": 1,
+        "3": 1,
+        "4": 2,
+        "5": 3
+      },
+      "revealBatches": 8,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "hatchery",
+      "quality": "high",
+      "from": 1,
+      "to": 2,
+      "retained": 4,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 4,
+        "3": 2,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 7,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "hatchery",
+      "quality": "high",
+      "from": 2,
+      "to": 3,
+      "retained": 8,
+      "additive": 8,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 1
+      },
+      "revealBatches": 8,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "habit",
+      "quality": "high",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 12,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "revealBatches": 12,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "habit",
+      "quality": "high",
+      "from": 1,
+      "to": 2,
+      "retained": 7,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 1,
+        "3": 2,
+        "4": 2,
+        "5": 3
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "habit",
+      "quality": "high",
+      "from": 2,
+      "to": 3,
+      "retained": 11,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 4,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "wisdom",
+      "quality": "high",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 11,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 6,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 11,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "wisdom",
+      "quality": "high",
+      "from": 1,
+      "to": 2,
+      "retained": 6,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 1,
+        "3": 3,
+        "4": 3,
+        "5": 1
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "wisdom",
+      "quality": "high",
+      "from": 2,
+      "to": 3,
+      "retained": 10,
+      "additive": 6,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 1,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 6,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "event",
+      "quality": "high",
+      "from": 0,
+      "to": 1,
+      "retained": 0,
+      "additive": 11,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 5,
+        "4": 1,
+        "5": 2
+      },
+      "revealBatches": 11,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "event",
+      "quality": "high",
+      "from": 1,
+      "to": 2,
+      "retained": 6,
+      "additive": 9,
+      "stages": {
+        "1": 1,
+        "2": 2,
+        "3": 2,
+        "4": 1,
+        "5": 3
+      },
+      "revealBatches": 9,
+      "temporaryParts": 5,
+      "failures": []
+    },
+    {
+      "id": "event",
+      "quality": "high",
+      "from": 2,
+      "to": 3,
+      "retained": 10,
+      "additive": 8,
+      "stages": {
+        "1": 2,
+        "2": 3,
+        "3": 1,
+        "4": 1,
+        "5": 1
+      },
+      "revealBatches": 8,
+      "temporaryParts": 5,
+      "failures": []
+    }
+  ],
+  "failures": [],
+  "browserErrors": [],
+  "passed": true
+}

@@ -5,6 +5,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 // Isolated browser only: never authenticates or mutates a real account.
 const origin = process.env.RELEASE_SMOKE_ORIGIN || 'http://127.0.0.1:4186';
 assert(['127.0.0.1', 'localhost'].includes(new URL(origin).hostname), 'Loopback only');
+const targetIsland = Number(process.env.RELEASE_SMOKE_ISLAND || 4);
+assert(Number.isInteger(targetIsland) && targetIsland > 0, 'RELEASE_SMOKE_ISLAND must be a positive integer');
 const out = process.argv[2];
 assert(out, 'Supply a new evidence directory');
 mkdirSync(out, {recursive:true});
@@ -14,7 +16,7 @@ const browser = await chromium.launch({headless:true, executablePath:'/Users/ejm
 const context = await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,serviceWorkers:'block',reducedMotion:'reduce',isMobile:true,hasTouch:true,
   userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1'});
 const page = await context.newPage();
-const report = {status:'running',scope:'production bundle, disposable guest and offline local palace fixture; not physical-device acceptance',errors:[],cases:[]};
+const report = {status:'running',scope:'production bundle, disposable guest and offline local island fixture; not physical-device acceptance',errors:[],cases:[]};
 page.on('pageerror',error=>report.errors.push(error.message));
 page.setDefaultTimeout(60000);
 async function enterGuest() {
@@ -34,12 +36,12 @@ try {
     const url = new URL(route.request().url());
     return ['127.0.0.1','localhost'].includes(url.hostname) || ['data:','blob:'].includes(url.protocol) ? route.continue() : route.abort();
   });
-  await page.evaluate(()=>{
+  await page.evaluate((islandNumber)=>{
     const key='island_run_runtime_state_demo-user-0001';
     const state=JSON.parse(localStorage.getItem(key));
     if (!state) throw Error('Expected disposable demo record');
     if (JSON.stringify(state.signatureMissionProgressByIsland).includes('opening-games-v1')) throw Error('Unexpected new campaign enrollment');
-    Object.assign(state,{currentIslandNumber:4,cycleIndex:0,essence:1000,dicePool:100,
+    Object.assign(state,{currentIslandNumber:islandNumber,cycleIndex:0,essence:1000,dicePool:100,
       firstRunClaimed:true,firstSessionTutorialState:'complete',onboardingDisplayNameLoopCompleted:true,
       welcomePackClaimed:true,welcomePackRewardBundleClaimed:true,storyPrologueSeen:true,
       audioEnabled:false,musicEnabled:false,sfxEnabled:false,activeStopIndex:0,activeStopType:'hatchery',
@@ -48,16 +50,30 @@ try {
       signatureMissionProgressByIsland:{}});
     localStorage.setItem(key,JSON.stringify(state));
     localStorage.setItem('island_run_landmark_coachmark_seen_demo-user-0001','1');
-  });
+  }, targetIsland);
   await page.goto(origin+'/app',{waitUntil:'domcontentloaded'});
   await enterGuest();
   const canvas=page.locator('canvas[aria-label^="Interactive 3D"]').first();
   await canvas.waitFor({state:'visible'});
-  await page.waitForTimeout(2500);
-  await page.screenshot({path:out+'/production-palace-004.png'});
+  if (targetIsland === 7) {
+    await page.waitForFunction(() => document.querySelector('canvas[aria-label^="Interactive 3D"]')?.dataset.island7EnvironmentReady === 'true');
+  } else {
+    await page.waitForTimeout(2500);
+  }
+  const coachmarkDismiss = page.getByRole('button',{name:'Got it',exact:true}).last();
+  if (await coachmarkDismiss.isVisible().catch(()=>false)) {
+    await coachmarkDismiss.click();
+    await page.waitForTimeout(400);
+  }
+  const islandLabel=String(targetIsland).padStart(3,'0');
+  await page.screenshot({path:`${out}/production-island-${islandLabel}.png`});
   report.canvas=await canvas.evaluate(el=>({...el.dataset}));
   report.text=(await page.locator('body').innerText()).slice(-9000);
-  report.cases.push('Unmarked saves are not enrolled; production Island004 L3 renders without development flags');
+  report.cases.push(`Unmarked saves are not enrolled; production Island${islandLabel} L3 renders without development flags`);
+  if (targetIsland === 7) {
+    assert.equal(report.canvas.island7Environment, 'world-space-geometry-v2', 'Island 007 must select V2 in production');
+    assert.equal(report.canvas.island7EnvironmentReady, 'true', 'Island 007 V2 terrain must finish loading');
+  }
   assert.equal(report.errors.length,0,'No uncaught browser errors');
   report.status='pass';
 } catch(error) {

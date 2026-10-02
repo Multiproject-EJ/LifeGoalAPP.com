@@ -1297,7 +1297,11 @@ export function buildIsland7UnderwaterLandmark(
   level: BuildLevel,
   quality: Island3DQuality,
   materials: Island7UnderwaterMaterials,
-  options: IslandConstructionFactoryOptions = {},
+  options: IslandConstructionFactoryOptions & {
+    /** Presentation-only factory; preserves the canonical wrapper and sockets. */
+    palaceFactory?: (level: 1 | 2 | 3, quality: Island3DQuality) => THREE.Group;
+    outerFactory?: (id: 'hatchery' | 'habit' | 'wisdom' | 'event', level: 1 | 2 | 3, quality: Island3DQuality) => THREE.Group;
+  } = {},
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_7_UNDERWATER_${definition.id.toUpperCase()}_ROOT`;
@@ -1338,7 +1342,10 @@ export function buildIsland7UnderwaterLandmark(
     addPlinth(root, definition.id === 'boss' ? 1.45 : 1.08, materials, quality);
   } else {
     const resolved = level as 1 | 2 | 3;
-    const building = definition.id === 'hatchery'
+    const palaceFactory = definition.id === 'boss' ? options.palaceFactory : undefined;
+    const outerFactory = definition.id !== 'boss' ? options.outerFactory : undefined;
+    const customFactory = palaceFactory || outerFactory;
+    const building = outerFactory && definition.id !== 'boss' ? outerFactory(definition.id, resolved, quality) : definition.id === 'hatchery'
       ? createNautilusHatchery(resolved, quality, materials)
       : definition.id === 'habit'
         ? createHabitSanctuary(resolved, quality, materials)
@@ -1346,16 +1353,16 @@ export function buildIsland7UnderwaterLandmark(
           ? createWisdomArchive(resolved, quality, materials)
           : definition.id === 'event'
             ? createCompassPortal(resolved, quality, materials)
-            : createPearlPalace(resolved, quality, materials);
+            : palaceFactory ? palaceFactory(resolved, quality) : createPearlPalace(resolved, quality, materials);
     building.name = `ISLAND_7_${definition.id.toUpperCase()}_ARCHITECTURE_PIVOT`;
     if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
-    building.scale.setScalar(options.constructionPreview
+    if (!customFactory) building.scale.setScalar(options.constructionPreview
       ? (definition.id === 'boss' ? 1.14 : 1.16)
       : definition.id === 'boss'
         ? (resolved === 3 ? 1.34 : resolved === 2 ? 1.14 : 1)
         : (resolved === 3 ? 1.34 : resolved === 2 ? 1.16 : 1));
-    if (!options.constructionPreview) compactUnderwaterLandmark(building, definition.id, materials);
-    if (resolved === 3) addHeroFacade(building, definition.id, materials, quality);
+    if (!customFactory && !options.constructionPreview) compactUnderwaterLandmark(building, definition.id, materials);
+    if (!customFactory && resolved === 3) addHeroFacade(building, definition.id, materials, quality);
     if (options.constructionPreview === 'target') {
       applyIslandConstructionAuthoring({
         root: building,
@@ -1379,7 +1386,12 @@ export function buildIsland7UnderwaterLandmark(
   // One hero shadow anchors the central palace. The four satellites keep
   // baked material depth and receive that lighting without each replaying the
   // whole architectural draw list into the shadow map.
-  markShadows(root, quality === 'high' && definition.id === 'boss');
+  markShadows(root, quality === 'high' && (definition.id === 'boss' || Boolean(options.outerFactory)));
+  if (options.outerFactory || options.palaceFactory) root.traverse(node => {
+    if (!(node instanceof THREE.Mesh)) return;
+    const transparent = (Array.isArray(node.material) ? node.material : [node.material]).some(material => material.transparent);
+    if (transparent) node.castShadow = false;
+  });
   return root;
 }
 
@@ -1818,6 +1830,7 @@ export function createIsland7UnderwaterLivingAmbience(
   profile: Island3DQualityProfile,
   materials: Island7UnderwaterMaterials,
   ocean: THREE.Mesh,
+  options: { previewCreatureRoutes?: boolean } = {},
 ): Island7UnderwaterAmbienceRuntime {
   const quality = profile.id;
   const root = new THREE.Group();
@@ -2014,6 +2027,20 @@ export function createIsland7UnderwaterLivingAmbience(
   root.add(mantaOrbit);
 
   const whale = createWhaleSilhouette(materials, quality);
+  if (import.meta.env.DEV && options.previewCreatureRoutes) {
+    // Animal skin must not inherit the shared geological albedo and bump maps.
+    const skin = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.48, metalness: 0.02 });
+    const back = new THREE.Color(0x214e61), belly = new THREE.Color(0x6e9da2), color = new THREE.Color();
+    whale.traverse(node => {
+      if (!(node instanceof THREE.Mesh)) return;
+      const positions = node.geometry.getAttribute('position'), colors = new Float32Array(positions.count * 3);
+      for (let i = 0; i < positions.count; i++) {
+        const ventral = THREE.MathUtils.smoothstep((0.15 - positions.getY(i)) / 0.8, 0, 1);
+        color.copy(back).lerp(belly, ventral * 0.7); colors.set([color.r, color.g, color.b], i * 3);
+      }
+      node.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3)); node.material = skin;
+    });
+  }
   whale.scale.setScalar(1.05);
   whale.position.set(-15, 6.9, -28);
   whale.rotation.y = 0.5;
@@ -2156,10 +2183,16 @@ export function createIsland7UnderwaterLivingAmbience(
       });
       mantaOrbit.rotation.y = elapsed * 0.035;
       manta.rotation.z = Math.sin(elapsed * 0.48) * 0.1;
-      whale.position.x = -15 + ((elapsed * 0.24) % 34);
-    // Keep the whale below the phone notch/header lane so the slow silhouette
-    // is actually visible during gameplay rather than living behind chrome.
-    whale.position.y = 6.9 + Math.sin(elapsed * 0.09) * 0.4;
+      if (import.meta.env.DEV && options.previewCreatureRoutes) {
+        // A continuous world-space loop in the upper-middle water corridor.
+        // Keep the complete body below the phone header and face its travel tangent.
+        const phase = elapsed * 0.016 - 0.8;
+        whale.position.set(Math.sin(phase) * 7, -0.6 + Math.sin(phase * 0.73) * 0.18, -13.5 + Math.cos(phase) * 1.5);
+        whale.rotation.y = Math.atan2(1.5 * Math.sin(phase), 7 * Math.cos(phase));
+      } else {
+        whale.position.x = -15 + ((elapsed * 0.24) % 34);
+        whale.position.y = 6.9 + Math.sin(elapsed * 0.09) * 0.4;
+      }
       submarineOrbit.rotation.y = -elapsed * 0.024;
       submarine.position.y = -0.9 + Math.sin(elapsed * 0.22) * 0.26;
       const propeller = submarine.userData.propeller as THREE.Object3D | undefined;

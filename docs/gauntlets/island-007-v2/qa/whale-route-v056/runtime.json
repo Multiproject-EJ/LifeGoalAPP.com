@@ -1,0 +1,23 @@
+{
+  "status": "pass",
+  "periodSeconds": 392.6990816987241,
+  "rows": [
+    {
+      "camera": "matched-wide",
+      "samples": 721,
+      "visibleSamples": 721,
+      "minimumNormalizedY": 0.14483531870098126,
+      "maximumNormalizedY": 0.24572110265620017,
+      "headerGuard": 0.065
+    },
+    {
+      "camera": "normal-phone",
+      "samples": 721,
+      "visibleSamples": 721,
+      "minimumNormalizedY": 0.09638046252412474,
+      "maximumNormalizedY": 0.20654466894663798,
+      "headerGuard": 0.065
+    }
+  ],
+  "scope": "Actual factory geometry projected through both review and normal phone cameras for one full horizontal loop; no physical-device or artistic anatomy approval."
+}

@@ -1,0 +1,11 @@
+{
+  "action": "retain-local-route-change",
+  "reviewer": "whole_scene_critique",
+  "finding": "At t240 whale fully separated from distant shadows, clear water around silhouette, above all buildings. Kingdom remains focal point day/night.",
+  "limitations": [
+    "Existing simple anatomy more noticeable",
+    "Only t240 visually reviewed; full loop geometry projection separately checked",
+    "No anatomy approval"
+  ],
+  "typeScript": "pass"
+}

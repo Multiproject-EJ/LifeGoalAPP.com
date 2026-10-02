@@ -162,6 +162,7 @@ import { getSupabaseClient } from './lib/supabaseClient';
 import { isValidUuid } from './lib/isValidUuid';
 import { useContinuousSave } from './hooks/useContinuousSave';
 import { isStandaloneMode } from './routes/detectStandalone';
+import { resolveWorkspaceHistoryUrl } from './routes/workspaceHistory';
 import { useDailySpinStatus } from './hooks/useDailySpinStatus';
 import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from './hooks/useFutureFeatureCardStates';
 import { isIslandRunFeatureEnabled } from './config/islandRunFeatureFlags';
@@ -2786,20 +2787,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const activeSurface = resolveSurface(window.location.hostname);
-    const isPeaceBetweenRootRoute = activeSurface === 'peacebetween' && window.location.pathname === '/';
-    if (isConflictRoute(window.location.pathname) || isPeaceBetweenRootRoute) return;
-    const searchSuffix = initialSearch ?? '';
-    let nextPath = '/';
-    if (activeWorkspaceNav === 'journal') {
-      nextPath = '/journal';
-    } else if (activeWorkspaceNav === 'breathing-space') {
-      nextPath = '/breathing-space';
-    }
-    const nextUrl = `${nextPath}${searchSuffix}`;
-    if (window.location.pathname !== nextPath) {
-      window.history.replaceState({}, '', nextUrl);
-    }
+    const nextUrl = resolveWorkspaceHistoryUrl(activeWorkspaceNav, window.location.href);
+    if (nextUrl) window.history.replaceState(window.history.state, '', nextUrl);
   }, [activeWorkspaceNav, initialSearch]);
 
   useEffect(() => {

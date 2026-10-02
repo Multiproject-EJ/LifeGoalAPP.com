@@ -17,15 +17,30 @@ export async function registerServiceWorker() {
 
   try {
     const SW_RELOAD_FLAG_KEY = 'lifegoalapp_sw_reloaded_once';
+    let previousController = navigator.serviceWorker.controller;
+    let reloadedInThisDocument = false;
 
     const triggerControlledReload = () => {
-      if (typeof window === 'undefined') return;
-      if (window.sessionStorage.getItem(SW_RELOAD_FLAG_KEY) === '1') return;
-      window.sessionStorage.setItem(SW_RELOAD_FLAG_KEY, '1');
+      if (typeof window === 'undefined' || reloadedInThisDocument) return;
+      try {
+        if (window.sessionStorage.getItem(SW_RELOAD_FLAG_KEY) === '1') return;
+        window.sessionStorage.setItem(SW_RELOAD_FLAG_KEY, '1');
+      } catch {
+        // If storage is blocked, keep the app open rather than risk an
+        // unbounded refresh loop. A normal manual refresh loads the update.
+        return;
+      }
+      reloadedInThisDocument = true;
       window.location.reload();
     };
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
+      const controller = navigator.serviceWorker.controller;
+      if (!controller || controller === previousController) return;
+      const isReplacement = Boolean(previousController);
+      previousController = controller;
+      // First-time control does not need to interrupt login or an active game.
+      if (!isReplacement) return;
       triggerControlledReload();
     });
 
@@ -34,7 +49,11 @@ export async function registerServiceWorker() {
       type: 'classic',
     });
 
-    void registration.update();
+    // Browser automation/privacy settings can disable registration entirely.
+    if (!registration) return;
+    void registration.update().catch((error) => {
+      console.warn('Service worker update check failed; keeping the current app open.', error);
+    });
 
     if (registration.waiting) {
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });

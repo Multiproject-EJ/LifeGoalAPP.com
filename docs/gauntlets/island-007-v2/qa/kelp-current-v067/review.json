@@ -1,0 +1,13 @@
+{
+  "status": "retain-local-animation",
+  "sourceSha256": "796310e513d4360c01a101f6bde8f8dc9fd0cc38017b5cef690f1a37bbb82425",
+  "independentReviewer": "whole_scene_critique",
+  "visualReview": "Sampled t0/t3/t6 retain fixed lower tips while upper blades bend by different amounts. Day/night shading coherent; full-scene composition preserved. Subtle at full scale. Existing angular blade geometry unchanged. Reviewer inspected stills, not continuous playback. No whole-reef macro approval.",
+  "validation": {
+    "typescript": "passed",
+    "isolatedCapture": "v066-kelp-current-isolated: no errors, identical frozen frames, changing animated frames, unchanged instance matrices",
+    "fullScene": "v067-kelp-current-t240: no errors, stable source, sampled 60 FPS day/night; 152/166 calls, 172082/172096 triangles",
+    "performanceLimitation": "Earlier v066 samples were 13/21 FPS; baseline v061 itself sampled 15/30. Repeat recovered to 60/60 without source changes. Cause is not established; these samples are not a sustained or physical-device benchmark.",
+    "reducedMotion": "Parent passes elapsed=0 when reduced motion is enabled."
+  }
+}
