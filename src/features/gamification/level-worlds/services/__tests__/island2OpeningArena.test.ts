@@ -138,6 +138,7 @@ export const island2OpeningArenaTests: TestCase[] = [
       assert(board.includes("case 'arriving': return openingArenaArrivalBusy"), 'the arrival waits until nothing else is on screen');
       const base = fsMod.readFileSync('src/features/gamification/level-worlds/dev/OpeningArenaHoverBase.ts', 'utf8');
       assert(base.includes('construction.visible = anchored && arenaLevel < 3;') && base.includes('crowd.visible = arenaLevel >= 3;'), 'steel construction first, a full crowd at Level 3');
+      assert(base.includes('festival.visible = arenaLevel >= 3;') && base.includes('islandRadius * 0.8, 5, 20'), 'Level 3 adds the ceremony showpiece on a bigger base');
       const modal = fsMod.readFileSync('src/features/gamification/level-worlds/components/OpeningArenaBuildModal.tsx', 'utf8');
       assert(modal.includes('useControllerShopScrollLock()') && modal.includes('document.body'), 'portal + scroll lock');
     },

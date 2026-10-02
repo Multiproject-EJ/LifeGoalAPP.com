@@ -186,6 +186,102 @@ export function createOpeningArenaHoverBase() {
   }
   arena.add(crowd);
 
+  // Level 3 showpiece for the opening ceremony: sweeping searchlights, a
+  // giant hovering crystal trophy, golden halo rings round the disc, tall
+  // pennant masts, bunting and a swirl of sparkles.
+  const festival = new THREE.Group();
+  arena.add(festival);
+  const gold = track(new THREE.MeshStandardMaterial({ color: '#ffd45c', emissive: '#ffb21f', emissiveIntensity: 0.9, roughness: 0.25, metalness: 0.85 }));
+  const beamMaterial = track(new THREE.MeshBasicMaterial({ color: '#fff1b8', transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  const searchBeamGeometry = track(new THREE.ConeGeometry(0.22, 2.6, 20, 1, true));
+  searchBeamGeometry.rotateX(Math.PI);
+  searchBeamGeometry.translate(0, 1.3, 0);
+  const searchlights = Array.from({ length: 8 }, (_, i) => {
+    const a = (i / 8) * Math.PI * 2 + 0.4;
+    const pivot = new THREE.Group();
+    pivot.position.set(Math.cos(a) * 0.9, 0.62, Math.sin(a) * 0.9 * 0.8);
+    const tilt = new THREE.Group();
+    tilt.add(new THREE.Mesh(searchBeamGeometry, beamMaterial));
+    pivot.add(tilt);
+    pivot.userData = { a, phase: i * 0.9 };
+    festival.add(pivot);
+    return { pivot, tilt };
+  });
+  const trophy = new THREE.Group();
+  trophy.position.y = 1.15;
+  const trophyCrystal = new THREE.Mesh(track(new THREE.OctahedronGeometry(0.16, 0)), track(new THREE.MeshStandardMaterial({ color: '#b8fbff', emissive: '#3fd7ff', emissiveIntensity: 1.4, roughness: 0.1, flatShading: true })));
+  trophyCrystal.scale.y = 1.6;
+  const trophyRings = [0, 1, 2].map((k) => {
+    const ring = new THREE.Mesh(track(new THREE.TorusGeometry(0.28 + k * 0.07, 0.012, 8, 64)), gold);
+    ring.rotation.set(Math.PI / 2 + (k - 1) * 0.5, k * 0.7, 0);
+    trophy.add(ring);
+    return ring;
+  });
+  const trophyGlow = new THREE.Mesh(track(new THREE.SphereGeometry(0.42, 20, 14)), track(new THREE.MeshBasicMaterial({ color: '#ffe79a', transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false })));
+  trophy.add(trophyCrystal, trophyGlow);
+  festival.add(trophy);
+  const pedestal = new THREE.Mesh(track(new THREE.CylinderGeometry(0.06, 0.12, 0.5, 12)), gold);
+  pedestal.position.y = 0.33;
+  festival.add(pedestal);
+  const halos = [1.18, 1.34].map((r, k) => {
+    const halo = new THREE.Mesh(track(new THREE.TorusGeometry(r, 0.018, 8, 128)), gold);
+    halo.rotation.x = Math.PI / 2;
+    halo.position.y = k === 0 ? 0.05 : -0.12;
+    festival.add(halo);
+    return halo;
+  });
+  const haloLightGeometry = track(new THREE.SphereGeometry(0.028, 8, 6));
+  const haloLights = new THREE.Group();
+  for (let i = 0; i < 48; i += 1) {
+    const a = (i / 48) * Math.PI * 2;
+    const light = new THREE.Mesh(haloLightGeometry, rimLight);
+    light.position.set(Math.cos(a) * 1.18, 0.05, Math.sin(a) * 1.18);
+    haloLights.add(light);
+  }
+  festival.add(haloLights);
+  const mastGeometry = track(new THREE.CylinderGeometry(0.012, 0.016, 0.9, 6));
+  const pennantGeometry = track(new THREE.BufferGeometry());
+  pennantGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.2, -0.05, 0, 0, -0.11, 0]), 3));
+  pennantGeometry.computeVertexNormals();
+  const pennants: THREE.Mesh[] = [];
+  const mastTops: THREE.Vector3[] = [];
+  for (let i = 0; i < 12; i += 1) {
+    const a = (i / 12) * Math.PI * 2;
+    const mast = new THREE.Mesh(mastGeometry, gold);
+    mast.position.set(Math.cos(a) * 0.97, 0.45, Math.sin(a) * 0.97);
+    festival.add(mast);
+    const pennant = new THREE.Mesh(pennantGeometry, track(new THREE.MeshStandardMaterial({ color: bannerColors[i % 4], side: THREE.DoubleSide, emissive: bannerColors[i % 4], emissiveIntensity: 0.25 })));
+    pennant.position.set(mast.position.x, 0.88, mast.position.z);
+    pennant.rotation.y = -a;
+    festival.add(pennant);
+    pennants.push(pennant);
+    mastTops.push(new THREE.Vector3(mast.position.x, 0.86, mast.position.z));
+  }
+  // Bunting: sagging strings of little flags between neighbouring masts.
+  const buntingCount = 12 * 7;
+  const bunting = new THREE.InstancedMesh(track(new THREE.ConeGeometry(0.022, 0.05, 3)), track(new THREE.MeshStandardMaterial({ roughness: 0.7 })), buntingCount);
+  const buntingMatrix = new THREE.Matrix4();
+  for (let i = 0; i < 12; i += 1) {
+    const from = mastTops[i]!;
+    const to = mastTops[(i + 1) % 12]!;
+    for (let k = 0; k < 7; k += 1) {
+      const u = (k + 1) / 8;
+      const p = from.clone().lerp(to, u);
+      p.y -= Math.sin(u * Math.PI) * 0.1;
+      buntingMatrix.makeRotationX(Math.PI).setPosition(p);
+      bunting.setMatrixAt(i * 7 + k, buntingMatrix);
+      bunting.setColorAt(i * 7 + k, new THREE.Color(bannerColors[(i + k) % 4]));
+    }
+  }
+  festival.add(bunting);
+  // Sparkles swirling up around the trophy and the stands.
+  const sparkleCount = 90;
+  const sparkles = new THREE.InstancedMesh(track(new THREE.OctahedronGeometry(0.022, 0)), track(new THREE.MeshBasicMaterial({ color: '#fff3c4', transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })), sparkleCount);
+  sparkles.frustumCulled = false;
+  const sparkleSeeds = Array.from({ length: sparkleCount }, () => ({ r: 0.25 + random() * 0.85, a: random() * Math.PI * 2, speed: 0.3 + random() * 0.6, rise: random() }));
+  const sparkleMatrix = new THREE.Matrix4();
+  festival.add(sparkles);
+
   // Airship tugs and tow cables for the delivery.
   const tugs = new THREE.Group();
   root.add(tugs);
@@ -227,12 +323,12 @@ export function createOpeningArenaHoverBase() {
   /** Beside the island, on the far side from the camera, clear of the island. */
   function place(options: { centre: THREE.Vector3; islandRadius: number; groundY: number; viewFrom: THREE.Vector3 }) {
     const { centre, islandRadius, groundY, viewFrom } = options;
-    baseRadius = THREE.MathUtils.clamp(islandRadius * 0.62, 4, 16);
+    baseRadius = THREE.MathUtils.clamp(islandRadius * 0.8, 5, 20);
     const out = new THREE.Vector3(centre.x - viewFrom.x, 0, centre.z - viewFrom.z);
     if (out.lengthSq() < 1e-4) out.set(0, 0, -1);
     out.normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.22);
     approachDirection.copy(out);
-    anchorPosition.copy(centre).addScaledVector(out, islandRadius + baseRadius * 1.2);
+    anchorPosition.copy(centre).addScaledVector(out, islandRadius + baseRadius * 1.45);
     anchorPosition.y = groundY + baseRadius * 0.28;
     base.scale.setScalar(baseRadius);
     const side = new THREE.Vector3(-out.z, 0, out.x);
@@ -262,6 +358,7 @@ export function createOpeningArenaHoverBase() {
     floodlights.forEach((tower) => { tower.visible = arenaLevel >= 3; });
     banners.forEach((banner) => { banner.visible = arenaLevel >= 3; });
     crowd.visible = arenaLevel >= 3;
+    festival.visible = arenaLevel >= 3;
     tugs.visible = stage === 'in_transit' || stage === 'arriving';
     cables.visible = tugs.visible;
     chains.visible = anchored || (stage === 'arriving' && arrivalT > OPENING_ARENA_ARRIVAL_SECONDS * 0.72);
@@ -321,6 +418,31 @@ export function createOpeningArenaHoverBase() {
         positions.setXYZ(i * 2 + 1, to.x, to.y, to.z);
       });
       positions.needsUpdate = true;
+    }
+    if (festival.visible) {
+      const motion = reduced ? 0 : 1;
+      searchlights.forEach(({ pivot, tilt }) => {
+        const { a, phase } = pivot.userData as { a: number; phase: number };
+        pivot.rotation.y = -a + Math.PI / 2 + motion * Math.sin(t * 0.7 + phase) * 0.9;
+        tilt.rotation.x = 0.35 + motion * Math.sin(t * 0.9 + phase) * 0.22;
+      });
+      beamMaterial.opacity = 0.12 + motion * Math.sin(t * 2.3) * 0.04;
+      trophy.position.y = 1.15 + motion * Math.sin(t * 1.4) * 0.05;
+      trophyCrystal.rotation.y = motion * t * 1.2;
+      trophyRings.forEach((ring, k) => { ring.rotation.z = motion * t * (0.8 + k * 0.35) * (k % 2 ? -1 : 1); });
+      (trophyGlow.material as THREE.MeshBasicMaterial).opacity = 0.12 + motion * (Math.sin(t * 3) + 1) * 0.06;
+      halos[0]!.rotation.z = motion * t * 0.25;
+      halos[1]!.rotation.z = -motion * t * 0.18;
+      haloLights.rotation.y = motion * t * 0.25;
+      pennants.forEach((pennant, i) => { pennant.scale.x = 0.85 + motion * Math.sin(t * 5 + i) * 0.15; });
+      sparkleSeeds.forEach((seed, i) => {
+        const life = (seed.rise + t * 0.12 * seed.speed * motion) % 1;
+        const angle = seed.a + t * seed.speed * motion;
+        const scale = Math.sin(life * Math.PI);
+        sparkleMatrix.makeScale(scale, scale, scale).setPosition(Math.cos(angle) * seed.r, 0.3 + life * 1.4, Math.sin(angle) * seed.r * 0.8);
+        sparkles.setMatrixAt(i, sparkleMatrix);
+      });
+      sparkles.instanceMatrix.needsUpdate = true;
     }
     if (!reduced && cranes[0].visible) cranes.forEach((crane, i) => { crane.rotation.y += dt * (i === 0 ? 0.15 : -0.12); });
   }
