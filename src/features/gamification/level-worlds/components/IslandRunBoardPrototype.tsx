@@ -12018,7 +12018,7 @@ export function IslandRunBoardPrototype({
     setLandingText(message);
     setMarketInteracted(true);
   };
-  const performIslandTravel = async (nextIsland: number, options?: { startTimer?: boolean; completedVisitKey?: string }) => {
+  const performIslandTravel = async (nextIsland: number, options?: { startTimer?: boolean; completedVisitKey?: string; devJump?: boolean }) => {
     if (isTravellingRef.current) return;
     if (isAnimatingRollRef.current) {
       // P1-21: avoid resetting token/island state while a hop animation is
@@ -12048,6 +12048,7 @@ export function IslandRunBoardPrototype({
         islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
         triggerSource: 'perform_island_travel',
         completedVisitKey: options?.completedVisitKey,
+        devJump: isDevModeEnabled && options?.devJump === true,
       }),
     );
 
@@ -12183,7 +12184,7 @@ export function IslandRunBoardPrototype({
     if (!isDevModeEnabled || !isDevIslandJumpTargetValid || isDevIslandJumpPending) return;
     setIsDevIslandJumpPending(true);
     try {
-      await performIslandTravel(devIslandJumpTarget, { startTimer: false });
+      await performIslandTravel(devIslandJumpTarget, { startTimer: false, devJump: true });
       if (getIslandRunStateSnapshot(session).currentIslandNumber !== devIslandJumpTarget) {
         throw new Error('Island travel did not complete.');
       }
@@ -14814,6 +14815,7 @@ export function IslandRunBoardPrototype({
       showBoardSymbolLegend ||
       showVaultIslandGiftUnlock ||
       showVaultIslandCollection ||
+      activeVaultCasinoPlay !== null ||
       showMissionPhoneBriefing ||
       Boolean(activeMissionBriefing) ||
       stormfrontCinematicPlaying ||

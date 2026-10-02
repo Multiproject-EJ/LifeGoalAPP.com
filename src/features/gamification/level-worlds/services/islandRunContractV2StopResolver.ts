@@ -162,7 +162,10 @@ export function canPostponeIslandRunStop(options: {
   if (!ISLAND_RUN_POSTPONABLE_STOP_TYPES.includes(ISLAND_RUN_CONTRACT_V2_STOP_TYPES[stopIndex])) {
     return { ok: false, reason: 'not_postponable', openIncompleteCount };
   }
-  if (!isStopAccessUnlocked(entry, stopIndex, options.stopStatesByIndex)) return { ok: false, reason: 'not_accessible', openIncompleteCount };
+  // Beginner landmarks are free to enter (see resolveIslandRunContractV2Stops),
+  // so any one the player can open can also be postponed; otherwise "Come back
+  // later" on a non-dismissable stop would strand them.
+  if (stopIndex >= 4 && !isStopAccessUnlocked(entry, stopIndex, options.stopStatesByIndex)) return { ok: false, reason: 'not_accessible', openIncompleteCount };
   const nextStopIndex = stopIndex + 1;
   if (nextStopIndex >= ISLAND_RUN_CONTRACT_V2_STOP_TYPES.length || ISLAND_RUN_CONTRACT_V2_STOP_TYPES[nextStopIndex] === 'boss') {
     return { ok: false, reason: 'next_stop_unavailable', openIncompleteCount };
