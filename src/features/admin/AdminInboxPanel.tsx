@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { listAllCaseThreads, updateCaseStatus, addInternalNote, saveReplyDraft, sendAdminReply, updateCaseRouting } from '../../services/adminCases';
 import { isAdminUser, listActiveAdminUsers, type AdminUserRow } from '../../services/adminRoles';
+import { groupCrashReports, summariseCrashDiagnostics, CRASH_REPORT_CATEGORY } from '../../services/crashReportGroups';
 import { listCaseMessages, type CaseStatus, type CaseThreadRow, type CaseMessageRow } from '../../services/cases';
 import { listMyCaseThreadReads, markCaseThreadRead } from '../../services/caseThreadReads';
 
@@ -31,6 +32,7 @@ export function AdminInboxPanel({ session }: Props) {
   const [typeFilter, setTypeFilter] = useState<'all' | 'feedback' | 'support'>('all');
   const [featureFilter, setFeatureFilter] = useState<'all' | string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [crashGroupFilter, setCrashGroupFilter] = useState<string | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUserRow[]>([]);
   const [routingPriority, setRoutingPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
   const [routingAssignee, setRoutingAssignee] = useState<string>('');
@@ -61,9 +63,20 @@ export function AdminInboxPanel({ session }: Props) {
     return Array.from(new Set(threads.map((thread) => getFeatureArea(thread)))).sort((a, b) => a.localeCompare(b));
   }, [threads]);
 
+  const crashGroups = useMemo(() => groupCrashReports(threads), [threads]);
+  const crashGroupThreadIds = useMemo(() => {
+    const group = crashGroups.find((entry) => entry.signature === crashGroupFilter);
+    return group ? new Set(group.threadIds) : null;
+  }, [crashGroups, crashGroupFilter]);
+  const selectedCrashSummary = useMemo(
+    () => (selectedThread?.category === CRASH_REPORT_CATEGORY ? summariseCrashDiagnostics(selectedThread.metadata) : null),
+    [selectedThread],
+  );
+
   const filteredThreads = useMemo(() => {
     const search = searchQuery.trim().toLowerCase();
     return threads.filter((thread) => {
+      if (crashGroupThreadIds && !crashGroupThreadIds.has(thread.id)) return false;
       if (statusFilter !== 'all' && thread.status !== statusFilter) return false;
       if (typeFilter !== 'all' && thread.case_type !== typeFilter) return false;
       if (featureFilter !== 'all' && getFeatureArea(thread) !== featureFilter) return false;
@@ -75,7 +88,7 @@ export function AdminInboxPanel({ session }: Props) {
         thread.id.slice(0, 8).toLowerCase().includes(search)
       );
     });
-  }, [threads, statusFilter, typeFilter, featureFilter, searchQuery]);
+  }, [threads, statusFilter, typeFilter, featureFilter, searchQuery, crashGroupThreadIds]);
 
   const loadThreads = async () => {
     setLoading(true);
@@ -174,6 +187,17 @@ export function AdminInboxPanel({ session }: Props) {
     await loadMessages(selectedThread.id);
   };
 
+  /** Mark every open report of one crash resolved (e.g. after shipping the fix). */
+  const handleResolveCrashGroup = async (threadIds: string[]) => {
+    let failed = 0;
+    for (const threadId of threadIds) {
+      const { error } = await updateCaseStatus({ threadId, nextStatus: 'resolved', adminUserId: session.user.id });
+      if (error) failed += 1;
+    }
+    setStatus(failed > 0 ? `Resolved ${threadIds.length - failed} of ${threadIds.length} reports.` : `Resolved ${threadIds.length} crash reports.`);
+    await loadThreads();
+  };
+
   const handleSaveInternalNote = async () => {
     if (!selectedThread || !noteDraft.trim()) return;
     const { error } = await addInternalNote({
@@ -253,6 +277,38 @@ export function AdminInboxPanel({ session }: Props) {
           </button>
         </div>
 
+        {crashGroups.length > 0 ? (
+          <div className="account-panel__card" style={{ margin: 0, display: 'grid', gap: 8 }}>
+            <p className="account-panel__eyebrow" style={{ margin: 0 }}>
+              Crash reports · {crashGroups.length} distinct {crashGroups.length === 1 ? 'crash' : 'crashes'}
+            </p>
+            {crashGroups.map((group) => (
+              <div key={group.signature} style={{ display: 'grid', gap: 4, borderTop: '1px solid var(--border-default)', paddingTop: 6 }}>
+                <strong style={{ wordBreak: 'break-word' }}>{group.message}</strong>
+                {group.topFrame ? <code style={{ fontSize: 12, wordBreak: 'break-all' }}>{group.topFrame}</code> : null}
+                <span className="account-panel__hint" style={{ margin: 0 }}>
+                  {group.threadIds.length} {group.threadIds.length === 1 ? 'report' : 'reports'} · {group.openThreadIds.length} open · {group.players} {group.players === 1 ? 'player' : 'players'}
+                  {group.islands.length > 0 ? ` · islands ${group.islands.join(', ')}` : ''} · ×{group.totalRepeats} occurrences · last {formatDateTime(group.lastSeenIso)}
+                </span>
+                <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className={`btn ${crashGroupFilter === group.signature ? 'btn--primary' : ''}`}
+                    onClick={() => setCrashGroupFilter((current) => (current === group.signature ? null : group.signature))}
+                  >
+                    {crashGroupFilter === group.signature ? 'Show all cases' : 'Show these reports'}
+                  </button>
+                  {group.openThreadIds.length > 0 ? (
+                    <button type="button" className="btn" onClick={() => handleResolveCrashGroup(group.openThreadIds)}>
+                      Mark {group.openThreadIds.length} resolved (fixed)
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
         <div style={{ display: 'grid', gap: 8 }}>
           <div className="account-panel__actions-row" style={{ flexWrap: 'wrap' }}>
             <label className="supabase-auth__field" style={{ minWidth: 180, marginBottom: 0 }}>
@@ -302,6 +358,7 @@ export function AdminInboxPanel({ session }: Props) {
                 setTypeFilter('all');
                 setFeatureFilter('all');
                 setSearchQuery('');
+                setCrashGroupFilter(null);
               }}
             >
               Clear filters
@@ -336,6 +393,22 @@ export function AdminInboxPanel({ session }: Props) {
           <div style={{ borderTop: '1px solid var(--border-default)', paddingTop: 12 }}>
             <h4>{selectedThread.subject}</h4>
             <p className="account-panel__hint">Feature area: {getFeatureArea(selectedThread)}</p>
+            {selectedCrashSummary ? (
+              <div className="account-panel__card" style={{ margin: '6px 0' }}>
+                <p className="account-panel__eyebrow">Crash diagnostics</p>
+                <p className="account-panel__hint" style={{ margin: 0 }}>
+                  {selectedCrashSummary.device} · {selectedCrashSummary.viewport} · app {selectedCrashSummary.appVersion}
+                  {selectedCrashSummary.island !== null ? ` · island ${selectedCrashSummary.island}` : ''}
+                  {selectedCrashSummary.secondsSinceLoad !== null ? ` · ${selectedCrashSummary.secondsSinceLoad}s after load` : ''}
+                </p>
+                {selectedCrashSummary.crashes.map((crash, index) => (
+                  <p key={index} style={{ margin: '4px 0 0', fontSize: 13, wordBreak: 'break-word' }}>
+                    {crash.message}{crash.repeats > 1 ? ` (×${crash.repeats})` : ''}
+                    {crash.topFrame ? <><br /><code style={{ fontSize: 12 }}>{crash.topFrame}</code></> : null}
+                  </p>
+                ))}
+              </div>
+            ) : null}
             <p className="account-panel__hint">Desired outcome: {selectedThread.desired_outcome || 'Not provided'}</p>
             <p className="account-panel__hint">First response at: {formatDateTime(selectedThread.first_response_at)}</p>
             <p className="account-panel__hint">Resolved at: {formatDateTime(selectedThread.resolved_at)}</p>
