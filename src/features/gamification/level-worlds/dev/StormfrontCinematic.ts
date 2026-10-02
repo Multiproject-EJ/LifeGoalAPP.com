@@ -242,21 +242,42 @@ export function createIsland2StormfrontCinematic(options: {
 
   // The storm wall: a curved, flickering curtain of light at the wave front so
   // the approach reads continuously, not only while a bolt is alive.
+  // Soft-edged and streaky (not a flat slab): faded arc ends, a ragged top,
+  // vertical light streaks and a bright, uneven base where the bolts land.
   const wallTexture = (() => {
     if (typeof document === 'undefined') return null;
+    const W = 256;
+    const H = 128;
     const wallCanvas = document.createElement('canvas');
-    wallCanvas.width = 8;
-    wallCanvas.height = 128;
+    wallCanvas.width = W;
+    wallCanvas.height = H;
     const ctx = wallCanvas.getContext('2d');
     if (!ctx) return null;
-    const g = ctx.createLinearGradient(0, 0, 0, 128);
-    g.addColorStop(0, 'rgba(160,200,255,0)');
-    g.addColorStop(0.55, 'rgba(160,200,255,0.35)');
-    g.addColorStop(0.85, 'rgba(225,238,255,0.9)');
-    g.addColorStop(1, 'rgba(225,238,255,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, 8, 128);
-    return new THREE.CanvasTexture(wallCanvas);
+    const image = ctx.createImageData(W, H);
+    const streak = Array.from({ length: W }, () => random());
+    for (let x = 1; x < W - 1; x += 1) streak[x] = (streak[x - 1]! + streak[x]! * 2 + streak[x + 1]!) / 4;
+    const top = Array.from({ length: W }, (_, x) => 0.25 + 0.3 * (Math.sin(x * 0.11) * 0.5 + 0.5) * (0.6 + streak[x]! * 0.8));
+    for (let x = 0; x < W; x += 1) {
+      const u = x / (W - 1);
+      const edge = Math.min(1, u / 0.18, (1 - u) / 0.18);
+      const ends = edge * edge * (3 - 2 * edge);
+      for (let y = 0; y < H; y += 1) {
+        const v = y / (H - 1); // 0 = top, 1 = base
+        const rise = Math.max(0, Math.min(1, (v - top[x]!) / 0.35));
+        const base = v > 0.97 ? (1 - v) / 0.03 : 1;
+        const glow = rise * rise * (0.35 + 0.65 * Math.pow(v, 3)) * base;
+        const alpha = Math.max(0, Math.min(1, glow * (0.45 + streak[x]! * 0.75) * ends));
+        const i = (y * W + x) * 4;
+        image.data[i] = 175 + 70 * v;
+        image.data[i + 1] = 205 + 40 * v;
+        image.data[i + 2] = 255;
+        image.data[i + 3] = Math.round(alpha * 255);
+      }
+    }
+    ctx.putImageData(image, 0, 0);
+    const texture = new THREE.CanvasTexture(wallCanvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
   })();
   const wallMaterial = new THREE.MeshBasicMaterial({
     color: '#bcd6ff', map: wallTexture, transparent: true, opacity: 0, side: THREE.DoubleSide,
@@ -264,7 +285,7 @@ export function createIsland2StormfrontCinematic(options: {
   });
   const wallArc = Math.PI * 0.95;
   const wall = new THREE.Mesh(
-    new THREE.CylinderGeometry(1, 1, radius * 2.6, 64, 1, true, Math.atan2(forward.x, forward.z) - wallArc / 2, wallArc),
+    new THREE.CylinderGeometry(1, 1, radius * 2.6, 96, 1, true, Math.atan2(forward.x, forward.z) - wallArc / 2, wallArc),
     wallMaterial,
   );
   wall.position.copy(centre).add(new THREE.Vector3(0, radius * 1.1, 0));
