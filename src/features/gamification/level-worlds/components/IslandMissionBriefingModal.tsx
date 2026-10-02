@@ -264,6 +264,21 @@ function MissionPhoneStanceFace({ stance }: { stance: IslandMissionStats['stance
   );
 }
 
+/** One glanceable row: island %, mood, difficulty and egg. Tap for the full cards. */
+function MissionPhoneStatChips({ stats, onExpand }: { stats: IslandMissionStats; onExpand: () => void }): React.JSX.Element {
+  const signals = resolveMissionPhoneSignals(stats);
+  const egg = stats.egg;
+  return (
+    <button type="button" className="island-mission-tracker__chips" onClick={onExpand} aria-label={`Island ${stats.complete ? 'cleared' : `${stats.completionPercent}%`}, ${MISSION_PHONE_STANCE_LABELS[stats.stance]}, ${stats.difficulty}, egg ${egg.state === 'none' ? 'none yet' : MISSION_PHONE_EGG_TIER_LABELS[egg.tier]}. Show details.`}>
+      <span data-signal={signals.island}>🏝 {stats.complete ? 'Cleared' : `${stats.completionPercent}%`}</span>
+      <span data-signal={signals.stance}><MissionPhoneStanceFace stance={stats.stance} />{MISSION_PHONE_STANCE_LABELS[stats.stance]}</span>
+      <span data-signal={signals.difficulty}>{stats.difficulty}</span>
+      <span data-signal={signals.egg}>🥚 {egg.state === 'none' ? '—' : MISSION_PHONE_EGG_TIER_LABELS[egg.tier]}</span>
+      <i aria-hidden="true">▾</i>
+    </button>
+  );
+}
+
 function MissionPhoneStats({ stats }: { stats: IslandMissionStats }): React.JSX.Element {
   const difficultyLevel = MISSION_PHONE_DIFFICULTY_LEVELS[stats.difficulty];
   const egg = stats.egg;
@@ -475,6 +490,9 @@ export function IslandMissionBriefingModal({
 }: IslandMissionBriefingModalProps): React.JSX.Element | null {
   const [phase, setPhase] = React.useState<MissionPhonePhase>('unfolding');
   const [selectedObjectiveIndex, setSelectedObjectiveIndex] = React.useState<number | null>(null);
+  // "This is what you need now" (user request 2026-10-02): details fold away.
+  const [statsExpanded, setStatsExpanded] = React.useState(false);
+  const [flagsExpanded, setFlagsExpanded] = React.useState(false);
   // Mission dashboard, or an incoming message shown fullscreen (100% focus).
   // Filed messages live in their own Messages modal, never on the dashboard.
   const [screen, setScreen] = React.useState<{ kind: 'mission' } | { kind: 'message'; id: string }>(
@@ -640,6 +658,10 @@ export function IslandMissionBriefingModal({
     ? Math.round(normalizedProgress.reduce((total, item) => total + (item.value / item.target), 0) * (100 / normalizedProgress.length))
     : 0;
   const overallPercent = Math.max(0, Math.min(100, Math.round(overallProgressPercent ?? derivedOverallPercent)));
+  const nextObjectiveIndex = normalizedProgress.findIndex((item) => !item.complete);
+  const nextStep = nextObjectiveIndex >= 0
+    ? { kind: 'objective' as const, index: nextObjectiveIndex, item: normalizedProgress[nextObjectiveIndex]!, hint: objectiveDetails[nextObjectiveIndex] ?? 'Tap for how to do it.' }
+    : { kind: 'done' as const };
   const missionTitle = presentation.headline;
   const selectedObjective = selectedObjectiveIndex === null
     ? null
@@ -701,7 +723,12 @@ export function IslandMissionBriefingModal({
             <div className="island-mission-tracker__phone-screen" style={islandCompletion ? { overflowY: 'auto' } : undefined}>
               {!showMessageView ? (
               <header className="island-mission-tracker__header">
-                {stats ? <MissionPhoneStats stats={stats} /> : null}
+                {stats ? (statsExpanded ? (
+                  <div className="island-mission-tracker__stats-expanded">
+                    <MissionPhoneStats stats={stats} />
+                    <button type="button" className="island-mission-tracker__chips-less" onClick={() => setStatsExpanded(false)}>Hide island details ▴</button>
+                  </div>
+                ) : <MissionPhoneStatChips stats={stats} onExpand={() => setStatsExpanded(true)} />) : null}
                 <div className="island-mission-tracker__mission-caption">
                   <span>
                     <small>{showMessageView ? 'Message' : showInbox ? 'Mission Phone' : 'Current mission'}</small>
@@ -765,6 +792,51 @@ export function IslandMissionBriefingModal({
                 </section>
               ) : (
                 <>
+                <section className="island-mission-tracker__now" aria-label="Do this now">
+                  <small className="island-mission-tracker__now-kicker">{nextStep.kind === 'done' && !primaryActionLabel ? 'All set' : 'Do this now'}</small>
+                  {primaryActionLabel && onPrimaryAction ? (
+                    <div className="island-mission-tracker__mission-action island-mission-tracker__mission-action--card">
+                      {milestoneCount > 0 ? (
+                        <span className="island-mission-tracker__milestones" aria-label={`${milestoneValue} of ${milestoneCount} mission stages complete`}>
+                          {Array.from({ length: milestoneCount }, (_, index) => (
+                            <i key={index} className={index < milestoneValue ? 'is-filled' : undefined} aria-hidden="true">{variant === 'living-compass' ? index + 1 : '⬡'}</i>
+                          ))}
+                        </span>
+                      ) : null}
+                      <button
+                        type="button"
+                        disabled={primaryActionDisabled || primaryActionBusy || phase !== 'open'}
+                        onClick={onPrimaryAction}
+                      >
+                        <span aria-hidden="true">{variant === 'living-compass' ? '✧' : milestoneValue >= milestoneCount && milestoneCount > 0 ? '👑' : '🍯'}</span>
+                        <strong>{primaryActionBusy ? variant === 'living-compass' ? 'Awakening…' : 'PRESSURISING…' : primaryActionLabel}</strong>
+                      </button>
+                      {primaryActionHint ? <small>{primaryActionHint}</small> : null}
+                    </div>
+                  ) : nextStep.kind === 'objective' ? (
+                    <button
+                      type="button"
+                      className="island-mission-tracker__now-step"
+                      onClick={onObjectiveSelect ? () => handleObjectiveClick(nextStep.index) : undefined}
+                      disabled={!onObjectiveSelect}
+                    >
+                      <span
+                        className="island-mission-tracker__objective-marker island-mission-tracker__now-glyph"
+                        aria-hidden="true"
+                        style={{ '--mission-objective-progress': `${Math.round((nextStep.item.value / nextStep.item.target) * 360)}deg` } as React.CSSProperties}
+                      >
+                        <span><MissionObjectiveGlyph label={nextStep.item.label} /></span>
+                      </span>
+                      <span className="island-mission-tracker__now-copy">
+                        <strong>{nextStep.item.label}</strong>
+                        <small>{nextStep.hint}</small>
+                      </span>
+                      <em>{nextStep.item.displayValue ?? `${Math.floor(nextStep.item.value)} / ${Math.floor(nextStep.item.target)}`}</em>
+                    </button>
+                  ) : (
+                    <p className="island-mission-tracker__now-done">✅ Every objective is done. Return to the island to finish up.</p>
+                  )}
+                </section>
                 <ol className="island-mission-tracker__checklist" aria-label="Mission objectives">
                   {normalizedProgress.map((item, objectiveIndex) => {
                     const objectiveLabel = `${item.label}: ${item.complete ? item.completeLabel : `${item.value} of ${item.target}`}`;
@@ -812,6 +884,13 @@ export function IslandMissionBriefingModal({
                   })}
                 </ol>
                 {landmarkFlags && landmarkFlags.length > 0 ? (
+                  !flagsExpanded ? (
+                    <button type="button" className="island-mission-tracker__flags-toggle" onClick={() => setFlagsExpanded(true)} aria-expanded={false}>
+                      <i className="island-landmark-flag island-landmark-flag--green" aria-hidden="true" />
+                      <span>Landmarks · {landmarkFlags.filter((landmark) => landmark.flag === 'green').length} / {landmarkFlags.length} built to Level 3</span>
+                      <em aria-hidden="true">▾</em>
+                    </button>
+                  ) : (
                   <section className="island-mission-tracker__flags" aria-label="Landmark flags">
                     <header>
                       <small>Landmark flags</small>
@@ -828,7 +907,9 @@ export function IslandMissionBriefingModal({
                         </li>
                       ))}
                     </ul>
+                    <button type="button" className="island-mission-tracker__chips-less" onClick={() => setFlagsExpanded(false)}>Hide landmarks ▴</button>
                   </section>
+                  )
                 ) : null}
                 {addOnMission ? (
                   <section className="island-mission-tracker__flags island-mission-tracker__addon" aria-label={`Add-on mission: ${addOnMission.title}`}>
@@ -853,26 +934,6 @@ export function IslandMissionBriefingModal({
                 </>
               )}
 
-              {primaryActionLabel && onPrimaryAction && !showMessageView && !showInbox ? (
-                <div className="island-mission-tracker__mission-action">
-                  {milestoneCount > 0 ? (
-                    <span className="island-mission-tracker__milestones" aria-label={`${milestoneValue} of ${milestoneCount} mission stages complete`}>
-                      {Array.from({ length: milestoneCount }, (_, index) => (
-                        <i key={index} className={index < milestoneValue ? 'is-filled' : undefined} aria-hidden="true">{variant === 'living-compass' ? index + 1 : '⬡'}</i>
-                      ))}
-                    </span>
-                  ) : null}
-                  <button
-                    type="button"
-                    disabled={primaryActionDisabled || primaryActionBusy || phase !== 'open'}
-                    onClick={onPrimaryAction}
-                  >
-                    <span aria-hidden="true">{variant === 'living-compass' ? '✧' : milestoneValue >= milestoneCount && milestoneCount > 0 ? '👑' : '🍯'}</span>
-                    <strong>{primaryActionBusy ? variant === 'living-compass' ? 'Awakening…' : 'PRESSURISING…' : primaryActionLabel}</strong>
-                  </button>
-                  {primaryActionHint ? <small>{primaryActionHint}</small> : null}
-                </div>
-              ) : null}
 
               {!showMessageView && !showInbox ? (
               <footer className="island-mission-tracker__overall" aria-label="Mission progress">

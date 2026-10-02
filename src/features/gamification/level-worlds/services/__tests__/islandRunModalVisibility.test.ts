@@ -151,4 +151,19 @@ export const islandRunModalVisibilityTests: TestCase[] = [
       assert(css.includes('.island-run-board__rewardbar-hatchery-egg-button:has(.island-run-board__rewardbar-hatchery-time) { margin-bottom: 14px; }'), 'hatch timer does not cover Lucky Spin');
     },
   },
+  {
+    name: 'Mission Phone is "what you need now": one Do-this-now card first; stats and landmark flags fold away without losing info',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const modal = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandMissionBriefingModal.tsx', 'utf8');
+      const card = modal.indexOf('<section className="island-mission-tracker__now" aria-label="Do this now">');
+      assert(card > 0 && card < modal.indexOf('<ol className="island-mission-tracker__checklist"'), 'the Do-this-now card comes before the checklist');
+      assert(modal.indexOf('island-mission-tracker__mission-action--card') > card, 'the main action lives in the card');
+      assert(modal.includes('const nextObjectiveIndex = normalizedProgress.findIndex((item) => !item.complete);'), 'otherwise the card shows the first unfinished objective');
+      assert(modal.includes('statsExpanded ? (') && modal.includes('<MissionPhoneStatChips stats={stats} onExpand={() => setStatsExpanded(true)} />'), 'island details collapse into chips (tap for the full cards)');
+      assert(modal.includes('!flagsExpanded ? (') && modal.includes('built to Level 3</span>'), 'landmark flags collapse into one row');
+      assert(modal.includes('onClick={() => setFlagsExpanded(false)}>Hide landmarks'), 'and can be folded back');
+    },
+  },
 ];
