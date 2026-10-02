@@ -26,6 +26,7 @@ import { createIsland2StormfrontCinematic } from './StormfrontCinematic';
 import { createStormfrontStructures } from './StormfrontStructures';
 import { OPENING_ARENA_ARRIVAL_SECONDS, createOpeningArenaHoverBase, type OpeningArenaVisualStage } from './OpeningArenaHoverBase';
 import { createGoldenSkyLift } from './GoldenSkyLift';
+import { CRYSTAL_DROP_RAMP_LAUNCH_MS, createCrystalDropRamp } from './CrystalDropRamp';
 import { createCrystalDropZones } from './CrystalDropZones';
 import type { StormfrontCinematicBeat } from '../services/island2StormfrontCinematic';
 import { buildIsland40PlaceholderLandmark, createIsland40PlaceholderWorld, ISLAND_40_PLACEHOLDER_LABEL } from './Island40PlaceholderThreeWorld';
@@ -458,6 +459,8 @@ interface Island5ThreePilotProps {
   onDepartureCinematicComplete?: () => void;
   /** Island 002 Stormfront: plays the storm and the central strike (presentation only). */
   stormfrontCinematicActive?: boolean;
+  /** 'celebration': the Island 002 opening ceremony strike — no landmark damage. */
+  stormfrontCinematicMode?: 'storm' | 'celebration';
   onStormfrontCinematicComplete?: () => void;
   onStormfrontCinematicBeat?: (beat: StormfrontCinematicBeat) => void;
   /** Island 002 storm-safe add-on structures (null hides them). */
@@ -473,6 +476,13 @@ interface Island5ThreePilotProps {
   onOpeningArenaClick?: () => void;
   /** Island 002 (new campaign): the centre landmark is the Golden Sky Lift. */
   centreLandmarkVariant?: 'golden-sky-lift' | null;
+  /** Island 002 (Arena home): the four corner landmarks are Crystal Miners drop ramps. */
+  outerLandmarkVariant?: 'drop-ramps' | null;
+  /** Increment to play the drill-pod launch off every drop ramp. */
+  dropRampLaunchSequence?: number;
+  onDropRampLaunchComplete?: () => void;
+  /** Dev capture seam: hold every drop ramp's launch at this progress (0..1). */
+  dropRampPreviewProgress?: number | null;
   /** Island 002: four Crystal Miners drop zones beside the outer landmarks. */
   crystalDropZonesVisible?: boolean;
   onCrystalDropZoneClick?: () => void;
@@ -3851,6 +3861,7 @@ export default function Island5ThreePilot({
   departureCinematicActive = false,
   onDepartureCinematicComplete,
   stormfrontCinematicActive = false,
+  stormfrontCinematicMode = 'storm',
   onStormfrontCinematicComplete,
   onStormfrontCinematicBeat,
   stormfrontStructureLevels = null,
@@ -3861,6 +3872,10 @@ export default function Island5ThreePilot({
   onOpeningArenaArrivalComplete,
   onOpeningArenaClick,
   centreLandmarkVariant = null,
+  outerLandmarkVariant = null,
+  dropRampLaunchSequence = 0,
+  onDropRampLaunchComplete,
+  dropRampPreviewProgress = null,
   crystalDropZonesVisible = false,
   onCrystalDropZoneClick,
   openingCeremonyPlayback = null,
@@ -4155,8 +4170,8 @@ export default function Island5ThreePilot({
   onLuckySpinClickRef.current = onLuckySpinClick;
   const departureCinematicRef = useRef({ active: departureCinematicActive, onComplete: onDepartureCinematicComplete });
   departureCinematicRef.current = { active: departureCinematicActive, onComplete: onDepartureCinematicComplete };
-  const stormfrontCinematicRef = useRef({ active: stormfrontCinematicActive, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat });
-  stormfrontCinematicRef.current = { active: stormfrontCinematicActive, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat };
+  const stormfrontCinematicRef = useRef({ active: stormfrontCinematicActive, mode: stormfrontCinematicMode, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat });
+  stormfrontCinematicRef.current = { active: stormfrontCinematicActive, mode: stormfrontCinematicMode, onComplete: onStormfrontCinematicComplete, onBeat: onStormfrontCinematicBeat };
   const constructionPresentationRef = useRef<IslandRunConstructionPresentation | null>(constructionPresentation);
   constructionPresentationRef.current = constructionPresentation;
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
@@ -4377,11 +4392,17 @@ export default function Island5ThreePilot({
   crystalDropZonesRef.current = { visible: crystalDropZonesVisible, onClick: onCrystalDropZoneClick };
   const centreLandmarkVariantRef = useRef(centreLandmarkVariant);
   centreLandmarkVariantRef.current = centreLandmarkVariant;
+  const outerLandmarkVariantRef = useRef(outerLandmarkVariant);
+  outerLandmarkVariantRef.current = outerLandmarkVariant;
+  const dropRampLaunchRef = useRef({ sequence: dropRampLaunchSequence, onComplete: onDropRampLaunchComplete });
+  dropRampLaunchRef.current = { sequence: dropRampLaunchSequence, onComplete: onDropRampLaunchComplete };
+  const dropRampPreviewProgressRef = useRef(dropRampPreviewProgress);
+  dropRampPreviewProgressRef.current = dropRampPreviewProgress;
   const landmarkBuildLevelsKey = useMemo(
     () => `${ISLAND_5_LANDMARKS
       .map((landmark) => `${landmark.id}:${landmarkBuildLevels?.[landmark.id] ?? buildLevel}`)
-      .join('|')}|centre:${centreLandmarkVariant ?? 'authored'}`,
-    [buildLevel, centreLandmarkVariant, landmarkBuildLevels],
+      .join('|')}|centre:${centreLandmarkVariant ?? 'authored'}|outer:${outerLandmarkVariant ?? 'authored'}`,
+    [buildLevel, centreLandmarkVariant, landmarkBuildLevels, outerLandmarkVariant],
   );
   // Island 015 build levels mutate semantic GLB groups through the binder.
   // Other worlds still rebuild their authored procedural geometry as before.
@@ -6735,6 +6756,10 @@ export default function Island5ThreePilot({
     island15FallbackRoot.name = 'ISLAND_15_CRYSTAL_PALACE_V4_LOADING_FALLBACK';
     if (isCrystalGlacier) scene.add(island15FallbackRoot);
     const goldenSkyLifts: ReturnType<typeof createGoldenSkyLift>[] = [];
+    const dropRamps: ReturnType<typeof createCrystalDropRamp>[] = [];
+    // A scene rebuild must not replay an old launch request.
+    let dropRampLaunchSeen = dropRampLaunchRef.current.sequence;
+    let dropRampLaunchStartedAt: number | null = null;
     for (const landmark of ISLAND_5_LANDMARKS) {
       const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevelRef.current;
       const landmarkRoot = buildAuthoredLandmark(landmark, resolvedBuildLevel);
@@ -6749,6 +6774,19 @@ export default function Island5ThreePilot({
         lift.root.position.y = authoredBox.isEmpty() ? 0 : authoredBox.min.y - landmarkRoot.position.y;
         landmarkRoot.add(lift.root);
         goldenSkyLifts.push(lift);
+      }
+      if (landmark.id !== 'boss' && outerLandmarkVariantRef.current === 'drop-ramps' && resolvedBuildLevel > 0) {
+        // Island 002 Arena home: the corner landmark becomes a drop ramp that
+        // points off the island's edge (away from the centre).
+        landmarkRoot.updateMatrixWorld(true);
+        const authoredBox = new THREE.Box3().setFromObject(landmarkRoot);
+        const authoredSize = authoredBox.getSize(new THREE.Vector3());
+        landmarkRoot.children.forEach((child) => { child.visible = false; });
+        const ramp = createCrystalDropRamp({ level: resolvedBuildLevel, size: THREE.MathUtils.clamp(Math.max(authoredSize.x, authoredSize.z) * 0.62, 0.7, 3) });
+        ramp.root.position.y = authoredBox.isEmpty() ? 0 : authoredBox.min.y - landmarkRoot.position.y;
+        ramp.root.rotation.y = Math.atan2(landmark.position[0], landmark.position[2]) - landmarkRoot.rotation.y;
+        landmarkRoot.add(ramp.root);
+        dropRamps.push(ramp);
       }
       if (landmark.id === 'boss' && !isCrystalGlacier) makeLandmarkMaterialsIndependent(landmarkRoot);
       // The representative Island 019 gate intentionally shows only the
@@ -11656,8 +11694,11 @@ export default function Island5ThreePilot({
             scene,
             canvas,
             start: { position: camera.position.clone(), target: controls.target.clone(), fov: camera.fov },
-            damagedRoots: outerIds.map((id) => landmarkRootsById.get(id)).filter((entry): entry is THREE.Object3D => Boolean(entry)),
+            // The opening ceremony strike celebrates; only the real storm breaks pieces off.
+            damagedRoots: stormfrontCinematicRef.current.mode === 'celebration' ? []
+              : outerIds.map((id) => landmarkRootsById.get(id)).filter((entry): entry is THREE.Object3D => Boolean(entry)),
             allRoots,
+            celebration: stormfrontCinematicRef.current.mode === 'celebration',
           });
           stormfrontCinematicTime = 0;
           stormfrontCinematicNotified = false;
@@ -11743,6 +11784,28 @@ export default function Island5ThreePilot({
         goldenSkyLifts.forEach((lift) => lift.setCrowdTarget(null));
       }
       goldenSkyLifts.forEach((lift) => lift.update(now / 1000, isReducedMotion));
+      dropRamps.forEach((ramp) => ramp.update(now / 1000, isReducedMotion));
+      // Drill-pod launch off every drop ramp (Island 002 Crystal Miners entry).
+      const launchRequest = dropRampLaunchRef.current;
+      if (launchRequest.sequence !== dropRampLaunchSeen) {
+        dropRampLaunchSeen = launchRequest.sequence;
+        dropRampLaunchStartedAt = launchRequest.sequence > 0 && dropRamps.length > 0 && !isReducedMotion ? now : null;
+        if (dropRampLaunchStartedAt === null && launchRequest.sequence > 0) launchRequest.onComplete?.();
+      }
+      const heldLaunch = dropRampPreviewProgressRef.current;
+      if (heldLaunch !== null) {
+        dropRamps.forEach((ramp, index) => ramp.setLaunchProgress(heldLaunch - index * 0.07));
+      } else if (dropRampLaunchStartedAt !== null) {
+        const elapsed = (now - dropRampLaunchStartedAt) / CRYSTAL_DROP_RAMP_LAUNCH_MS;
+        dropRamps.forEach((ramp, index) => ramp.setLaunchProgress(elapsed - index * 0.07));
+        canvas.dataset.dropRampLaunch = elapsed.toFixed(2);
+        if (elapsed >= 1 + dropRamps.length * 0.07) {
+          dropRampLaunchStartedAt = null;
+          dropRamps.forEach((ramp) => ramp.setLaunchProgress(0));
+          canvas.dataset.dropRampLaunch = 'done';
+          dropRampLaunchRef.current.onComplete?.();
+        }
+      }
       // Crystal Miners drop zones: one pad beside each outer landmark, toward the centre.
       if (crystalDropZonesRef.current.visible && !crystalDropZones.placed && landmarkRootsById.size >= 5) {
         const centreBox = new THREE.Box3();
@@ -12511,6 +12574,7 @@ export default function Island5ThreePilot({
       stormfrontStructures.dispose();
       openingArenaBase.dispose();
       goldenSkyLifts.forEach((lift) => lift.dispose());
+      dropRamps.forEach((ramp) => ramp.dispose());
       crystalDropZones.dispose();
       stormfrontStructureFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });
       landmarkFlags.forEach((entry) => { scene.remove(entry.object.root); entry.object.dispose(); });

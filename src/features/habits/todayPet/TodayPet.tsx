@@ -1,10 +1,11 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTodayPetOwnership } from './todayPetSingleton';
-import { getCreatureById } from '../../gamification/level-worlds/services/creatureCatalog';
+import { getCompanionBonusForCreature, getCreatureById } from '../../gamification/level-worlds/services/creatureCatalog';
 import { resolveCreatureArtManifest } from '../../gamification/level-worlds/services/creatureImageManifest';
 import {
   hasTodayPet3dModel,
+  resolveTodayPetStats,
   planTodayPetAction,
   todayPetBubbles,
   TODAY_PET_SIZE_PX,
@@ -57,6 +58,8 @@ export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props
   const [bubbles, setBubbles] = useState(false);
   const [effect, setEffect] = useState<{ id: number; kind: 'hearts' | 'dice' | 'pair' } | null>(null);
   const [ball, setBall] = useState<{ id: number; x: number } | null>(null);
+  // Pet / Play warm the feeling stat for a while (presentation only).
+  const [lovedAtMs, setLovedAtMs] = useState(0);
   // webp cutout → png cutout → emoji fallback.
   const [artStep, setArtStep] = useState(0);
   const [use3d, setUse3d] = useState(() => hasTodayPet3dModel(companion.creatureId) && typeof document !== 'undefined' && supportsWebGl());
@@ -120,8 +123,10 @@ export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props
       onPair(companion.creatureId);
       react('happy', 1_600, 'pair');
     } else if (bubble === 'pet') {
+      setLovedAtMs(Date.now());
       react('happy', 1_800, 'hearts');
     } else {
+      setLovedAtMs(Date.now());
       busy.current = true;
       window.clearTimeout(timer.current);
       setBubbles(false);
@@ -148,6 +153,16 @@ export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props
   const anchor = <span ref={anchorRef} className="today-pet-anchor" aria-hidden="true" />;
   if (!owns || !creature || !art || typeof document === 'undefined') return anchor;
   const name = creature.name;
+  const bondLevel = companion.bondLevel ?? 1;
+  const stats = resolveTodayPetStats({
+    tier: creature.tier,
+    bondLevel,
+    fedToday,
+    recentlyLoved: Date.now() - lovedAtMs < 10 * 60_000,
+    mood,
+    hourOfDay: new Date().getHours(),
+    islandBonusLabel: companion.paired ? getCompanionBonusForCreature(creature, bondLevel).label : null,
+  });
   return <>{anchor}{createPortal(
     <div className="today-pet-yard" aria-live="polite">
       {ball ? <span key={ball.id} className="today-pet__ball" style={{ left: `${ball.x * 100}%` }} aria-hidden="true" /> : null}
@@ -155,6 +170,28 @@ export function TodayPet({ companion, fedToday, feeding, onFeed, onPair }: Props
         className={`today-pet today-pet--${mood}${use3d ? ' today-pet--3d' : ''}`}
         style={{ left: `${x * 100}%`, transitionDuration: `${mood === 'walk' || mood === 'chase' ? walkMs : 0}ms`, ['--pet-size' as string]: `${TODAY_PET_SIZE_PX}px` }}
       >
+        {bubbles ? (
+          <div className={`today-pet__stats${x < 0.3 ? ' today-pet__stats--from-left' : x > 0.7 ? ' today-pet__stats--from-right' : ''}`} aria-label={`${name}'s stats`}>
+            <p className="today-pet__stats-name">{stats.feeling.emoji} {name}</p>
+            {([
+              ['feeling', 'Feeling', stats.feeling],
+              ['power', 'Power', stats.power],
+              ['hunger', 'Hunger', stats.hunger],
+            ] as const).map(([key, title, stat]) => (
+              <div key={key} className={`today-pet__stat today-pet__stat--${key}`}>
+                <span className="today-pet__stat-title">{title}</span>
+                <span className="today-pet__stat-bar" role="meter" aria-label={`${title}: ${stat.label}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={stat.pct}>
+                  <i style={{ width: `${stat.pct}%` }} />
+                </span>
+                <small>{stat.label}</small>
+              </div>
+            ))}
+            <p className="today-pet__stats-bonus">
+              {stats.islandBonusLabel ? <span>🏝️ {stats.islandBonusLabel} each island</span> : <span>⭐ Make it your pet for an island bonus</span>}
+              <span>🍖 {stats.feedBonusLabel}</span>
+            </p>
+          </div>
+        ) : null}
         {bubbles ? (
           <div className={`today-pet__bubbles${x < 0.3 ? ' today-pet__bubbles--from-left' : x > 0.7 ? ' today-pet__bubbles--from-right' : ''}`} role="menu" aria-label={`${name}`}>
             {todayPetBubbles(companion.paired).map((bubble) => (

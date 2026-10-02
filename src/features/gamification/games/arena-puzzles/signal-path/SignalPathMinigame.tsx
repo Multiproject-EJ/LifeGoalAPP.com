@@ -247,6 +247,11 @@ export default function SignalPathMinigame({ islandNumber, launchConfig, onCompl
       <div className="signal-path__actions">
         <button type="button" className="arena-puzzle__secondary" onClick={() => { setRouteSafe([]); setMessage('Route cleared. Begin again at beacon 1.'); }}>Reset</button>
         <button type="button" className="arena-puzzle__secondary" onClick={revealHint} disabled={hintsUsed >= 3}>Hint {3 - hintsUsed}/3</button>
+        {import.meta.env.DEV ? (
+          // QA shortcut (dev server only): lay the canonical route and finish
+          // through the normal result, so the round still settles canonically.
+          <button type="button" className="arena-puzzle__secondary" onClick={() => { setRouteSafe([...puzzle.path]); finish(clock.elapsedSeconds, puzzle.path.length); }}>Solve (dev)</button>
+        ) : null}
       </div>
     </ArenaPuzzleFrame>
   );

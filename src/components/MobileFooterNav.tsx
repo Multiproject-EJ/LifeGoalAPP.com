@@ -55,14 +55,13 @@ type MobileFooterNavProps = {
   onSnapExpand?: () => void;
   onCollapse?: () => void;
   pointsBalance?: number;
+  /** Something new waits in the launcher menu: show the robot face, otherwise the compass. */
+  launcherHasNews?: boolean;
 };
 
 const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
 const DAILY_GAME_ICONS = ['💎', '🔑', '🗝️', '🎁', '🔓'];
-const MENU_LAUNCHER_FACE_INTERVAL_MS = 60_000;
 
-const getMenuLauncherFace = (timestamp = Date.now()): 'compass' | 'coach' =>
-  Math.floor(timestamp / MENU_LAUNCHER_FACE_INTERVAL_MS) % 2 === 0 ? 'compass' : 'coach';
 
 const getFooterClickSoundKind = (
   itemId: string,
@@ -87,6 +86,7 @@ export function MobileFooterNav({
   isDiodeActive,
   pointsBadges = {},
   showPointsBadges = false,
+  launcherHasNews = false,
   isFlashActive = false,
   isCollapsed = false,
   isSnapActive = false,
@@ -106,9 +106,10 @@ export function MobileFooterNav({
   const [areControlsFaded, setAreControlsFaded] = useState(false);
   const [isDiamondFaded, setIsDiamondFaded] = useState(false);
   const [isMenuLaunchAnimating, setIsMenuLaunchAnimating] = useState(false);
-  const [menuLauncherFace, setMenuLauncherFace] = useState<'compass' | 'coach'>(() =>
-    getMenuLauncherFace(),
-  );
+  // The robot only appears when the launcher menu has something new (user
+  // decision 2026-10-02); otherwise the compass stays, so it never competes
+  // with the Today pet.
+  const menuLauncherFace: 'compass' | 'coach' = launcherHasNews ? 'coach' : 'compass';
   const [expandedFooterIconId, setExpandedFooterIconId] = useState<string | null>(null);
   const [displayPointsBalance, setDisplayPointsBalance] = useState<number | null>(
     typeof pointsBalance === 'number' ? Math.max(0, Math.floor(pointsBalance)) : null,
@@ -329,23 +330,6 @@ export function MobileFooterNav({
     };
   }, []);
 
-  useEffect(() => {
-    const syncLauncherFace = () => setMenuLauncherFace(getMenuLauncherFace());
-    const firstFlipDelay = MENU_LAUNCHER_FACE_INTERVAL_MS - (Date.now() % MENU_LAUNCHER_FACE_INTERVAL_MS);
-    let intervalId: number | null = null;
-
-    const timeoutId = window.setTimeout(() => {
-      syncLauncherFace();
-      intervalId = window.setInterval(syncLauncherFace, MENU_LAUNCHER_FACE_INTERVAL_MS);
-    }, firstFlipDelay);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      if (intervalId !== null) {
-        window.clearInterval(intervalId);
-      }
-    };
-  }, []);
 
   const triggerMenuLaunchMotion = () => {
     if (menuLaunchTimeoutRef.current !== null) {

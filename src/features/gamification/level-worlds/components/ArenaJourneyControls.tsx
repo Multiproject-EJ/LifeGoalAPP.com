@@ -11,8 +11,8 @@ import { resolveIslandRunFeatureAccess } from '../services/islandRunFeatureAcces
 import './ArenaJourneyControls.css';
 
 const introductionCopy: Partial<Record<ArenaGameId, string>> = {
-  signal_path: 'The caretaker invites you to connect the beacons. Trace one continuous route through the grid. Start with Signal Path; more games join your catalogue as you explore.',
-  crystal_miners: 'The mining crew has a workshop for you. Open your gifts, merge matching tools, then choose Drop to explore the cavern. Your tools and discoveries stay with you between islands.',
+  signal_path: 'The caretaker invites you to connect the beacons. Trace one continuous route through the grid. More games join your catalogue as you explore.',
+  crystal_miners: 'The mining crew has a workshop for you. Open your gifts, merge matching tools, then choose Drop: your drill pods launch off the island’s ramps into the cavern. Your tools and discoveries stay with you between islands.',
   journey_disc_arena: 'The Arena crew welcomes you to the chapter exhibition. Deploy one to four discs and knock your rivals out. Your armory travels with you; exhibitions return on Islands 006, 011, 016 and onward.',
 };
 

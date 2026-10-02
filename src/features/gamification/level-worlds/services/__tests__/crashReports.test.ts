@@ -8,6 +8,8 @@ import {
   queueCrashReportForLater,
   takePendingCrashReports,
 } from '../../../../../services/crashReports';
+import { wrapStationIndex } from '../../dev/RobotConstructionTheatre';
+import { groupCrashReports, normaliseTopFrame, summariseCrashDiagnostics } from '../../../../../services/crashReportGroups';
 import { applyCrashReportThankYouDice } from '../islandRunCrashReportRewardAction';
 import {
   readIslandRunGameStateRecord,
@@ -86,6 +88,67 @@ export const crashReportsTests: TestCase[] = [
       assertEqual(pending.length, 3, 'only the latest three are kept');
       assertEqual(pending[2].note, 'note 4', 'newest last');
       assertEqual(takePendingCrashReports().length, 0, 'handed over exactly once');
+    },
+  },
+  {
+    name: 'reported crash: construction crew station index stays valid after long builds with a negative step',
+    run: () => {
+      // Field reports: "undefined is not an object (evaluating 'x2.position')"
+      // every frame after minutes of building (stationStep -1 kept shifting).
+      for (const shift of [0, -1, -7, -40, -1000, 1000]) {
+        const index = wrapStationIndex(3 + shift, 6);
+        assert(Number.isInteger(index) && index >= 0 && index < 6, `shift ${shift} → ${index}`);
+      }
+      assertEqual(wrapStationIndex(-1, 6), 5, 'wraps backwards');
+      assertEqual(wrapStationIndex(Number.NaN, 6), 0, 'never NaN');
+      assertEqual(wrapStationIndex(4, 0), 0, 'empty ring is safe');
+    },
+  },
+  {
+    name: 'crash capture: a crash repeating every frame is one entry with a repeat count',
+    run: () => {
+      clearRecentCrashes();
+      const error = new TypeError("undefined is not an object (evaluating 'x2.position')");
+      for (let i = 0; i < 40; i += 1) captureCrash({ error, surface: 'window' });
+      captureCrash({ error: new Error('something else'), surface: 'window' });
+      const recent = getRecentCrashes();
+      assertEqual(recent.length, 2, 'distinct crashes only');
+      assertEqual(recent[0]!.repeatCount, 40, 'repeats are counted');
+      clearRecentCrashes();
+    },
+  },
+  {
+    name: 'crash triage: the same bug across builds, islands and minified names is one group; resolved reports stop counting as open',
+    run: () => {
+      const report = (id: string, userId: string, build: string, variable: string, island: number, status = 'new', at = '2026-10-02T00:00:00Z') => ({
+        id, user_id: userId, category: 'crash_report', status, created_at: at, subject: 'Crash',
+        metadata: {
+          appVersion: build, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', viewport: '390x844@3', msSinceLoad: 263120,
+          context: { islandRun: { islandNumber: island } },
+          crashes: [{ message: `undefined is not an object (evaluating '${variable}.position')`, surface: 'window', repeatCount: 40,
+            stack: `@capacitor://localhost/assets/Island5ThreePilot-${build}.js:36:113337\nforEach@[native code]\nupdate@capacitor://localhost/assets/Island5ThreePilot-${build}.js:36:112046` }],
+        },
+      });
+      const groups = groupCrashReports([
+        report('a', 'u1', 'D6ljorJL', 'x2', 7),
+        report('b', 'u1', 'D6ljorJL', 'x2', 8, 'new', '2026-10-02T00:29:00Z'),
+        report('c', 'u2', 'B1WGM4_W', 'q9', 19, 'resolved', '2026-10-02T13:00:00Z'),
+        { id: 'd', user_id: 'u3', category: 'bug', status: 'new', created_at: '2026-10-02T00:00:00Z', subject: 'Other', metadata: null },
+        { ...report('e', 'u3', 'D6ljorJL', 'x2', 3), metadata: { crashes: [{ message: 'Other failure', stack: 'at render (https://lifegoalapp.com/assets/Today-AbC12345.js:1:2)' }] } },
+      ]);
+      assertEqual(groups.length, 2, 'two distinct crashes; non-crash cases ignored');
+      const top = groups[0]!;
+      assertEqual(top.threadIds.length, 3, 'one bug across two builds and minified names');
+      assertEqual(top.openThreadIds.length, 2, 'resolved reports are not open');
+      assertEqual(top.players, 2, 'distinct players');
+      assertEqual(top.islands.join(','), '7,8,19', 'islands seen');
+      assertEqual(top.totalRepeats, 120, 'per-frame repeats add up');
+      assertEqual(top.topFrame, '@Island5ThreePilot', 'top frame without hash or position');
+      assertEqual(normaliseTopFrame('TypeError: x\n    at render (https://lifegoalapp.com/assets/Today-AbC12345.js:1:2)'), 'render Today', 'Chrome frames too');
+      const summary = summariseCrashDiagnostics(report('a', 'u1', 'D6ljorJL', 'x2', 7).metadata);
+      assertEqual(summary.device, 'iOS', 'device family only');
+      assertEqual(summary.island, 7, 'island context');
+      assertEqual(summary.crashes[0]!.repeats, 40, 'repeat count shown');
     },
   },
 ];

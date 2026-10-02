@@ -76,4 +76,19 @@ export const islandRunModalVisibilityTests: TestCase[] = [
       }), true, 'hint should appear after reveal surfaces close');
     },
   },
+  {
+    name: 'the Mission Phone never stacks on a landmark modal: the stop waits behind it and returns when the phone closes',
+    run: async () => {
+      assertEqual(shouldRenderActiveStopModal({
+        hasActiveStop: true, storyReaderOpen: false, firstRunCelebrationOpen: false, missionPhoneOpen: true,
+      }), false, 'hidden while the phone is open');
+      assertEqual(shouldRenderActiveStopModal({
+        hasActiveStop: true, storyReaderOpen: false, firstRunCelebrationOpen: false, missionPhoneOpen: false,
+      }), true, 'back once the phone closes');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes('missionPhoneOpen: Boolean(activeMissionBriefing) || showMissionPhoneBriefing,'), 'the board passes the phone state');
+    },
+  },
 ];

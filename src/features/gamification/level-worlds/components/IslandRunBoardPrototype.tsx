@@ -253,6 +253,7 @@ import {
   resolveNextExpansionIsland,
 } from '../services/islandRunExpansionPacks';
 import { completeExpansionPackVoyage, devGrantExpansionPack, switchExpansionVoyage } from '../services/islandRunExpansionVoyageActions';
+import { devEnrollOpeningGamesCampaign } from '../services/islandRunOpeningGamesCampaignDevAction';
 import { DriftVoyageIntroModal } from './DriftVoyageIntroModal';
 
 const ISLAND_AFFIRMATIONS_SEEN_STORAGE_KEY = 'islandRun.affirmationsSeen.v1';
@@ -11452,6 +11453,87 @@ export function IslandRunBoardPrototype({
     playIslandRunSound('minigame_open');
   };
 
+  // Island 002 Arena home (user decision 2026-10-02): the corner landmarks are
+  // Crystal Miners drop ramps; entering the mine plays a drill-pod launch off
+  // every ramp first. Presentation only — the game launch itself is unchanged.
+  const dropRampsActive = islandNumber === 2 && !featureAccess.gradual;
+  const [dropRampLaunchSequence, setDropRampLaunchSequence] = useState(0);
+  const [dropRampDiveActive, setDropRampDiveActive] = useState(false);
+  const dropRampLaunchResolveRef = useRef<(() => void) | null>(null);
+  const playDropRampLaunch = useCallback(() => new Promise<void>((resolve) => {
+    if (dropRampLaunchResolveRef.current) { resolve(); return; }
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      dropRampLaunchResolveRef.current = null;
+      document.body.classList.remove('island-run--drop-ramp-launch');
+      setDropRampDiveActive(false);
+      resolve();
+    };
+    dropRampLaunchResolveRef.current = finish;
+    document.body.classList.add('island-run--drop-ramp-launch');
+    if (!(typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) setDropRampDiveActive(true);
+    setCameraMode('overview_manual');
+    setFocusedStopId(null);
+    setThreeCameraOverviewRequestVersion((current) => current + 1);
+    setDropRampLaunchSequence((current) => current + 1);
+    // Never strand the player if the 3D scene is rebuilding or unavailable.
+    window.setTimeout(finish, 4500);
+  }), []);
+  useEffect(() => () => { dropRampLaunchResolveRef.current?.(); }, []);
+  useEffect(() => {
+    // Dev capture seam: ?islandDropRampPreview=launch replays the launch every 8 s.
+    if (!isIslandVisualPreview || new URLSearchParams(window.location.search).get('islandDropRampPreview') !== 'launch') return undefined;
+    const timer = window.setInterval(() => setDropRampLaunchSequence((current) => current + 1), 8000);
+    return () => window.clearInterval(timer);
+  }, [isIslandVisualPreview]);
+
+  // Island 002 opening ceremony (user decision 2026-10-02): the first time the
+  // Arena opens on the Arena home, the hover base flies in carrying the full
+  // arena, a celebratory lightning strike lights up the island, fireworks
+  // burst, then the Arena appears. Once per player; presentation only.
+  type ArenaCeremonyPhase = 'idle' | 'arrival' | 'strike' | 'cheer';
+  const [arenaCeremonyPhase, setArenaCeremonyPhase] = useState<ArenaCeremonyPhase>('idle');
+  const arenaCeremonySeenKey = `islandRun.island2ArenaCeremony.v1:${session.user.id}`;
+  const arenaCeremonyPreview = isIslandVisualPreview && new URLSearchParams(window.location.search).get('islandArenaCeremonyPreview') === '1';
+  const endArenaCeremony = useCallback(() => {
+    setArenaCeremonyPhase('idle');
+    document.body.classList.remove('island-run--drop-ramp-launch');
+  }, []);
+  useEffect(() => {
+    if (arenaCeremonyPhase !== 'idle') return;
+    const wantsCeremony = arenaCeremonyPreview || (dropRampsActive && activeStopId === 'mystery');
+    if (!wantsCeremony) return;
+    if (!arenaCeremonyPreview) {
+      try {
+        if (window.localStorage.getItem(arenaCeremonySeenKey) === '1') return;
+        // Marked at the start: an interrupted ceremony never traps the player in a replay loop.
+        window.localStorage.setItem(arenaCeremonySeenKey, '1');
+      } catch {
+        return;
+      }
+    }
+    const reducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.body.classList.add('island-run--drop-ramp-launch');
+    setCameraMode('overview_manual');
+    setFocusedStopId(null);
+    setThreeCameraOverviewRequestVersion((current) => current + 1);
+    setArenaCeremonyPhase(reducedMotion ? 'cheer' : 'arrival');
+  }, [activeStopId, arenaCeremonyPhase, arenaCeremonyPreview, arenaCeremonySeenKey, dropRampsActive]);
+  useEffect(() => {
+    if (arenaCeremonyPhase === 'idle') return undefined;
+    // Each phase has a ceiling, so a missing 3D callback can never strand the Arena.
+    const ceiling = arenaCeremonyPhase === 'arrival' ? 12000 : arenaCeremonyPhase === 'strike' ? 9000 : 3600;
+    const timer = window.setTimeout(() => {
+      if (arenaCeremonyPhase === 'arrival') setArenaCeremonyPhase('strike');
+      else if (arenaCeremonyPhase === 'strike') setArenaCeremonyPhase('cheer');
+      else endArenaCeremony();
+    }, ceiling);
+    return () => window.clearTimeout(timer);
+  }, [arenaCeremonyPhase, endArenaCeremony]);
+  useEffect(() => () => { document.body.classList.remove('island-run--drop-ramp-launch'); }, []);
+
   const handleLaunchArenaGame = async (gameId: ArenaGameId) => {
     const launchVisitKey = arenaStadiumVisitKey(getIslandRunStateSnapshot(session));
     const launchPreferences = activeStopId === 'mystery' ? { ...arenaPreferences, disabledEventIds: [] } : arenaPreferences;
@@ -11488,6 +11570,10 @@ export function IslandRunBoardPrototype({
       }
       const pace = resolveArenaSessionPace(launchPreferences, gameId, [...introducedArenaGameIds, ...enabledArenaDemos]);
       if (!pace) { setShowArenaPreferences(true); return; }
+      if (dropRampsActive) {
+        await playDropRampLaunch();
+        if (arenaLaunchOwnerRef.current !== session.user.id) return;
+      }
       registerAllMinigameManifests();
       setActiveLaunchedMinigameId(gameId);
       setActiveLaunchedMinigameSource('timed_event');
@@ -14868,8 +14954,29 @@ export function IslandRunBoardPrototype({
     showIsland20Arrival,
     stopAutoRoll,
   ]);
-  const hideControllerForPresentation = shouldHideMissionController(missionOwnsController, doesModalOwnAttention,
+  const controllerHiddenByPresentation = shouldHideMissionController(missionOwnsController, doesModalOwnAttention,
     lavaSkiffNavigation.active || isShooterControllerActive);
+  // Controller rescue (user request 2026-10-02): the floating 🎮 button can
+  // bring back a controller that a stuck presentation flag left hidden. The
+  // override lasts only while that flag stays stuck: the next time nothing
+  // hides it, it clears, so a newly opened modal hides the controller again.
+  const [controllerRescueActive, setControllerRescueActive] = useState(false);
+  const [controllerResetKey, setControllerResetKey] = useState(0);
+  useEffect(() => {
+    if (!controllerHiddenByPresentation) setControllerRescueActive(false);
+  }, [controllerHiddenByPresentation]);
+  const hideControllerForPresentation = controllerHiddenByPresentation && !controllerRescueActive;
+  const handleControllerRescueButton = useCallback(() => {
+    const controllerShowing = !isControllerTucked && !hideControllerForPresentation;
+    if (controllerShowing) {
+      setIsControllerTucked(true);
+      return;
+    }
+    // Reset: untuck, ignore a stuck hide flag and rebuild the controller.
+    setIsControllerTucked(false);
+    if (controllerHiddenByPresentation) setControllerRescueActive(true);
+    setControllerResetKey((current) => current + 1);
+  }, [controllerHiddenByPresentation, hideControllerForPresentation, isControllerTucked]);
   useEffect(() => {
     if (missionOwnsController) {
       stopAutoRoll();
@@ -17493,6 +17600,20 @@ export function IslandRunBoardPrototype({
                   <button
                     type="button"
                     className="island-run-board__dev-island-jump-submit"
+                    onClick={() => {
+                      setShowTopbarMenu(false);
+                      void devEnrollOpeningGamesCampaign({ session, client })
+                        .then((result) => setLandingText(result.status === 'ok'
+                          ? '🧪 DEV: this save now plays the new campaign (Opening Arena, Stormfront…).'
+                          : '🧪 DEV: this save is already on the new campaign.'))
+                        .catch(() => setLandingText('Could not switch this save to the new campaign.'));
+                    }}
+                  >
+                    🧪 Enrol in new campaign (dev)
+                  </button>
+                  <button
+                    type="button"
+                    className="island-run-board__dev-island-jump-submit"
                     onClick={() => { setShowTopbarMenu(false); setShowCompassLongFormDev(true); }}
                   >
                     📖 Compass Book long form (dev)
@@ -17968,8 +18089,9 @@ export function IslandRunBoardPrototype({
                 firstArrivalActive={firstArrivalActive}
                 departureCinematicActive={Boolean(islandDeparture)}
                 onDepartureCinematicComplete={() => islandDepartureFinishRef.current?.()}
-                stormfrontCinematicActive={stormfrontCinematicPlaying}
-                onStormfrontCinematicComplete={finishStormfrontCinematic}
+                stormfrontCinematicActive={stormfrontCinematicPlaying || arenaCeremonyPhase === 'strike'}
+                stormfrontCinematicMode={arenaCeremonyPhase === 'strike' ? 'celebration' : 'storm'}
+                onStormfrontCinematicComplete={arenaCeremonyPhase === 'strike' ? () => setArenaCeremonyPhase('cheer') : finishStormfrontCinematic}
                 onStormfrontCinematicBeat={handleStormfrontBeat}
                 stormfrontStructureLevels={stormfrontStructureLevels}
                 onStormfrontStructureClick={handleStormfrontStructureClick}
@@ -17977,11 +18099,17 @@ export function IslandRunBoardPrototype({
                 skyHangarLaunchKey={skyHangarLaunchKey}
                 caretakerTileVisit={caretakerTileVisit}
                 playerPieceCheer={playerPieceCheer.key > 0 ? { key: playerPieceCheer.key, element: playerPieceCheerElement } : null}
-                openingArena={openingArenaVisual}
-                onOpeningArenaArrivalComplete={handleOpeningArenaArrivalComplete}
+                openingArena={arenaCeremonyPhase === 'arrival' ? { stage: 'arriving', arenaLevel: 3, rollsUntilDelivery: 0 }
+                  : arenaCeremonyPhase !== 'idle' ? { stage: 'anchored', arenaLevel: 3, rollsUntilDelivery: 0 }
+                    : openingArenaVisual}
+                onOpeningArenaArrivalComplete={arenaCeremonyPhase === 'arrival' ? () => setArenaCeremonyPhase('strike') : handleOpeningArenaArrivalComplete}
                 onOpeningArenaClick={isIslandVisualPreview ? undefined : () => setShowOpeningArenaBuild(true)}
                 centreLandmarkVariant={openingArenaAvailable || (isIslandVisualPreview && new URLSearchParams(window.location.search).get('islandSkyLiftPreview') === '1')
                   ? 'golden-sky-lift' : null}
+                outerLandmarkVariant={dropRampsActive || (isIslandVisualPreview && Boolean(new URLSearchParams(window.location.search).get('islandDropRampPreview'))) ? 'drop-ramps' : null}
+                dropRampLaunchSequence={dropRampLaunchSequence}
+                dropRampPreviewProgress={isIslandVisualPreview && /^t[0-9.]+$/.test(new URLSearchParams(window.location.search).get('islandDropRampPreview') ?? '') ? Number(new URLSearchParams(window.location.search).get('islandDropRampPreview')!.slice(1)) : null}
+                onDropRampLaunchComplete={() => dropRampLaunchResolveRef.current?.()}
                 crystalDropZonesVisible={openingArenaAvailable || (isIslandVisualPreview && new URLSearchParams(window.location.search).get('islandSkyLiftPreview') === '1')}
                 onCrystalDropZoneClick={isIslandVisualPreview ? undefined : () => {
                   setLandingText('💎 Crystal Miners drop zone — the Event Arena sends expeditions down from here.');
@@ -18444,6 +18572,17 @@ export function IslandRunBoardPrototype({
       {islandDeparture || firstArrivalActive || showFirstLightAssemblyCrater ? null : (
         <button
           type="button"
+          className={`island-run-prototype__controller-rescue-floating${isControllerTucked || hideControllerForPresentation ? ' is-missing' : ''}`}
+          aria-label={isControllerTucked || hideControllerForPresentation ? 'Show and reset the game controller' : 'Hide the game controller'}
+          title={isControllerTucked || hideControllerForPresentation ? 'Show / reset controller' : 'Hide controller'}
+          onClick={handleControllerRescueButton}
+        >
+          🎮
+        </button>
+      )}
+      {islandDeparture || firstArrivalActive || showFirstLightAssemblyCrater ? null : (
+        <button
+          type="button"
           className="island-run-prototype__camera-reset-floating"
           aria-label="Zoom out to the full island overview"
           title="Full island overview"
@@ -18541,6 +18680,7 @@ export function IslandRunBoardPrototype({
               <ShooterControllerAdapter onIntent={emitShooterControllerIntent} />
             ) : (
               <LivingController
+                key={`living-controller-${controllerResetKey}`}
                 arrivalKey={String(islandNumber)}
                 onThemeChange={setTopbarControllerTheme}
                 onArrivalImpact={() => { triggerIslandRunHaptic('controller_land'); setControllerLandedIslandNumber(islandNumber); }}
@@ -19066,6 +19206,7 @@ export function IslandRunBoardPrototype({
         hasActiveStop: Boolean(activeStop),
         storyReaderOpen: showStoryReader,
         firstRunCelebrationOpen: showFirstRunCelebration,
+        missionPhoneOpen: Boolean(activeMissionBriefing) || showMissionPhoneBriefing,
       }) && activeStop && (() => {
         if (activeStop.stopId === 'hatchery' && featureAccess.welcomeCheckIn && !showEarlyOwnedEggs) {
           return <IslandRunWelcomeCheckInModal key={`${cycleIndex}:${islandNumber}`} session={session} client={client}
@@ -22027,6 +22168,14 @@ export function IslandRunBoardPrototype({
         document.body,
       ) : null}
 
+      {arenaCeremonyPhase === 'cheer' ? createPortal(
+        <div className="island-run-arena-ceremony" role="status" aria-live="polite">
+          <CelebrationFireworks variant="hero" />
+          <p className="island-run-arena-ceremony__eyebrow">Island 002 · Opening ceremony</p>
+          <h2 className="island-run-arena-ceremony__title">The Arena Games are open!</h2>
+          <p className="island-run-arena-ceremony__body">Launch from the drop ramps into Crystal Miners.</p>
+        </div>, document.body) : null}
+      {dropRampDiveActive ? createPortal(<div className="island-run-drop-dive" aria-hidden="true" />, document.body) : null}
       {/* Only while an intro is playing or queued: an unopened phone message
           must not leave the pill hovering over the controller. */}
       {devFreshArrivalBriefing && (firstArrivalActive || pendingMissionBriefing || activeMissionBriefing) ? createPortal(

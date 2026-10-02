@@ -29607,3 +29607,105 @@ body > .island-run-overlay-root.island-stop-modal-backdrop {
   font-size: 0.85rem;
   font-weight: 700;
 }
+
+/* Island 002 drill-pod launch: the Arena window steps aside while the pods
+   leave the drop ramps, then the mine opens. */
+body.island-run--drop-ramp-launch .event-arena-modal-backdrop {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The dive: after the pods leave the ramps the view sinks into a glowing
+   crystal shaft, then the mine opens. Timed to the 3D launch (~3.1 s). */
+.island-run-drop-dive {
+  position: fixed;
+  inset: 0;
+  z-index: 11990;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 58%, rgba(159, 247, 255, 0) 0 18%, rgba(57, 198, 255, 0.55) 34%, rgba(10, 30, 58, 0.96) 70%),
+    repeating-radial-gradient(circle at 50% 58%, rgba(159, 247, 255, 0.22) 0 2px, transparent 2px 26px);
+  transform: scale(2.4);
+  animation: island-run-drop-dive 3.1s ease-in forwards;
+}
+
+@keyframes island-run-drop-dive {
+  0%, 52% { opacity: 0; transform: scale(2.4); }
+  78% { opacity: 0.85; transform: scale(1.35); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Island 002 opening ceremony finale (presentation only). */
+.island-run-arena-ceremony {
+  position: fixed;
+  inset: 0;
+  z-index: 11980;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 1rem;
+  text-align: center;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 45%, rgba(8, 20, 40, 0.15), rgba(8, 20, 40, 0.55));
+  animation: island-run-arena-ceremony-in 0.45s ease-out both;
+}
+.island-run-arena-ceremony__eyebrow {
+  margin: 0;
+  color: #9ff7ff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.island-run-arena-ceremony__title {
+  margin: 0;
+  color: #fff4dc;
+  font-size: clamp(1.7rem, 7vw, 2.4rem);
+  line-height: 1.1;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.55);
+}
+.island-run-arena-ceremony__body {
+  margin: 0;
+  color: #e9f6ff;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+/* Fade in only: the finale is removed when the ceremony ends, so a reduced-
+   motion (instant) or delayed animation can never leave it invisible. */
+@keyframes island-run-arena-ceremony-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .island-run-arena-ceremony { animation: none; }
+}
+
+/* Controller rescue: beside the full-overview button. Tap to hide the
+   controller; when it is missing or tucked, tap to show and reset it. */
+.island-run-prototype__controller-rescue-floating {
+  position: absolute;
+  right: max(72px, calc(env(safe-area-inset-right, 0px) + 72px));
+  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 44px);
+  z-index: 18;
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 2px solid rgba(198, 170, 103, 0.9);
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.96) 0%, rgba(248, 234, 197, 0.92) 100%);
+  font-size: 1.2rem;
+  box-shadow: 0 6px 16px rgba(19, 35, 56, 0.22);
+  cursor: pointer;
+}
+.island-run-prototype__controller-rescue-floating.is-missing {
+  border-color: rgba(127, 243, 255, 0.95);
+  box-shadow: 0 0 0 3px rgba(127, 243, 255, 0.35), 0 6px 16px rgba(19, 35, 56, 0.22);
+}
+.island-run-prototype__controller-rescue-floating:focus-visible {
+  outline: 2px solid rgba(170, 236, 255, 0.96);
+  outline-offset: 2px;
+}

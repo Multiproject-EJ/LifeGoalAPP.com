@@ -48,6 +48,7 @@
     "test:sanitized-campaign-sharing": "node scripts/check-sanitized-campaign-sharing.mjs",
     "check:admin-alerts-foundation": "node scripts/check-admin-alerts-foundation.mjs",
     "test:habit-swipe-threshold-haptic": "node scripts/check-habit-swipe-threshold-haptic.mjs",
+    "test:launcher-face-news": "node scripts/check-launcher-face-news.mjs",
     "test:dice-commerce-switch": "node scripts/check-dice-commerce-switch.mjs",
     "test:minigame-ticket-commerce-readiness": "node scripts/check-minigame-ticket-commerce-readiness.mjs",
     "test:celebration-fireworks": "node scripts/check-celebration-fireworks.mjs",

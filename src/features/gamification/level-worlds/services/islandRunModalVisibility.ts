@@ -9,10 +9,13 @@ export function shouldRenderActiveStopModal(options: {
   hasActiveStop: boolean;
   storyReaderOpen: boolean;
   firstRunCelebrationOpen: boolean;
+  /** The Mission Phone sits on top: the stop waits (stays open) behind it. */
+  missionPhoneOpen?: boolean;
 }): boolean {
   return options.hasActiveStop
     && !options.storyReaderOpen
-    && !options.firstRunCelebrationOpen;
+    && !options.firstRunCelebrationOpen
+    && !options.missionPhoneOpen;
 }
 
 export function shouldRenderPerfectCompanionHint(options: {

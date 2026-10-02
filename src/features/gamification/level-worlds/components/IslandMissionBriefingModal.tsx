@@ -815,7 +815,7 @@ export function IslandMissionBriefingModal({
                   <section className="island-mission-tracker__flags" aria-label="Landmark flags">
                     <header>
                       <small>Landmark flags</small>
-                      <span><i className="island-landmark-flag island-landmark-flag--green" aria-hidden="true" /> green flag = landmark done</span>
+                      <span><i className="island-landmark-flag island-landmark-flag--green" aria-hidden="true" /> green flag = built to Level 3</span>
                     </header>
                     <ul>
                       {landmarkFlags.map((landmark) => (

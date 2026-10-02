@@ -21,6 +21,8 @@ import {
   sanitizeOpeningArenaProgress,
 } from '../island2OpeningArena';
 import { anchorOpeningArenaHoverBase, fundOpeningArena, orderOpeningArenaHoverBase } from '../island2OpeningArenaActions';
+import { devEnrollOpeningGamesCampaign } from '../islandRunOpeningGamesCampaignDevAction';
+import { usesOpeningGamesCampaign } from '../islandRunOpeningGames';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const session = { user: { id: 'island2-opening-arena-test', user_metadata: {} } } as Session;
@@ -35,6 +37,23 @@ async function seed(overrides: Partial<IslandRunGameStateRecord> = {}) {
 }
 
 export const island2OpeningArenaTests: TestCase[] = [
+  {
+    name: 'dev campaign enrolment: marks an un-enrolled save, keeps its progress, and is idempotent',
+    run: async () => {
+      await seed({ signatureMissionProgressByIsland: {}, essence: 777 });
+      assert(!usesOpeningGamesCampaign(getIslandRunStateSnapshot(session).signatureMissionProgressByIsland), 'starts outside the new campaign');
+      assertEqual((await devEnrollOpeningGamesCampaign({ session, client: null, nowMs: 5 })).status, 'ok', 'enrols');
+      const after = getIslandRunStateSnapshot(session);
+      assert(usesOpeningGamesCampaign(after.signatureMissionProgressByIsland), 'now on the new campaign');
+      assertEqual(after.essence, 777, 'wallet untouched');
+      assertEqual((await devEnrollOpeningGamesCampaign({ session, client: null })).status, 'already_enrolled', 'second call is a no-op');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const at = board.indexOf('🧪 Enrol in new campaign (dev)');
+      assert(at > 0 && board.lastIndexOf('{isDevModeEnabled ? (', at) > board.lastIndexOf('</section>', at), 'the enrol button lives inside the dev-only island controls');
+    },
+  },
   {
     name: 'opening arena: order → delivered after 3 rolls → anchored → built to Level 3, in that order only',
     run: () => {
@@ -119,6 +138,7 @@ export const island2OpeningArenaTests: TestCase[] = [
       assert(board.includes("case 'arriving': return openingArenaArrivalBusy"), 'the arrival waits until nothing else is on screen');
       const base = fsMod.readFileSync('src/features/gamification/level-worlds/dev/OpeningArenaHoverBase.ts', 'utf8');
       assert(base.includes('construction.visible = anchored && arenaLevel < 3;') && base.includes('crowd.visible = arenaLevel >= 3;'), 'steel construction first, a full crowd at Level 3');
+      assert(base.includes('festival.visible = arenaLevel >= 3;') && base.includes('islandRadius * 0.8, 5, 20'), 'Level 3 adds the ceremony showpiece on a bigger base');
       const modal = fsMod.readFileSync('src/features/gamification/level-worlds/components/OpeningArenaBuildModal.tsx', 'utf8');
       assert(modal.includes('useControllerShopScrollLock()') && modal.includes('document.body'), 'portal + scroll lock');
     },

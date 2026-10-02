@@ -1,4 +1,5 @@
 import {
+  resolveTodayPetStats,
   hasTodayPet3dModel,
   planTodayPetAction,
   resolveTodayPetCompanion,
@@ -63,6 +64,24 @@ export const todayPetBehaviourTests: TestCase[] = [
       assertEqual(resolveTodayPetOwner([{ id: 1, displayed: true }, { id: 2, displayed: true }]), 1, 'two live trackers still give one pet');
       assertEqual(resolveTodayPetOwner([{ id: 1, displayed: false }, { id: 2, displayed: true }]), 2, 'a hidden tracker never owns the pet');
       assertEqual(resolveTodayPetOwner([{ id: 1, displayed: false }]), null, 'no pet when no tracker is on screen');
+    },
+  },
+  {
+    name: 'today pet stats: hunger rises until fed, feeling warms with care, power grows with rarity and bond, the island bonus is real',
+    run: () => {
+      const base = { tier: 'common', bondLevel: 1, fedToday: false, recentlyLoved: false, mood: 'idle' as const, hourOfDay: 18, islandBonusLabel: '+4 Dice' };
+      const hungry = resolveTodayPetStats(base);
+      assert(hungry.hunger.pct >= 70 && hungry.hunger.label === 'Very hungry', 'evening, unfed: very hungry');
+      const fed = resolveTodayPetStats({ ...base, fedToday: true, recentlyLoved: true });
+      assertEqual(fed.hunger.pct, 0, 'fed today: full');
+      assertEqual(fed.hunger.label, 'Full', 'full label');
+      assert(fed.feeling.pct > hungry.feeling.pct, 'feeding and petting lift the feeling');
+      assertEqual(fed.feedBonusLabel, 'Fed today', 'feed bonus already claimed');
+      assertEqual(hungry.feedBonusLabel, 'Feed · +15 🎲', 'feed bonus on offer');
+      const legend = resolveTodayPetStats({ ...base, tier: 'legendary', bondLevel: 6 });
+      assert(legend.power.pct > hungry.power.pct && legend.power.label === 'Bond Lv 6', 'rarity and bond raise power');
+      assertEqual(hungry.islandBonusLabel, '+4 Dice', 'the start-of-island companion bonus is passed through');
+      for (const stats of [hungry, fed, legend]) for (const stat of [stats.feeling, stats.power, stats.hunger]) assert(stat.pct >= 0 && stat.pct <= 100, 'bars stay 0-100');
     },
   },
 ];

@@ -120,6 +120,12 @@
       "worldSource": 20,
       "worldFingerprint": "993f46ab987661eb",
       "capturedAt": "2026-09-28"
+    },
+    "21": {
+      "path": "/assets/islands/island-021/map/voyage-portrait.webp",
+      "worldSource": 2,
+      "worldFingerprint": "71b5b832a8c8abd9",
+      "capturedAt": "2026-10-02"
     }
   }
 }

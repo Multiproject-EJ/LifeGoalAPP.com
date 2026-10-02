@@ -6,7 +6,8 @@ export interface IslandRun3DWorldRoute {
   runtimeIslandNumber: number;
   worldSourceNumber: IslandRunAuthored3DWorldSource;
   role: 'ordinary' | 'arena';
-  presentationStatus?: 'placeholder';
+  /** 'placeholder': a stand-in until own art exists. 'preserved-copy': a deliberate home for a world whose original slot changed. */
+  presentationStatus?: 'placeholder' | 'preserved-copy';
 }
 
 /**
@@ -58,6 +59,11 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   // Eivind reassigned that death/Titan world to runtime Island 017 so runtime
   // Island 016 can remain Fisherman's Village.
   { runtimeIslandNumber: 17, worldSourceNumber: 17, role: 'ordinary' },
+  // Island 021 preserves Celestial Sky Kingdom with its original landmarks
+  // (user decision 2026-10-02): runtime Island 002 becomes the Arena home,
+  // where the four corner landmarks are rebuilt as Crystal Miners drop ramps.
+  // Visual only: Island 021 keeps its own story, missions and cadence.
+  { runtimeIslandNumber: 21, worldSourceNumber: 2, role: 'ordinary', presentationStatus: 'preserved-copy' },
   // Island 040 reuses the Crown Citadel look (source 004, what new-campaign
   // players see on Island 002) instead of the temporary placeholder pack.
   // Visual only: Island 040 keeps its own story, missions and Arena cadence.
