@@ -69,10 +69,10 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
   {
     name: 'keeps every runtime island on an explicit authored source identity',
     run: () => {
-      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.filter(route => route.presentationStatus !== 'placeholder').length, 20, 'twenty authored world packs remain');
-      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 21, 'one explicit temporary setting is also routed');
-      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 21, 'runtime islands are unique');
-      const authored = ISLAND_RUN_3D_WORLD_ROUTES.filter((route) => route.presentationStatus !== 'placeholder');
+      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.filter(route => route.presentationStatus === undefined).length, 20, 'twenty authored world packs remain');
+      assertEqual(ISLAND_RUN_3D_WORLD_ROUTES.length, 22, 'one temporary stand-in and one preserved copy are also routed');
+      assertEqual(new Set(ISLAND_RUN_3D_WORLD_ROUTES.map((route) => route.runtimeIslandNumber)).size, 22, 'runtime islands are unique');
+      const authored = ISLAND_RUN_3D_WORLD_ROUTES.filter((route) => route.presentationStatus === undefined);
       assertEqual(new Set(authored.map((route) => route.worldSourceNumber)).size, 20, 'authored visual source packs are unique');
     },
   },
@@ -84,9 +84,18 @@ export const islandRun3DWorldRoutingTests: TestCase[] = [
       assertEqual(route?.presentationStatus, 'placeholder', 'a stand-in copy, not production Cosmic Outpost');
       assertEqual(route?.role, 'arena', 'visual placeholder preserves arena cadence');
       assertEqual(isIslandRunArenaIsland(40), true, 'gameplay arena classification is unchanged');
-      for (const island of [0, 21, 22, 39, 41, 120, 121, 40.5, NaN]) {
+      for (const island of [0, 22, 39, 41, 120, 121, 40.5, NaN]) {
         assertEqual(resolveIslandRun3DWorldRoute(island), null, 'no broad fallback or fabricated route');
       }
+    },
+  },
+  {
+    name: 'Island 021 preserves Celestial Sky Kingdom with its original landmarks (Island 002 becomes the Arena home)',
+    run: () => {
+      const route = resolveIslandRun3DWorldRoute(21);
+      assertEqual(route?.worldSourceNumber, 2, 'user decision 2026-10-02: keep the original Island 002 world on a later slot');
+      assertEqual(route?.presentationStatus, 'preserved-copy', 'a deliberate copy, not a stand-in');
+      assertEqual(resolveIslandRun3DWorldRoute(2)?.worldSourceNumber, 2, 'Island 002 itself stays Celestial Sky Kingdom');
     },
   },
   {
