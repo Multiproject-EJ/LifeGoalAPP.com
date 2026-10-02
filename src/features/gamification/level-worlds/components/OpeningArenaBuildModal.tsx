@@ -8,6 +8,7 @@ import {
   type OpeningArenaProgress,
 } from '../services/island2OpeningArena';
 import { MAX_BUILD_LEVEL } from '../services/islandRunBuildConstants';
+import { INSUFFICIENT_MONEY_NOTICE } from './Island2StormfrontModals';
 
 const HOLD_STEP_MS = 140;
 const LEVEL_NAMES = ['Lower bowl & pitch', 'Upper tier & columns', 'Grand canopy & floodlights'];
@@ -40,9 +41,9 @@ export function OpeningArenaBuildModal(props: {
     inFlight.current = true;
     try {
       const result = await onFundStepRef.current();
-      if (result.status === 'insufficient_money') { setNotice('Not enough money. Roll to collect more, then keep building.'); setHolding(false); }
+      if (result.status === 'insufficient_money') { setNotice(INSUFFICIENT_MONEY_NOTICE); setHolding(false); }
       else if (result.status !== 'ok') setHolding(false);
-      else if (result.leveledUp) setNotice('Level up! The crowd cheers 🎉');
+      else setNotice((current) => (result.leveledUp ? 'Level up! The crowd cheers 🎉' : current === INSUFFICIENT_MONEY_NOTICE ? null : current));
     } finally {
       inFlight.current = false;
     }

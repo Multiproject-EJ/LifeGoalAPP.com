@@ -19770,7 +19770,7 @@ export function IslandRunBoardPrototype({
               {isActiveBehaviorStopNonDismissable ? (
                 <p className="island-stop-modal__locked-notice" role="status">
                   <span aria-hidden="true">📝</span>{' '}
-                  {activeStop.stopId === 'mystery' ? 'Finish a stadium round and any waiting game comparison to continue.' : <>Finish this landmark to continue — answer the prompt{activeStop.stopId === 'habit' ? ' (or tap “Skip for now”)' : ''} above.</>}
+                  {activeStop.stopId === 'mystery' ? 'Finish a stadium round and any waiting game comparison to continue.' : <>Finish this landmark to continue — answer the prompt{activeStop.stopId === 'habit' ? ' (or tap “Come back later”)' : ''} above.</>}
                 </p>
               ) : (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setActiveStopId(null)}>
@@ -22182,6 +22182,7 @@ export function IslandRunBoardPrototype({
           claimResult={welcomePackClaimResult}
           bundleOnlyClaimResult={welcomePackBundleOnlyResult}
           deferCreaturePack={deferWelcomePackCreatureCards}
+          giftsAlreadyCollected={runtimeState.welcomePackRewardBundleClaimed === true}
           isDevPreview={isDevModeEnabled}
           displayName={welcomePackGuestDisplayName}
         />

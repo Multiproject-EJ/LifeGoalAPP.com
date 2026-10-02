@@ -31,4 +31,17 @@ export const islandRunWelcomePackCopyTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'welcome pack on Island 2: gifts already collected open straight on the deferred creature cards',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const modal = fsMod.readFileSync('src/features/gamification/level-worlds/components/WelcomePackModal.tsx', 'utf8');
+      assert(modal.includes("const cardsOnly = giftsAlreadyCollected && !deferCreaturePack;"), 'cards-only only when the cards are no longer deferred');
+      assert(modal.includes("const startPhase: WelcomePackPhase = cardsOnly ? 'cards-intro' : 'economy';"), 'skips the Island 001 gift page and its award replay');
+      assert(modal.includes('if (cardsOnly && !claimResult)') && modal.includes('const claimed = onClaim ? await onClaim() : false;'), 'opening the pack claims the cards canonically first');
+      const board = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(board.includes('giftsAlreadyCollected={runtimeState.welcomePackRewardBundleClaimed === true}'), 'the board passes the canonical gift receipt');
+    },
+  },
 ];

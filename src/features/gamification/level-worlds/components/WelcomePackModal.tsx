@@ -24,6 +24,12 @@ export interface WelcomePackModalProps {
   claimResult?: ClaimFullWelcomePackResult | null;
   bundleOnlyClaimResult?: ClaimWelcomePackRewardBundleResult | null;
   deferCreaturePack?: boolean;
+  /**
+   * The day-one gifts were already collected (on Island 1) and only the
+   * deferred creature cards remain: open straight on the cards instead of
+   * replaying the gift page and its award animation.
+   */
+  giftsAlreadyCollected?: boolean;
   isDevPreview?: boolean;
   displayName?: string | null;
   autoCollect?: boolean;
@@ -68,11 +74,14 @@ export function WelcomePackModal({
   claimResult = null,
   bundleOnlyClaimResult = null,
   deferCreaturePack = false,
+  giftsAlreadyCollected = false,
   isDevPreview = false,
   displayName = null,
   autoCollect = false,
 }: WelcomePackModalProps): React.JSX.Element | null {
-  const [phase, setPhase] = React.useState<WelcomePackPhase>('economy');
+  const cardsOnly = giftsAlreadyCollected && !deferCreaturePack;
+  const startPhase: WelcomePackPhase = cardsOnly ? 'cards-intro' : 'economy';
+  const [phase, setPhase] = React.useState<WelcomePackPhase>(startPhase);
   const [collectAnimating, setCollectAnimating] = React.useState(false);
   const [celebrationStep, setCelebrationStep] = React.useState<WelcomeCelebrationStep>('idle');
   const [revealIndex, setRevealIndex] = React.useState(0);
@@ -83,13 +92,13 @@ export function WelcomePackModal({
   React.useEffect(() => {
     if (!open) {
       autoCollectStartedRef.current = false;
-      setPhase('economy');
+      setPhase(startPhase);
       setCollectAnimating(false);
       setCelebrationStep('idle');
       setRevealIndex(0);
       celebrationRunRef.current += 1;
     }
-  }, [open]);
+  }, [open, startPhase]);
 
   React.useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined;
@@ -165,8 +174,8 @@ export function WelcomePackModal({
     celebrationRunRef.current += 1;
     setCollectAnimating(false);
     setCelebrationStep('idle');
-    setPhase('economy');
-  }, [claimError]);
+    setPhase(startPhase);
+  }, [claimError, startPhase]);
 
   const handleAdvanceCard = () => {
     if (revealIndex < resolvedCards.length - 1) {
@@ -229,20 +238,30 @@ export function WelcomePackModal({
       <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title-cards">
         <CelebrationFireworks variant="hero" />
         <div className="wpm-shell wpm-shell--cards-intro wpm-shell--enter">
-          <p className="wpm-eyebrow">First Light Shore</p>
+          <p className="wpm-eyebrow">{cardsOnly ? 'Welcome Pack · held for Island 2' : 'First Light Shore'}</p>
           <h2 id="wpm-title-cards" className="wpm-title">Your 5 Cards</h2>
+          {claimError ? <p className="wpm-issue-status" role="alert">{claimError}</p> : null}
 
           <div className="wpm-big-card-icon" aria-hidden="true">🃏</div>
 
           <button
             type="button"
             className="wpm-collect-btn"
-            onClick={() => {
+            disabled={claimPending || collectAnimating}
+            onClick={async () => {
+              // Island 2 delivery of the deferred cards: claim them now.
+              if (cardsOnly && !claimResult) {
+                if (claimPending || collectAnimating) return;
+                setCollectAnimating(true);
+                const claimed = onClaim ? await onClaim() : false;
+                setCollectAnimating(false);
+                if (!claimed) return;
+              }
               setRevealIndex(0);
               setPhase('pack-opening');
             }}
           >
-            Open Creature Pack
+            {claimPending || collectAnimating ? 'Preparing…' : 'Open Creature Pack'}
           </button>
         </div>
       </div>,
