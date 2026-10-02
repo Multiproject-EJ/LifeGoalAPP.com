@@ -177,4 +177,13 @@ export const islandRunModalVisibilityTests: TestCase[] = [
       assert(/\.bm2-celebration-title h2 \{[^}]*color: inherit;/.test(css), 'the build celebration title keeps its gold colour');
     },
   },
+  {
+    name: 'QA Island 005: Treasure Path headings are readable on the dark card',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const css = fsMod.readFileSync('src/features/gamification/level-worlds/components/lucky-roll/IslandRunLuckyRollDevOverlay.css', 'utf8');
+      assert(css.includes('.island-run-lucky-roll-dev-overlay__card :is(h2, h3, h4) { color: inherit; }'), 'headings follow the card text colour');
+    },
+  },
 ];

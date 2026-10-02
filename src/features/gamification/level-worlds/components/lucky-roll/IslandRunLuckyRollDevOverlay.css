@@ -52,6 +52,8 @@
   font-size: clamp(1.7rem, 8vw, 2.4rem);
   line-height: 1;
   letter-spacing: -0.04em;
+  /* Explicit: the global h2 colour is dark navy on this dark panel. */
+  color: #fff4cf;
   text-shadow: 0 0 22px rgba(255, 224, 117, 0.42);
 }
 
@@ -502,3 +504,8 @@
     filter: brightness(1.12);
   }
 }
+
+/* The global h1–h6 colour is dark navy; this card is dark. Headings follow
+   the card's light text (QA Island 005: "Collect your treasure"). */
+.island-run-lucky-roll-dev-overlay__card :is(h2, h3, h4) { color: inherit; }
+.island-run-lucky-roll-dev-overlay__card .island-run-lucky-roll-dev-overlay__title { color: #fff4cf; }
