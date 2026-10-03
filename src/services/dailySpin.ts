@@ -16,7 +16,11 @@ import { fetchHolidayPreferences } from './holidayPreferences';
 import { isIslandRunFeatureEnabled } from '../config/islandRunFeatureFlags';
 import { clampSpinsForStrictDailyLimit, STRICT_DAILY_SPIN_LIMIT } from './dailySpinLimit';
 import { resolveDailySpinAwards } from './dailySpinRewardPolicy';
-import { grantDailySpinIslandRunRewards } from '../features/gamification/level-worlds/services/islandRunDailySpinRewardAction';
+import {
+  getDailySpinBoostEssenceBalance,
+  grantDailySpinIslandRunRewards,
+  spendDailySpinBoostEssence,
+} from '../features/gamification/level-worlds/services/islandRunDailySpinRewardAction';
 import { getIslandRunStateSnapshot } from '../features/gamification/level-worlds/services/islandRunStateStore';
 import {
   buildDailySpinPrizePool,
@@ -512,78 +516,37 @@ export const SPIN_REWARD_MULTIPLIER_OPTIONS: Array<{ multiplier: SpinRewardMulti
   { multiplier: 3, essenceCost: 60, label: 'Mega ×3' },
 ];
 
-export async function getDailySpinEssenceBalance(userId: string): Promise<ServiceResponse<number>> {
-  if (!canUseSupabaseData()) {
-    return { data: 0, error: null };
-  }
-
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('island_run_runtime_state' as any)
-    .select('essence, essence_lifetime_spent')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error) {
-    return { data: null, error };
-  }
-
-  const row = data as { essence?: number } | null;
-  return { data: Math.max(0, Number(row?.essence ?? 0)), error: null };
+/**
+ * Reward-boost balance: the canonical Island Run wallet (Money), the same one
+ * the wheel's prizes are credited to. Guests and signed-in players alike.
+ */
+export async function getDailySpinEssenceBalance(session: Session): Promise<ServiceResponse<number>> {
+  return { data: getDailySpinBoostEssenceBalance(session), error: null };
 }
 
-async function spendDailySpinEssence(userId: string, amount: number): Promise<ServiceResponse<number>> {
-  if (amount <= 0) {
-    return getDailySpinEssenceBalance(userId);
-  }
-
-  if (!canUseSupabaseData()) {
-    return { data: 0, error: null };
-  }
-
-  const balanceResult = await getDailySpinEssenceBalance(userId);
-  if (balanceResult.error || balanceResult.data === null) {
-    return { data: null, error: balanceResult.error ?? new Error('Could not check essence balance') };
-  }
-
-  if (balanceResult.data < amount) {
-    return { data: null, error: new Error('Not enough essence for this reward boost') };
-  }
-
-  const nextBalance = balanceResult.data - amount;
-  const supabase = getSupabaseClient();
-  const { data: currentRow } = await supabase
-    .from('island_run_runtime_state' as any)
-    .select('essence_lifetime_spent')
-    .eq('user_id', userId)
-    .maybeSingle();
-  const lifetimeRow = currentRow as { essence_lifetime_spent?: number } | null;
-  const nextLifetimeSpent = Math.max(0, Number(lifetimeRow?.essence_lifetime_spent ?? 0)) + amount;
-  const { error } = await supabase
-    .from('island_run_runtime_state' as any)
-    .update({
-      essence: nextBalance,
-      essence_lifetime_spent: nextLifetimeSpent,
-      updated_at: new Date().toISOString(),
-    } as any)
-    .eq('user_id', userId);
-
-  if (error) {
-    return { data: null, error };
-  }
-
-  void recordTelemetryEvent({
-    userId,
-    eventType: 'economy_spend',
-    metadata: {
-      currency: 'essence',
-      amount,
-      balance: nextBalance,
-      sourceType: 'daily_spin_multiplier',
-    },
+async function spendDailySpinEssence(session: Session, amount: number): Promise<ServiceResponse<number>> {
+  const result = await spendDailySpinBoostEssence({
+    session,
+    client: canUseSupabaseData() ? getSupabaseClient() : null,
+    amount,
+    triggerSource: 'daily_spin_boost_spend',
   });
-
-  return { data: nextBalance, error: null };
+  if (!result.ok) {
+    return { data: null, error: new Error(result.errorMessage) };
+  }
+  if (amount > 0) {
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_spend',
+      metadata: {
+        currency: 'essence',
+        amount,
+        balance: result.balance,
+        sourceType: 'daily_spin_multiplier',
+      },
+    });
+  }
+  return { data: result.balance, error: null };
 }
 
 export async function executeSpin(
@@ -619,7 +582,7 @@ export async function executeSpin(
     return { data: null, error: new Error('Invalid spin reward multiplier') };
   }
 
-  const spendResult = await spendDailySpinEssence(userId, essenceCost);
+  const spendResult = await spendDailySpinEssence(options.session, essenceCost);
   if (spendResult.error) {
     return { data: null, error: spendResult.error };
   }

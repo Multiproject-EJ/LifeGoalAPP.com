@@ -54,6 +54,8 @@ export interface IslandMissionBriefingModalProps {
   onObjectiveSelect?: (objectiveIndex: number) => void;
   primaryActionLabel?: string;
   primaryActionHint?: string;
+  /** Icon on a staged mission's action (defaults to a neutral spark). */
+  primaryActionIcon?: string;
   primaryActionDisabled?: boolean;
   primaryActionBusy?: boolean;
   variant?: 'default' | 'living-compass';
@@ -480,6 +482,7 @@ export function IslandMissionBriefingModal({
   onObjectiveSelect,
   primaryActionLabel,
   primaryActionHint,
+  primaryActionIcon,
   primaryActionDisabled = false,
   primaryActionBusy = false,
   variant = 'default',
@@ -811,7 +814,7 @@ export function IslandMissionBriefingModal({
                         {/* The honey pot belongs to staged (milestone) missions; plain actions
                             such as the island-clear signal carry their own emoji in the label. */}
                         {variant === 'living-compass' || milestoneCount > 0 ? (
-                          <span aria-hidden="true">{variant === 'living-compass' ? '✧' : milestoneValue >= milestoneCount ? '👑' : '🍯'}</span>
+                          <span aria-hidden="true">{variant === 'living-compass' ? '✧' : milestoneValue >= milestoneCount ? '👑' : primaryActionIcon ?? '✦'}</span>
                         ) : null}
                         <strong>{primaryActionBusy ? variant === 'living-compass' ? 'Awakening…' : 'PRESSURISING…' : primaryActionLabel}</strong>
                       </button>

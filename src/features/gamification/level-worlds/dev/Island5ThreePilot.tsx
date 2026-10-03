@@ -375,7 +375,7 @@ import {
   ISLAND_17_TITANS_REST_WORLD_NAME,
 } from './Island17TitansRestThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
-import { IslandRunLoadingScreen, markIslandRunLoadingScreenDone } from '../components/IslandRunLoadingScreen';
+import { IslandRunLoadingScreen, IslandRunViewportLoading, markIslandRunLoadingScreenDone } from '../components/IslandRunLoadingScreen';
 import { createIsland001AtmosphereThree } from './Island001AtmosphereThree';
 import {
   resolveIsland001DayPosition,
@@ -443,6 +443,8 @@ export interface IslandRunArenaBattlePresentation {
 }
 
 interface Island5ThreePilotProps {
+  /** Board use: show the loading screen as a viewport layer above all game UI. */
+  viewportLoading?: boolean;
   visibleTechnologyFragments?: readonly VisibleTechnologyFragment[];
   trafficLightCharge?: number;
   firstArrivalWaitForWelcome?: boolean;
@@ -3853,6 +3855,7 @@ function collectIslandThreeScenePerformanceInventory(scene: THREE.Object3D) {
 }
 
 export default function Island5ThreePilot({
+  viewportLoading = false,
   visibleTechnologyFragments = [], trafficLightCharge = 0,
   firstArrivalWaitForWelcome = false, firstArrivalWelcomeComplete = false, onFirstArrivalWelcome,
   firstArrivalPreviewTime, firstArrivalActive = false, firstArrivalSkip = false, onFirstArrivalComplete, onFirstArrivalBeat,
@@ -12852,7 +12855,9 @@ export default function Island5ThreePilot({
         );
         return typeof document === 'undefined' ? layer : createPortal(layer, document.body);
       })() : null}
-      {!hasRenderedFrame ? (
+      {viewportLoading ? (
+        <IslandRunViewportLoading active={!hasRenderedFrame} stage="world" title={`Entering ${worldName}`} detail="Rendering your island…" />
+      ) : !hasRenderedFrame ? (
         <div className="island-5-three-pilot__loading">
           <IslandRunLoadingScreen stage="world" title={`Entering ${worldName}`} detail="Rendering your island…" />
         </div>

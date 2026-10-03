@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './IslandRunLoadingScreen.css';
 
 export type IslandRunLoadingStage = 'save' | 'bundle' | 'world';
@@ -105,5 +106,54 @@ export function IslandRunLoadingScreen({
         <span className="ir-loading__percent" aria-hidden="true">{progress}%</span>
       </div>
     </div>
+  );
+}
+
+/** Never trap the player behind a loading screen (slow device, lost WebGL). */
+export const ISLAND_RUN_VIEWPORT_LOADING_MAX_MS = 15_000;
+const VIEWPORT_LOADING_FADE_MS = 360;
+
+/**
+ * The loading screen as a top-level viewport layer. Game elements (top bar,
+ * controller, rails, banners, toasts, pop-ups) all render above an in-scene
+ * loading screen, so while the island is loading this layer sits above every
+ * one of them and blocks taps. It fades out once `active` turns false, or
+ * after ISLAND_RUN_VIEWPORT_LOADING_MAX_MS at the latest.
+ */
+export function IslandRunViewportLoading({
+  active,
+  title,
+  detail,
+  stage = 'world',
+  maxMs = ISLAND_RUN_VIEWPORT_LOADING_MAX_MS,
+}: {
+  active: boolean;
+  title?: string;
+  detail?: string;
+  stage?: IslandRunLoadingStage;
+  maxMs?: number;
+}) {
+  const [timedOut, setTimedOut] = useState(false);
+  const shown = active && !timedOut;
+  const [mounted, setMounted] = useState(shown);
+
+  useEffect(() => {
+    if (!active) { setTimedOut(false); return undefined; }
+    const timer = window.setTimeout(() => setTimedOut(true), maxMs);
+    return () => window.clearTimeout(timer);
+  }, [active, maxMs]);
+
+  useEffect(() => {
+    if (shown) { setMounted(true); return undefined; }
+    const timer = window.setTimeout(() => setMounted(false), VIEWPORT_LOADING_FADE_MS);
+    return () => window.clearTimeout(timer);
+  }, [shown]);
+
+  if (!mounted || typeof document === 'undefined') return null;
+  return createPortal(
+    <div className={`ir-loading-viewport island-5-three-pilot__loading${shown ? '' : ' ir-loading-viewport--leaving'}`} aria-busy={shown}>
+      <IslandRunLoadingScreen title={title} detail={detail} stage={stage} />
+    </div>,
+    document.body,
   );
 }

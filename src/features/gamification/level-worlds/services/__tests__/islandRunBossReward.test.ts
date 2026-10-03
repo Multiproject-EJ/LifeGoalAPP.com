@@ -40,7 +40,7 @@ export const islandRunBossRewardTests: TestCase[] = [
       assert(board.includes("'📡 Send assignment completed signal'"), 'the Mission Phone offers the completed signal');
       assert(/setShowIslandClearCelebration\(false\);\s*setIsIslandClearSignalPending\(true\);\s*setShowMissionPhoneBriefing\(true\);/.test(board), 'after claiming, the celebration closes and the Mission Phone opens on the signal step');
       assert(/const handleSendAssignmentCompletedSignal = \(\) => \{[\s\S]{0,260}void handleTravelFromCelebration\(\);/.test(board), 'sending the signal departs through the canonical, completion-checked travel path');
-      assert(board.includes("isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''"), 'an unsent signal marks the phone icon');
+      assert(board.includes("isIslandClearSignalPending || isMissionPhoneStageActionReady ? ' island-run-mission-phone--signal' : ''"), 'an unsent signal (or a ready stage action) marks the phone icon');
     },
   },
 ];

@@ -94,3 +94,20 @@
 @media (prefers-reduced-motion: reduce) {
   .ir-loading__progress i { transition: none; }
 }
+
+/* Viewport layer: above every game element while the island loads. */
+.ir-loading-viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: auto;
+  opacity: 1;
+  transition: opacity 360ms ease-out;
+}
+.ir-loading-viewport--leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ir-loading-viewport { transition: none; }
+}
