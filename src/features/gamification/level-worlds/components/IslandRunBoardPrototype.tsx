@@ -3884,6 +3884,15 @@ export function IslandRunBoardPrototype({
   const stagedRestorationAvailableCharges = stagedRestorationProgress
     ? getStagedRestorationAvailableCharges(stagedRestorationProgress)
     : 0;
+  // A collected pickup is waiting to be spent from the phone (e.g. Island 007
+  // "Pressurize District"). Without this the phone button gave no hint.
+  const isMissionPhoneStageActionReady = Boolean(
+    stagedRestorationDescriptor
+    && stagedRestorationProgress
+    && stagedRestorationProgress.completedAtMs === null
+    && stagedRestorationProgress.activatedStages < stagedRestorationDescriptor.stageCount
+    && stagedRestorationAvailableCharges >= stagedRestorationDescriptor.chargeCostPerStage,
+  );
   const lavaLabyrinthEscapeMissionStarted = islandNumber !== 20
     || isLavaLabyrinthEscapeMissionStarted(stagedRestorationProgress);
   const compassBookReceived = useMemo(() => hasReceivedCompassBook(runtimeState), [runtimeState]);
@@ -17995,15 +18004,15 @@ export function IslandRunBoardPrototype({
                     <button
                       key={`mission-phone-${missionMessageNudge}`}
                       type="button"
-                      className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing || arenaGamesCallId ? ' island-run-mission-phone--message' : ''}`}
-                      aria-label={`${incomingMissionBriefing ? 'New mission message. ' : ''}${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(isIslandVisualPreview ? islandArtPreviewNumber : islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+                      className={`island-run-board__mission-phone-rail${currentMissionTracker.complete ? ' island-run-board__mission-phone-rail--complete' : ''}${isIslandClearSignalPending || isMissionPhoneStageActionReady ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing || arenaGamesCallId ? ' island-run-mission-phone--message' : ''}`}
+                      aria-label={`${incomingMissionBriefing ? 'New mission message. ' : ''}${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : isMissionPhoneStageActionReady ? `Mission action ready: ${stagedRestorationDescriptor?.actionLabel ?? 'next stage'}. ` : ''}Open Island ${String(isIslandVisualPreview ? islandArtPreviewNumber : islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
                       title="Mission tracker"
                       onClick={handleMissionPhoneButton}
                     >
                       <MissionPhoneRailIcon />
                       <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
                       <small>Mission</small>
-                      {isIslandClearSignalPending ? <i className="island-run-mission-phone__signal-dot" aria-hidden="true" /> : null}
+                      {isIslandClearSignalPending || isMissionPhoneStageActionReady ? <i className="island-run-mission-phone__signal-dot" aria-hidden="true" /> : null}
                       {incomingMissionBriefing ? <b className="island-run-mission-phone__message-badge" aria-hidden="true">1</b> : null}
                     </button>
                   </span>
@@ -18579,14 +18588,14 @@ export function IslandRunBoardPrototype({
         <button
           key={`mission-phone-floating-${missionMessageNudge}`}
           type="button"
-          className={`island-run-board__mission-phone-floating${isIslandClearSignalPending ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing || arenaGamesCallId ? ' island-run-mission-phone--message' : ''}`}
-          aria-label={`${incomingMissionBriefing ? 'New mission message. ' : ''}${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : ''}Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
+          className={`island-run-board__mission-phone-floating${isIslandClearSignalPending || isMissionPhoneStageActionReady ? ' island-run-mission-phone--signal' : ''}${incomingMissionBriefing || arenaGamesCallId ? ' island-run-mission-phone--message' : ''}`}
+          aria-label={`${incomingMissionBriefing ? 'New mission message. ' : ''}${isIslandClearSignalPending ? 'New message: send your assignment completed signal. ' : isMissionPhoneStageActionReady ? `Mission action ready: ${stagedRestorationDescriptor?.actionLabel ?? 'next stage'}. ` : ''}Open Island ${String(islandNumber).padStart(3, '0')} mission tracker, ${missionPhoneCompletionPercent}% complete`}
           title="Mission tracker"
           onClick={handleMissionPhoneButton}
         >
           <MissionPhoneRailIcon />
           <span aria-hidden="true">{missionPhoneCompletionPercent}%</span>
-          {isIslandClearSignalPending ? <i className="island-run-mission-phone__signal-dot" aria-hidden="true" /> : null}
+          {isIslandClearSignalPending || isMissionPhoneStageActionReady ? <i className="island-run-mission-phone__signal-dot" aria-hidden="true" /> : null}
           {incomingMissionBriefing ? <b className="island-run-mission-phone__message-badge" aria-hidden="true">1</b> : null}
         </button>
       ) : null}
@@ -22709,6 +22718,8 @@ export function IslandRunBoardPrototype({
               ? `Pour nectar · stage ${greatHoneyfallProgress.activatedReservoirs + 1} of ${GREAT_HONEYFALL_MAX_STAGE}`
               : 'Find royal nectar on the route'
           : undefined}
+        // The honey pot is Island 018 Great Honeyfall's; other staged missions get a neutral spark.
+        primaryActionIcon={stagedRestorationDescriptor?.islandNumber === 18 ? '🍯' : undefined}
         primaryActionHint={showMissionPhoneBriefing && isIslandClearSignalPending
           ? `Everything is green. Signal Mission Command and set sail for Island ${String(islandClearStats?.pendingNextIsland ?? islandNumber + 1).padStart(3, '0')}.`
           : showMissionPhoneBriefing && islandNumber === 17 && stagedRestorationProgress?.activatedStages === 8

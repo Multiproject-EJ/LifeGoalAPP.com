@@ -46,7 +46,9 @@ export const island006FixesTests: TestCase[] = [
       const board = await read('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
       assert(!board.includes('fire on the beat') && board.includes('your ship fires automatically'), 'boss card describes the shooter controls');
       const phone = await read('src/features/gamification/level-worlds/components/IslandMissionBriefingModal.tsx');
-      assert(phone.includes("{variant === 'living-compass' || milestoneCount > 0 ? ("), 'honey pot only on milestone missions');
+      assert(phone.includes("{variant === 'living-compass' || milestoneCount > 0 ? ("), 'no icon on plain actions like the clear signal');
+      assert(phone.includes("primaryActionIcon ?? '✦'"), 'staged missions default to a neutral spark');
+      assert(board.includes("primaryActionIcon={stagedRestorationDescriptor?.islandNumber === 18 ? '🍯' : undefined}"), 'honey pot only on Island 018 Honeyfall');
     },
   },
   {
@@ -62,6 +64,15 @@ export const island006FixesTests: TestCase[] = [
       const board = await read('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
       assert(board.includes('viewportLoading={!isIslandVisualPreview}'), 'board opts into the viewport layer');
       assert(board.includes('<IslandRunViewportLoading active stage="bundle"'), 'bundle fallback uses the viewport layer too');
+    },
+  },
+  {
+    name: 'Island 007: the phone button pulses when a collected pickup is waiting to be spent',
+    run: async () => {
+      const board = await read('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
+      assert(board.includes('const isMissionPhoneStageActionReady = Boolean('), 'ready flag derived from canonical staged progress');
+      assert((board.match(/isIslandClearSignalPending \|\| isMissionPhoneStageActionReady \? ' island-run-mission-phone--signal'/g) ?? []).length === 2, 'rail and floating phone both pulse');
+      assert(board.includes('Mission action ready: '), 'screen readers hear it too');
     },
   },
 ];
