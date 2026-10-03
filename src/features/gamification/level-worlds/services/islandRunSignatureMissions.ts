@@ -3,6 +3,7 @@ import { WORLD_PORTAL_KEY, sanitizeWorldPortalProgress, mergeWorldPortalProgress
 import { ARENA_JOURNEY_KEY, sanitizeArenaJourney, mergeArenaJourney, type ArenaJourneyProgress } from './arenaJourney';
 import { ARCHETYPE_CUP_KEY, mergeArchetypeCupProgress, sanitizeArchetypeCupProgress, type ArchetypeCupProgress } from './archetypeCup';
 import { LIFE_PATH_KEY, mergeLifePathProgress, sanitizeLifePathProgress, type LifePathProgress } from './lifePathProgress';
+import { HABIT_DICE_KEY, mergeHabitDiceLedger, sanitizeHabitDiceLedger, type HabitDiceLedger } from './habitDiceReward';
 import { DICE_SKINS_KEY, mergeDiceSkinProgress, sanitizeDiceSkinProgress, type DiceSkinProgress } from './islandRunDiceSkins';
 import { ISLAND_TREASURES_KEY, mergeIslandTreasureCollections, sanitizeIslandTreasureCollection, type IslandTreasureCollection } from './islandRunTreasures';
 import { STORMFRONT_KEY_PATTERN, mergeStormfrontProgress, sanitizeStormfrontProgress, type StormfrontProgress } from './island2Stormfront';
@@ -458,6 +459,7 @@ export interface StagedRestorationMissionProgress {
 export type IslandRunSignatureMissionProgress =
   | WorldPortalProgress
   | LifePathProgress
+  | HabitDiceLedger
   | ArenaJourneyProgress
   | ArchetypeCupProgress
   | DiceSkinProgress
@@ -527,6 +529,11 @@ export function sanitizeIslandRunSignatureMissionProgress(
     if (key === LIFE_PATH_KEY || record.missionId === 'life-path') {
       const lifePath = sanitizeLifePathProgress(record);
       if (key === LIFE_PATH_KEY && lifePath) result[key] = lifePath;
+      return;
+    }
+    if (key === HABIT_DICE_KEY || record.missionId === 'habit-dice') {
+      const habitDice = sanitizeHabitDiceLedger(record);
+      if (key === HABIT_DICE_KEY && habitDice) result[key] = habitDice;
       return;
     }
     if (record.missionId === 'arena-journey') {
@@ -1764,6 +1771,11 @@ export function mergeIslandRunSignatureMissionProgress(
     if (key === LIFE_PATH_KEY) {
       const lifePath = mergeLifePathProgress(a, b);
       if (lifePath) merged[key] = lifePath;
+      return;
+    }
+    if (key === HABIT_DICE_KEY) {
+      const habitDice = mergeHabitDiceLedger(a, b);
+      if (habitDice) merged[key] = habitDice;
       return;
     }
     if (a?.missionId === 'first-light-assembly-crater' && a.version !== 2) {

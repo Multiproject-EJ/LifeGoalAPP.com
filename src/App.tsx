@@ -147,8 +147,6 @@ import {
   ISLAND_RUN_REGISTRY_BONUS_USCT,
   type IslandRunGuestClaimSource,
 } from './features/gamification/level-worlds/services/islandRunGuestClaimService';
-import { SPIN_PRIZES } from './types/gamification';
-import { splitGoldBalance } from './constants/economy';
 import { awardDailyTreatDice } from './services/dailyTreats';
 import { consumePendingLandingPageTreat } from './services/landingPageTreat';
 import { getTopDisplayClass } from './utils/topDisplayClass';
@@ -667,12 +665,6 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
 const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'projects', 'timer', 'journal', 'contracts']);
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
-
-const formatGoldRange = (min: number, max: number) => {
-  const normalizedMin = Math.min(min, max);
-  const normalizedMax = Math.max(min, max);
-  return normalizedMin === normalizedMax ? `${normalizedMin}` : `${normalizedMin}-${normalizedMax}`;
-};
 
 interface AppProps {
   forceAuthOnMount?: boolean;
@@ -1231,8 +1223,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setHasCompletedInitialAppReadiness(false);
   }, [supabaseSession?.user?.id]);
 
-  const goldBalance = gamificationProfile?.total_points ?? 0;
-  const goldBreakdown = splitGoldBalance(goldBalance);
   const { spinAvailable, spinsAvailable } = useDailySpinStatus(supabaseSession?.user?.id);
   // The legacy-named placement flag keeps Daily Momentum out of the old game
   // overlay. Its canonical launcher now lives in the Island Run quick-action
@@ -1396,10 +1386,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
       cancelled = true;
     };
   }, [showGameBoardOverlay, overlayRealLifeUserId]);
-  const goldValueLabel =
-    goldBreakdown.diamonds > 0
-      ? `💎 ${goldBreakdown.diamonds.toLocaleString()} · 🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`
-      : `🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`;
   const zenTokenBalance = gamificationProfile?.zen_tokens ?? 0;
   const streakMomentum = gamificationProfile?.current_streak ?? 0;
   const currentLevel = levelInfo?.currentLevel ?? 1;
@@ -1454,24 +1440,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const launcherMenuHasNews = showMicroTestNotificationDot || pendingPromotion !== null;
   
 
-  const mobileMenuPointsBadges = useMemo(() => {
-    const badges: Record<string, string> = {};
-    if (goldBalance > 0) {
-      badges.score = goldBalance.toLocaleString();
-    }
-    return badges;
-  }, [goldBalance]);
-  const spinGoldRange = useMemo(() => {
-    // With the new economy-aligned prize pool, gold-type prizes are retired.
-    // Essence is the primary spin currency now.
-    const essenceValues = SPIN_PRIZES.filter((prize) => prize.type === 'essence').map((prize) => prize.value);
-    if (essenceValues.length === 0) {
-      return null;
-    }
-    const minEssence = Math.min(...essenceValues);
-    const maxEssence = Math.max(...essenceValues);
-    return formatGoldRange(minEssence, maxEssence);
-  }, []);
   
   const overlaySpinsRemaining = Math.max(0, Math.floor(spinsAvailable));
 
@@ -5732,10 +5700,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
             <div className="mobile-gamification-overlay__stat mobile-gamification-overlay__stat--mini-grid" role="listitem">
               <div className="mobile-gamification-overlay__mini-grid">
                 <div className="mobile-gamification-overlay__mini-card">
-                  <p className="mobile-gamification-overlay__mini-label">Gold wallet</p>
-                  <p className="mobile-gamification-overlay__mini-value">{goldValueLabel}</p>
-                </div>
-                <div className="mobile-gamification-overlay__mini-card">
                   <p className="mobile-gamification-overlay__mini-label">Lotus Flowers</p>
                   <p className="mobile-gamification-overlay__mini-value">🪷 {zenTokenBalance.toLocaleString()}</p>
                 </div>
@@ -6263,7 +6227,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
               handleMobileFooterExpand(true);
             }}
             onCollapse={handleMobileFooterCollapse}
-            pointsBalance={goldBalance}
           />
         )}
         {starterQuestSheet}
@@ -6601,7 +6564,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
             handleMobileFooterExpand(true);
           }}
           onCollapse={handleMobileFooterCollapse}
-          pointsBalance={goldBalance}
         />
       ) : null}
 

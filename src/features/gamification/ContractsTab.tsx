@@ -610,7 +610,7 @@ export function ContractsTab({
 
     refreshContractInList(data);
     await refreshContractEvaluations(data.id);
-    setRecoveryMessage(`Stake reduced to ${data.stakeAmount} ${data.stakeType === 'gold' ? 'Gold' : 'Tokens'}.`);
+    setRecoveryMessage(`Stake reduced to ${data.stakeAmount} ${data.stakeType === 'gold' ? 'legacy Gold' : 'Zen tokens'}.`);
     setContractResult(null);
     setResultContract(null);
     setResetEligibility(null);
@@ -838,7 +838,7 @@ export function ContractsTab({
                               {contract.currentProgress}/{contract.targetCount} this {cadenceLabel}
                             </span>
                             <span>{progressPercent}%</span>
-                            <span>{contract.stakeAmount} {contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}</span>
+                            <span>{contract.stakeAmount} {contract.stakeType === 'gold' ? 'legacy Gold' : 'Zen tokens'}</span>
                           </div>
                         </button>
                       </li>
@@ -913,7 +913,7 @@ export function ContractsTab({
           <div className="score-tab__info-modal">
             <h3 className="score-tab__info-modal-title">How the Promise System works</h3>
             <p className="score-tab__info-modal-body">
-              Stake Gold or Tokens on an active promise and track progress in this dashboard.
+              Stake Zen tokens on an active promise and track progress in this dashboard.
             </p>
             <p className="score-tab__info-modal-body">{getSweepHealthCopy()}</p>
             <button
@@ -1000,8 +1000,8 @@ export function ContractsTab({
                   const resultDate = latestEvaluation?.evaluatedAt ?? contract.updatedAt;
                   const impactText = latestEvaluation
                     ? latestEvaluation.result === 'success'
-                      ? `+${latestEvaluation.bonusAwarded} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
-                      : `-${latestEvaluation.stakeForfeited} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'}`
+                      ? `+${latestEvaluation.bonusAwarded} ${contract.stakeType === 'gold' ? 'legacy Gold' : 'Zen tokens'}`
+                      : `-${latestEvaluation.stakeForfeited} ${contract.stakeType === 'gold' ? 'legacy Gold' : 'Zen tokens'}`
                     : 'Impact unavailable';
 
                   return (

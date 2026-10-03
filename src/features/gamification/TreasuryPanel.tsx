@@ -93,7 +93,7 @@ export function TreasuryPanel({
       icon: '🎲',
       label: 'Dice',
       value: format.format(state.dicePool),
-      earn: 'Habits, tasks, the Task Tower and the daily refill',
+      earn: 'Habit check-ins, the Task Tower, daily treats and the refill',
       spend: 'Rolling on the island board',
     },
     {
@@ -154,7 +154,7 @@ export function TreasuryPanel({
         <p className="treasury__eyebrow">✦ Treasury</p>
         <h2 id="treasury-title" className="treasury__title">Everything you hold</h2>
         <p className="treasury__subtitle">
-          Real-life effort feeds your game: habits and tasks roll in dice, meditation grows your Zen Garden.
+          Real-life effort feeds your game: habits and the Task Tower roll in dice, meditation grows your Zen Garden.
         </p>
       </header>
 

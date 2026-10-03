@@ -14,7 +14,6 @@ import '../features/ai-coach/AiCoach.css';
 import { GamificationHeader } from './GamificationHeader';
 import { NewDailySpinWheel } from '../features/spin-wheel/NewDailySpinWheel';
 import { AI_FEATURE_ICON } from '../constants/ai';
-import { splitGoldBalance } from '../constants/economy';
 import { PROGRESS_STATE_EFFECTS, type ProgressState } from '../features/habits/progressGrading';
 import { CaseSubmissionModal } from '../features/cases/CaseSubmissionModal';
 
@@ -98,11 +97,6 @@ export function QuickActionsFAB({
     loading: gamificationLoading,
     refreshProfile,
   } = useGamification(session);
-  const goldBreakdown = splitGoldBalance(gamificationProfile?.total_points ?? 0);
-  const goldValueLabel =
-    goldBreakdown.diamonds > 0
-      ? `💎 ${goldBreakdown.diamonds.toLocaleString()} · 🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`
-      : `🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`;
   const currentLevel = levelInfo?.currentLevel ?? 1;
   const levelProgress = Math.min(100, Math.max(0, (currentLevel / 100) * 100));
   const levelGlow = 0.35 + (levelProgress / 100) * 0.65;
@@ -816,17 +810,6 @@ export function QuickActionsFAB({
                         ❤️ {gamificationProfile.lives}/{gamificationProfile.max_lives} · ❄️ {gamificationProfile.streak_freezes}
                       </p>
                       <p className="gamification-scorecard__hint">Use freezes to protect your streak on busy days.</p>
-                    </div>
-
-                    <div className="gamification-scorecard__tile gamification-scorecard__tile--points">
-                      <div className="gamification-scorecard__tile-header">
-                        <p className="gamification-scorecard__label">Gold bank</p>
-                        <span className="gamification-scorecard__pill">Bonus ready</span>
-                      </div>
-                      <p className="gamification-scorecard__value gamification-scorecard__value--glow">
-                        {goldValueLabel}
-                      </p>
-                      <p className="gamification-scorecard__hint">Spend gold on boosters in the store.</p>
                     </div>
                   </div>
 

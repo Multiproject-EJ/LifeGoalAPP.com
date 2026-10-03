@@ -1,53 +1,71 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { EGG_WARMTH_EVENT } from '../services/islandRunHabitEggWarmthAction';
 import './EggWarmthToastHost.css';
 
 const LOADING_SCREEN_SELECTOR = '.island-5-three-pilot__loading, .island-run-prototype--loading, .game-first-loading';
+const TOAST_MS = 4200;
+const MAX_STACK = 3;
 
-/** Shows the short "your eggs got warmer" confirmation from any warmth source. */
+interface ToastItem {
+  id: number;
+  icon: string;
+  notice: string;
+}
+
+/**
+ * Short real-life reward confirmations ("your eggs got warmer", "+8 dice").
+ * Any source dispatches EGG_WARMTH_EVENT with `{ notice, icon? }`; toasts that
+ * arrive together stack instead of replacing each other.
+ */
 export function EggWarmthToastHost() {
-  const [notice, setNotice] = useState<string | null>(null);
-  const [serial, setSerial] = useState(0);
+  const [items, setItems] = useState<ToastItem[]>([]);
+  const nextIdRef = useRef(1);
 
   useEffect(() => {
-    let waitTimer: number | undefined;
+    const timers = new Set<number>();
     const onWarmth = (event: Event) => {
-      const detail = (event as CustomEvent<{ notice?: unknown }>).detail;
+      const detail = (event as CustomEvent<{ notice?: unknown; icon?: unknown }>).detail;
       if (typeof detail?.notice !== 'string') return;
-      const notice = detail.notice;
+      const item: ToastItem = {
+        id: nextIdRef.current++,
+        icon: typeof detail.icon === 'string' && detail.icon ? detail.icon : '🥚',
+        notice: detail.notice,
+      };
       // Never over a loading screen: wait (up to ~30 s) until it is gone.
       let tries = 0;
       const showWhenReady = () => {
         tries += 1;
         if (document.querySelector(LOADING_SCREEN_SELECTOR) && tries < 30) {
-          waitTimer = window.setTimeout(showWhenReady, 1000);
+          const wait = window.setTimeout(() => { timers.delete(wait); showWhenReady(); }, 1000);
+          timers.add(wait);
           return;
         }
-        setNotice(notice);
-        setSerial((value) => value + 1);
+        setItems((current) => [...current, item].slice(-MAX_STACK));
+        const expire = window.setTimeout(() => {
+          timers.delete(expire);
+          setItems((current) => current.filter((entry) => entry.id !== item.id));
+        }, TOAST_MS);
+        timers.add(expire);
       };
-      window.clearTimeout(waitTimer);
       showWhenReady();
     };
     window.addEventListener(EGG_WARMTH_EVENT, onWarmth);
     return () => {
-      window.clearTimeout(waitTimer);
+      timers.forEach((timer) => window.clearTimeout(timer));
       window.removeEventListener(EGG_WARMTH_EVENT, onWarmth);
     };
   }, []);
 
-  useEffect(() => {
-    if (!notice) return undefined;
-    const timer = window.setTimeout(() => setNotice(null), 4200);
-    return () => window.clearTimeout(timer);
-  }, [notice, serial]);
-
-  if (!notice || typeof document === 'undefined') return null;
+  if (items.length === 0 || typeof document === 'undefined') return null;
   return createPortal(
-    <div key={serial} className="egg-warmth-toast" role="status" aria-live="polite">
-      <span className="egg-warmth-toast__egg" aria-hidden="true">🥚</span>
-      <span>{notice}</span>
+    <div className="egg-warmth-toast-stack" role="status" aria-live="polite">
+      {items.map((item) => (
+        <div key={item.id} className="egg-warmth-toast">
+          <span className="egg-warmth-toast__egg" aria-hidden="true">{item.icon}</span>
+          <span>{item.notice}</span>
+        </div>
+      ))}
     </div>,
     document.body,
   );

@@ -15,7 +15,7 @@ import {
   preloadGiftBoxOpeningAnimation,
   type GiftBoxRewardItem,
 } from '../../../components/GiftBoxOpeningAnimation';
-import { awardDailyTreatDice, awardDailyTreatGold } from '../../../services/dailyTreats';
+import { awardDailyTreatDice } from '../../../services/dailyTreats';
 import { playIslandRunSound } from '../level-worlds/services/islandRunAudio';
 import { applyEssenceAward } from '../level-worlds/services/islandRunStateActions';
 import {
@@ -179,10 +179,9 @@ const formatRewardToast = (
   if (reward.reward_currency === 'dice') {
     return { icon: '🎲', label: `+${amount} ${diceLabel}`.trim(), tier };
   }
-  if (isPersonalQuest) {
-    return { icon: '💰', label: `+${amount} Money`, tier };
-  }
-  return { icon: '🪙', label: `+${amount} Gold`, tier };
+  // Gold is retired: every non-dice treat pays game Money.
+  void isPersonalQuest;
+  return { icon: '💰', label: `+${amount} Money`, tier };
 };
 
 const formatGiftReward = (
@@ -197,12 +196,12 @@ const formatGiftReward = (
   if (reward.reward_currency === 'dice') {
     return { id: `gift-${id}-dice`, icon: '🎲', amount: String(amount), accessibleLabel: `${amount} Dice` };
   }
-  const label = usesMoneyLabel ? 'Money' : 'Gold';
+  void usesMoneyLabel;
   return {
-    id: `gift-${id}-${label.toLowerCase()}`,
-    icon: usesMoneyLabel ? '💰' : '🪙',
+    id: `gift-${id}-money`,
+    icon: '💰',
     amount: String(amount),
-    accessibleLabel: `${amount} ${label}`,
+    accessibleLabel: `${amount} Money`,
   };
 };
 
@@ -383,33 +382,32 @@ export const CountdownCalendarModal = ({
     };
   }, [isOpen, mode, previewHolidayKey, userId]);
 
-  // Handle gold rewards from legacy scratch card system.
-  // Symbol triples (symbolReward !== null) get a separate 'symbol_collection' dispatch
-  // plus a brief toast notification; the remaining door gold is dispatched with the standard label.
+  // Scratch-card rewards pay game Money (Gold is retired). Without an
+  // Island Run session there is no wallet to pay into, so nothing is paid.
   useEffect(() => {
-    if (!revealResult || !userId) return;
+    if (!revealResult || !userId || !islandRunSession) return;
 
-    const SYMBOL_BONUS_GOLD = 150;
+    const SYMBOL_BONUS_MONEY = 150;
+    const payMoney = (amount: number, label: string) => {
+      if (amount <= 0) return;
+      applyEssenceAward({
+        session: islandRunSession,
+        client: null,
+        amount,
+        islandRunContractV2Enabled: true,
+        triggerSource: `daily_treat_scratch_${label}`,
+      });
+    };
 
     if (revealResult.symbolReward) {
-      // Symbol triple completed — dispatch bonus gold with 'symbol_collection' label
-      void awardDailyTreatGold(userId, SYMBOL_BONUS_GOLD, 'symbol_collection');
-      setSymbolBonusNotification(`🎉 Symbol bonus! +${SYMBOL_BONUS_GOLD} 🪙 Gold for collecting 3 ${revealResult.symbolReward}s`);
+      payMoney(SYMBOL_BONUS_MONEY, 'symbol_collection');
+      setSymbolBonusNotification(`🎉 Symbol bonus! +${SYMBOL_BONUS_MONEY} 💰 Money for collecting 3 ${revealResult.symbolReward}s`);
       setTimeout(() => setSymbolBonusNotification(null), 4000);
-
-      // Dispatch only the non-symbol portion of the gold reward
-      const doorGold = revealResult.goldReward - SYMBOL_BONUS_GOLD;
-      if (doorGold > 0) {
-        void awardDailyTreatGold(userId, doorGold, `Cycle ${revealResult.cycle} Day ${revealResult.day}`);
-      }
-    } else if (revealResult.goldReward > 0) {
-      void awardDailyTreatGold(
-        userId,
-        revealResult.goldReward,
-        `Cycle ${revealResult.cycle} Day ${revealResult.day}`,
-      );
+      payMoney(revealResult.goldReward - SYMBOL_BONUS_MONEY, `cycle_${revealResult.cycle}_day_${revealResult.day}`);
+    } else {
+      payMoney(revealResult.goldReward, `cycle_${revealResult.cycle}_day_${revealResult.day}`);
     }
-  }, [revealResult, userId]);
+  }, [revealResult, userId, islandRunSession]);
 
   const [doorError, setDoorError] = useState<string | null>(null);
   // Doors currently mid-open request — blocks double-tap double-opens while
@@ -455,7 +453,7 @@ export const CountdownCalendarModal = ({
         return;
       }
 
-      // Award essence in Island Run sessions; award gold elsewhere.
+      // Non-dice treats pay game Money (Gold is retired).
       if (reward?.reward_currency === 'gold' && reward.reward_amount) {
         if (islandRunSession) {
           applyEssenceAward({
@@ -465,8 +463,6 @@ export const CountdownCalendarModal = ({
             islandRunContractV2Enabled: true,
             triggerSource: `daily_treat_day_${dayIndex}_${doorType}_door`,
           });
-        } else {
-          void awardDailyTreatGold(userId, reward.reward_amount, `Day ${dayIndex} ${doorType} door`);
         }
       }
 

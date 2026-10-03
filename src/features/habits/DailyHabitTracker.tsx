@@ -23,7 +23,6 @@ import { recordChallengeActivity } from '../../services/challenges';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { buildTimeLimitedOfferExpiryDedupeKey } from './timeLimitedOfferTelemetry';
 import type { ActiveAdventMetaResult } from '../../services/treatCalendarService';
-import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
 import {
   getHabitCompletionsByMonth,
@@ -196,14 +195,16 @@ import { FeedPetModal } from './FeedPetModal';
 import { TodayPet } from './todayPet/TodayPet';
 import { resolveTodayPetCompanion } from './todayPet/todayPetBehaviour';
 import { setActiveCompanionId } from '../gamification/level-worlds/services/islandRunStateActions';
-import { getSupabaseClient } from '../../lib/supabaseClient';
+import { canUseSupabaseData, getSupabaseClient } from '../../lib/supabaseClient';
 import { resolveFeedPetCompanionPresentation } from './feedPetCompanionPresentation';
 import { EVENT_IDS, type EventId } from '../gamification/level-worlds/services/islandRunEventEngine';
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
 import { getUnresolvedEggSlotsForIsland } from '../gamification/level-worlds/services/islandRunEggMania';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 import { refreshIslandRunStateFromLocal } from '../gamification/level-worlds/services/islandRunStateStore';
-import { warmEggsFromHabitCheckIn } from '../gamification/level-worlds/services/islandRunHabitEggWarmthAction';
+import { EGG_WARMTH_EVENT, warmEggsFromHabitCheckIn } from '../gamification/level-worlds/services/islandRunHabitEggWarmthAction';
+import { grantHabitCheckInDice } from '../gamification/level-worlds/services/habitDiceRewardAction';
+import { HABIT_DICE_MIN, habitDiceForRewardValue } from '../gamification/level-worlds/services/habitDiceReward';
 import { EggWarmthToastHost } from '../gamification/level-worlds/components/EggWarmthToastHost';
 import { getPromiseVariant, isPromiseActionableToday } from '../gamification/promisePresentation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
@@ -2520,6 +2521,24 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     saveDraft(storageKey, true);
     return true;
   }, [gamificationEnabled, session]);
+  // Habit check-ins pay dice (Gold is retired): once per habit per day,
+  // through the canonical Island Run action.
+  const payHabitCheckInDice = useCallback(async (habitId: string, dateISO: string, rewardValue: number) => {
+    if (!session?.user?.id || !gamificationEnabled) return;
+    try {
+      let client: ReturnType<typeof getSupabaseClient> | null = null;
+      if (canUseSupabaseData()) {
+        try { client = getSupabaseClient(); } catch { client = null; }
+      }
+      const dice = await grantHabitCheckInDice({ session, client, habitId, dateKey: dateISO, rewardValue });
+      if (dice > 0 && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(EGG_WARMTH_EVENT, { detail: { icon: '🎲', notice: `Habit done! +${dice} dice for your island.` } }));
+      }
+    } catch (error) {
+      console.warn('Habit dice reward failed', error);
+    }
+  }, [gamificationEnabled, session]);
+
   const warmEggsAfterHabitCheckIn = useCallback((habitId: string, dateISO: string) => {
     if (!session?.user?.id || !gamificationEnabled) return;
     try {
@@ -2717,18 +2736,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       currentStreak: habitInsights[habitId]?.currentStreak,
     });
   }, [adherenceByHabit, habitHealthByHabitId, habitInsights]);
-  const habitGoldLabel = useMemo(() => {
-    const prices = habits.map((habit) => defaultPriceByHabitId(habit.id));
-    if (!prices.length) {
-      const baseGold = convertXpToGold(XP_REWARDS.HABIT_COMPLETE);
-      const earlyGold = convertXpToGold(XP_REWARDS.HABIT_COMPLETE_EARLY);
-      const minGold = Math.min(baseGold, earlyGold);
-      const maxGold = Math.max(baseGold, earlyGold);
-      return minGold === maxGold ? `${minGold}` : `${minGold}-${maxGold}`;
-    }
-    const minGold = Math.min(...prices);
-    const maxGold = Math.max(...prices);
-    return minGold === maxGold ? `${minGold}` : `${minGold}-${maxGold}`;
+  // Habit check-ins pay dice now (Gold is retired); show the dice range.
+  const habitDiceLabel = useMemo(() => {
+    const dice = habits.map((habit) => habitDiceForRewardValue(defaultPriceByHabitId(habit.id)));
+    if (!dice.length) return `${HABIT_DICE_MIN}`;
+    const minDice = Math.min(...dice);
+    const maxDice = Math.max(...dice);
+    return minDice === maxDice ? `${minDice}` : `${minDice}-${maxDice}`;
   }, [defaultPriceByHabitId, habits]);
 
   const isBadHabit = useCallback((habit: HabitWithGoal) => {
@@ -6300,10 +6314,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             now,
           });
           const effectivePrice = offerPrice ?? rhythmBonusPrice ?? defaultPrice;
-          const effectivePriceXpAmount =
-            effectivePrice && XP_TO_GOLD_RATIO > 0
-              ? Math.round(effectivePrice / XP_TO_GOLD_RATIO)
-              : null;
           const projectedStreak = (habitInsights[habit.id]?.currentStreak ?? 0) + 1;
           const feedbackType = getHabitFeedbackType(projectedStreak);
 
@@ -6331,17 +6341,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
           await grantDailySpinHabitBonusOncePerDay();
           await earnXP(xpAmount, 'habit_complete', habit.id);
-          if (effectivePriceXpAmount) {
-            await earnXP(
-              effectivePriceXpAmount,
-              offerPrice ? 'habit_offer' : rhythmBonusPrice ? 'habit_rhythm_bonus' : 'habit_dynamic_reward',
-              habit.id,
-              offerPrice
-                ? 'Time-limited habit offer'
-                : rhythmBonusPrice
-                  ? 'Time-of-day habit rhythm bonus'
-                  : 'Dynamic default habit reward',
-            );
+          if (effectivePrice) {
+            if (isToday) await payHabitCheckInDice(habit.id, dateISO, effectivePrice);
 
             if (offerPrice && session?.user?.id && isConfigured && !isDemoExperience) {
               void recordTelemetryEvent({
@@ -6352,7 +6353,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   habitId: habit.id,
                   habitName: habit.name,
                   offerPrice,
-                  offerXpAmount: effectivePriceXpAmount,
+                  offerDice: habitDiceForRewardValue(offerPrice),
                   healthState: habitHealthByHabitId[habit.id] ?? 'active',
                   adherencePct: Math.round(
                     ((adherenceByHabit[habit.id]?.percentage ?? 100) + Number.EPSILON) * 100,
@@ -9839,17 +9840,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       <div className="habit-checklist__reward-rail" aria-label="Habit rewards and quest marker">
                         {(shouldShowHabitPoints || isOfferHabit || rhythmBonusPrice) ? (
                           <PointsBadge
-                            value={effectiveDisplayPrice}
+                            value={habitDiceForRewardValue(effectiveDisplayPrice)}
+                            icon="🎲"
+                            unit="dice"
                             className={`habit-points-badge${
                               isOfferHabit || rhythmBonusPrice ? ' habit-points-badge--offer' : ''
                             }`}
                             size="mini"
                             ariaLabel={
                               isOfferHabit && offerPrice !== null
-                                ? `Limited offer: ${offerPrice} diamonds`
+                                ? `Limited offer: ${habitDiceForRewardValue(offerPrice)} dice`
                                 : rhythmBonusPrice
-                                  ? `${getHabitRhythmLabel(rhythm.daypart)} rhythm bonus: ${rhythmBonusPrice} diamonds`
-                                : `Dynamic habit reward: ${defaultPrice} diamonds`
+                                  ? `${getHabitRhythmLabel(rhythm.daypart)} rhythm bonus: ${habitDiceForRewardValue(rhythmBonusPrice)} dice`
+                                : `Habit reward: ${habitDiceForRewardValue(defaultPrice)} dice`
                             }
                           />
                         ) : null}
@@ -10733,7 +10736,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       { id: 'lotus', icon: '🪷', label: 'Lotus', value: todayWinsSummary.lotusEarned },
       { id: 'xp', icon: '⭐', label: 'XP', value: todayWinsSummary.xpEarned },
       { id: 'game-total', icon: '🎮', label: 'Game', value: todayWinsSummary.gameRewardsTotal },
-      { id: 'game-gold', icon: '🪙', label: 'Gold', value: todayWinsSummary.gameGoldEarned },
       { id: 'game-dice', icon: '🎲', label: 'Dice', value: todayWinsSummary.gameDiceEarned },
       { id: 'game-token', icon: '🎟️', label: 'Game Tokens', value: todayWinsSummary.gameTokensEarned },
       { id: 'game-hearts', icon: '❤️', label: 'Hearts', value: todayWinsSummary.gameHeartsEarned },
@@ -12125,7 +12127,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       const promiseVariant = getPromiseVariant(contract);
                       const canShowPrimaryAction = contract.status === 'active' && !isOutcomeOnly;
                       const primaryActionLabel = promiseVariant === 'reverse' ? 'Log slip' : 'Check in';
-                      const stakeLabel = `${contract.stakeAmount} ${contract.stakeType === 'gold' ? 'Gold' : 'Tokens'} staked`;
+                      const stakeLabel = `${contract.stakeAmount} ${contract.stakeType === 'gold' ? 'legacy Gold' : 'Zen tokens'} staked`;
                       const contractEndDate = contract.endAt ? new Date(contract.endAt) : null;
                       const msLeft = contractEndDate ? contractEndDate.getTime() - Date.now() : null;
                       const daysLeft = msLeft !== null && msLeft > 0 ? Math.ceil(msLeft / (1000 * 60 * 60 * 24)) : 0;
@@ -14053,6 +14055,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   if (isCompact) {
     return (
       <section className="habit-tracker habit-tracker--compact">
+        <EggWarmthToastHost />
         {renderCompactExperience()}
         {todayStarUpgradeModal}
         <SuperHabitRosterModal
@@ -14272,7 +14275,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 >
                   {shouldShowHabitPoints ? (
                     <PointsBadge
-                      value={habitGoldLabel}
+                      value={habitDiceLabel}
+                      icon="🎲"
+                      unit="dice"
                       className="points-badge--corner habit-points-badge"
                       size="mini"
                     />
