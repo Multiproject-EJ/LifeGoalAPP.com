@@ -3,20 +3,38 @@ import { createPortal } from 'react-dom';
 import { EGG_WARMTH_EVENT } from '../services/islandRunHabitEggWarmthAction';
 import './EggWarmthToastHost.css';
 
+const LOADING_SCREEN_SELECTOR = '.island-5-three-pilot__loading, .island-run-prototype--loading, .game-first-loading';
+
 /** Shows the short "your eggs got warmer" confirmation from any warmth source. */
 export function EggWarmthToastHost() {
   const [notice, setNotice] = useState<string | null>(null);
   const [serial, setSerial] = useState(0);
 
   useEffect(() => {
+    let waitTimer: number | undefined;
     const onWarmth = (event: Event) => {
       const detail = (event as CustomEvent<{ notice?: unknown }>).detail;
       if (typeof detail?.notice !== 'string') return;
-      setNotice(detail.notice);
-      setSerial((value) => value + 1);
+      const notice = detail.notice;
+      // Never over a loading screen: wait (up to ~30 s) until it is gone.
+      let tries = 0;
+      const showWhenReady = () => {
+        tries += 1;
+        if (document.querySelector(LOADING_SCREEN_SELECTOR) && tries < 30) {
+          waitTimer = window.setTimeout(showWhenReady, 1000);
+          return;
+        }
+        setNotice(notice);
+        setSerial((value) => value + 1);
+      };
+      window.clearTimeout(waitTimer);
+      showWhenReady();
     };
     window.addEventListener(EGG_WARMTH_EVENT, onWarmth);
-    return () => window.removeEventListener(EGG_WARMTH_EVENT, onWarmth);
+    return () => {
+      window.clearTimeout(waitTimer);
+      window.removeEventListener(EGG_WARMTH_EVENT, onWarmth);
+    };
   }, []);
 
   useEffect(() => {

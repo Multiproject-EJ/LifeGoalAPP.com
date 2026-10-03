@@ -9115,6 +9115,13 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setFishingPullsRemaining(rollResult.fishermansVillagePendingCatch.pullsRequired);
+          setFishingSessionCatchKind(rollResult.fishermansVillagePendingCatch.kind);
+          // Start the cast sequence like the reopen path does. Leaving the
+          // phase at 'off' showed a stuck "It got away!" HUD with no controls.
+          setFishingPhase('approach');
+          setFishingCountdown(null);
+          setFishingTension(0);
+          fishingEscapeInFlightRef.current = false;
           setFishingCatchMessage(null);
           setShowFishermansFishing(true);
           setLandingText(rollResult.fishermansVillageRodCollected
@@ -15720,6 +15727,13 @@ export function IslandRunBoardPrototype({
     triggerIslandRunHaptic,
   ]);
 
+  // Self-heal: an open fishing session with a catch on the line must never sit
+  // in 'off' (that renders "It got away!" with no cast or pull control).
+  useEffect(() => {
+    if (!showFishermansFishing || !fishermansFishingProgress.pendingCatch || fishingPhase !== 'off') return undefined;
+    const timer = window.setTimeout(() => setFishingPhase('approach'), 120);
+    return () => window.clearTimeout(timer);
+  }, [fishermansFishingProgress.pendingCatch, fishingPhase, showFishermansFishing]);
   useEffect(() => {
     if (!showFishermansFishing) return undefined;
     const advance = (next: typeof fishingPhase, delayMs: number) => {
