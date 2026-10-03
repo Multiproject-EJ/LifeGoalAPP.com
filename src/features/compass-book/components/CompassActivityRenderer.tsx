@@ -316,6 +316,14 @@ function BlockInput({
             onChange={(event) =>
               onChange(block.questionId, { kind: 'scale', value: Number(event.target.value) })
             }
+            // An unanswered slider rests on the midpoint; releasing it there must
+            // still count as an answer (no change event fires for the same value).
+            onPointerUp={(event) => {
+              if (current === null) onChange(block.questionId, { kind: 'scale', value: Number(event.currentTarget.value) });
+            }}
+            onKeyUp={(event) => {
+              if (current === null && (event.key === 'Enter' || event.key === ' ')) onChange(block.questionId, { kind: 'scale', value: Number(event.currentTarget.value) });
+            }}
             aria-label={block.prompt}
           />
           <div className="compass-book__scale-foot">
