@@ -99,10 +99,22 @@ export const habitEggWarmthTests: TestCase[] = [
     },
   },
   {
+    name: 'egg warmth: habits, Compass answers and the daily visit share one daily cap',
+    run: () => {
+      const storage = memoryStorage();
+      recordHabitEggWarmth(storage, 'u', 'daily-visit', '2026-10-03');
+      recordHabitEggWarmth(storage, 'u', 'compass:values.1', '2026-10-03');
+      assert(!canHabitWarmEggsToday(storage, 'u', 'compass:values.1', '2026-10-03'), 'same answer cannot warm twice a day');
+      recordHabitEggWarmth(storage, 'u', 'habit:h1', '2026-10-03');
+      assert(!canHabitWarmEggsToday(storage, 'u', 'habit:h2', '2026-10-03'), 'cap shared across sources');
+    },
+  },
+  {
     name: 'habit egg warmth: notice copy',
     run: () => {
-      assertEqual(formatHabitEggWarmthNotice({ warmedCount: 3, readyCount: 0 }, 1), '🔥 Your 3 eggs got 2h warmer. (2 more today)', 'plural');
-      assertEqual(formatHabitEggWarmthNotice({ warmedCount: 1, readyCount: 1 }, 3), '🔥 Your egg got 2h warmer. One is ready to hatch! (max warmth today)', 'ready + capped');
+      assertEqual(formatHabitEggWarmthNotice({ warmedCount: 3, readyCount: 0 }, 1), '🔥 Habit done! Your 3 eggs got 2h warmer. (2 more today)', 'plural');
+      assertEqual(formatHabitEggWarmthNotice({ warmedCount: 1, readyCount: 1 }, 3, 'compass'), '🔥 Thanks for sharing! Your egg got 2h warmer. One is ready to hatch! (max warmth today)', 'ready + capped');
+      assertEqual(formatHabitEggWarmthNotice({ warmedCount: 2, readyCount: 0 }, 2, 'visit'), '🔥 Welcome back! Your 2 eggs got 2h warmer. (1 more today)', 'daily visit');
     },
   },
   {
@@ -114,6 +126,11 @@ export const habitEggWarmthTests: TestCase[] = [
       assertEqual((tracker.match(/if \(isToday\) warmEggsAfterHabitCheckIn\(habit\.id, dateISO\);/g) ?? []).length, 3, 'toggle, done-ish and stage check-ins warm eggs');
       const action = fs.readFileSync('src/features/gamification/level-worlds/services/islandRunHabitEggWarmthAction.ts', 'utf8') as string;
       assert(action.includes('applyHabitEggWarmth('), 'uses the canonical state action');
+      const compass = fs.readFileSync('src/features/compass-book/hooks/useCompassBook.ts', 'utf8') as string;
+      assert(compass.includes("warmEggsFromSource({ session, source: `compass:${activityId}` })"), 'Compass answers warm eggs before habits exist');
+      const board = fs.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8') as string;
+      assert(board.includes("warmEggsFromSource({ session, source: 'daily-visit' })"), 'first visit of the day warms eggs');
+      assert(board.includes('<EggWarmthToastHost />') && tracker.includes('<EggWarmthToastHost />'), 'toast shows on board and Today');
       const modal = fs.readFileSync('src/features/gamification/level-worlds/components/CreatureHatchRevealModal.tsx', 'utf8') as string;
       assert(modal.includes('export const HATCH_RITUAL_TAPS = 3;'), 'three taps to crack');
       assert(!modal.includes('reduced ? 250 : 2200'), 'no auto-crack timer');

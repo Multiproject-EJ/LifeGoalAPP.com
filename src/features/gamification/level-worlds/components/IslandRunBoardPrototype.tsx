@@ -209,6 +209,8 @@ import {
 import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
 import { useGamification } from '../../../../hooks/useGamification';
 import { isDemoSession } from '../../../../services/demoSession';
+import { warmEggsFromSource } from '../services/islandRunHabitEggWarmthAction';
+import { EggWarmthToastHost } from './EggWarmthToastHost';
 import type { IslandRunGuestClaimSource } from '../services/islandRunGuestClaimService';
 import {
   hydrateIslandRunRuntimeStateWithSource,
@@ -2906,6 +2908,20 @@ export function IslandRunBoardPrototype({
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const isOnboardingCelebrationVisible = showFirstRunCelebration || showHatcheryL1Celebration;
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
+  // First visit of the day warms incubating eggs (shares the daily warmth cap
+  // with habit check-ins and Compass answers). Delayed so the toast lands
+  // after the loading screen.
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return undefined;
+    const timer = window.setTimeout(() => {
+      try {
+        warmEggsFromSource({ session, source: 'daily-visit' });
+      } catch (error) {
+        console.warn('Daily visit egg warmth failed', error);
+      }
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [hasHydratedRuntimeState, session]);
   const [firstArrivalSkip, setFirstArrivalSkip] = useState(false);
   const [firstArrivalWelcomeComplete, setFirstArrivalWelcomeComplete] = useState(false);
   const [firstArrivalBeat, setFirstArrivalBeat] = useState('FAST TRAVEL');
@@ -22068,6 +22084,7 @@ export function IslandRunBoardPrototype({
         />
       ) : null}
 
+      <EggWarmthToastHost />
       {eggBatchCards.length > 0 ? <EggBatchReveal creatureIds={eggBatchCards} onClose={() => setEggBatchCards([])} /> : null}
       {hatchReveal ? (
         <CreatureHatchRevealModal
