@@ -1638,11 +1638,11 @@
   white-space: nowrap;
 }
 
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(1) { order: 4; background-image: url('/assets/themes/first-light-kingdom/score/player-shop.webp'); }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(1)::after { content: 'Keep playing'; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(2) { order: 6; background-image: url('/assets/themes/first-light-kingdom/score/garage.webp'); }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(2)::after { content: 'Keep playing'; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(3) {
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(1) { order: 4; background-image: url('/assets/themes/first-light-kingdom/score/player-shop.webp'); }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(1)::after { content: 'Keep playing'; }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(2) { order: 6; background-image: url('/assets/themes/first-light-kingdom/score/garage.webp'); }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(2)::after { content: 'Keep playing'; }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(3) {
   order: 1;
   min-height: 0;
   aspect-ratio: 1.72 / 1;
@@ -1652,15 +1652,15 @@
   background-size: cover;
   box-shadow: 0 12px 27px rgba(38, 57, 77, 0.16);
 }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(4) { order: 2; background-image: url('/assets/themes/first-light-kingdom/score/achievements.webp'); }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(4)::after { content: 'Keep playing'; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(5) { order: 5; background-image: url('/assets/themes/first-light-kingdom/score/zen-garden.webp'); }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(5)::after { content: 'Keep playing'; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(6) { order: 3; background-image: url('/assets/themes/first-light-kingdom/score/adventure-league.webp'); }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(6)::before { content: '★'; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(6)::after { content: 'Open'; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(7) { order: 7; background-image: url('/assets/themes/first-light-kingdom/score/bank.webp'); }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(7)::after { content: 'Keep playing'; }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(4) { order: 2; background-image: url('/assets/themes/first-light-kingdom/score/achievements.webp'); }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(4)::after { content: 'Keep playing'; }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(5) { order: 5; background-image: url('/assets/themes/first-light-kingdom/score/zen-garden.webp'); }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(5)::after { content: 'Keep playing'; }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(6) { order: 3; background-image: url('/assets/themes/first-light-kingdom/score/adventure-league.webp'); }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(6)::before { content: '★'; }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(6)::after { content: 'Open'; }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(7) { order: 7; background-image: url('/assets/themes/first-light-kingdom/score/bank.webp'); }
+[data-theme='first-light-kingdom'] .score-tab__hub--home > .score-tab__hub-card:nth-child(7)::after { content: 'Keep playing'; }
 
 [data-theme='first-light-kingdom'] .score-tab__hub-card--full { grid-column: 1 / -1; }
 [data-theme='first-light-kingdom'] .score-tab__hub-card .score-tab__hub-visual,
@@ -2283,3 +2283,41 @@
   [data-theme='first-light-kingdom'] .feature-preview-overlay--progression .feature-preview-overlay__progression-art { aspect-ratio: 3 / 1.25; }
   [data-theme='first-light-kingdom'] .feature-preview-overlay--progression .feature-preview-overlay__unlock-note { display: none; }
 }
+
+/* Collections list: the home-grid art cards above hide titles and icons and
+   paint artwork by position; this list needs plain, readable cards. */
+[data-theme='first-light-kingdom'] .score-tab__hub--collections > .score-tab__hub-card {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.85rem;
+  align-items: center;
+  padding: 1rem 1.1rem;
+  background-image: none;
+  text-align: left;
+}
+[data-theme='first-light-kingdom'] .score-tab__hub--collections > .score-tab__hub-card .score-tab__hub-visual {
+  display: grid;
+  grid-row: span 2;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: rgba(214, 172, 86, 0.16);
+  font-size: 1.6rem;
+}
+[data-theme='first-light-kingdom'] .score-tab__hub--collections > .score-tab__hub-card .score-tab__hub-title {
+  display: block;
+  position: static;
+  color: #0c2a52;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 650;
+}
+[data-theme='first-light-kingdom'] .score-tab__hub--collections > .score-tab__hub-card .score-tab__hub-desc {
+  margin: 0.15rem 0 0;
+  color: #3b5274;
+  text-align: left;
+}
+[data-theme='first-light-kingdom'] .score-tab__hub--collections > .score-tab__hub-card::before,
+[data-theme='first-light-kingdom'] .score-tab__hub--collections > .score-tab__hub-card::after { content: none; }
