@@ -1,10 +1,12 @@
 import type { IslandRunGameStateRecord, PerIslandEggsLedger } from './islandRunGameStateStore';
 
 /**
- * Habits warm the egg (user decision 2026-10-03): every habit check-in for
- * today brings all incubating eggs closer to hatching. One warmth per habit
- * per day, at most HABIT_EGG_WARMTH_DAILY_CAP warmths a day, so real-life
- * habits speed hatching without letting a long list skip the wait entirely.
+ * Real-life effort warms the egg (user decision 2026-10-03): a habit check-in,
+ * a Compass Book answer or the first visit of the day brings all incubating
+ * eggs closer to hatching. Before the life app opens there are no habits, so
+ * Compass answers and daily visits carry the warmth. Each source warms once
+ * per day and all sources share HABIT_EGG_WARMTH_DAILY_CAP, so effort speeds
+ * hatching without skipping the wait entirely.
  */
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -86,15 +88,21 @@ function readWarmedHabitIds(storage: HabitEggWarmthStorage, userId: string, date
   }
 }
 
-/** Whether this habit may still warm eggs today (not used yet, cap not reached). */
-export function canHabitWarmEggsToday(storage: HabitEggWarmthStorage, userId: string, habitId: string, dateISO: string): boolean {
-  const warmed = readWarmedHabitIds(storage, userId, dateISO);
-  return !warmed.includes(habitId) && warmed.length < HABIT_EGG_WARMTH_DAILY_CAP;
+export type EggWarmthSource = `habit:${string}` | `compass:${string}` | 'daily-visit';
+
+export function habitWarmthSource(habitId: string): EggWarmthSource {
+  return `habit:${habitId}`;
 }
 
-export function recordHabitEggWarmth(storage: HabitEggWarmthStorage, userId: string, habitId: string, dateISO: string): number {
+/** Whether this source may still warm eggs today (not used yet, cap not reached). */
+export function canHabitWarmEggsToday(storage: HabitEggWarmthStorage, userId: string, source: string, dateISO: string): boolean {
   const warmed = readWarmedHabitIds(storage, userId, dateISO);
-  if (!warmed.includes(habitId)) warmed.push(habitId);
+  return !warmed.includes(source) && warmed.length < HABIT_EGG_WARMTH_DAILY_CAP;
+}
+
+export function recordHabitEggWarmth(storage: HabitEggWarmthStorage, userId: string, source: string, dateISO: string): number {
+  const warmed = readWarmedHabitIds(storage, userId, dateISO);
+  if (!warmed.includes(source)) warmed.push(source);
   try {
     storage.setItem(ledgerKey(userId, dateISO), JSON.stringify(warmed));
   } catch {
@@ -103,7 +111,17 @@ export function recordHabitEggWarmth(storage: HabitEggWarmthStorage, userId: str
   return warmed.length;
 }
 
-export function formatHabitEggWarmthNotice(result: { warmedCount: number; readyCount: number }, warmthsUsedToday: number): string {
+const SOURCE_LEAD: Record<'habit' | 'compass' | 'visit', string> = {
+  habit: 'Habit done!',
+  compass: 'Thanks for sharing!',
+  visit: 'Welcome back!',
+};
+
+export function formatHabitEggWarmthNotice(
+  result: { warmedCount: number; readyCount: number },
+  warmthsUsedToday: number,
+  kind: 'habit' | 'compass' | 'visit' = 'habit',
+): string {
   const hours = Math.round(HABIT_EGG_WARMTH_MS / HOUR_MS);
   const eggs = result.warmedCount === 1 ? 'Your egg' : `Your ${result.warmedCount} eggs`;
   const left = Math.max(0, HABIT_EGG_WARMTH_DAILY_CAP - warmthsUsedToday);
@@ -111,5 +129,5 @@ export function formatHabitEggWarmthNotice(result: { warmedCount: number; readyC
     ? ` ${result.readyCount === 1 ? 'One is' : `${result.readyCount} are`} ready to hatch!`
     : '';
   const tail = left > 0 ? ` (${left} more today)` : ' (max warmth today)';
-  return `🔥 ${eggs} got ${hours}h warmer.${ready}${tail}`;
+  return `🔥 ${SOURCE_LEAD[kind]} ${eggs} got ${hours}h warmer.${ready}${tail}`;
 }

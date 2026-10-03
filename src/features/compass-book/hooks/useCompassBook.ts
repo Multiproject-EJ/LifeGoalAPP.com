@@ -21,6 +21,7 @@ import {
   type CompassChapterState,
 } from '../types';
 import { getChapterActivities } from '../content/compassBookCurriculum';
+import { warmEggsFromSource } from '../../gamification/level-worlds/services/islandRunHabitEggWarmthAction';
 import { buildDemoChapterStates } from '../content/demoBook';
 import { computeChapterProgress, mergeCompletedActivityIds } from '../logic/progress';
 import { getChapterConfirmedOutput } from '../logic/projectors';
@@ -220,8 +221,16 @@ export function useCompassBook(
     async (chapterId: CompassBookChapterId, activityId: string, entries: CompassAnswerEntry[]) => {
       const base = states[chapterId] ?? emptyChapterState(chapterId);
       await persist(applyActivityAnswers(base, chapterId, activityId, entries));
+      // Sharing an answer warms incubating eggs (once per activity per day).
+      if (!demo && session && entries.length > 0) {
+        try {
+          warmEggsFromSource({ session, source: `compass:${activityId}` });
+        } catch (error) {
+          console.warn('Compass egg warmth failed', error);
+        }
+      }
     },
-    [states, persist, applyActivityAnswers],
+    [states, persist, applyActivityAnswers, demo, session],
   );
 
   /** Dev long form: many activities of one chapter in a single persist. */

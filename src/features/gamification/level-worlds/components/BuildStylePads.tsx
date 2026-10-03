@@ -80,9 +80,14 @@ export function StackBuildPad({ disabled, costLabel, onBuild }: PadProps) {
   const { busy, step } = useStep(onBuild);
   const track = useRef<HTMLDivElement>(null);
   const drag = useRef<{ startY: number; height: number } | null>(null);
-  const [progress, setProgress] = useState(0);
+  // Release reads the latest drag progress (state would be one render stale,
+  // which also made Enter/Space never build).
+  const progressRef = useRef(0);
+  const [progress, setProgressState] = useState(0);
   const [locked, setLocked] = useState(false);
   const [stacked, setStacked] = useState(0);
+  const [nudge, setNudge] = useState(0);
+  const setProgress = (value: number) => { progressRef.current = value; setProgressState(value); };
   const down = (event: ReactPointerEvent) => {
     if (disabled || busy || locked || !track.current) return;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -95,7 +100,12 @@ export function StackBuildPad({ disabled, costLabel, onBuild }: PadProps) {
   const up = async () => {
     if (!drag.current) return;
     drag.current = null;
-    if (!stackReleaseLocks(progress)) { setProgress(0); return; }
+    if (!stackReleaseLocks(progressRef.current)) {
+      // A plain tap (or a short drag) teaches the gesture instead of doing nothing.
+      if (progressRef.current < 0.5) setNudge((n) => n + 1);
+      setProgress(0);
+      return;
+    }
     setProgress(1); setLocked(true);
     const built = await step();
     try { navigator.vibrate?.(built ? [10, 40, 16] : 6); } catch { /* unsupported */ }
@@ -103,17 +113,22 @@ export function StackBuildPad({ disabled, costLabel, onBuild }: PadProps) {
   };
   return (
     <div className={`bsp bsp--stack${locked ? ' bsp--locked' : ''}`}>
+      <div className="bsp-stack__rail">
       <div ref={track} className="bsp-stack__track" aria-hidden="true">
         <span className="bsp-stack__slot" />
+        {!locked && progress === 0 ? (
+          <span key={nudge} className={`bsp-stack__cue${nudge > 0 ? ' bsp-stack__cue--nudge' : ''}`}>⇡ Drag up past the line</span>
+        ) : null}
         <span className="bsp-stack__pile">{Array.from({ length: Math.min(4, stacked) }, (_, i) => <i key={i} />)}</span>
       </div>
-      <button type="button" className="bsp-stack__beam" disabled={disabled}
+      <button type="button" key={`beam-${nudge}`} className={`bsp-stack__beam${nudge > 0 ? ' bsp-stack__beam--nudge' : ''}`} disabled={disabled}
         style={{ bottom: `calc(${progress} * (100% - 36px))` }}
         onPointerDown={down} onPointerMove={move} onPointerUp={() => void up()} onPointerCancel={() => { drag.current = null; setProgress(0); }}
         onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setProgress(1); drag.current = { startY: 0, height: 1 }; void up(); } }}
         aria-label={`Hoist and stack: drag the beam up to build one step for ${costLabel}`}>
         ⇡ Hoist
       </button>
+      </div>
       <p className="bsp__hint">{locked ? 'Locked in!' : `Drag up past the line · ${costLabel}`}</p>
     </div>
   );

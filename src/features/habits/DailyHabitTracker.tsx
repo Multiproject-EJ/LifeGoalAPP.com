@@ -204,6 +204,7 @@ import { getUnresolvedEggSlotsForIsland } from '../gamification/level-worlds/ser
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 import { refreshIslandRunStateFromLocal } from '../gamification/level-worlds/services/islandRunStateStore';
 import { warmEggsFromHabitCheckIn } from '../gamification/level-worlds/services/islandRunHabitEggWarmthAction';
+import { EggWarmthToastHost } from '../gamification/level-worlds/components/EggWarmthToastHost';
 import { getPromiseVariant, isPromiseActionableToday } from '../gamification/promisePresentation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
 import { triggerCompletionHaptic, triggerImpactHaptic } from '../../utils/completionHaptics';
@@ -2519,17 +2520,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     saveDraft(storageKey, true);
     return true;
   }, [gamificationEnabled, session]);
-  const [eggWarmthNotice, setEggWarmthNotice] = useState<string | null>(null);
-  useEffect(() => {
-    if (!eggWarmthNotice) return undefined;
-    const timer = window.setTimeout(() => setEggWarmthNotice(null), 4200);
-    return () => window.clearTimeout(timer);
-  }, [eggWarmthNotice]);
   const warmEggsAfterHabitCheckIn = useCallback((habitId: string, dateISO: string) => {
     if (!session?.user?.id || !gamificationEnabled) return;
     try {
-      const notice = warmEggsFromHabitCheckIn({ session, habitId, dateISO });
-      if (notice) setEggWarmthNotice(notice);
+      warmEggsFromHabitCheckIn({ session, habitId, dateISO });
     } catch (error) {
       console.warn('Habit egg warmth failed', error);
     }
@@ -14152,12 +14146,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   return (
     <section className="habit-tracker">
       {todayStarUpgradeModal}
-      {eggWarmthNotice ? (
-        <div className="habit-egg-warmth-toast" role="status" aria-live="polite">
-          <span className="habit-egg-warmth-toast__egg" aria-hidden="true">🥚</span>
-          <span>{eggWarmthNotice}</span>
-        </div>
-      ) : null}
+      <EggWarmthToastHost />
       <SuperHabitRosterModal
         open={superHabitRosterOpen}
         initialSuperHabitId={selectedSuperHabitId}

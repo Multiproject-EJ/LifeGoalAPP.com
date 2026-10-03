@@ -5,6 +5,7 @@ import { hasSavedIslandRunRecord } from '../gamification/level-worlds/services/i
 import { resolveWorldPortalProgress } from '../gamification/level-worlds/services/worldPortalProgress';
 import { readSavedWorldPortalReceipt } from '../gamification/level-worlds/services/worldPortalActions';
 import { resolveWorldPortalAccess } from './worldPortalAccess';
+import { hasAcceptedLifeFastTrack } from '../gamification/level-worlds/services/lifePathProgress';
 import { isDemoSession } from '../../services/demoSession';
 import type { DeveloperCheck } from './useVerifiedDeveloper';
 
@@ -57,6 +58,7 @@ export function useWorldPortalEntry(session: Session | null, client: SupabaseCli
     hasEarnedPortal,
     isVerifiedDeveloper: !!owner && developer.owner === owner && developer.verified,
     hasVerifiedEarlyAccess: false,
+    hasAcceptedFastTrack: !!journeyState && hasAcceptedLifeFastTrack(journeyState.signatureMissionProgressByIsland),
   });
   const phase: 'loading' | 'ready' | 'error' = guestTransferPending ? (guestTransferFailed ? 'error' : 'loading')
     : owner && access.canOpenFullApp ? 'ready'

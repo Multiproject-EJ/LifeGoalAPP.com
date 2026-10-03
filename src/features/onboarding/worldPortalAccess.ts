@@ -16,9 +16,11 @@ export interface WorldPortalAccessInput {
   isVerifiedDeveloper: boolean;
   /** Server-confirmed entitlement; never a local switch or user_metadata. */
   hasVerifiedEarlyAccess: boolean;
+  /** The player accepted the caretaker's optional life fast-track offer. */
+  hasAcceptedFastTrack?: boolean;
 }
 
-export type WorldPortalAccessReason = 'developer' | 'earned' | 'early-access'
+export type WorldPortalAccessReason = 'developer' | 'earned' | 'early-access' | 'fast-track'
   | 'council-ready' | 'game-first';
 
 export interface WorldPortalAccess {
@@ -40,7 +42,8 @@ export function resolveWorldPortalAccess(input: WorldPortalAccessInput): WorldPo
   const reason: WorldPortalAccessReason = input.isVerifiedDeveloper ? 'developer'
     : input.hasEarnedPortal ? 'earned'
       : input.hasVerifiedEarlyAccess ? 'early-access'
-        : councilReady ? 'council-ready' : 'game-first';
+        : input.hasAcceptedFastTrack ? 'fast-track'
+          : councilReady ? 'council-ready' : 'game-first';
   const canOpenFullApp = reason !== 'game-first' && reason !== 'council-ready';
   return {
     reason,
