@@ -1699,3 +1699,51 @@
   height: 1.5rem;
   object-fit: contain;
 }
+
+/* One-step quick add: category chips + optional details link. */
+.actions-tab__quick-add-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-top: 0.6rem;
+}
+.actions-tab__quick-add-chip,
+.actions-tab__quick-add-more {
+  min-height: 34px;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #fff;
+  color: #1f2937;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.actions-tab__quick-add-chip--selected {
+  border-color: var(--category-color, #6366f1);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--category-color, #6366f1) 30%, transparent);
+  background: color-mix(in srgb, var(--category-color, #6366f1) 12%, #fff);
+}
+.actions-tab__quick-add-more {
+  border-style: dashed;
+  color: #4b5563;
+}
+
+/* Tasks header shortcuts carry a visible label under the icon. */
+.actions-tab__header-icon {
+  flex-direction: column;
+  width: auto;
+  min-width: 44px;
+  height: auto;
+  min-height: 44px;
+  padding: 0.25rem 0.45rem;
+  gap: 1px;
+}
+.actions-tab__header-icon-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #475569;
+  letter-spacing: 0.02em;
+}
