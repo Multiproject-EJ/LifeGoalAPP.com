@@ -115,6 +115,7 @@ export const habitEggWarmthTests: TestCase[] = [
       assertEqual(formatHabitEggWarmthNotice({ warmedCount: 3, readyCount: 0 }, 1), '🔥 Habit done! Your 3 eggs got 2h warmer. (2 more today)', 'plural');
       assertEqual(formatHabitEggWarmthNotice({ warmedCount: 1, readyCount: 1 }, 3, 'compass'), '🔥 Thanks for sharing! Your egg got 2h warmer. One is ready to hatch! (max warmth today)', 'ready + capped');
       assertEqual(formatHabitEggWarmthNotice({ warmedCount: 2, readyCount: 0 }, 2, 'visit'), '🔥 Welcome back! Your 2 eggs got 2h warmer. (1 more today)', 'daily visit');
+      assertEqual(formatHabitEggWarmthNotice({ warmedCount: 1, readyCount: 0 }, 1, 'task'), '🔥 Must-do done! Your egg got 2h warmer. (2 more today)', 'must-do task');
     },
   },
   {

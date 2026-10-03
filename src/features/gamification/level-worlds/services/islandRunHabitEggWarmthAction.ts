@@ -66,7 +66,9 @@ export function warmEggsFromSource(options: {
   if (result.nextHatchAtMs !== null) {
     scheduleEggHatchNotification(userId, result.nextHatchAtMs).catch(() => undefined);
   }
-  const kind = options.source.startsWith('habit:') ? 'habit' : options.source.startsWith('compass:') ? 'compass' : 'visit';
+  const kind = options.source.startsWith('habit:') ? 'habit'
+    : options.source.startsWith('compass:') ? 'compass'
+      : options.source.startsWith('task:') ? 'task' : 'visit';
   const notice = formatHabitEggWarmthNotice(result, used, kind);
   if (options.announce !== false) announce(notice);
   return notice;

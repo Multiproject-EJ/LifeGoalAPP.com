@@ -20,6 +20,8 @@ import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
 import { logGameSession, awardDice, awardGameTokens } from '../../../../services/gameRewards';
 import { startTaskTowerSession, completeTaskTowerSession } from '../../../../services/taskTowerSessions';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
+import { applyTokenHopRewards } from '../../level-worlds/services/islandRunStateActions';
+import { ISLAND_RUN_ECONOMY_SOURCES } from '../../level-worlds/services/islandRunEconomyTelemetry';
 import type { Action } from '../../../../types/actions';
 import type { TowerBlock, TaskTowerSession } from './taskTowerTypes';
 import { TOWER_GRID, TASK_TOWER_COMBO } from './taskTowerTypes';
@@ -51,6 +53,27 @@ const playAllClear = () => {
 const playBlockTap = () => {
   playTone(500, 0.05, 'sine', 0.15);
 };
+
+/**
+ * Task Tower dice must land in the playable Island Run dice pool (the one the
+ * game rolls with), not only the legacy local currency balance. Canonical
+ * action, same path the daily treats use.
+ */
+function grantTaskTowerIslandRunDice(session: Session, amount: number): void {
+  const dice = Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0;
+  if (dice <= 0) return;
+  try {
+    applyTokenHopRewards({
+      session,
+      client: null,
+      deltas: { dicePool: dice },
+      telemetryDiceSource: ISLAND_RUN_ECONOMY_SOURCES.taskTowerDice,
+      triggerSource: 'task_tower_dice_award',
+    });
+  } catch (error) {
+    console.warn('Task Tower dice could not reach the Island Run wallet', error);
+  }
+}
 
 const SHARD_ANIMATION_MS = 450;
 const LANDING_ANIMATION_MS = 400;
@@ -87,7 +110,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const userId = session.user.id;
-  const { actions, loading, completeAction: completeActionHook } = useActions(session);
+  const { actions, loading, completeAction: completeActionHook, createAction } = useActions(session);
   const { projects } = useProjects(session);
 
   const projectColorById = useMemo(
@@ -118,6 +141,11 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const [combo, setCombo] = useState<ComboState | null>(null);
   const [stageShaking, setStageShaking] = useState(false);
   const [overviewMode, setOverviewMode] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addTitle, setAddTitle] = useState('');
+  const [adding, setAdding] = useState(false);
+  // Action ids the tower already holds (built, queued or completed this visit).
+  const knownActionIdsRef = useRef<Set<string>>(new Set());
 
   const floatingRewardIdRef = useRef(0);
   const towerBuiltRef = useRef(false);
@@ -150,6 +178,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
     towerBuiltRef.current = true;
 
     const { blocks, queued } = buildTowerAndQueue(actions.filter(a => !a.completed));
+    knownActionIdsRef.current = new Set(actions.map(a => a.id));
     setTowerOpenedEmpty(blocks.length === 0);
     setGameSession(prev => ({ ...prev, blocks }));
     setQueuedActions(queued);
@@ -169,6 +198,49 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
       supabaseSessionIdRef.current = sessionId;
     });
   }, [loading, actions, userId]);
+
+  // Tasks added while the tower is open (the "+ Add" button) drop straight in:
+  // the lowest supported spot that fits, else they join the supply line.
+  useEffect(() => {
+    if (!towerBuiltRef.current) return;
+    const fresh = actions.filter(a => !a.completed && !knownActionIdsRef.current.has(a.id));
+    if (fresh.length === 0) return;
+    fresh.forEach(a => knownActionIdsRef.current.add(a.id));
+    let blocks = gameSession.blocks;
+    const placedIds: string[] = [];
+    const overflow: Action[] = [];
+    for (const action of fresh) {
+      const block = placeQueuedBlock(blocks, action);
+      if (block) { blocks = [...blocks, block]; placedIds.push(block.id); }
+      else overflow.push(action);
+    }
+    setGameSession(prev => ({ ...prev, blocks: [...prev.blocks, ...blocks.filter(b => placedIds.includes(b.id))] }));
+    if (overflow.length > 0) setQueuedActions(prev => [...prev, ...overflow]);
+    setTowerOpenedEmpty(false);
+    if (placedIds.length > 0) {
+      setLandingBlockIds(new Set(placedIds));
+      playBlockSettle();
+      const timer = window.setTimeout(() => setLandingBlockIds(new Set()), LANDING_ANIMATION_MS);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the task list changes
+  }, [actions]);
+
+  const submitTowerTask = useCallback(async () => {
+    const title = addTitle.trim();
+    if (!title || adding) return;
+    setAdding(true);
+    try {
+      await createAction({ title, category: 'nice_to_do' });
+      setAddTitle('');
+      setAddOpen(false);
+    } catch (error) {
+      console.error('Task Tower: adding a task failed', error);
+    } finally {
+      setAdding(false);
+    }
+  }, [addTitle, adding, createAction]);
 
   // Retire the combo meter when its window lapses without another clear.
   useEffect(() => {
@@ -239,6 +311,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
       }
       if (blockRewards.dice > 0) {
         awardDice(userId, blockRewards.dice, 'task_tower', `Task Tower: Completed ${selectedBlock.category} block`);
+        grantTaskTowerIslandRunDice(session, blockRewards.dice);
       }
 
       const rewardParts = [];
@@ -308,6 +381,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
         }
         if (storeyDice > 0) {
           awardDice(userId, storeyDice, 'task_tower', `Task Tower: Tower ${storeysCleared} storey(s) shorter`);
+          grantTaskTowerIslandRunDice(session, storeyDice);
         }
 
         playStoreyClear();
@@ -346,6 +420,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
         }
         if (allClearRewards.dice > 0) {
           awardDice(userId, allClearRewards.dice, 'task_tower', 'Task Tower: All Clear Bonus');
+          grantTaskTowerIslandRunDice(session, allClearRewards.dice);
         }
         if (allClearRewards.tokens > 0) {
           awardGameTokens(userId, allClearRewards.tokens, 'task_tower', 'Task Tower: All Clear Bonus');
@@ -370,7 +445,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
     } catch (error) {
       console.error('Failed to complete action:', error);
     }
-  }, [selectedBlock, combo, gameSession.blocks, queuedActions, completeActionHook, showFloatingReward, userId]);
+  }, [selectedBlock, combo, gameSession.blocks, queuedActions, completeActionHook, showFloatingReward, userId, session]);
 
   const handleCancelComplete = useCallback(() => {
     setSelectedBlock(null);
@@ -489,6 +564,16 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
           <div className="task-tower__header-actions">
             <button
               type="button"
+              className={`task-tower__add-toggle${addOpen ? ' task-tower__add-toggle--active' : ''}`}
+              onClick={() => { setSelectedBlock(null); setAddOpen(prev => !prev); }}
+              aria-expanded={addOpen}
+              aria-label="Add a task to the tower"
+              title="Add a task"
+            >
+              ＋ Add
+            </button>
+            <button
+              type="button"
               className={`task-tower__zoom-toggle${overviewMode ? ' task-tower__zoom-toggle--active' : ''}`}
               onClick={() => {
                 setSelectedBlock(null);
@@ -510,6 +595,27 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
             </button>
           </div>
         </div>
+
+        {addOpen && (
+          <form
+            className="task-tower__add-form"
+            onSubmit={(event) => { event.preventDefault(); void submitTowerTask(); }}
+          >
+            <input
+              className="task-tower__add-input"
+              type="text"
+              value={addTitle}
+              onChange={(event) => setAddTitle(event.target.value)}
+              placeholder="New task — it drops onto the tower"
+              aria-label="New task title"
+              autoFocus
+              disabled={adding}
+            />
+            <button type="submit" className="task-tower__add-submit" disabled={adding || !addTitle.trim()}>
+              {adding ? '…' : 'Drop it'}
+            </button>
+          </form>
+        )}
 
         {queuedActions.length > 0 && (
           <div className="task-tower__supply-line" aria-label={`${queuedActions.length} tasks waiting in the supply line`}>
@@ -550,7 +656,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
           {combo && (
             <div className="task-tower__combo" key={combo.expiresAt}>
               <span className="task-tower__combo-label">
-                {combo.count >= 2 ? `Combo ×${getComboMultiplier(combo.count)}` : 'Combo ready'}
+                {combo.count >= 2 ? `Combo ×${getComboMultiplier(combo.count)}` : 'Clear another before the bar runs out for bonus 🪙'}
               </span>
               <span className="task-tower__combo-bar">
                 <span

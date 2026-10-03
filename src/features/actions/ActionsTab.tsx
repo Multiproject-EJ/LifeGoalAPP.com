@@ -26,6 +26,7 @@ import { resolveFeatureAccess } from '../../services/featureAccess';
 import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
 import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../../hooks/useFutureFeatureCardStates';
 import { useEntranceArtworkReady } from '../../hooks/useEntranceArtworkReady';
+import { EggWarmthToastHost } from '../gamification/level-worlds/components/EggWarmthToastHost';
 import './ActionsTab.css';
 
 const projectsIcon = '/icons/Actions/actions_projects.webp';
@@ -487,6 +488,7 @@ export function ActionsTab({
   if (activeView === 'launcher') {
     return (
       <div className={`actions-tab actions-tab--launcher${isLauncherEntranceReady ? ' actions-tab--motion-ready' : ''}`}>
+        <EggWarmthToastHost />
         <header className="actions-tab__header actions-tab__header--launcher">
           <div className="actions-tab__header-content">
             <h2 className="actions-tab__title">ACTIONS</h2>
@@ -668,6 +670,7 @@ export function ActionsTab({
 
   return (
     <div className="actions-tab">
+      <EggWarmthToastHost />
       <header className="actions-tab__header">
         <div className="actions-tab__header-content">
           <h2 className="actions-tab__title">Tasks</h2>
@@ -684,7 +687,8 @@ export function ActionsTab({
               aria-label="Go to Projects"
               title="Go to Projects"
             >
-              📦
+              <span aria-hidden="true">📦</span>
+              <small className="actions-tab__header-icon-label">Projects</small>
             </button>
           )}
           {onNavigateToTimer && (
@@ -695,7 +699,8 @@ export function ActionsTab({
               aria-label="Open Timer"
               title="Open Timer"
             >
-              ⏱️
+              <span aria-hidden="true">⏱️</span>
+              <small className="actions-tab__header-icon-label">Timer</small>
             </button>
           )}
           <button
@@ -705,7 +710,8 @@ export function ActionsTab({
             aria-label="Open Task Tower"
             title="Open Task Tower"
           >
-            🗼
+            <span aria-hidden="true">🗼</span>
+            <small className="actions-tab__header-icon-label">Tower</small>
           </button>
           {isDemoExperience && (
             <span className="actions-tab__demo-badge">Demo Mode</span>

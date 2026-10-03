@@ -10,6 +10,8 @@ import {
   reorderActions as reorderActionsService,
 } from '../../../services/actions';
 import { DEMO_USER_ID } from '../../../services/demoData';
+import { warmEggsFromSource } from '../../gamification/level-worlds/services/islandRunHabitEggWarmthAction';
+
 export function useActions(session: Session | null) {
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,13 +88,22 @@ export function useActions(session: Session | null) {
       }
       if (data) {
         setActions((prev) => prev.map((a) => (a.id === id ? data : a)));
+        // A finished Must-do warms incubating eggs (shares the daily cap with
+        // habits, Compass answers and the daily visit).
+        if (session && data.category === 'must_do') {
+          try {
+            warmEggsFromSource({ session, source: `task:${id}` });
+          } catch (warmError) {
+            console.warn('Task egg warmth failed', warmError);
+          }
+        }
         return data;
       }
       return null;
     } catch (err) {
       throw err;
     }
-  }, [userId]);
+  }, [userId, session]);
 
   const reorderActionsByCategory = useCallback(async (category: ActionCategory, orderedIds: string[]): Promise<void> => {
     const idsInOrder = orderedIds.filter(Boolean);

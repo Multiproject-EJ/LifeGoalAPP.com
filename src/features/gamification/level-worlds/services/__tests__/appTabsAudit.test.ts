@@ -27,4 +27,27 @@ export const appTabsAuditTests: TestCase[] = [
       assert(levelWorlds.includes('.island-soft-save-modal__dialog :is(h1, h2, h3) { color: #f4f9ff; }'), 'guest save prompt heading');
     },
   },
+  {
+    name: 'Task Tower: dice reach the playable Island Run pool, the tower stands on the ground, tasks add in one step',
+    run: async () => {
+      const tower = await read('src/features/gamification/games/task-tower/TaskTower.tsx');
+      assert((tower.match(/grantTaskTowerIslandRunDice\(session, /g) ?? []).length === 3, 'block, storey and all-clear dice all go to the canonical pool');
+      assert(tower.includes('telemetryDiceSource: ISLAND_RUN_ECONOMY_SOURCES.taskTowerDice'), 'canonical token-hop action with its own source');
+      assert(tower.includes('aria-label="Add a task to the tower"') && tower.includes('placeQueuedBlock(blocks, action)'), 'in-tower add drops new tasks live');
+      const css = await read('src/features/gamification/games/task-tower/taskTower.css');
+      assert(css.includes('.task-tower__game-area > .task-tower__grid {\n  margin-top: auto;'), 'tower anchored to the ground');
+      const quick = await read('src/features/actions/components/QuickAddAction.tsx');
+      assert(quick.includes("if (e.key === 'Enter' && !adding && title.trim()) {") && quick.includes('void handleSubmit();'), 'Enter adds immediately');
+      assert(quick.includes('More details…'), 'details are optional');
+    },
+  },
+  {
+    name: 'Task Tower: a finished Must-do warms eggs through the shared daily cap',
+    run: async () => {
+      const hook = await read('src/features/actions/hooks/useActions.ts');
+      assert(hook.includes("if (session && data.category === 'must_do') {") && hook.includes('warmEggsFromSource({ session, source: `task:${id}` })'), 'must-do completion warms eggs');
+      const tab = await read('src/features/actions/ActionsTab.tsx');
+      assert((tab.match(/<EggWarmthToastHost \/>/g) ?? []).length === 2, 'toast shows on the Actions screens');
+    },
+  },
 ];

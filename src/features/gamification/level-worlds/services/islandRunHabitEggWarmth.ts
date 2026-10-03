@@ -88,7 +88,7 @@ function readWarmedHabitIds(storage: HabitEggWarmthStorage, userId: string, date
   }
 }
 
-export type EggWarmthSource = `habit:${string}` | `compass:${string}` | 'daily-visit';
+export type EggWarmthSource = `habit:${string}` | `compass:${string}` | `task:${string}` | 'daily-visit';
 
 export function habitWarmthSource(habitId: string): EggWarmthSource {
   return `habit:${habitId}`;
@@ -111,8 +111,9 @@ export function recordHabitEggWarmth(storage: HabitEggWarmthStorage, userId: str
   return warmed.length;
 }
 
-const SOURCE_LEAD: Record<'habit' | 'compass' | 'visit', string> = {
+const SOURCE_LEAD: Record<'habit' | 'compass' | 'task' | 'visit', string> = {
   habit: 'Habit done!',
+  task: 'Must-do done!',
   compass: 'Thanks for sharing!',
   visit: 'Welcome back!',
 };
@@ -120,7 +121,7 @@ const SOURCE_LEAD: Record<'habit' | 'compass' | 'visit', string> = {
 export function formatHabitEggWarmthNotice(
   result: { warmedCount: number; readyCount: number },
   warmthsUsedToday: number,
-  kind: 'habit' | 'compass' | 'visit' = 'habit',
+  kind: 'habit' | 'compass' | 'task' | 'visit' = 'habit',
 ): string {
   const hours = Math.round(HABIT_EGG_WARMTH_MS / HOUR_MS);
   const eggs = result.warmedCount === 1 ? 'Your egg' : `Your ${result.warmedCount} eggs`;

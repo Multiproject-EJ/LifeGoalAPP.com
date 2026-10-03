@@ -49,11 +49,12 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false, showTas
     }
   };
 
+  // One step: Enter (or +) adds the task with the chosen category, Nice to do
+  // by default. Notes and a project are optional, behind "More details".
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !adding) {
-      if (title.trim()) {
-        setShowCategoryModal(true);
-      }
+    if (e.key === 'Enter' && !adding && title.trim()) {
+      e.preventDefault();
+      void handleSubmit();
     }
   };
 
@@ -84,15 +85,46 @@ export function QuickAddAction({ onAdd, projects = [], disabled = false, showTas
         <button
           type="button"
           className={`actions-tab__quick-add-button ${hasTitle ? 'actions-tab__quick-add-button--visible' : ''}`}
-          onClick={() => setShowCategoryModal(true)}
+          onClick={() => void handleSubmit()}
           disabled={adding || disabled || !hasTitle}
-          aria-label="Choose action category"
+          aria-label="Add task"
           aria-hidden={!hasTitle}
           tabIndex={hasTitle ? 0 : -1}
         >
           {adding ? '...' : '+'}
         </button>
       </div>
+
+      {hasTitle ? (
+        <div className="actions-tab__quick-add-chips" role="radiogroup" aria-label="Task category">
+          {(Object.keys(ACTION_CATEGORY_CONFIG) as ActionCategory[]).map((cat) => {
+            const config = ACTION_CATEGORY_CONFIG[cat];
+            const isSelected = category === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                role="radio"
+                aria-checked={isSelected}
+                className={`actions-tab__quick-add-chip${isSelected ? ' actions-tab__quick-add-chip--selected' : ''}`}
+                style={{ '--category-color': config.color } as React.CSSProperties}
+                onClick={() => setCategory(cat)}
+                disabled={adding || disabled}
+              >
+                <span aria-hidden="true">{config.icon}</span> {config.label}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            className="actions-tab__quick-add-more"
+            onClick={() => setShowDetailsModal(true)}
+            disabled={adding || disabled}
+          >
+            More details…
+          </button>
+        </div>
+      ) : null}
 
       {showCategoryModal && (
         <div
