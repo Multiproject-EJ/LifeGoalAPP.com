@@ -20796,7 +20796,7 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {/* ── Puzzle Collection (Island 015+) ─────────────────────────────── */}
+      {/* ── Puzzle Collection (Island 005+) ─────────────────────────────── */}
       {showStickerAlbumDialog && isPuzzleCollectionAvailable && (
         <PuzzleCollectionModal
           view={resolvePuzzleCollectionView({

@@ -146,7 +146,8 @@ export function ContractWizard({
   const [endDate, setEndDate] = useState<string>('');
   const [durationWeeks, setDurationWeeks] = useState<number>(4);
 
-  const [stakeType, setStakeType] = useState<ContractStakeType>('gold');
+  // Gold is retired: new promises stake Zen tokens only.
+  const [stakeType] = useState<ContractStakeType>('tokens');
   const [stakeAmount, setStakeAmount] = useState<number>(0);
   const [graceDays, setGraceDays] = useState<number>(1);
   const [trackingMode, setTrackingMode] = useState<'progress' | 'outcome_only'>('progress');
@@ -336,10 +337,10 @@ export function ContractWizard({
 
     if (currentScreen === 'stake' && !stakeValid) {
       if (!hasStakeCapacity) {
-        setError(`Build your ${stakeType === 'gold' ? 'Gold' : 'Tokens'} to at least 5 before creating a promise stake.`);
+        setError(`Build your ${stakeType === 'gold' ? 'Gold' : 'Zen tokens'} to at least 5 before creating a promise stake.`);
         return false;
       }
-      setError(`Stake must be between 1 and ${maxStake} (20% of your ${stakeType === 'gold' ? 'Gold' : 'Tokens'}).`);
+      setError(`Stake must be between 1 and ${maxStake} (20% of your ${stakeType === 'gold' ? 'Gold' : 'Zen tokens'}).`);
       return false;
     }
 
@@ -857,25 +858,9 @@ export function ContractWizard({
         <section className="contract-wizard__step">
           <h3 className="contract-wizard__prompt">What do you stake?</h3>
           <p className="contract-wizard__balance-pill">
-            Gold: {currentGoldBalance} · Tokens: {currentTokenBalance}
+            Zen tokens: {currentTokenBalance}
           </p>
 
-          <div className="contract-wizard__choice-row">
-            <button
-              type="button"
-              className={`contract-wizard__choice${stakeType === 'gold' ? ' contract-wizard__choice--selected' : ''}`}
-              onClick={() => setStakeType('gold')}
-            >
-              Gold
-            </button>
-            <button
-              type="button"
-              className={`contract-wizard__choice${stakeType === 'tokens' ? ' contract-wizard__choice--selected' : ''}`}
-              onClick={() => setStakeType('tokens')}
-            >
-              Tokens
-            </button>
-          </div>
 
           <div className="contract-wizard__field-group">
             <label className="contract-wizard__label" htmlFor="stake-amount">Amount</label>
@@ -891,8 +876,8 @@ export function ContractWizard({
             />
             <p className="contract-wizard__helper-text">
               {hasStakeCapacity
-                ? `You have ${balance} ${stakeType === 'gold' ? 'Gold' : 'Tokens'} (max: ${maxStake}).`
-                : `You have ${balance} ${stakeType === 'gold' ? 'Gold' : 'Tokens'}. Reach 5+ to unlock staking.`}
+                ? `You have ${balance} ${stakeType === 'gold' ? 'Gold' : 'Zen tokens'} (max: ${maxStake}).`
+                : `You have ${balance} ${stakeType === 'gold' ? 'Gold' : 'Zen tokens'}. Reach 5+ to unlock staking.`}
             </p>
             {hasStakeCapacity && (
               <div className="contract-wizard__quick-stake-row">
@@ -1053,7 +1038,7 @@ export function ContractWizard({
             </p>
 
             <p>
-              Stake: {stakeAmount} {stakeType === 'gold' ? 'Gold' : 'Tokens'}
+              Stake: {stakeAmount} {stakeType === 'gold' ? 'Gold' : 'Zen tokens'}
               {selectedContractType === 'sacred' ? ' (3× bonus on success, 3× penalty on miss)' : ''}.
             </p>
 

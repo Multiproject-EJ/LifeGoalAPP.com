@@ -2,7 +2,6 @@
 // Supports both demo mode (localStorage) and Supabase mode
 
 import { canUseSupabaseDataForUser, getSupabaseClient } from '../lib/supabaseClient';
-import { convertXpToGold } from '../constants/economy';
 import type {
   GamificationProfile,
   Achievement,
@@ -139,7 +138,6 @@ export async function awardXP(
           metadata: {
             currency: 'xp',
             xpAmount: finalXPAmount,
-            goldAwarded: convertXpToGold(finalXPAmount),
             sourceType,
             sourceId: sourceId ?? null,
             description: description ?? null,
@@ -178,7 +176,6 @@ export async function awardXP(
     const oldLevel = currentProfile.current_level;
     const newLevel = calculateLevelFromXP(newXP);
     const leveledUp = newLevel > oldLevel;
-    const goldAwarded = convertXpToGold(finalXPAmount);
 
     // Update profile
     const { error: updateError } = await supabase
@@ -186,7 +183,6 @@ export async function awardXP(
       .update({
         total_xp: newXP,
         current_level: newLevel,
-        total_points: currentProfile.total_points + goldAwarded,
       })
       .eq('user_id', userId);
 
@@ -228,7 +224,6 @@ export async function awardXP(
       metadata: {
         currency: 'xp',
         xpAmount: finalXPAmount,
-        goldAwarded,
         sourceType,
         sourceId: sourceId ?? null,
         description: description ?? null,
@@ -283,12 +278,10 @@ async function awardXPDemo(
   const oldLevel = profile.current_level || 1;
   const newLevel = calculateLevelFromXP(newXP);
   const leveledUp = newLevel > oldLevel;
-  const goldAwarded = convertXpToGold(xpAmount);
 
   // Update profile
   profile.total_xp = newXP;
   profile.current_level = newLevel;
-  profile.total_points = (profile.total_points || 0) + goldAwarded;
   localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(profile));
 
   // Log transaction

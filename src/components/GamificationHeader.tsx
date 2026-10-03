@@ -1,4 +1,4 @@
-// Gamification Header - Displays level, XP, streak, lives, and gold
+// Gamification Header - Displays level, XP, streak and lives
 
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
@@ -7,7 +7,6 @@ import { XPBar } from './XPBar';
 import { NotificationBadge } from './NotificationBadge';
 import { useDailySpinStatus } from '../hooks/useDailySpinStatus';
 import { getActivePowerUps } from '../services/powerUps';
-import { splitGoldBalance } from '../constants/economy';
 import { DEMO_USER_ID } from '../services/demoData';
 
 interface GamificationHeaderProps {
@@ -21,9 +20,6 @@ export function GamificationHeader({ profile, levelInfo, session, onLevelClick }
   const { spinAvailable, loading } = useDailySpinStatus(session?.user?.id);
   const [activePowerUps, setActivePowerUps] = useState<ActiveBoost[]>([]);
   const zenTokens = profile.zen_tokens ?? 0;
-  const { diamonds, goldRemainder } = splitGoldBalance(profile.total_points);
-  const goldValueLabel =
-    diamonds > 0 ? `💎 ${diamonds.toLocaleString()} · 🪙 ${goldRemainder.toLocaleString()}` : goldRemainder.toLocaleString();
 
   useEffect(() => {
     const userId = session?.user?.id || DEMO_USER_ID;
@@ -107,13 +103,6 @@ export function GamificationHeader({ profile, levelInfo, session, onLevelClick }
             <span className="gamification-stat__icon">❤️</span>
             <span className="gamification-stat__value">{profile.lives}/{profile.max_lives}</span>
             <span className="gamification-stat__label">Lives</span>
-          </div>
-
-          {/* Gold */}
-          <div className="gamification-stat">
-            <span className="gamification-stat__icon">🪙</span>
-            <span className="gamification-stat__value">{goldValueLabel}</span>
-            <span className="gamification-stat__label">Gold</span>
           </div>
 
           {/* Lotus Flowers */}

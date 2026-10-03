@@ -445,8 +445,8 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     name: 'Island 001 cannot claim reward-bar prizes',
     run: () => {
       assertEqual(resolveNextRewardKind(3, 1), 'essence', 'Expected Island 001 to stay puzzle-free');
-      assertEqual(resolveNextRewardKind(3, 14), 'essence', 'No puzzle pieces before Island 015');
-      assertEqual(resolveNextRewardKind(3, 15), 'sticker_fragments', 'Expected puzzle collection to begin on Island 015');
+      assertEqual(resolveNextRewardKind(3, 4), 'essence', 'No puzzle pieces before Island 005');
+      assertEqual(resolveNextRewardKind(3, 5), 'sticker_fragments', 'Expected puzzle collection to begin on Island 005');
 
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
       const islandOneClaim = claimIslandRunContractV2RewardBar({

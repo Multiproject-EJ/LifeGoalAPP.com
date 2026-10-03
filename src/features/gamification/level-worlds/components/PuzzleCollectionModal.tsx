@@ -64,7 +64,7 @@ function PuzzleBoard({ entry, placed, pieces, size, animate }: {
   );
 }
 
-/** Island 015+ Puzzle Collection: the current event's jigsaw and the gallery. */
+/** Island 005+ Puzzle Collection: the current event's jigsaw and the gallery. */
 export function PuzzleCollectionModal(props: {
   view: PuzzleCollectionView;
   bonusDice: number;

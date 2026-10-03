@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import type React from 'react';
 import type { Action } from '../../../types/actions';
 import { ACTION_CATEGORY_CONFIG, ACTIONS_XP_REWARDS, calculateTimeRemaining } from '../../../types/actions';
-import { convertXpToGold } from '../../../constants/economy';
 import { PointsBadge } from '../../../components/PointsBadge';
 import { ActionTimer } from './ActionTimer';
 
@@ -153,7 +152,7 @@ export function ActionItem({
       : action.category === 'nice_to_do'
         ? ACTIONS_XP_REWARDS.COMPLETE_NICE_TO_DO
         : ACTIONS_XP_REWARDS.COMPLETE_PROJECT_ACTION;
-    return convertXpToGold(xpReward).toString();
+    return xpReward.toString();
   })();
 
   return (
@@ -171,7 +170,7 @@ export function ActionItem({
       onDrop={handleDrop}
     >
       {pointsLabel ? (
-        <PointsBadge value={pointsLabel} className="points-badge--corner action-item__points-badge" size="mini" />
+        <PointsBadge value={pointsLabel} icon="⭐" unit="XP" className="points-badge--corner action-item__points-badge" size="mini" />
       ) : null}
       <button
         type="button"

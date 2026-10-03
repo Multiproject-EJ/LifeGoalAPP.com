@@ -14,6 +14,7 @@ export const ISLAND_RUN_ECONOMY_SOURCES = {
   passiveRegenDice: 'passive_regen_dice',
   dailyTreatDice: 'daily_treat_dice',
   taskTowerDice: 'task_tower_dice',
+  habitCheckInDice: 'habit_check_in_dice',
   dailySpinDice: 'daily_spin_dice',
   welcomePackDice: 'welcome_pack_dice',
   firstSessionTutorialDice: 'first_session_tutorial_dice',
