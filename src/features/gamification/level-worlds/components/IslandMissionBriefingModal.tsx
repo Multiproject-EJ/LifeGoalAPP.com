@@ -808,7 +808,11 @@ export function IslandMissionBriefingModal({
                         disabled={primaryActionDisabled || primaryActionBusy || phase !== 'open'}
                         onClick={onPrimaryAction}
                       >
-                        <span aria-hidden="true">{variant === 'living-compass' ? '✧' : milestoneValue >= milestoneCount && milestoneCount > 0 ? '👑' : '🍯'}</span>
+                        {/* The honey pot belongs to staged (milestone) missions; plain actions
+                            such as the island-clear signal carry their own emoji in the label. */}
+                        {variant === 'living-compass' || milestoneCount > 0 ? (
+                          <span aria-hidden="true">{variant === 'living-compass' ? '✧' : milestoneValue >= milestoneCount ? '👑' : '🍯'}</span>
+                        ) : null}
                         <strong>{primaryActionBusy ? variant === 'living-compass' ? 'Awakening…' : 'PRESSURISING…' : primaryActionLabel}</strong>
                       </button>
                       {primaryActionHint ? <small>{primaryActionHint}</small> : null}

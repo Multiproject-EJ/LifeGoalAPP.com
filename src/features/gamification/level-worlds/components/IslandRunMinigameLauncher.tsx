@@ -23,7 +23,8 @@ function LauncherFallback(props: {
 }) {
   return (
     <div style={{ color: '#fff', padding: '2rem', textAlign: 'center', background: 'rgba(5, 10, 24, 0.92)', minHeight: '100%' }}>
-      <h3 style={{ marginTop: 0 }}>{props.title}</h3>
+      {/* Explicit colour: the global h1–h6 rule is dark navy, unreadable on this panel. */}
+      <h3 style={{ marginTop: 0, color: '#fff4cf' }}>{props.title}</h3>
       <p>{props.body}</p>
       <button onClick={props.onClose}>{props.ctaLabel}</button>
     </div>
