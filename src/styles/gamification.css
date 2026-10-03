@@ -4409,3 +4409,6 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Global h1–h6 are dark navy; the League invite card is dark. */
+.score-tab__league-invite h3 { color: #fff4cf; }

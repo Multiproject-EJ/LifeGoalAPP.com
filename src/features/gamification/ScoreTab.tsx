@@ -961,7 +961,7 @@ export function ScoreTab({
       </header>
 
       {activeTab === 'home' && (
-        <div className="score-tab__hub">
+        <div className="score-tab__hub score-tab__hub--home">
           <button
             type="button"
             className={getScoreFutureFeatureCardClassName('score-tab__hub-card', 'score.playerShop')}
@@ -2031,7 +2031,7 @@ export function ScoreTab({
               </section>
             )
           ) : (
-            <div className="score-tab__hub">
+            <div className="score-tab__hub score-tab__hub--collections">
             <button
               type="button"
               className={getScoreFutureFeatureCardClassName(

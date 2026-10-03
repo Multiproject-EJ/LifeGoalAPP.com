@@ -29839,3 +29839,6 @@ body.island-run--drop-ramp-launch .event-arena-modal-backdrop {
   cursor: pointer;
 }
 .island-mission-tracker__flags-toggle em { margin-left: auto; font-style: normal; opacity: 0.6; }
+
+/* Global h1–h6 are dark navy; keep the guest save prompt title readable. */
+.island-soft-save-modal__dialog :is(h1, h2, h3) { color: #f4f9ff; }
