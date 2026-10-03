@@ -48,8 +48,8 @@ export const islandRunFeatureAccessTests: TestCase[] = [
         continue;
       }
       assert(result.payout,'claim available in isolated payout test');
-      assertEqual(result.payout?.rewardKind,island>=15?'sticker_fragments':'essence','actual grant follows policy');
-      if(island<15)assertEqual(result.state.stickerProgress.fragments,2,'saved fragments retained, not deleted');
+      assertEqual(result.payout?.rewardKind,island>=5?'sticker_fragments':'essence','actual grant follows policy');
+      if(island<5)assertEqual(result.state.stickerProgress.fragments,2,'saved fragments retained, not deleted');
       assertDeepEqual(result.state.stickerInventory,initial.stickerInventory,'owned collection retained');
     }
   }},
@@ -69,18 +69,18 @@ export const islandRunFeatureAccessTests: TestCase[] = [
       });
     }
   }},
-  {name:'puzzle reward rotation and its preview agree on the Island015 introduction',run(){
-    for(const island of [1,2,3,4,14,15,16]){
+  {name:'puzzle reward rotation and its preview agree on the Island005 introduction',run(){
+    for(const island of [1,2,3,4,5,6,15]){
       const ledger=fresh();
-      const expected=island>=15?'sticker_fragments':'essence';
+      const expected=island>=5?'sticker_fragments':'essence';
       assertEqual(resolveNextRewardKind(3,island,ledger),expected,'rotation uses cohort');
       const preview=resolveRewardBarClaimPayoutPreview({islandNumber:island,state:{activeTimedEvent:null,rewardBarEscalationTier:3,rewardBarClaimCountInEvent:3,signatureMissionProgressByIsland:ledger}});
       assertEqual(preview.rewardKind,expected,'HUD and payout preview match');
-      if(island<15)assertEqual(preview.stickerFragments,0,'no early puzzle grants');
+      if(island<5)assertEqual(preview.stickerFragments,0,'no early puzzle grants');
     }
   }},
-  {name:'traffic-light reward resolver cannot leak puzzle fragments before Island015',run(){
-    for(const island of [1,2,3,14])for(let seed=0;seed<300;seed++){
+  {name:'traffic-light reward resolver cannot leak puzzle fragments before Island005',run(){
+    for(const island of [1,2,3,4])for(let seed=0;seed<300;seed++){
       const reward=resolveTrafficLightCoinFlipReward({seed,stickerFragments:0,islandNumber:island,signatureMissionProgressByIsland:fresh()});
       assertEqual(reward.stickerFragments,0,'all sampled early rewards are fragment-free');
     }
@@ -97,7 +97,7 @@ export const islandRunFeatureAccessTests: TestCase[] = [
       assert(a.dailyWheel && a.ordinaryEvents,'other legacy access preserved');
       assertEqual(a.trafficLight,island>=3,'the Traffic Light waits for Island003 on every save');
       assertEqual(a.eggs,island>=4,'new eggs start on004 for every save');
-      assertEqual(a.puzzleCollection,island>=15,'the puzzle icon waits for Island015 on every save');
+      assertEqual(a.puzzleCollection,island>=5,'the puzzle icon waits for Island005 on every save');
     }
   }},
   {name:'new Island001 and002 have no puzzle or traffic-light capability',run(){
@@ -107,10 +107,10 @@ export const islandRunFeatureAccessTests: TestCase[] = [
       assert(!a.rewardChannel && !a.eventLauncher,'ceremony required');
     }
   }},
-  {name:'Island003 introduces traffic lights; puzzles wait for Island015',run(){
+  {name:'Island003 introduces traffic lights; puzzles wait for Island005',run(){
     const a=access(3);
     assert(a.trafficLight && !a.puzzleCollection,'traffic lights only');
-    assert(!access(14).puzzleCollection && access(15).puzzleCollection,'Puzzle Collection opens on Island015');
+    assert(!access(4).puzzleCollection && access(5).puzzleCollection,'Puzzle Collection opens on Island005');
     assert(!a.eggs && !a.dailyWheel,'next features stay locked');
   }},
   {name:'Island004 introduces eggs but island number alone cannot unlock the Vault or wheel',run(){

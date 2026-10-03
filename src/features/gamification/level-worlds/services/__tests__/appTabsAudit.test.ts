@@ -65,4 +65,20 @@ export const appTabsAuditTests: TestCase[] = [
       assert(css.includes('Sky Citadel skin') && css.includes('height: 100dvh;'), 'skin present, full-screen on phones');
     },
   },
+  {
+    name: 'Bank is a two-pocket Treasury: game currencies from the canonical store, XP and Zen tokens; retired currencies hidden',
+    run: async () => {
+      const treasury = await read('src/features/gamification/TreasuryPanel.tsx');
+      assert(treasury.includes('useIslandRunState(session, null)'), 'reads the canonical Island Run store');
+      for (const field of ['state.essence', 'state.shards', 'state.dicePool', 'state.minigameTicketsByEvent', 'state.stickerProgress.fragments']) {
+        assert(treasury.includes(field), `game pocket shows ${field}`);
+      }
+      assert(!/persistIslandRunRuntimeStatePatch|commitIslandRunState|apply[A-Z]\w+\(/.test(treasury), 'read-only: no gameplay writes');
+      const score = await read('src/features/gamification/ScoreTab.tsx');
+      for (const retired of ['🛡️ Shields', '✨ Shards', '💎 Diamonds', '🪙 Coins', 'Gold wallet', 'handleConvertShields']) {
+        assert(!score.includes(retired), `${retired} retired from the Bank`);
+      }
+      assert(score.includes('<TreasuryPanel'), 'Bank renders the Treasury');
+    },
+  },
 ];

@@ -8,9 +8,10 @@ export interface IslandRunFeatureAccessContext {
   signatureMissionProgressByIsland?: IslandRunSignatureMissionProgressByIsland;
 }
 
-/** The Puzzle Collection opens on Island 015 for every save (user request
- * 2026-09-30); traffic lights keep their own Island 003 introduction. */
-export const GRADUAL_PUZZLE_INTRODUCTION_ISLAND = 15;
+/** The Puzzle Collection opens on Island 005 for every save (user request
+ * 2026-10-03, was Island 015) and stays a standard feature from there on;
+ * traffic lights keep their own Island 003 introduction. */
+export const GRADUAL_PUZZLE_INTRODUCTION_ISLAND = 5;
 export const GRADUAL_TRAFFIC_LIGHT_INTRODUCTION_ISLAND = 3;
 export const GRADUAL_EGG_INTRODUCTION_ISLAND = 4;
 

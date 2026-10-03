@@ -24,11 +24,11 @@ import type {
   PacingAnalysis,
   ZenTokenTransaction,
 } from '../../types/gamification';
-import { GamificationHeader } from '../../components/GamificationHeader';
+import { TreasuryPanel } from './TreasuryPanel';
 import { lockPageScroll } from '../../utils/scrollLock';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
-import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
+import { splitGoldBalance } from '../../constants/economy';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { resolveFeatureAccess } from '../../services/featureAccess';
 import { isAdminUser } from '../../services/adminRoles';
@@ -36,7 +36,6 @@ import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { ZEN_TRANSACTIONS_DISPLAY_LIMIT } from '../../constants/zenGarden';
 import { createReward, fetchRewardCatalog, fetchRewardRedemptions, redeemReward, shouldPromptEvolution, evolveReward } from '../../services/rewards';
-import { loadCurrencyBalance } from '../../services/gameRewards';
 import { recordTelemetryEvent } from '../../services/telemetry';
 import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
 import { analyzeRewardPacing, canShowPrompt, markPromptShown } from '../../lib/rewardPacing';
@@ -54,10 +53,6 @@ import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../..
 import { useEntranceArtworkReady } from '../../hooks/useEntranceArtworkReady';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
 import { PowerUpsStore } from '../power-ups/PowerUpsStore';
-import {
-  readIslandRunRuntimeState,
-} from './level-worlds/services/islandRunRuntimeState';
-import { applyWalletShieldsSet } from './level-worlds/services/islandRunStateActions';
 import { useIslandRunState } from './level-worlds/hooks/useIslandRunState';
 import { CREATURE_CATALOG } from './level-worlds/services/creatureCatalog';
 import { resolveCreatureArtManifest } from './level-worlds/services/creatureImageManifest';
@@ -175,10 +170,6 @@ export function ScoreTab({
     () => new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }),
     []
   );
-  const xpToNextLevel = levelInfo
-    ? Math.max(levelInfo.xpForNextLevel - levelInfo.currentXP, 0)
-    : 0;
-  const goldRatioLabel = `1 gold per ${Math.round(1 / XP_TO_GOLD_RATIO)} XP`;
   const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections'>(initialActiveTab ?? 'home');
   const isScoreEntranceReady = useEntranceArtworkReady(SCORE_ENTRANCE_ARTWORK, {
     enabled: activeTab === 'home',
@@ -214,16 +205,6 @@ export function ScoreTab({
   const [zenTransactions, setZenTransactions] = useState<ZenTokenTransaction[]>([]);
   const [zenTransactionsError, setZenTransactionsError] = useState<string | null>(null);
 
-  // M17B: Shield Wallet state for Bank tab
-  const [shieldsBalance, setShieldsBalance] = useState(0);
-  const [shieldConvertFeedback, setShieldConvertFeedback] = useState<string | null>(null);
-  const [shieldConverting, setShieldConverting] = useState(false);
-
-  // M17C: Shards Wallet state for Bank tab
-  const [shardsBalance, setShardsBalance] = useState(0);
-
-  // M17E: Hearts Wallet state for Bank tab
-  const [heartsBalance, setHeartsBalance] = useState(0);
   const [leaderboardTopEntries, setLeaderboardTopEntries] = useState<LeaderboardEntry[]>([]);
   const [leaderboardViewerEntries, setLeaderboardViewerEntries] = useState<LeaderboardEntry[]>([]);
   const [leaderboardViewerRank, setLeaderboardViewerRank] = useState<number | null>(null);
@@ -463,45 +444,6 @@ export function ScoreTab({
     return leaderboardViewerEntries.filter((entry) => entry.archetype === leaderboardArchetypeFilter);
   }, [leaderboardArchetypeFilter, leaderboardViewerEntries]);
 
-  // M17B: Hydrate shields balance when Bank tab is active
-  useEffect(() => {
-    if (activeTab !== 'bank' || !session) return;
-    const state = readIslandRunRuntimeState(session);
-    setShieldsBalance(state.shields ?? 0);
-    // M17C: Hydrate shards balance
-    setShardsBalance(state.shards ?? 0);
-    // M17E: Hydrate hearts balance from localStorage currency store
-    setHeartsBalance(loadCurrencyBalance(session.user.id).hearts);
-  }, [activeTab, session]);
-
-  // M17B: Convert all shields to coins
-  const handleConvertShields = useCallback(async () => {
-    if (!session || shieldsBalance === 0) return;
-    const coinsGained = shieldsBalance * 65;
-    const confirmed = window.confirm(
-      `Convert ${shieldsBalance} shield${shieldsBalance !== 1 ? 's' : ''} → ${coinsGained} coins?`
-    );
-    if (!confirmed) return;
-
-    setShieldConverting(true);
-    setShieldConvertFeedback(null);
-
-    const result = applyWalletShieldsSet({
-      session,
-      client: null,
-      nextShields: 0,
-      triggerSource: 'score_tab_convert_shields',
-    });
-
-    setShieldConverting(false);
-
-    if (result.changed || result.record.shields === 0) {
-      setShieldConvertFeedback(`Converted ${shieldsBalance} shield${shieldsBalance !== 1 ? 's' : ''} → ${coinsGained} coins!`);
-      setShieldsBalance(0);
-    } else {
-      setShieldConvertFeedback('Conversion failed. Please try again.');
-    }
-  }, [session, shieldsBalance]);
 
   useEffect(() => {
     setGoldBalance(profile?.total_points ?? 0);
@@ -1218,134 +1160,15 @@ export function ScoreTab({
         </div>
       )}
 
-      {!loading && enabled && profileWithGold && levelInfo && activeTab === 'bank' && (
+      {!loading && enabled && session && activeTab === 'bank' && (
         <div className="score-tab__content">
-          <div className="score-tab__bank-intro">
-            <h2 className="score-tab__headline">Track your daily economy</h2>
-            <p className="score-tab__subtitle">
-              Review XP, gold, and streak momentum before you spin or visit the player shop.
-            </p>
-          </div>
-          <GamificationHeader
-            profile={profileWithGold}
+          <TreasuryPanel
+            session={session}
+            totalXp={profileWithGold?.total_xp ?? 0}
             levelInfo={levelInfo}
-            session={session ?? undefined}
+            zenTokens={zenTokens}
           />
-
-          <div className="score-tab__grid">
-            <article className="score-tab__card score-tab__card--xp">
-              <h3 className="score-tab__card-title">XP bank</h3>
-              <p className="score-tab__value">{formatter.format(profileWithGold.total_xp)} XP</p>
-              <p className="score-tab__meta">
-                {formatter.format(xpToNextLevel)} XP to level {levelInfo.currentLevel + 1}
-              </p>
-            </article>
-
-            <article className="score-tab__card score-tab__card--points">
-              <div className="score-tab__card-row">
-                <h3 className="score-tab__card-title">Gold wallet</h3>
-                <span className="score-tab__pill">Spendable</span>
-              </div>
-              <p className="score-tab__value">{goldValueLabel}</p>
-              <p className="score-tab__meta">Use gold for shop upgrades and trophies.</p>
-            </article>
-
-            <article className="score-tab__card">
-              <h3 className="score-tab__card-title">Streak momentum</h3>
-              <p className="score-tab__value">🔥 {formatter.format(profileWithGold.current_streak)} days</p>
-              <p className="score-tab__meta">
-                Longest streak: {formatter.format(profileWithGold.longest_streak)} days
-              </p>
-            </article>
-
-            <article className="score-tab__card score-tab__card--zen">
-              <div className="score-tab__card-row">
-                <h3 className="score-tab__card-title">Zen tokens</h3>
-                <span className="score-tab__pill score-tab__pill--muted">Meditation-only</span>
-              </div>
-              <p className="score-tab__value">🪷 {formatter.format(zenTokens)}</p>
-              <p className="score-tab__meta">Earn through meditation sessions for Zen Garden unlocks.</p>
-            </article>
-          </div>
-
-          <div className="score-tab__note">
-            <p>
-              Gold is derived from XP ({goldRatioLabel}). Spin rewards and achievements
-              add bonus gold on top.
-            </p>
-            <button
-              type="button"
-              className="score-tab__link"
-              onClick={onNavigateToAchievements}
-            >
-              View achievements
-            </button>
-          </div>
-
-          {/* M17B: Shield Wallet section */}
-          <section className="score-tab__ledger">
-            <div className="score-tab__ledger-header">
-              <div>
-                <p className="score-tab__eyebrow">💰 Currency wallet</p>
-                <h3 className="score-tab__ledger-title">All currencies</h3>
-              </div>
-              <span className="score-tab__ledger-pill">Balance</span>
-            </div>
-
-            {/* M17E: Coins row */}
-            <article className="score-tab__card">
-              <div className="score-tab__card-row">
-                <h3 className="score-tab__card-title">🪙 Coins</h3>
-                <span className="score-tab__pill">Spendable</span>
-              </div>
-              <p className="score-tab__value">🪙 {formatter.format(goldBreakdown.goldRemainder)}</p>
-              <p className="score-tab__meta">Spend Coins in the player shop on rewards and upgrades.</p>
-            </article>
-
-            {/* M17E: Diamonds row */}
-            <article className="score-tab__card">
-              <div className="score-tab__card-row">
-                <h3 className="score-tab__card-title">💎 Diamonds</h3>
-                <span className="score-tab__pill">Premium</span>
-              </div>
-              <p className="score-tab__value">💎 {formatter.format(goldBreakdown.diamonds)}</p>
-              <p className="score-tab__meta">1 Diamond = 1,000 Coins. Earned by accumulating large gold totals.</p>
-            </article>
-
-            {/* M17B: Shields row */}
-            <article className="score-tab__card">
-              <div className="score-tab__card-row">
-                <h3 className="score-tab__card-title">🛡️ Shields</h3>
-                <span className="score-tab__pill">Convertible</span>
-              </div>
-              <p className="score-tab__value">🛡️ {shieldsBalance}</p>
-              <p className="score-tab__meta">1 Shield = 65 Coins · Complete Body habits to earn Shields.</p>
-              <button
-                type="button"
-                className="score-tab__link"
-                style={{ marginTop: '0.75rem' }}
-                disabled={shieldsBalance === 0 || shieldConverting}
-                onClick={() => void handleConvertShields()}
-              >
-                {shieldConverting ? 'Converting…' : 'Convert all → Coins'}
-              </button>
-              {shieldConvertFeedback && (
-                <p className="score-tab__meta" style={{ marginTop: '0.5rem', color: shieldConvertFeedback.includes('failed') ? '#dc2626' : '#15803d', fontWeight: 600 }}>
-                  {shieldConvertFeedback}
-                </p>
-              )}
-            </article>
-
-            {/* M17C: Shards row */}
-            <article className="score-tab__card">
-              <div className="score-tab__card-row">
-                <h3 className="score-tab__card-title">✨ Shards</h3>
-                <span className="score-tab__pill">Accumulating</span>
-              </div>
-              <p className="score-tab__value">✨ {shardsBalance}</p>
-              <p className="score-tab__meta">Shards accumulate across islands. Spend paths coming soon.</p>
-            </article>
-          </section>
+          {profileWithGold && levelInfo && (<>
 
           <section className="score-tab__ledger">
             <div className="score-tab__ledger-header">
@@ -1455,6 +1278,7 @@ export function ScoreTab({
               </div>
             )}
           </section>
+          </>)}
         </div>
       )}
 
@@ -1722,9 +1546,9 @@ export function ScoreTab({
           ) : null}
         </div>
       )}
-      {!loading && enabled && activeTab === 'bank' && (!profile || !levelInfo) && (
+      {!loading && enabled && activeTab === 'bank' && !session && (
         <div className="score-tab__status">
-          No score data yet. Complete a habit or spin the wheel to start earning XP.
+          Sign in to see your Treasury.
         </div>
       )}
 

@@ -6,13 +6,13 @@ import { createOpeningGamesCampaignLedger } from '../islandRunSignatureMissions'
 
 export const puzzleCollectionTests: TestCase[] = [
   {
-    name: 'puzzle collection: the icon waits for Island 015 on new and existing saves',
+    name: 'puzzle collection: the icon waits for Island 005 on new and existing saves',
     run: () => {
       for (const ledger of [undefined, createOpeningGamesCampaignLedger()]) {
-        for (const island of [1, 2, 3, 8, 14]) {
+        for (const island of [1, 2, 3, 4]) {
           assert(!resolveIslandRunFeatureAccess({ currentIslandNumber: island, signatureMissionProgressByIsland: ledger }).puzzleCollection, `no puzzle icon on Island ${island}`);
         }
-        for (const island of [15, 16, 120]) {
+        for (const island of [5, 6, 15, 120]) {
           assert(resolveIslandRunFeatureAccess({ currentIslandNumber: island, signatureMissionProgressByIsland: ledger }).puzzleCollection, `puzzle collection on Island ${island}`);
         }
       }

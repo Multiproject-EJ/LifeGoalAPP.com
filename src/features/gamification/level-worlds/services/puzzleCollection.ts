@@ -2,7 +2,7 @@ import { getEventRotationTemplates, parseEventId, type EventRotationTemplate } f
 import { STICKER_FRAGMENTS_PER_STICKER } from './islandRunContractV2RewardBar';
 
 /**
- * Puzzle Collection (Island 015+, user request 2026-09-30): each event's
+ * Puzzle Collection (Island 005+, user request 2026-10-03): each event's
  * sticker is a five-piece picture puzzle. Reward-bar puzzle pieces fill the
  * current event's puzzle; five pieces complete it (the canonical sticker rule
  * in the reward bar is unchanged). Read-only presentation model.
