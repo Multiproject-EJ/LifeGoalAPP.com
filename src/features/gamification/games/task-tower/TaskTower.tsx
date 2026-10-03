@@ -82,6 +82,8 @@ interface TaskTowerProps {
   session: Session;
   onClose: () => void;
   onComplete: (rewards: { coins: number; dice: number; tokens: number }) => void;
+  /** Optional shortcuts (projects, timer, task list) docked under the tower. */
+  dock?: React.ReactNode;
 }
 
 type TimeOfDay = 'day' | 'dusk' | 'night';
@@ -108,7 +110,7 @@ interface ComboState {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
+export function TaskTower({ session, onClose, onComplete, dock }: TaskTowerProps) {
   const userId = session.user.id;
   const { actions, loading, completeAction: completeActionHook, createAction } = useActions(session);
   const { projects } = useProjects(session);
@@ -146,6 +148,15 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const [adding, setAdding] = useState(false);
   // Action ids the tower already holds (built, queued or completed this visit).
   const knownActionIdsRef = useRef<Set<string>>(new Set());
+
+  // Full-screen sheet: lock the page behind it while the tower is open.
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const { body } = document;
+    const previous = body.style.overflow;
+    body.style.overflow = 'hidden';
+    return () => { body.style.overflow = previous; };
+  }, []);
 
   const floatingRewardIdRef = useRef(0);
   const towerBuiltRef = useRef(false);
@@ -515,30 +526,52 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
 
         <div className="task-tower__container">
           <div className="task-tower__header">
-            <h2 className="task-tower__title">🗼 Task Tower</h2>
-            <button
-              type="button"
-              className="task-tower__close"
-              onClick={onClose}
-              aria-label="Close"
-            >
-              ✕
-            </button>
+            <div className="task-tower__heading">
+              <h2 className="task-tower__title">
+                <span className="task-tower__title-crest" aria-hidden="true">✦</span>
+                Task Tower
+              </h2>
+            </div>
+            <div className="task-tower__header-actions">
+              <button
+                type="button"
+                className="task-tower__close"
+                onClick={onClose}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
-          <div className="task-tower__empty-state">
-            <p className="task-tower__empty-message">
-              No tasks to clear!<br />
-              Add some actions first.
-            </p>
-            <button
-              type="button"
-              className="task-tower__button"
-              onClick={onClose}
-            >
-              Back to Board
-            </button>
+          <div className="task-tower__stage task-tower__stage--empty">
+            <TaskTowerScene />
+            <div className="task-tower__empty-state">
+              <span className="task-tower__empty-crest" aria-hidden="true">✦</span>
+              <p className="task-tower__empty-title">Your tower is clear</p>
+              <p className="task-tower__empty-message">
+                Add a task and watch the first stone drop into place.
+              </p>
+              <form
+                className="task-tower__add-form task-tower__add-form--empty"
+                onSubmit={(event) => { event.preventDefault(); void submitTowerTask(); }}
+              >
+                <input
+                  className="task-tower__add-input"
+                  type="text"
+                  value={addTitle}
+                  onChange={(event) => setAddTitle(event.target.value)}
+                  placeholder="What needs to be done?"
+                  aria-label="New task title"
+                  disabled={adding}
+                />
+                <button type="submit" className="task-tower__add-submit" disabled={adding || !addTitle.trim()}>
+                  {adding ? '…' : 'Drop it'}
+                </button>
+              </form>
+            </div>
           </div>
+          {dock && <div className="task-tower__dock">{dock}</div>}
         </div>
       </div>
     );
@@ -554,12 +587,24 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
 
       <div className="task-tower__container">
         <div className="task-tower__header">
-          <h2 className="task-tower__title">🗼 Task Tower</h2>
-          <div className="task-tower__stats">
-            <span className="task-tower__stat">Cleared: {gameSession.blocksCleared}</span>
-            {gameSession.linesCleared > 0 && (
-              <span className="task-tower__stat">Storeys: {gameSession.linesCleared}</span>
-            )}
+          <div className="task-tower__heading">
+            <h2 className="task-tower__title">
+              <span className="task-tower__title-crest" aria-hidden="true">✦</span>
+              Task Tower
+            </h2>
+            <div className="task-tower__stats">
+              <span className="task-tower__stat">
+                <span className="task-tower__stat-value">{gameSession.blocks.filter(block => !block.completed).length}</span> to do
+              </span>
+              <span className="task-tower__stat">
+                <span className="task-tower__stat-value">{gameSession.blocksCleared}</span> cleared
+              </span>
+              {gameSession.linesCleared > 0 && (
+                <span className="task-tower__stat">
+                  <span className="task-tower__stat-value">{gameSession.linesCleared}</span> storeys
+                </span>
+              )}
+            </div>
           </div>
           <div className="task-tower__header-actions">
             <button
@@ -570,7 +615,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
               aria-label="Add a task to the tower"
               title="Add a task"
             >
-              ＋ Add
+              <span aria-hidden="true">＋</span> Add
             </button>
             <button
               type="button"
@@ -746,6 +791,8 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
             </div>
           </div>
         )}
+
+        {dock && <div className="task-tower__dock">{dock}</div>}
       </div>
 
       {showCelebration && (

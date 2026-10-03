@@ -59,7 +59,7 @@ export function TaskTowerBlock({ block, gridRows, projectColor, onTap, isSelecte
       data-block-id={block.id}
       aria-label={`${block.title} - ${categoryConfig.label}`}
     >
-      <span className="task-tower-block__icon">{categoryConfig.icon}</span>
+      <span className="task-tower-block__gem" aria-hidden="true" />
       {projectColor && (
         <span
           className="task-tower-block__project-ribbon"

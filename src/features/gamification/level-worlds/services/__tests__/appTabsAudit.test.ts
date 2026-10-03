@@ -50,4 +50,19 @@ export const appTabsAuditTests: TestCase[] = [
       assert((tab.match(/<EggWarmthToastHost \/>/g) ?? []).length === 2, 'toast shows on the Actions screens');
     },
   },
+  {
+    name: 'Task Tower: Sky Citadel look is a full-screen portal sheet above the app nav with its tools docked',
+    run: async () => {
+      const tab = await read('src/features/actions/ActionsTab.tsx');
+      assert((tab.match(/\{showTaskTower && createPortal\(/g) ?? []).length === 2, 'both tower overlays render in a body portal');
+      assert(tab.includes('dock={('), 'projects / timer / tasks shortcuts are docked inside the tower');
+      const tower = await read('src/features/gamification/games/task-tower/TaskTower.tsx');
+      assert(tower.includes("body.style.overflow = 'hidden';"), 'page scroll is locked while open');
+      assert(tower.includes('className="task-tower__empty-state"') && tower.includes('task-tower__add-form--empty'), 'empty tower invites a first task');
+      const scene = await read('src/features/gamification/games/task-tower/TaskTowerScene.tsx');
+      assert(scene.includes('function spirePath') && scene.includes('task-tower__cloudbank'), 'castle spires above the clouds');
+      const css = await read('src/features/gamification/games/task-tower/taskTower.css');
+      assert(css.includes('Sky Citadel skin') && css.includes('height: 100dvh;'), 'skin present, full-screen on phones');
+    },
+  },
 ];

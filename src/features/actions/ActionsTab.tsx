@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import { isDemoSession } from '../../services/demoSession';
 import type { CreateActionInput, ActionCategory, Action, UpdateActionInput } from '../../types/actions';
@@ -607,52 +608,54 @@ export function ActionsTab({
             </div>
           </div>
         </div>
-        {showTaskTower && (
+        {showTaskTower && createPortal(
           <div className="actions-tab__task-tower-overlay" role="dialog" aria-modal="true" aria-label="Task Tower">
-            <div className="actions-tab__task-tower-shortcuts" aria-label="Task Tower tools">
-              {onNavigateToProjects && (
-                <button
-                  type="button"
-                  className="actions-tab__task-tower-shortcut"
-                  onClick={() => {
-                    setShowTaskTower(false);
-                    onNavigateToProjects();
-                  }}
-                  aria-label="Open projects"
-                >
-                  <img className="actions-tab__task-tower-shortcut-icon" src={projectsIcon} alt="" />
-                  <span>Projects</span>
-                </button>
-              )}
-              {onNavigateToTimer && (
-                <button
-                  type="button"
-                  className="actions-tab__task-tower-shortcut"
-                  onClick={() => {
-                    setShowTaskTower(false);
-                    onNavigateToTimer({ sourceType: 'general' });
-                  }}
-                  aria-label="Open timer"
-                >
-                  <img className="actions-tab__task-tower-shortcut-icon" src={timerIcon} alt="" />
-                  <span>Timer</span>
-                </button>
-              )}
-              <button
-                type="button"
-                className="actions-tab__task-tower-shortcut actions-tab__task-tower-shortcut--primary"
-                onClick={() => {
-                  setShowTaskTower(false);
-                  setActiveView('tasks');
-                }}
-                aria-label="Open tasks list"
-              >
-                <img className="actions-tab__task-tower-shortcut-icon" src={taskIcon} alt="" />
-                <span>Tasks</span>
-              </button>
-            </div>
             <TaskTower
               session={session}
+              dock={(
+                <div className="actions-tab__task-tower-shortcuts" aria-label="Task Tower tools">
+                  {onNavigateToProjects && (
+                    <button
+                      type="button"
+                      className="actions-tab__task-tower-shortcut"
+                      onClick={() => {
+                        setShowTaskTower(false);
+                        onNavigateToProjects();
+                      }}
+                      aria-label="Open projects"
+                    >
+                      <img className="actions-tab__task-tower-shortcut-icon" src={projectsIcon} alt="" />
+                      <span>Projects</span>
+                    </button>
+                  )}
+                  {onNavigateToTimer && (
+                    <button
+                      type="button"
+                      className="actions-tab__task-tower-shortcut"
+                      onClick={() => {
+                        setShowTaskTower(false);
+                        onNavigateToTimer({ sourceType: 'general' });
+                      }}
+                      aria-label="Open timer"
+                    >
+                      <img className="actions-tab__task-tower-shortcut-icon" src={timerIcon} alt="" />
+                      <span>Timer</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="actions-tab__task-tower-shortcut actions-tab__task-tower-shortcut--primary"
+                    onClick={() => {
+                      setShowTaskTower(false);
+                      setActiveView('tasks');
+                    }}
+                    aria-label="Open tasks list"
+                  >
+                    <img className="actions-tab__task-tower-shortcut-icon" src={taskIcon} alt="" />
+                    <span>Tasks</span>
+                  </button>
+                </div>
+              )}
               onClose={() => setShowTaskTower(false)}
               onComplete={(rewards) => {
                 setShowTaskTower(false);
@@ -662,7 +665,8 @@ export function ActionsTab({
                 });
               }}
             />
-          </div>
+          </div>,
+          document.body,
         )}
       </div>
     );
@@ -832,7 +836,7 @@ export function ActionsTab({
         </div>
       )}
 
-      {showTaskTower && (
+      {showTaskTower && createPortal(
         <div className="actions-tab__task-tower-overlay" role="dialog" aria-modal="true" aria-label="Task Tower">
           <TaskTower
             session={session}
@@ -845,7 +849,8 @@ export function ActionsTab({
               });
             }}
           />
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

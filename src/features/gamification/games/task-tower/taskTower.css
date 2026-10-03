@@ -1545,3 +1545,791 @@
 }
 .task-tower__add-submit:disabled { opacity: 0.55; cursor: default; }
 .task-tower__combo-label { max-width: 11rem; line-height: 1.2; }
+
+/* ==========================================================================
+   Sky Citadel skin (2026-10): the tower matches its launcher card — a
+   midnight-navy kingdom above the clouds, gold trim, Garamond display type
+   and jewel-stone blocks. Everything above stays as the structural base;
+   these rules restyle it.
+   ========================================================================== */
+
+.task-tower {
+  --tt-navy-0: #030b1f;
+  --tt-navy-1: #071a36;
+  --tt-navy-2: #0c2a52;
+  --tt-gold: #e9c46a;
+  --tt-gold-soft: rgba(233, 196, 106, 0.55);
+  --tt-gold-line: rgba(233, 196, 106, 0.32);
+  --tt-ivory: #fff4d0;
+  --tt-ivory-muted: rgba(255, 244, 208, 0.72);
+  --tt-display: 'EB Garamond', 'Baskerville', 'Times New Roman', serif;
+}
+
+.task-tower--day {
+  --tower-cloud: rgba(255, 255, 255, 0.92);
+  --tower-skyline-far: #a9bedb;
+  --tower-skyline-near: #7b93ba;
+  --tower-window: rgba(40, 60, 100, 0.28);
+  --tower-window-lit: #fff1c4;
+}
+
+.task-tower--dusk {
+  --tower-cloud: rgba(255, 214, 220, 0.72);
+  --tower-skyline-far: #4b3b6e;
+  --tower-skyline-near: #2c2150;
+  --tower-window: rgba(20, 14, 40, 0.55);
+  --tower-window-lit: #ffcf7a;
+}
+
+.task-tower--night {
+  --tower-cloud: rgba(150, 172, 220, 0.16);
+  --tower-skyline-far: #15335f;
+  --tower-skyline-near: #0a1d3d;
+  --tower-window: rgba(4, 10, 26, 0.65);
+  --tower-window-lit: #ffd889;
+}
+
+.task-tower__backdrop {
+  background: radial-gradient(ellipse at 50% 30%, rgba(12, 42, 82, 0.9) 0%, rgba(3, 11, 31, 0.96) 70%);
+}
+
+.task-tower__container {
+  background: linear-gradient(180deg, var(--tt-navy-1) 0%, var(--tt-navy-0) 100%);
+  border-radius: 24px;
+  border: 1px solid var(--tt-gold-soft);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 0 0 4px rgba(233, 196, 106, 0.08),
+    0 0 60px rgba(233, 196, 106, 0.12),
+    inset 0 1px 0 rgba(255, 244, 208, 0.18);
+}
+
+/* Header: crest, Garamond title, gold stat line, round controls */
+.task-tower__header {
+  gap: 0.75rem;
+  padding: 0.85rem 1rem 0.75rem 1.15rem;
+  background:
+    linear-gradient(90deg, transparent, var(--tt-gold-line) 20%, var(--tt-gold-line) 80%, transparent) bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(12, 42, 82, 0.85) 0%, rgba(7, 26, 54, 0.6) 100%);
+  border-bottom: none;
+}
+
+.task-tower__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.task-tower__title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--tt-display);
+  font-size: 1.65rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--tt-ivory);
+  text-shadow: 0 0 18px rgba(233, 196, 106, 0.25), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.task-tower__title-crest {
+  font-size: 0.85em;
+  color: var(--tt-gold);
+  text-shadow: 0 0 10px rgba(233, 196, 106, 0.7);
+}
+
+.task-tower__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.75rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tt-ivory-muted);
+}
+
+.task-tower__stat-value {
+  color: var(--tt-gold);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+.task-tower__header-actions {
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.task-tower__add-toggle {
+  min-height: 40px;
+  padding: 0 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 236, 180, 0.8);
+  background: linear-gradient(180deg, #f7dc93 0%, #e2b452 55%, #c8953a 100%);
+  color: #2a1c04;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 14px rgba(233, 196, 106, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.task-tower__add-toggle--active {
+  background: linear-gradient(180deg, #fff1c4 0%, #f2cf77 100%);
+}
+
+.task-tower__zoom-toggle,
+.task-tower__close {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(12, 42, 82, 0.75);
+  border: 1px solid var(--tt-gold-soft);
+  color: var(--tt-ivory);
+  font-size: 1.05rem;
+  box-shadow: inset 0 1px 0 rgba(255, 244, 208, 0.15);
+}
+
+.task-tower__zoom-toggle:hover,
+.task-tower__close:hover {
+  background: rgba(20, 58, 110, 0.9);
+  border-color: var(--tt-gold);
+}
+
+.task-tower__zoom-toggle--active {
+  background: rgba(233, 196, 106, 0.25);
+  border-color: var(--tt-gold);
+}
+
+/* In-tower add form */
+.task-tower__add-form {
+  padding: 0.6rem 1rem;
+  background: rgba(7, 26, 54, 0.9);
+  border-bottom: 1px solid var(--tt-gold-line);
+}
+
+.task-tower__add-input {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--tt-gold-line);
+  background: rgba(3, 11, 31, 0.7);
+  color: var(--tt-ivory);
+}
+
+.task-tower__add-input::placeholder {
+  color: rgba(255, 244, 208, 0.45);
+}
+
+.task-tower__add-input:focus {
+  outline: none;
+  border-color: var(--tt-gold);
+  box-shadow: 0 0 0 3px rgba(233, 196, 106, 0.2);
+}
+
+.task-tower__add-submit {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 236, 180, 0.8);
+  background: linear-gradient(180deg, #f7dc93 0%, #d9a845 100%);
+  color: #2a1c04;
+  font-weight: 800;
+}
+
+/* Supply line: the next stones waiting to be hoisted */
+.task-tower__supply-line {
+  padding: 0.45rem 1.15rem;
+  background: rgba(3, 11, 31, 0.6);
+  border-bottom: 1px solid var(--tt-gold-line);
+}
+
+.task-tower__supply-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  color: var(--tt-gold);
+}
+
+.task-tower__supply-chip {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(255, 236, 180, 0.7);
+}
+
+.task-tower__supply-chip--must_do { background: linear-gradient(135deg, #ff8a96 0%, #c2263f 60%, #7a0f25 100%); }
+.task-tower__supply-chip--nice_to_do { background: linear-gradient(135deg, #8ff0c9 0%, #1fa47a 60%, #0b5a44 100%); }
+.task-tower__supply-chip--project { background: linear-gradient(135deg, #ffe19a 0%, #e0a238 60%, #8a5410 100%); }
+
+.task-tower__supply-more {
+  color: var(--tt-ivory);
+}
+
+/* Scene: kingdom above the clouds */
+.task-tower--day .task-tower__sky {
+  background: linear-gradient(180deg, #6f9fd8 0%, #9cc1ea 34%, #cfe0f3 62%, #f6e6c6 86%, #fff2d6 100%);
+}
+
+.task-tower--dusk .task-tower__sky {
+  background: linear-gradient(180deg, #141a46 0%, #33306a 30%, #74457a 54%, #c46d67 76%, #f0ae6c 100%);
+}
+
+.task-tower--night .task-tower__sky {
+  background:
+    radial-gradient(ellipse 90% 40% at 50% 100%, rgba(233, 196, 106, 0.22) 0%, transparent 70%),
+    linear-gradient(180deg, #020818 0%, #06173a 40%, #0d2a58 75%, #1b3d72 100%);
+}
+
+/* Day and dusk get a few faint stars too; night gets the full field */
+.task-tower--dusk .task-tower__stars {
+  opacity: 0.45;
+}
+
+.task-tower__stars {
+  background-image:
+    radial-gradient(1px 1px at 8% 18%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 18% 8%, rgba(255, 244, 208, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 27% 30%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1px 1px at 38% 14%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 47% 36%, rgba(255, 244, 208, 0.75), transparent),
+    radial-gradient(1.5px 1.5px at 58% 6%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 66% 24%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2px 2px at 74% 12%, rgba(255, 236, 180, 0.9), transparent),
+    radial-gradient(1px 1px at 86% 28%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 94% 10%, rgba(255, 255, 255, 0.85), transparent);
+}
+
+.task-tower--night .task-tower__orb {
+  top: 9%;
+  right: 12%;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  /* crescent moon: a lit disc with an offset shadow bite */
+  box-shadow:
+    inset -9px -2px 0 0 #fff1c4,
+    0 0 18px 2px rgba(255, 236, 180, 0.35);
+}
+
+/* Faint gold aurora band behind the spires */
+.task-tower__aurora {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 22%;
+  height: 30%;
+  background: radial-gradient(ellipse 60% 50% at 50% 70%, rgba(233, 196, 106, 0.16) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.task-tower--day .task-tower__aurora {
+  background: radial-gradient(ellipse 60% 50% at 50% 70%, rgba(255, 236, 190, 0.5) 0%, transparent 70%);
+}
+
+.task-tower__skyline--far {
+  bottom: 30px;
+  height: 26%;
+  opacity: 0.9;
+}
+
+.task-tower__skyline--near {
+  bottom: 26px;
+  height: 30%;
+}
+
+.task-tower__skyline-finial {
+  fill: var(--tt-gold);
+  filter: drop-shadow(0 0 2px rgba(233, 196, 106, 0.8));
+}
+
+.task-tower--night .task-tower__skyline-window--lit,
+.task-tower--dusk .task-tower__skyline-window--lit {
+  filter: drop-shadow(0 0 2px rgba(255, 216, 137, 0.9));
+}
+
+.task-tower__haze {
+  bottom: 26px;
+}
+
+.task-tower--night .task-tower__haze {
+  background: linear-gradient(180deg, rgba(27, 61, 114, 0) 0%, rgba(120, 150, 210, 0.2) 100%);
+}
+
+/* Cloud bank the plinth floats on */
+.task-tower__cloudbank {
+  position: absolute;
+  left: -4%;
+  right: -4%;
+  bottom: 0;
+  height: 54px;
+  background-image:
+    radial-gradient(48px 26px at 6% 70%, var(--tower-cloud) 60%, transparent 62%),
+    radial-gradient(60px 30px at 20% 85%, var(--tower-cloud) 60%, transparent 62%),
+    radial-gradient(44px 24px at 36% 92%, var(--tower-cloud) 60%, transparent 62%),
+    radial-gradient(56px 28px at 64% 92%, var(--tower-cloud) 60%, transparent 62%),
+    radial-gradient(64px 30px at 80% 82%, var(--tower-cloud) 60%, transparent 62%),
+    radial-gradient(50px 26px at 95% 70%, var(--tower-cloud) 60%, transparent 62%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.task-tower--night .task-tower__cloudbank {
+  --tower-cloud: rgba(120, 146, 205, 0.42);
+}
+
+/* Ground: a carved stone plinth with a gold-inlaid top course */
+.task-tower__ground {
+  left: 4%;
+  right: 4%;
+  height: 22px;
+  border-radius: 0 0 14px 14px;
+  border-top: none;
+  background:
+    linear-gradient(90deg, transparent, #f7dc93 15%, #e9c46a 50%, #f7dc93 85%, transparent) top / 100% 3px no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 38px, rgba(60, 50, 40, 0.28) 38px 39.5px) 0 3px / 100% 19px no-repeat,
+    linear-gradient(180deg, #e8e0cf 0%, #c8bca4 55%, #9e917a 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 -2px 14px rgba(233, 196, 106, 0.25);
+}
+
+.task-tower--night .task-tower__ground {
+  filter: brightness(0.72) saturate(0.85) hue-rotate(-8deg);
+}
+
+.task-tower--dusk .task-tower__ground {
+  filter: brightness(0.88) sepia(0.12);
+}
+
+.task-tower__vignette {
+  background: radial-gradient(ellipse 130% 100% at 50% 58%, transparent 60%, rgba(2, 8, 24, 0.4) 100%);
+}
+
+/* Hoist: a gilded beam with a lantern instead of a hazard-striped crane */
+.task-tower__crane-boom {
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  height: 7px;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(90deg, rgba(120, 80, 10, 0.35) 0 2px, transparent 2px 14px),
+    linear-gradient(180deg, #fff1c4 0%, #e9c46a 45%, #a8781f 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(233, 196, 106, 0.35);
+}
+
+.task-tower__crane-boom::before,
+.task-tower__crane-boom::after {
+  top: -4px;
+  bottom: auto;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6d8 0%, #e9c46a 55%, #8f6316 100%);
+  box-shadow: 0 0 8px rgba(233, 196, 106, 0.6);
+}
+
+.task-tower__crane-boom::before { left: -8px; }
+.task-tower__crane-boom::after { right: -8px; }
+
+.task-tower__crane-beacon {
+  top: 30px;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle at 40% 35%, #fffbe8 0%, #ffd56b 70%);
+  box-shadow: 0 0 10px 4px rgba(255, 213, 107, 0.6);
+}
+
+.task-tower__crane-trolley {
+  top: 12px;
+  width: 22px;
+  height: 12px;
+  margin-left: -11px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #16386a 0%, #0a1f42 100%);
+  border: 1px solid var(--tt-gold);
+}
+
+.task-tower__crane-cable {
+  top: 12px;
+  width: 2px;
+  background: repeating-linear-gradient(180deg, #f7dc93 0 3px, #a8781f 3px 5px);
+}
+
+.task-tower__crane-hook {
+  top: 26px;
+  border-color: var(--tt-gold);
+  border-top-color: transparent;
+  filter: drop-shadow(0 0 3px rgba(233, 196, 106, 0.7));
+}
+
+.task-tower__crane-trolley--engaged .task-tower__crane-hook {
+  top: 42px;
+}
+
+/* Blocks: jewel-stone with gold edges */
+.task-tower-block {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 228, 160, 0.55);
+  padding: 0.6rem 0.7rem 0.6rem 1.6rem;
+  color: #fffaf0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  box-shadow:
+    0 8px 16px -6px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -4px 8px -4px rgba(0, 0, 0, 0.45);
+}
+
+.task-tower-block--must_do {
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.04) 30%, transparent 60%, rgba(255, 255, 255, 0.06) 100%),
+    repeating-linear-gradient(128deg, transparent 0 22px, rgba(255, 200, 210, 0.07) 22px 23px, transparent 23px 41px),
+    linear-gradient(160deg, #d2455a 0%, #a3203b 52%, #6c0f27 100%);
+  border-color: rgba(255, 210, 170, 0.6);
+  --shard-color: #b8243c;
+}
+
+.task-tower-block--nice_to_do {
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.06) 30%, transparent 60%, rgba(255, 255, 255, 0.08) 100%),
+    repeating-linear-gradient(128deg, transparent 0 22px, rgba(200, 255, 230, 0.07) 22px 23px, transparent 23px 41px),
+    linear-gradient(160deg, #2fbf92 0%, #138263 52%, #08503f 100%);
+  border-color: rgba(255, 228, 160, 0.55);
+  --shard-color: #149170;
+}
+
+.task-tower-block--project {
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.06) 30%, transparent 60%, rgba(255, 255, 255, 0.08) 100%),
+    repeating-linear-gradient(128deg, transparent 0 22px, rgba(255, 240, 200, 0.08) 22px 23px, transparent 23px 41px),
+    linear-gradient(160deg, #e6a944 0%, #b8771d 52%, #7a4a0c 100%);
+  border-color: rgba(255, 236, 180, 0.65);
+  --shard-color: #c88a28;
+}
+
+/* Gold filigree line along the base of urgent stones (was a hazard stripe) */
+.task-tower-block--must_do::after {
+  left: 14px;
+  right: 14px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, #f7dc93 25%, #e9c46a 50%, #f7dc93 75%, transparent);
+  opacity: 0.9;
+}
+
+.task-tower-block__gem {
+  position: absolute;
+  top: 50%;
+  left: 9px;
+  width: 9px;
+  height: 9px;
+  margin-top: -5px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+  border: 1px solid rgba(255, 236, 180, 0.9);
+  box-shadow: 0 0 6px rgba(255, 236, 180, 0.55), inset 1px 1px 0 rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
+.task-tower-block--must_do .task-tower-block__gem { background: linear-gradient(135deg, #ffd0d6 0%, #ff5d75 45%, #a1122e 100%); }
+.task-tower-block--nice_to_do .task-tower-block__gem { background: linear-gradient(135deg, #d6ffef 0%, #45e0a8 45%, #0c6e52 100%); }
+.task-tower-block--project .task-tower-block__gem { background: linear-gradient(135deg, #fff4d0 0%, #ffcb5c 45%, #9a6213 100%); }
+
+.task-tower-block__title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.task-tower-block__pulse {
+  inset: -3px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 228, 160, 0.65);
+}
+
+.task-tower-block--selected {
+  border-color: #fff1c4;
+  box-shadow:
+    0 12px 22px rgba(0, 0, 0, 0.5),
+    0 0 0 2.5px rgba(233, 196, 106, 0.95),
+    0 0 26px 6px rgba(233, 196, 106, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.task-tower-block__shard {
+  border-radius: 1px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 6px rgba(255, 236, 180, 0.6);
+}
+
+/* Combo meter, floating rewards, storey flash */
+.task-tower__combo {
+  top: 34px;
+  right: 14px;
+  background: rgba(7, 26, 54, 0.88);
+  border: 1px solid var(--tt-gold-soft);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.task-tower__combo-label {
+  color: var(--tt-ivory);
+}
+
+.task-tower__combo-fill {
+  background: linear-gradient(90deg, #f7dc93 0%, #e9c46a 100%);
+}
+
+.task-tower__floating-reward {
+  background: linear-gradient(180deg, rgba(12, 42, 82, 0.96) 0%, rgba(3, 11, 31, 0.96) 100%);
+  border: 1px solid var(--tt-gold);
+  color: #ffe6a7;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 28px rgba(233, 196, 106, 0.3);
+}
+
+.task-tower__storey-flash {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 236, 180, 0.75) 50%, transparent 100%);
+}
+
+/* Confirm sheet */
+.task-tower__confirm-modal {
+  background: rgba(2, 8, 24, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.task-tower__confirm-content {
+  width: min(360px, calc(100% - 2rem));
+  box-sizing: border-box;
+  background: linear-gradient(180deg, var(--tt-navy-2) 0%, var(--tt-navy-1) 100%);
+  border: 1px solid var(--tt-gold-soft);
+  border-radius: 20px;
+  padding: 1.4rem 1.25rem 1.2rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(233, 196, 106, 0.12);
+}
+
+.task-tower__confirm-title {
+  font-family: var(--tt-display);
+  font-size: 1.45rem;
+  font-weight: 500;
+  color: var(--tt-ivory);
+}
+
+.task-tower__confirm-message {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tt-gold);
+  margin-bottom: 1.15rem;
+}
+
+.task-tower__confirm-button {
+  min-height: 48px;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.task-tower__confirm-button--confirm {
+  background: linear-gradient(180deg, #f7dc93 0%, #e2b452 55%, #c8953a 100%);
+  border: 1px solid rgba(255, 236, 180, 0.85);
+  color: #2a1c04;
+  box-shadow: 0 6px 16px rgba(233, 196, 106, 0.3);
+}
+
+.task-tower__confirm-button--confirm:hover {
+  box-shadow: 0 8px 20px rgba(233, 196, 106, 0.45);
+}
+
+.task-tower__confirm-button--cancel {
+  background: transparent;
+  border: 1px solid rgba(255, 244, 208, 0.35);
+  color: var(--tt-ivory);
+}
+
+.task-tower__confirm-button--cancel:hover {
+  background: rgba(255, 244, 208, 0.08);
+  border-color: rgba(255, 244, 208, 0.6);
+}
+
+/* Empty state: the scene with a small invitation card on it */
+.task-tower__stage--empty {
+  justify-content: center;
+  align-items: center;
+}
+
+.task-tower__empty-state {
+  position: relative;
+  z-index: 2;
+  min-height: 0;
+  margin: 1rem;
+  padding: 1.5rem 1.25rem 1.25rem;
+  gap: 0.35rem;
+  width: min(360px, calc(100% - 2rem));
+  box-sizing: border-box;
+  background: rgba(7, 26, 54, 0.82);
+  border: 1px solid var(--tt-gold-soft);
+  border-radius: 20px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.task-tower__empty-crest {
+  color: var(--tt-gold);
+  font-size: 1.3rem;
+  text-shadow: 0 0 12px rgba(233, 196, 106, 0.7);
+}
+
+.task-tower__empty-title {
+  margin: 0;
+  font-family: var(--tt-display);
+  font-size: 1.5rem;
+  color: var(--tt-ivory);
+}
+
+.task-tower__empty-message {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--tt-ivory-muted);
+}
+
+.task-tower__add-form--empty {
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+/* Dock: projects / timer / task list shortcuts under the tower */
+.task-tower__dock {
+  flex-shrink: 0;
+  padding: 0.55rem 0.75rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
+  background:
+    linear-gradient(90deg, transparent, var(--tt-gold-line) 20%, var(--tt-gold-line) 80%, transparent) top / 100% 1px no-repeat,
+    rgba(3, 11, 31, 0.92);
+}
+
+.task-tower__dock .actions-tab__task-tower-shortcuts {
+  position: static;
+  padding: 0;
+}
+
+.task-tower__dock .actions-tab__task-tower-shortcut {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--tt-gold-line);
+  background: rgba(12, 42, 82, 0.7);
+  color: var(--tt-ivory);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.task-tower__dock .actions-tab__task-tower-shortcut--primary {
+  border-color: var(--tt-gold-soft);
+  background: linear-gradient(180deg, rgba(233, 196, 106, 0.22) 0%, rgba(12, 42, 82, 0.7) 100%);
+}
+
+/* Session rewards sheet */
+.task-tower-rewards__backdrop {
+  background: rgba(2, 8, 24, 0.8);
+}
+
+.task-tower-rewards__container {
+  background: linear-gradient(180deg, var(--tt-navy-2, #0c2a52) 0%, var(--tt-navy-0, #030b1f) 100%);
+  border: 1px solid rgba(233, 196, 106, 0.55);
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 50px rgba(233, 196, 106, 0.15);
+}
+
+.task-tower-rewards__header,
+.task-tower-rewards__header--all-clear {
+  background: radial-gradient(ellipse at 50% 0%, rgba(233, 196, 106, 0.22) 0%, transparent 70%);
+  border-bottom: 1px solid rgba(233, 196, 106, 0.3);
+}
+
+.task-tower-rewards__title {
+  font-family: 'EB Garamond', 'Baskerville', 'Times New Roman', serif;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff4d0;
+}
+
+.task-tower-rewards__subtitle,
+.task-tower-rewards__stat-label {
+  color: #e9c46a;
+}
+
+.task-tower-rewards__stat {
+  background: rgba(12, 42, 82, 0.6);
+  border: 1px solid rgba(233, 196, 106, 0.25);
+  border-radius: 14px;
+}
+
+.task-tower-rewards__stat-value {
+  color: #fff4d0;
+}
+
+.task-tower-rewards__button {
+  min-height: 50px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 236, 180, 0.85);
+  background: linear-gradient(180deg, #f7dc93 0%, #e2b452 55%, #c8953a 100%);
+  color: #2a1c04;
+  font-weight: 800;
+}
+
+/* Overview: no glass-facade sweep (it spanned the empty rows as a pale
+   panel), and stones shrink to plain jewel bricks */
+.task-tower__stage--overview .task-tower__grid::after,
+.task-tower__stage--overview .task-tower-block__gem {
+  display: none;
+}
+
+.task-tower__stage--overview .task-tower-block {
+  border-radius: 2px;
+  padding: 0;
+}
+
+/* Phones: the tower is a full-screen sheet, not a floating card */
+@media (max-width: 640px) {
+  .task-tower {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .task-tower__container {
+    max-width: none;
+    max-height: none;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .task-tower__header {
+    padding: 0.7rem 0.75rem 0.6rem 1rem;
+  }
+
+  .task-tower__title {
+    font-size: 1.3rem;
+    white-space: nowrap;
+  }
+
+  .task-tower__stats {
+    display: flex;
+  }
+
+  .task-tower-block {
+    min-height: 64px;
+    padding-left: 1.45rem;
+  }
+
+  .task-tower-block__title {
+    font-size: 0.8rem;
+  }
+}
