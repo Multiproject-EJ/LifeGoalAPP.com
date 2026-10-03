@@ -19746,7 +19746,7 @@ export function IslandRunBoardPrototype({
                             <p className="island-boss-trial__challenge-label">
                               <strong>Challenge:</strong>{' '}
                               {rhythmBossPreview
-                                ? 'Rhythm Assault — pilot your ship, fire on the beat, and survive 3 phases plus the final attack.'
+                                ? 'Boss Blitz — drag to fly, your ship fires automatically. Dodge the volleys, charge NOVA, and take the boss down.'
                                 : bossConfig.type === 'fight'
                                   ? `Reach ${bossConfig.scoreTarget} hits before time runs out.`
                                   : `Complete ${bossConfig.scoreTarget} actions in ${bossConfig.trialDurationSec}s.`}
