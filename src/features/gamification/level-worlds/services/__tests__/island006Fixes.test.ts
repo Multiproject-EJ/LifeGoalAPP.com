@@ -49,4 +49,19 @@ export const island006FixesTests: TestCase[] = [
       assert(phone.includes("{variant === 'living-compass' || milestoneCount > 0 ? ("), 'honey pot only on milestone missions');
     },
   },
+  {
+    name: 'Loading screen is a viewport layer above every game element until the first frame',
+    run: async () => {
+      const loading = await read('src/features/gamification/level-worlds/components/IslandRunLoadingScreen.tsx');
+      assert(loading.includes('export function IslandRunViewportLoading(') && loading.includes('createPortal('), 'viewport layer portals to the top level');
+      assert(loading.includes('ISLAND_RUN_VIEWPORT_LOADING_MAX_MS = 15_000'), 'safety timeout never traps the player');
+      const css = await read('src/features/gamification/level-worlds/components/IslandRunLoadingScreen.css');
+      assert(/\.ir-loading-viewport \{[^}]*position: fixed;[^}]*z-index: 2147483000;[^}]*pointer-events: auto;/.test(css), 'fixed, topmost and blocks taps');
+      const pilot = await read('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx');
+      assert(pilot.includes('<IslandRunViewportLoading active={!hasRenderedFrame}'), 'scene keeps the layer until its first frame');
+      const board = await read('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
+      assert(board.includes('viewportLoading={!isIslandVisualPreview}'), 'board opts into the viewport layer');
+      assert(board.includes('<IslandRunViewportLoading active stage="bundle"'), 'bundle fallback uses the viewport layer too');
+    },
+  },
 ];

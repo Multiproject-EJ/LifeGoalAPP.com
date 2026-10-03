@@ -459,7 +459,7 @@ export function NewDailySpinWheel({ session, onClose, devPreview=false }: NewDai
       if (prizes.some(isIslandThreeJackpotPrize)) {
         setSelectedMultiplier(1);
       }
-      const { data: balance } = await getDailySpinEssenceBalance(session.user.id);
+      const { data: balance } = await getDailySpinEssenceBalance(session);
       setEssenceBalance(balance ?? 0);
       await loadSpinStatus(prizes);
     };

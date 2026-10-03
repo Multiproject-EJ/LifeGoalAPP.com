@@ -525,7 +525,7 @@ import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { EventArenaLandmarkModal } from './EventArenaLandmarkModal';
 import { AssemblyInvitationPhone } from './AssemblyInvitationPhone';
-import { IslandRunLoadingScreen } from './IslandRunLoadingScreen';
+import { IslandRunLoadingScreen, IslandRunViewportLoading } from './IslandRunLoadingScreen';
 import { IslandRunWalletPanel } from './IslandRunWalletPanel';
 import { getVaultIslandTotalInvested } from '../services/islandRunVaultProgress';
 import {
@@ -18144,12 +18144,12 @@ export function IslandRunBoardPrototype({
           <div className={`island-run-board__three-preview${firstArrivalActive || islandDeparture ? " island-run-board__three-preview--arrival" : ""}${islandDeparture ? " island-run-board__three-preview--departure" : ""}`}>
             <Suspense
               fallback={(
-                <div className="island-run-board__three-preview-loading">
-                  <IslandRunLoadingScreen stage="bundle" title={`Island ${islandArtPreviewNumber}`} detail="Opening the 3D world…" />
-                </div>
+                // Viewport layer: nothing in the game UI may show over loading.
+                <IslandRunViewportLoading active stage="bundle" title={`Island ${islandArtPreviewNumber}`} detail="Opening the 3D world…" />
               )}
             >
               <Island5ThreeScene
+                viewportLoading={!isIslandVisualPreview}
                 visibleTechnologyFragments={visibleTechnologyFragments}
                 trafficLightCharge={trafficLightPreviewCharge ?? displayedTrafficLightCharge}
                 firstArrivalWaitForWelcome

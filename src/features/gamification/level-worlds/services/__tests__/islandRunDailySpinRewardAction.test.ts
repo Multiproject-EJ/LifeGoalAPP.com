@@ -1,5 +1,5 @@
 import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
-import { grantDailySpinIslandRunRewards } from '../islandRunDailySpinRewardAction';
+import { getDailySpinBoostEssenceBalance, grantDailySpinIslandRunRewards, spendDailySpinBoostEssence } from '../islandRunDailySpinRewardAction';
 import {
   readIslandRunGameStateRecord,
   resetIslandRunRuntimeCommitCoordinatorForTests,
@@ -10,7 +10,7 @@ import {
   getIslandRunStateSnapshot,
   hydrateIslandRunState,
 } from '../islandRunStateStore';
-import { assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
+import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'daily-spin-reward-user';
 
@@ -137,6 +137,43 @@ export const islandRunDailySpinRewardActionTests: TestCase[] = [
       ]);
 
       assertEqual(getIslandRunStateSnapshot(session).dicePool, 205, 'both serialized dice grants should survive');
+    },
+  },
+  {
+    name: 'Daily Spin boost reads and spends the canonical wallet (guests too) and survives hydration',
+    run: async () => {
+      resetHarness();
+      await seedWallet(30, 100, 2);
+      const session = makeSession();
+      assertEqual(getDailySpinBoostEssenceBalance(session), 100, 'boost buttons read the playable wallet, not a remote-only balance');
+      const spent = await spendDailySpinBoostEssence({ session, client: null, amount: 60 });
+      assertEqual(spent.ok, true, 'affordable boost is paid');
+      assertEqual(getDailySpinBoostEssenceBalance(session), 40, 'wallet debited immediately');
+      assertEqual(getIslandRunStateSnapshot(session).essenceLifetimeSpent, 60, 'lifetime spend tracked');
+      __resetIslandRunStateStoreForTests();
+      const hydrated = await hydrateIslandRunState({ session, client: null });
+      assertEqual(hydrated.record.essence, 40, 'debit survives reload');
+    },
+  },
+  {
+    name: 'Daily Spin boost: a short wallet spends nothing',
+    run: async () => {
+      resetHarness();
+      await seedWallet(30, 20, 2);
+      const session = makeSession();
+      const result = await spendDailySpinBoostEssence({ session, client: null, amount: 25 });
+      assertEqual(result.ok, false, 'not enough money');
+      assertEqual(getDailySpinBoostEssenceBalance(session), 20, 'nothing debited');
+    },
+  },
+  {
+    name: 'Daily Spin service no longer writes essence straight to the remote table',
+    run: async () => {
+      // @ts-ignore
+      const fs = await import('fs');
+      const source = fs.readFileSync('src/services/dailySpin.ts', 'utf8') as string;
+      assert(source.includes('spendDailySpinBoostEssence({'), 'boost spend uses the canonical action');
+      assert(!/update\(\{\s*essence: nextBalance/.test(source), 'no direct remote essence update');
     },
   },
 ];

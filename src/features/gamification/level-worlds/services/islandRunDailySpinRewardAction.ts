@@ -89,3 +89,52 @@ export function grantDailySpinIslandRunRewards(options: {
     return { ok: true, record: next, applied };
   });
 }
+
+export type SpendDailySpinBoostEssenceResult =
+  | { ok: true; record: IslandRunGameStateRecord; balance: number }
+  | { ok: false; record: IslandRunGameStateRecord; balance: number; errorMessage: string };
+
+/** The canonical wallet balance the wheel's boost buttons show. */
+export function getDailySpinBoostEssenceBalance(session: Session): number {
+  return Math.max(0, Math.floor(getIslandRunStateSnapshot(session).essence));
+}
+
+/**
+ * Pays a Daily Spin reward boost from the canonical Island Run wallet (the
+ * same wallet the wheel's prizes are credited to). Previously the boost was
+ * debited straight in the remote table, so guests always read 0 and a
+ * signed-in player's local record could overwrite the debit. All-or-nothing:
+ * a short wallet spends nothing.
+ */
+export function spendDailySpinBoostEssence(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  amount: number;
+  triggerSource?: string;
+}): Promise<SpendDailySpinBoostEssenceResult> {
+  const { session, client, triggerSource } = options;
+  const amount = sanitizeRewardAmount(options.amount);
+  return withIslandRunActionLock(session.user.id, async () => {
+    const current = getIslandRunStateSnapshot(session);
+    if (amount === 0) return { ok: true, record: current, balance: current.essence };
+    if (current.essence < amount) {
+      return { ok: false, record: current, balance: current.essence, errorMessage: 'Not enough money for this reward boost' };
+    }
+    const next: IslandRunGameStateRecord = {
+      ...current,
+      essence: current.essence - amount,
+      essenceLifetimeSpent: current.essenceLifetimeSpent + amount,
+      runtimeVersion: current.runtimeVersion + 1,
+    };
+    // The store publishes the record on this device before the remote write,
+    // so the debit has happened even if the cloud write fails (it syncs
+    // later). Never cancel the spin after taking the money.
+    await commitIslandRunState({
+      session,
+      client,
+      record: next,
+      triggerSource: triggerSource ?? 'daily_spin_boost_spend',
+    });
+    return { ok: true, record: next, balance: next.essence };
+  });
+}
