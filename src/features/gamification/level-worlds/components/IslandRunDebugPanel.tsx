@@ -40,6 +40,7 @@ interface DebugPanelProps {
   onSetDevTimedEventOverride: (eventType: EventId | null) => void;
   onGrantDevTimedEventTickets: (amount: number) => void;
   onGrantDevEssence?: (amount: number) => void;
+  onPreviewLifePathPrompt?: (prompt: 'intent' | 'fast-track') => void;
   showLuckyRollDevLauncher?: boolean;
   onOpenLuckyRollDevOverlay?: (targetIslandNumber: number) => void;
   onStartLuckyRollDevSession?: (targetIslandNumber: number) => Promise<string>;
@@ -170,6 +171,7 @@ export function IslandRunDebugPanel({
   onSetDevTimedEventOverride,
   onGrantDevTimedEventTickets,
   onGrantDevEssence,
+  onPreviewLifePathPrompt,
   showLuckyRollDevLauncher = false,
   onOpenLuckyRollDevOverlay,
   onStartLuckyRollDevSession,
@@ -660,6 +662,16 @@ export function IslandRunDebugPanel({
                     >
                       Grant 10,000 Money
                     </button>
+                    {onPreviewLifePathPrompt ? (
+                      <>
+                        <button type="button" className="island-run-debug-panel__copy-btn" onClick={() => onPreviewLifePathPrompt('intent')}>
+                          Preview life-path question
+                        </button>
+                        <button type="button" className="island-run-debug-panel__copy-btn" onClick={() => onPreviewLifePathPrompt('fast-track')}>
+                          Preview fast-track offer
+                        </button>
+                      </>
+                    ) : null}
                     <span style={{ fontSize: '0.76rem', opacity: 0.82 }}>
                       Canonical dev action; useful for full 15-step construction traces.
                     </span>

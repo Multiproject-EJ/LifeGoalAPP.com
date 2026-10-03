@@ -45,7 +45,7 @@ export function GameFirstShell({ phase, offline, developerError, renderGame, acc
     {panel !== null && <section className="game-first-essentials" aria-label="Game account and help">
       <header><button type="button" onClick={back}>← Back to game</button><h1>{panel === 'account' ? 'Your account' : 'Account & help'}</h1></header>
       {panel === 'account' && account ? account : <div className="game-first-help">
-        <p>Your journey starts in Island Run. At Island 040, the caretakers offer the portal to Today, habits and goals. Your existing data stays intact.</p>
+        <p>Your journey starts in Island Run. Want real-life goals and habits sooner? Your caretaker offers an optional fast track along the way (from Island 010, or Island 004 if you came to improve your life), and the Compass Book can bring it forward any time. Otherwise, just keep playing: at Island 040 the caretakers open the portal to Today, habits and goals. Your existing data stays intact.</p>
         <button type="button" onClick={() => { onAccount(); setPanel('account'); }}>Account, privacy &amp; accessibility settings</button>
         {onSignIn && <button type="button" onClick={onSignIn}>Sign in or save this guest run</button>}
         <nav aria-label="Essential information"><a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy policy</a>

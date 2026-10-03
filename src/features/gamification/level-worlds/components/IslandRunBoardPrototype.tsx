@@ -211,6 +211,9 @@ import { useGamification } from '../../../../hooks/useGamification';
 import { isDemoSession } from '../../../../services/demoSession';
 import { warmEggsFromSource } from '../services/islandRunHabitEggWarmthAction';
 import { EggWarmthToastHost } from './EggWarmthToastHost';
+import { LifePathPromptModal } from './LifePathPromptModal';
+import { resolveLifePathPrompt, type LifePathPrompt } from '../services/lifePathProgress';
+import { acceptLifeFastTrack, answerLifePathIntent, declineLifeFastTrack } from '../services/lifePathActions';
 import type { IslandRunGuestClaimSource } from '../services/islandRunGuestClaimService';
 import {
   hydrateIslandRunRuntimeStateWithSource,
@@ -2908,6 +2911,7 @@ export function IslandRunBoardPrototype({
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const isOnboardingCelebrationVisible = showFirstRunCelebration || showHatcheryL1Celebration;
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
+  const [lifePathPromptOpen, setLifePathPromptOpen] = useState<Exclude<LifePathPrompt, null> | null>(null);
   // First visit of the day warms incubating eggs (shares the daily warmth cap
   // with habit check-ins and Compass answers). Delayed so the toast lands
   // after the loading screen.
@@ -14870,8 +14874,24 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       showIsland20Arrival ||
       walletStoreModalKind !== null ||
-      walletPanelOriginRect !== null,
+      walletPanelOriginRect !== null ||
+      lifePathPromptOpen !== null,
   );
+  // Life path: "What brings you here?" (Island 002+) and the optional fast
+  // track to Today/habits/goals (Island 010, or 004 for "improving my life").
+  // Only offered while the life app is still closed, and never over another
+  // modal or mid-roll.
+  const lifePathCandidate = resolveLifePathPrompt({
+    ledger: __storeState.signatureMissionProgressByIsland,
+    currentIslandNumber: __storeState.currentIslandNumber,
+    cycleIndex: __storeState.cycleIndex,
+    hasFullAppAccess: canExitToApp,
+  });
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || !lifePathCandidate || lifePathPromptOpen || doesModalOwnAttention || isAnimatingRollRef.current) return undefined;
+    const timer = window.setTimeout(() => setLifePathPromptOpen(lifePathCandidate), 1800);
+    return () => window.clearTimeout(timer);
+  }, [hasHydratedRuntimeState, lifePathCandidate, lifePathPromptOpen, doesModalOwnAttention]);
   // Island 001 Assembly blast/build beat: everything stays visible but inert
   // (controller, floating buttons, top bar, explore dots) so it plays through.
   const firstLightAssemblyAnimating = firstLightAssemblyPendingSector !== null;
@@ -22085,6 +22105,17 @@ export function IslandRunBoardPrototype({
       ) : null}
 
       <EggWarmthToastHost />
+      {lifePathPromptOpen ? (
+        <LifePathPromptModal
+          prompt={lifePathPromptOpen}
+          canOpenToday={canExitToApp && Boolean(onExitBoard)}
+          onAnswerIntent={(intent) => answerLifePathIntent({ session, client, intent })}
+          onAcceptFastTrack={() => acceptLifeFastTrack({ session, client })}
+          onDeclineFastTrack={() => declineLifeFastTrack({ session, client })}
+          onOpenToday={() => { setLifePathPromptOpen(null); onExitBoard?.(); }}
+          onClose={() => setLifePathPromptOpen(null)}
+        />
+      ) : null}
       {eggBatchCards.length > 0 ? <EggBatchReveal creatureIds={eggBatchCards} onClose={() => setEggBatchCards([])} /> : null}
       {hatchReveal ? (
         <CreatureHatchRevealModal
@@ -23710,6 +23741,7 @@ export function IslandRunBoardPrototype({
           onSetDevTimedEventOverride={handleSetDevTimedEventOverride}
           onGrantDevTimedEventTickets={handleGrantDevTimedEventTickets}
           onGrantDevEssence={handleDevGrantEssence}
+          onPreviewLifePathPrompt={isDevModeEnabled ? (prompt) => { setLifePathPromptOpen(prompt); setShowDebugPanel(false); } : undefined}
           showLuckyRollDevLauncher={isDevModeEnabled}
           onOpenLuckyRollDevOverlay={handleOpenDevLuckyRollOverlay}
           onStartLuckyRollDevSession={handleDevStartLuckyRollSession}

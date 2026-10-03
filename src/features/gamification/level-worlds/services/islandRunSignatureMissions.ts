@@ -2,6 +2,7 @@ import { sanitizeTitanAwakening, mergeTitanAwakening, type TitanAwakening } from
 import { WORLD_PORTAL_KEY, sanitizeWorldPortalProgress, mergeWorldPortalProgress, type WorldPortalProgress } from './worldPortalProgress';
 import { ARENA_JOURNEY_KEY, sanitizeArenaJourney, mergeArenaJourney, type ArenaJourneyProgress } from './arenaJourney';
 import { ARCHETYPE_CUP_KEY, mergeArchetypeCupProgress, sanitizeArchetypeCupProgress, type ArchetypeCupProgress } from './archetypeCup';
+import { LIFE_PATH_KEY, mergeLifePathProgress, sanitizeLifePathProgress, type LifePathProgress } from './lifePathProgress';
 import { DICE_SKINS_KEY, mergeDiceSkinProgress, sanitizeDiceSkinProgress, type DiceSkinProgress } from './islandRunDiceSkins';
 import { ISLAND_TREASURES_KEY, mergeIslandTreasureCollections, sanitizeIslandTreasureCollection, type IslandTreasureCollection } from './islandRunTreasures';
 import { STORMFRONT_KEY_PATTERN, mergeStormfrontProgress, sanitizeStormfrontProgress, type StormfrontProgress } from './island2Stormfront';
@@ -456,6 +457,7 @@ export interface StagedRestorationMissionProgress {
 
 export type IslandRunSignatureMissionProgress =
   | WorldPortalProgress
+  | LifePathProgress
   | ArenaJourneyProgress
   | ArchetypeCupProgress
   | DiceSkinProgress
@@ -520,6 +522,11 @@ export function sanitizeIslandRunSignatureMissionProgress(
     if (key === WORLD_PORTAL_KEY || record.missionId === 'world-portal') {
       const portal = sanitizeWorldPortalProgress(record);
       if (key === WORLD_PORTAL_KEY && portal) result[key] = portal;
+      return;
+    }
+    if (key === LIFE_PATH_KEY || record.missionId === 'life-path') {
+      const lifePath = sanitizeLifePathProgress(record);
+      if (key === LIFE_PATH_KEY && lifePath) result[key] = lifePath;
       return;
     }
     if (record.missionId === 'arena-journey') {
@@ -1752,6 +1759,11 @@ export function mergeIslandRunSignatureMissionProgress(
     if (key === WORLD_PORTAL_KEY) {
       const portal = mergeWorldPortalProgress(a, b);
       if (portal) merged[key] = portal;
+      return;
+    }
+    if (key === LIFE_PATH_KEY) {
+      const lifePath = mergeLifePathProgress(a, b);
+      if (lifePath) merged[key] = lifePath;
       return;
     }
     if (a?.missionId === 'first-light-assembly-crater' && a.version !== 2) {

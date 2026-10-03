@@ -258,6 +258,7 @@ import { islandCommunicationAccessTests } from './islandCommunicationAccess.test
 import { bossRhythmGameTests } from './bossRhythmGame.test';
 import { bossBlitzEngineTests } from './bossBlitzEngine.test';
 import { habitEggWarmthTests } from './habitEggWarmth.test';
+import { lifePathTests } from './lifePath.test';
 import { islandRunReflectionCurriculumTests } from './islandRunReflectionCurriculum.test';
 import { islandRunClueCardCurriculumTests } from './islandRunClueCardCurriculum.test';
 import { islandRunCardDrawCadenceTests } from './islandRunCardDrawCadence.test';
@@ -590,6 +591,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandCommunicationAccess', tests: islandCommunicationAccessTests },
   { label: 'bossBlitzEngine', tests: bossBlitzEngineTests },
   { label: 'habitEggWarmth', tests: habitEggWarmthTests },
+  { label: 'lifePath', tests: lifePathTests },
   { label: 'bossRhythmGame', tests: bossRhythmGameTests },
   { label: 'islandRunReflectionCurriculum', tests: islandRunReflectionCurriculumTests },
   { label: 'islandRunClueCardCurriculum', tests: islandRunClueCardCurriculumTests },

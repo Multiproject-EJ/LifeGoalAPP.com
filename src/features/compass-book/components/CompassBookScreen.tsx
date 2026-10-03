@@ -28,6 +28,10 @@ import { CompassReading } from './CompassReading';
 import { CompassChapterScreen } from './CompassChapterScreen';
 import { CompassGuidedFlow } from './CompassGuidedFlow';
 import { CompassBookPresentationControl } from './CompassBookPresentationControl';
+import { getIslandRunStateSnapshot } from '../../gamification/level-worlds/services/islandRunStateStore';
+import { hasAcceptedLifeFastTrack, LIFE_PATH_INTENT_ISLAND, resolveLifePathPrompt } from '../../gamification/level-worlds/services/lifePathProgress';
+import { reopenLifeFastTrackOffer } from '../../gamification/level-worlds/services/lifePathActions';
+import { resolveWorldPortalProgress } from '../../gamification/level-worlds/services/worldPortalProgress';
 import {
   COMPASS_BOOK_ISLAND_ENTRANCE_MS,
   COMPASS_BOOK_PRESENTATION_STORAGE_KEY,
@@ -194,6 +198,23 @@ export function CompassBookScreen({
   }>({ key: 0, kind: 'fragment', issuedAt: -Infinity });
   const book = useCompassBook(session, { demo });
   const userId = session?.user?.id ?? 'local';
+  // Before the life app opens, the book can bring the fast-track offer forward.
+  const showLifeFastTrackCard = (() => {
+    if (!session) return false;
+    try {
+      const state = getIslandRunStateSnapshot(session);
+      return resolveLifePathPrompt({
+        ledger: state.signatureMissionProgressByIsland,
+        currentIslandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        hasFullAppAccess: Boolean(resolveWorldPortalProgress(state.signatureMissionProgressByIsland)),
+      }) === null && !hasAcceptedLifeFastTrack(state.signatureMissionProgressByIsland)
+        && !resolveWorldPortalProgress(state.signatureMissionProgressByIsland)
+        && state.cycleIndex === 0 && state.currentIslandNumber >= LIFE_PATH_INTENT_ISLAND && state.currentIslandNumber < 40;
+    } catch {
+      return false;
+    }
+  })();
 
   // The cover only swings when the book is actually being opened. A deep link
   // straight to a fragment or a specific page skips it — the player asked for
@@ -460,6 +481,22 @@ export function CompassBookScreen({
                   <p className="compass-book__demo-banner" role="status">
                     Demo data — sample answers for preview. Nothing here is saved to your account.
                   </p>
+                ) : null}
+                {session && !demo && showLifeFastTrackCard ? (
+                  <section className="compass-book__life-fast-track" aria-label="Real-life plan">
+                    <p>
+                      <strong>Ready for real-life goals and habits?</strong> You don&rsquo;t have to be. Just keep playing and
+                      the book fills in, bite by bite. If you&rsquo;d like to start now, your caretaker can open Today for you.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void reopenLifeFastTrackOffer({ session, client: null }).then(() => onClose());
+                      }}
+                    >
+                      I&rsquo;m ready now
+                    </button>
+                  </section>
                 ) : null}
                 <CompassReading
                   currentIslandNumber={currentIslandNumber}
