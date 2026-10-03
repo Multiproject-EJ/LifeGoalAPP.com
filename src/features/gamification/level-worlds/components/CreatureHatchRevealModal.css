@@ -21,3 +21,70 @@
 @media (prefers-reduced-motion: reduce) {
   .egg-reveal-shell, .egg-reveal-arrival .island-run-hatch-reveal__art { animation: none; }
 }
+
+/* Hatch ritual: tap the egg three times to crack it. */
+.egg-reveal-crack-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
+}
+.egg-reveal-crack-button:focus-visible { outline: 3px solid #9ae9ff; outline-offset: 4px; }
+.egg-reveal-crack-button .island-run-hatch-reveal__art {
+  transform-origin: 50% 85%;
+  filter: drop-shadow(0 0 20px #9ae9ff88);
+}
+.egg-reveal-shell--idle { animation: egg-reveal-idle 1.6s ease-in-out infinite; }
+.egg-reveal-shell--hit { animation: egg-reveal-hit 420ms cubic-bezier(.3,1.6,.5,1) both; }
+.egg-reveal-crack-button__hint {
+  position: absolute;
+  bottom: -6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(4, 10, 20, 0.78);
+  color: #fff4cf;
+  font-size: 0.85rem;
+  font-weight: 700;
+  animation: egg-reveal-hint 1.2s ease-in-out infinite;
+}
+.egg-reveal-crack-button--burst::after {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, #ffffff 0%, var(--egg-flash, #9ae9ff) 35%, transparent 70%);
+  animation: egg-reveal-flash 700ms ease-out both;
+}
+.egg-reveal-crack-button--common { --egg-flash: #b7f5a8; }
+.egg-reveal-crack-button--rare { --egg-flash: #ffc94d; }
+.egg-reveal-crack-button--mythic { --egg-flash: #d59bff; }
+@keyframes egg-reveal-idle {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  20% { transform: rotate(-4deg) translateY(-2px); }
+  40% { transform: rotate(4deg) translateY(-2px); }
+  55% { transform: rotate(0) translateY(0); }
+}
+@keyframes egg-reveal-hit {
+  0% { transform: scale(1) rotate(0); }
+  30% { transform: scale(1.12, 0.9) rotate(-9deg); }
+  65% { transform: scale(0.96, 1.06) rotate(7deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes egg-reveal-hint {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes egg-reveal-flash {
+  0% { opacity: 0; transform: scale(0.4); }
+  35% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .egg-reveal-shell--idle, .egg-reveal-shell--hit, .egg-reveal-crack-button__hint, .egg-reveal-crack-button--burst::after { animation: none; }
+}

@@ -49,6 +49,7 @@ export { ISLAND_RUN_FULL_RESTORATION_DICE_REWARD } from './islandRunRestorationR
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { resolveIslandRunFeatureAccess } from './islandRunFeatureAccess';
 import { canPlaceIslandRunEggs } from './islandRunEggPlacementPolicy';
+import { warmIncubatingEggs, type WarmIncubatingEggsResult } from './islandRunHabitEggWarmth';
 import { ensureIslandRunContractV2ActiveTimedEvent } from './islandRunContractV2RewardBar';
 import { resolveIslandRunCompletion } from './islandRunCompletion';
 import type {
@@ -2400,6 +2401,31 @@ export function applyDevSpeedHatchEgg(options: ApplyDevSpeedHatchEggOptions): Ap
     triggerSource: triggerSource ?? 'dev_speed_hatch_egg',
   });
   return { record: next, changed: true };
+}
+
+/**
+ * Habits warm the egg: a habit check-in pulls every incubating egg's hatch
+ * time earlier (see islandRunHabitEggWarmth). Callers own the once-per-habit
+ * and daily-cap bookkeeping; this action only applies the warmth.
+ */
+export function applyHabitEggWarmth(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  warmMs: number;
+  nowMs?: number;
+  triggerSource?: string;
+}): WarmIncubatingEggsResult & { changed: boolean } {
+  const current = getIslandRunStateSnapshot(options.session);
+  const nowMs = Number.isFinite(options.nowMs) ? Math.max(0, Math.trunc(options.nowMs as number)) : Date.now();
+  const result = warmIncubatingEggs(current, options.warmMs, nowMs);
+  if (result.warmedCount === 0) return { ...result, changed: false };
+  void commitIslandRunState({
+    session: options.session,
+    client: options.client,
+    record: result.record,
+    triggerSource: options.triggerSource ?? 'habit_egg_warmth',
+  });
+  return { ...result, changed: true };
 }
 
 /**

@@ -24,6 +24,8 @@ export interface CreatureHatchRevealModalProps {
   continueLabel?: string;
 }
 
+export const HATCH_RITUAL_TAPS = 3;
+
 function stars(rarity: CreatureHatchRevealModalProps['rarity']): string {
   if (rarity === 'mythic') return '★★★★★';
   if (rarity === 'rare') return '★★★☆☆';
@@ -47,16 +49,32 @@ export function CreatureHatchRevealModal(props: CreatureHatchRevealModalProps): 
     return lockPageScroll(['body', 'documentElement']);
   }, [props.open]);
 
+  // Hatch ritual: the player cracks the egg with HATCH_RITUAL_TAPS taps; the
+  // last tap flashes the tier colour, then the creature arrives.
+  const [crackTaps, setCrackTaps] = useState(0);
+  const [isBursting, setIsBursting] = useState(false);
+
   useEffect(() => {
-    if (props.open) setIsHatchComplete(false);
+    if (!props.open) return;
+    setIsHatchComplete(false);
+    setCrackTaps(0);
+    setIsBursting(false);
   }, [props.open, props.creatureId]);
 
   useEffect(() => {
-    if (!props.open || usesThreeHatch) return;
+    if (!isBursting) return undefined;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const timer = window.setTimeout(() => setIsHatchComplete(true), reduced ? 250 : 2200);
+    const timer = window.setTimeout(() => setIsHatchComplete(true), reduced ? 150 : 700);
     return () => window.clearTimeout(timer);
-  }, [props.open, props.creatureId, usesThreeHatch]);
+  }, [isBursting]);
+
+  const crackEgg = () => {
+    if (isBursting || isHatchComplete) return;
+    const next = Math.min(HATCH_RITUAL_TAPS, crackTaps + 1);
+    setCrackTaps(next);
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') navigator.vibrate(next >= HATCH_RITUAL_TAPS ? 60 : 25);
+    if (next >= HATCH_RITUAL_TAPS) setIsBursting(true);
+  };
 
   if (!props.open) return null;
 
@@ -76,7 +94,7 @@ export function CreatureHatchRevealModal(props: CreatureHatchRevealModalProps): 
       <div className={`island-run-hatch-reveal__card island-run-hatch-reveal__card--${props.rarity}`}>
         <div className="island-run-hatch-reveal__header">
           {props.progressLabel ? <p role="status">{props.progressLabel}</p> : null}
-          <p className="island-run-hatch-reveal__title">{isHatchComplete ? props.creatureName : 'Someone is ready to meet you'}</p>
+          <p className="island-run-hatch-reveal__title">{isHatchComplete ? props.creatureName : usesThreeHatch ? 'Someone is ready to meet you' : 'Someone is knocking… crack the egg!'}</p>
           {isHatchComplete && props.creatureScore > 0 ? <p className="island-run-hatch-reveal__score">Score {props.creatureScore}</p> : null}
         </div>
         {usesThreeHatch ? (
@@ -93,8 +111,26 @@ export function CreatureHatchRevealModal(props: CreatureHatchRevealModalProps): 
           />
         ) : (
           <div className={`island-run-hatch-reveal__hero ${isHatchComplete ? 'egg-reveal-arrival' : 'egg-reveal-incubating'}`}>
-            {!isHatchComplete ? <img className="island-run-hatch-reveal__art egg-reveal-shell"
-              src={getEggStageArtSrc(props.rarity, 3)} alt="Your egg is cracking open" /> : <>
+            {!isHatchComplete ? (
+              <button
+                type="button"
+                className={`egg-reveal-crack-button${isBursting ? ` egg-reveal-crack-button--burst egg-reveal-crack-button--${props.rarity}` : ''}`}
+                onClick={crackEgg}
+                aria-label={`Tap to crack the egg, ${HATCH_RITUAL_TAPS - crackTaps} taps left`}
+              >
+                <img
+                  key={crackTaps}
+                  className={`island-run-hatch-reveal__art${crackTaps > 0 ? ' egg-reveal-shell--hit' : ' egg-reveal-shell--idle'}`}
+                  src={getEggStageArtSrc(props.rarity, 1 + crackTaps)}
+                  alt=""
+                />
+                {!isBursting ? (
+                  <span className="egg-reveal-crack-button__hint">
+                    {crackTaps === 0 ? 'Tap to crack!' : `${HATCH_RITUAL_TAPS - crackTaps} more`}
+                  </span>
+                ) : null}
+              </button>
+            ) : <>
             <img
               className="island-run-hatch-reveal__art"
               src={props.imageSrc}
@@ -109,7 +145,7 @@ export function CreatureHatchRevealModal(props: CreatureHatchRevealModalProps): 
         )}
         <p className="island-run-hatch-reveal__rarity">{props.rarity.toUpperCase()} · {stars(props.rarity)}</p>
         <p className="island-run-hatch-reveal__confirm">
-          {isHatchComplete ? 'Added to Sanctuary · creature card next' : 'Opening your egg…'}
+          {isHatchComplete ? 'Added to Sanctuary · creature card next' : usesThreeHatch ? 'Opening your egg…' : isBursting ? 'Here it comes…' : `Crack ${crackTaps}/${HATCH_RITUAL_TAPS}`}
         </p>
       </div>
       <div className="island-run-hatch-reveal__actions">

@@ -203,6 +203,7 @@ import { generateIslandStopPlan } from '../gamification/level-worlds/services/is
 import { getUnresolvedEggSlotsForIsland } from '../gamification/level-worlds/services/islandRunEggMania';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 import { refreshIslandRunStateFromLocal } from '../gamification/level-worlds/services/islandRunStateStore';
+import { warmEggsFromHabitCheckIn } from '../gamification/level-worlds/services/islandRunHabitEggWarmthAction';
 import { getPromiseVariant, isPromiseActionableToday } from '../gamification/promisePresentation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
 import { triggerCompletionHaptic, triggerImpactHaptic } from '../../utils/completionHaptics';
@@ -2517,6 +2518,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     });
     saveDraft(storageKey, true);
     return true;
+  }, [gamificationEnabled, session]);
+  const [eggWarmthNotice, setEggWarmthNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!eggWarmthNotice) return undefined;
+    const timer = window.setTimeout(() => setEggWarmthNotice(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [eggWarmthNotice]);
+  const warmEggsAfterHabitCheckIn = useCallback((habitId: string, dateISO: string) => {
+    if (!session?.user?.id || !gamificationEnabled) return;
+    try {
+      const notice = warmEggsFromHabitCheckIn({ session, habitId, dateISO });
+      if (notice) setEggWarmthNotice(notice);
+    } catch (error) {
+      console.warn('Habit egg warmth failed', error);
+    }
   }, [gamificationEnabled, session]);
 
   const visionImagesByHabit = useMemo(() => {
@@ -6269,6 +6285,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           }
         }
 
+        if (isToday) warmEggsAfterHabitCheckIn(habit.id, dateISO);
+
         // 🎮 Award XP for completing today's habits
         if (isActiveDay) {
           playHabitCompleteSfx();
@@ -6479,6 +6497,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         return nextLogs;
       });
 
+      if (isToday) warmEggsAfterHabitCheckIn(habit.id, dateISO);
+
       // Fire telemetry event for done-ish completion
       if (session?.user?.id) {
         void recordTelemetryEvent({
@@ -6621,6 +6641,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         setHabitInsights(calculateHabitInsights(habits, nextLogs, activeDate));
         return nextLogs;
       });
+
+      if (isToday) warmEggsAfterHabitCheckIn(habit.id, dateISO);
 
       if (session?.user?.id) {
         const stageMultiplier = getStageCreditMultiplier(stage);
@@ -14130,6 +14152,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   return (
     <section className="habit-tracker">
       {todayStarUpgradeModal}
+      {eggWarmthNotice ? (
+        <div className="habit-egg-warmth-toast" role="status" aria-live="polite">
+          <span className="habit-egg-warmth-toast__egg" aria-hidden="true">🥚</span>
+          <span>{eggWarmthNotice}</span>
+        </div>
+      ) : null}
       <SuperHabitRosterModal
         open={superHabitRosterOpen}
         initialSuperHabitId={selectedSuperHabitId}
